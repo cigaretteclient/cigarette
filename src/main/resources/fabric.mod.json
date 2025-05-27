@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "cigarette",
+  "version": "${version}",
+  "name": "cigarette",
+  "description": "Next-Generation Skyblock Modding",
+  "authors": [
+    "UndercoverGoose",
+    "waqfs"
+  ],
+  "contact": {
+    "sources": "https://github.com/waqfs/cigarette"
+  },
+  "license": "MIT",
+  "icon": "assets/cigarette/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "io.github.waqfs.Cigarette"
+    ]
+  },
+  "mixins": [],
+  "depends": {
+    "fabricloader": ">=0.16.14",
+    "minecraft": "~1.21.5",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

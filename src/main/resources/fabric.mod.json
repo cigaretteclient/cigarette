@@ -12,11 +12,14 @@
     "sources": "https://github.com/waqfs/cigarette"
   },
   "license": "MIT",
-  "icon": "assets/cigarette/icon.png",
+  "icon": "assets/icon.png",
   "environment": "*",
   "entrypoints": {
     "main": [
       "io.github.waqfs.Cigarette"
+    ],
+    "client": [
+      "io.github.waqfs.gui.KeyBinding"
     ]
   },
   "mixins": [],

@@ -67,12 +67,14 @@ public class ToggleOptionsWidget extends PassthroughWidget<ClickableWidget> {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        return dropdownVisible && super.mouseReleased(mouseX, mouseY, button);
+        super.mouseReleased(mouseX, mouseY, button);
+        return false;
     }
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        return dropdownVisible && super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+        super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+        return false;
     }
 
     @Override

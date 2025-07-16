@@ -42,8 +42,7 @@ public abstract class PassthroughWidget<T extends Element> extends ClickableWidg
         if (children == null) return false;
         for (Element child : children) {
             if (child == null) continue;
-            boolean handled = child.mouseReleased(mouseX, mouseY, button);
-            if (handled) return true;
+            child.mouseReleased(mouseX, mouseY, button);
         }
         return false;
     }
@@ -53,8 +52,7 @@ public abstract class PassthroughWidget<T extends Element> extends ClickableWidg
         if (children == null) return false;
         for (Element child : children) {
             if (child == null) continue;
-            boolean handled = child.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
-            if (handled) return true;
+            child.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
         }
         return false;
     }

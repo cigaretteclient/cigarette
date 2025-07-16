@@ -41,7 +41,7 @@ public class DraggableWidget extends ClickableWidget {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double ignored, double ignored_) {
-        if (isMouseOver(mouseX, mouseY) && dragging) {
+        if (dragging) {
             int deltaX = (int) (mouseX - startingMouseX);
             int deltaY = (int) (mouseY - startingMouseY);
             int newX = startingX + deltaX;
@@ -51,7 +51,6 @@ public class DraggableWidget extends ClickableWidget {
             if (dragCallback != null) {
                 dragCallback.updateParentPosition(newX, newY, deltaX, deltaY);
             }
-            return true;
         }
         return false;
     }
@@ -59,7 +58,7 @@ public class DraggableWidget extends ClickableWidget {
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         dragging = false;
-        return isMouseOver(mouseX, mouseY);
+        return false;
     }
 
     @Override

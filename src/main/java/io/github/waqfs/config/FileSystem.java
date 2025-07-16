@@ -1,5 +1,6 @@
-package io.github.waqfs;
+package io.github.waqfs.config;
 
+import io.github.waqfs.Cigarette;
 import net.fabricmc.loader.api.FabricLoader;
 import org.jetbrains.annotations.Nullable;
 
@@ -8,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
-public class ConfigHandler {
+public class FileSystem {
     private static final String CONFIG_NAME = "cigarette.toml";
     private static final String CONFIG_PATH = FabricLoader.getInstance().getConfigDir().getFileSystem().getPath(CONFIG_NAME).toString();
     private static final File CONFIG_FILE = new File(CONFIG_PATH);

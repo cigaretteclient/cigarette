@@ -19,7 +19,9 @@
       "io.github.waqfs.Cigarette"
     ],
     "client": [
-      "io.github.waqfs.gui.KeyBinding"
+      "io.github.waqfs.gui.KeyBinding",
+      "io.github.waqfs.module.keybind.BreakBlock",
+      "io.github.waqfs.module.keybind.AddGlassBlock"
     ]
   },
   "mixins": [],

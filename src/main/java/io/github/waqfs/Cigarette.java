@@ -1,5 +1,7 @@
 package io.github.waqfs;
 
+import io.github.waqfs.config.Config;
+import io.github.waqfs.config.FileSystem;
 import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,8 +14,10 @@ public class Cigarette implements ModInitializer {
     // That way, it's clear which mod wrote info, warnings, and errors.
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
+    public static Config CONFIG = new Config();
+
     @Override
     public void onInitialize() {
-        ConfigHandler.loadConfig();
+        FileSystem.loadConfig();
     }
 }

@@ -9,6 +9,8 @@ import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.function.Consumer;
+
 public class ToggleOptionsWidget extends PassthroughWidget<ClickableWidget> {
     private static final int BASE_COLOR = 0xFF1A1A1A;
     private static final int HOVERED_COLOR = 0xFF000000;
@@ -17,7 +19,22 @@ public class ToggleOptionsWidget extends PassthroughWidget<ClickableWidget> {
     private static final byte MAX_HOVER_TICKS = 35;
     private boolean dropdownVisible = false;
     private boolean toggledState = false;
+    private @Nullable Consumer<Boolean> toggledCallback = null;
     private int ticksOnHover = 0;
+
+    private void toggleState() {
+        this.toggledState = !this.toggledState;
+        if (this.toggledCallback != null) {
+            this.toggledCallback.accept(this.toggledState);
+        }
+    }
+
+    public void setState(boolean state) {
+        this.toggledState = state;
+        if (this.toggledCallback != null) {
+            this.toggledCallback.accept(this.toggledState);
+        }
+    }
 
     public ToggleOptionsWidget(int x, int y, int width, int height, Text message, @Nullable Text tooltip, @Nullable ClickableWidget... options) {
         super(x, y, width, height, message);
@@ -48,6 +65,10 @@ public class ToggleOptionsWidget extends PassthroughWidget<ClickableWidget> {
         return this;
     }
 
+    public void registerUpdate(Consumer<Boolean> callback) {
+        this.toggledCallback = callback;
+    }
+
     @Override
     public void mouseMoved(double mouseX, double mouseY) {
         if (dropdownVisible) super.mouseMoved(mouseX, mouseY);
@@ -57,7 +78,7 @@ public class ToggleOptionsWidget extends PassthroughWidget<ClickableWidget> {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (isMouseOver(mouseX, mouseY)) {
             switch (button) {
-                case GLFW.GLFW_MOUSE_BUTTON_LEFT -> toggledState = !toggledState;
+                case GLFW.GLFW_MOUSE_BUTTON_LEFT -> this.toggleState();
                 case GLFW.GLFW_MOUSE_BUTTON_RIGHT -> dropdownVisible = children != null && !dropdownVisible;
             }
             return true;

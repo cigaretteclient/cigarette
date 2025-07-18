@@ -8,13 +8,13 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 
 import java.util.HashSet;
 
-public class MysteryEsp extends BaseModule {
+public class PlayerESP extends BaseModule {
     protected static final String MODULE_NAME = "PlayerESP";
     protected static final String MODULE_TOOLTIP = "Highlights all the players in ESP.";
     protected static final String MODULE_ID = "murdermystery.playeresp";
     private final Glow.Context glowContext = new Glow.Context();
 
-    public MysteryEsp() {
+    public PlayerESP() {
         super(MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
         ClientTickEvents.START_CLIENT_TICK.register(client -> {
             this.glowContext.removeAll();

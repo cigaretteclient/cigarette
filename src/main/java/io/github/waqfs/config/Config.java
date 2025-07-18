@@ -4,6 +4,7 @@ import io.github.waqfs.gui.instance.Category;
 import io.github.waqfs.module.keybind.AddGlassBlock;
 import io.github.waqfs.module.keybind.BreakBlock;
 import io.github.waqfs.module.keybind.VClip;
+import io.github.waqfs.module.murdermystery.GoldEsp;
 import io.github.waqfs.module.murdermystery.MysteryEsp;
 
 public class Config {
@@ -14,6 +15,6 @@ public class Config {
 
     public Config() {
         this.keybinds.attach(new AddGlassBlock(), new BreakBlock(), new VClip());
-        this.murderMystery.attach(new MysteryEsp());
+        this.murderMystery.attach(new MysteryEsp(), new GoldEsp());
     }
 }

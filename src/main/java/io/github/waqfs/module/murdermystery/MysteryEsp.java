@@ -22,12 +22,12 @@ public class MysteryEsp extends BaseModule {
                 return;
             if (client.world == null) return;
 
-            HashSet<MurderMysteryAgent.AlivePlayer> alivePlayers = MurderMysteryAgent.getAlivePlayers();
-            for (MurderMysteryAgent.AlivePlayer player : alivePlayers) {
+            HashSet<MurderMysteryAgent.PersistentPlayer> persistentPlayers = MurderMysteryAgent.getVisiblePlayers();
+            for (MurderMysteryAgent.PersistentPlayer player : persistentPlayers) {
                 switch (player.role) {
-                    case INNOCENT -> this.glowContext.addGlow(player.uuid, 0xFFFFFF);
-                    case DETECTIVE -> this.glowContext.addGlow(player.uuid, 0x00FF00);
-                    case MURDERER -> this.glowContext.addGlow(player.uuid, 0xFF0000);
+                    case INNOCENT -> this.glowContext.addGlow(player.playerEntity.getUuid(), 0xFFFFFF);
+                    case DETECTIVE -> this.glowContext.addGlow(player.playerEntity.getUuid(), 0x00FF00);
+                    case MURDERER -> this.glowContext.addGlow(player.playerEntity.getUuid(), 0xFF0000);
                 }
             }
         });

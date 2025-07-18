@@ -22,7 +22,7 @@ public class GoldEsp extends BaseModule {
                 return;
             if (client.world == null) return;
 
-            HashSet<MurderMysteryAgent.AvailableGold> availableGold = MurderMysteryAgent.getAvailableGold();
+            HashSet<MurderMysteryAgent.AvailableGold> availableGold = MurderMysteryAgent.getVisibleGold();
             for (MurderMysteryAgent.AvailableGold gold : availableGold) {
                 this.glowContext.addGlow(gold.uuid, 0xFFD800);
             }

@@ -10,15 +10,13 @@ import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.UUID;
 
 public class MurderMysteryAgent implements ClientModInitializer {
-    private static final HashMap<String, AlivePlayer.Role> persistentRoles = new HashMap<>();
-    private static final HashSet<AlivePlayer> alivePlayers = new HashSet<>();
+    private static final HashMap<String, PersistentPlayer> persistentPlayers = new HashMap<>();
     private static final HashSet<AvailableGold> availableGold = new HashSet<>();
 
     @Override
@@ -29,15 +27,11 @@ public class MurderMysteryAgent implements ClientModInitializer {
                 return;
             }
 
-            this.cleanupAlivePlayers();
             this.cleanupAvailableGold();
 
             for (Entity entity : client.world.getEntities()) {
                 if (entity instanceof PlayerEntity player) {
-                    AlivePlayer existingPlayer = this.getAlivePlayer(player);
-                    if (existingPlayer == null) {
-                        existingPlayer = this.createAlivePlayer(player);
-                    }
+                    PersistentPlayer existingPlayer = this.getOrCreatePersistentPlayer(player);
 
                     ItemStack item = PlayerEntityL.getHeldItem(player);
                     if (item == null) continue;
@@ -65,24 +59,17 @@ public class MurderMysteryAgent implements ClientModInitializer {
         });
     }
 
-    public static HashSet<AlivePlayer> getAlivePlayers() {
-        return new HashSet<>(alivePlayers);
+    public static HashSet<PersistentPlayer> getVisiblePlayers() {
+        HashSet<PersistentPlayer> visiblePlayers = new HashSet<>();
+        for (PersistentPlayer player : persistentPlayers.values()) {
+            if (!player.playerEntity.isAlive()) continue;
+            visiblePlayers.add(player);
+        }
+        return visiblePlayers;
     }
 
-    public static HashSet<AvailableGold> getAvailableGold() {
+    public static HashSet<AvailableGold> getVisibleGold() {
         return new HashSet<>(availableGold);
-    }
-
-    private void cleanupAlivePlayers() {
-        HashSet<AlivePlayer> scheduleDeadPlayers = new HashSet<>();
-        for (AlivePlayer alivePlayer : alivePlayers) {
-            if (alivePlayer.playerEntity.isAlive()) continue;
-            scheduleDeadPlayers.add(alivePlayer);
-        }
-        for (AlivePlayer alivePlayer : scheduleDeadPlayers) {
-            alivePlayers.remove(alivePlayer);
-            alivePlayer.destroy();
-        }
     }
 
     private void cleanupAvailableGold() {
@@ -93,7 +80,6 @@ public class MurderMysteryAgent implements ClientModInitializer {
         }
         for (AvailableGold gold : scheduleGold) {
             availableGold.remove(gold);
-            gold.destroy();
         }
     }
 
@@ -115,11 +101,15 @@ public class MurderMysteryAgent implements ClientModInitializer {
         return false;
     }
 
-    private @Nullable AlivePlayer getAlivePlayer(PlayerEntity player) {
-        for (AlivePlayer remPlayer : alivePlayers) {
-            if (remPlayer.playerEntity == player) return remPlayer;
+    private PersistentPlayer getOrCreatePersistentPlayer(PlayerEntity player) {
+        String playerName = player.getNameForScoreboard();
+        PersistentPlayer persistPlayer = persistentPlayers.get(playerName);
+        if (persistPlayer == null) {
+            persistPlayer = new PersistentPlayer(player);
+            persistentPlayers.put(playerName, persistPlayer);
         }
-        return null;
+        persistPlayer.setPlayerEntity(player);
+        return persistPlayer;
     }
 
     private boolean goldExists(ItemEntity item) {
@@ -130,63 +120,38 @@ public class MurderMysteryAgent implements ClientModInitializer {
         return false;
     }
 
-    private AlivePlayer createAlivePlayer(PlayerEntity player) {
-        AlivePlayer remPlayer = new AlivePlayer(player);
-        alivePlayers.add(remPlayer);
-        return remPlayer;
-    }
-
     private void createGold(ItemEntity item) {
         AvailableGold gold = new AvailableGold(item);
         availableGold.add(gold);
     }
 
     private void unset() {
-        persistentRoles.clear();
-
-        for (AlivePlayer alivePlayer : alivePlayers) {
-            alivePlayer.destroy();
-        }
-        alivePlayers.clear();
-
-        for (AvailableGold gold : availableGold) {
-            gold.destroy();
-        }
+        persistentPlayers.clear();
         availableGold.clear();
     }
 
-    public class AlivePlayer {
-        public final PlayerEntity playerEntity;
-        public final UUID uuid;
+    public static class PersistentPlayer {
+        public PlayerEntity playerEntity;
         public final String name;
         public Role role;
-        private boolean exists;
 
-        public AlivePlayer(PlayerEntity playerEntity) {
+        public PersistentPlayer(PlayerEntity playerEntity) {
             this.playerEntity = playerEntity;
-            this.uuid = playerEntity.getUuid();
             this.name = playerEntity.getNameForScoreboard();
-            this.role = persistentRoles.getOrDefault(this.name, Role.INNOCENT);
-            this.exists = true;
+            this.role = Role.INNOCENT;
+        }
+
+        protected void setPlayerEntity(PlayerEntity playerEntity) {
+            this.playerEntity = playerEntity;
         }
 
         public void setMurderer() {
             this.role = Role.MURDERER;
-            persistentRoles.put(this.name, Role.MURDERER);
         }
 
         public void setDetective() {
             if (this.role == Role.MURDERER) return;
             this.role = Role.DETECTIVE;
-            persistentRoles.put(this.name, Role.DETECTIVE);
-        }
-
-        public boolean exists() {
-            return this.exists;
-        }
-
-        public void destroy() {
-            this.exists = false;
         }
 
         public enum Role {
@@ -203,23 +168,13 @@ public class MurderMysteryAgent implements ClientModInitializer {
         }
     }
 
-    public class AvailableGold {
+    public static class AvailableGold {
         public final ItemEntity itemEntity;
         public final UUID uuid;
-        private boolean exists;
 
         public AvailableGold(ItemEntity itemEntity) {
             this.itemEntity = itemEntity;
             this.uuid = itemEntity.getUuid();
-            this.exists = true;
-        }
-
-        public boolean exists() {
-            return this.exists;
-        }
-
-        public void destroy() {
-            this.exists = false;
         }
     }
 }

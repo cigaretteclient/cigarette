@@ -24,7 +24,7 @@ public class MysteryEsp extends BaseModule {
     public MysteryEsp() {
         super(MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
         ClientTickEvents.START_CLIENT_TICK.register(client -> {
-            if (GameDetector.rootGame != GameDetector.ParentGame.MURDER_MYSTERY || GameDetector.subGame == GameDetector.ChildGame.NULL) {
+            if (!this.isEnabled() || GameDetector.rootGame != GameDetector.ParentGame.MURDER_MYSTERY || GameDetector.subGame == GameDetector.ChildGame.NULL) {
                 this.glowContext.removeAll();
                 this.uuidStates.clear();
                 return;
@@ -40,6 +40,9 @@ public class MysteryEsp extends BaseModule {
                     if (item.isOf(Items.FILLED_MAP)) continue;
                     if (item.isOf(Items.GOLD_INGOT)) continue;
                     if (item.isOf(Items.ARMOR_STAND)) continue;
+                    if (item.isOf(Items.COMPASS)) continue;
+                    if (item.isOf(Items.COMPARATOR)) continue;
+                    if (item.isOf(Items.RED_BED)) continue;
                     if (item.isOf(Items.ARROW) || item.isOf(Items.BOW)) {
                         this.setDetective(playerEntity);
                         continue;

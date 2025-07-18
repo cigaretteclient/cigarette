@@ -3,7 +3,8 @@
   "package": "io.github.waqfs.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "EntityMixin"
+    "EntityMixin",
+    "ScoreboardMixin"
   ],
   "injectors": {
     "defaultRequire": 1

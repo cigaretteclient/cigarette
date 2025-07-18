@@ -20,7 +20,6 @@
     ],
     "client": [
       "io.github.waqfs.gui.KeyBinding",
-      "io.github.waqfs.GameDetector",
       "io.github.waqfs.module.keybind.BreakBlock",
       "io.github.waqfs.module.keybind.AddGlassBlock",
       "io.github.waqfs.module.keybind.VClip"

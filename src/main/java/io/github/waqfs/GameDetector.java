@@ -1,69 +1,67 @@
 package io.github.waqfs;
 
 import io.github.waqfs.lib.ScoreboardL;
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.minecraft.client.MinecraftClient;
 import org.jetbrains.annotations.Nullable;
 
-public class GameDetector implements ClientModInitializer {
+public class GameDetector {
     public static ParentGame rootGame = ParentGame.NULL;
     public static ChildGame subGame = ChildGame.NULL;
 
-    @Override
-    public void onInitializeClient() {
-        ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (client.player == null || client.world == null) {
+    public static void detect() {
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.player == null || client.world == null) {
+            GameDetector.unset();
+            return;
+        }
+
+        String headerText = ScoreboardL.getUnformattedHeader(client);
+        String[] rowsText = ScoreboardL.getUnformattedRows(client);
+        switch (headerText) {
+            case "SKYBLOCK" -> {
+                GameDetector.rootGame = ParentGame.SKYBLOCK;
+                GameDetector.subGame = ChildGame.NULL;
+            }
+            case "BED WARS" -> {
+                GameDetector.rootGame = ParentGame.BEDWARS;
+                if (GameDetector.some(rowsText, "Red")) {
+                    GameDetector.subGame = ChildGame.INSTANCED_BEDWARS;
+                } else {
+                    GameDetector.subGame = ChildGame.NULL;
+                }
+            }
+            case "MURDER MYSTERY" -> {
+                GameDetector.rootGame = ParentGame.MURDER_MYSTERY;
+                if (GameDetector.some(rowsText, "Detective")) {
+                    GameDetector.subGame = ChildGame.CLASSIC_MYSTERY;
+                } else if (GameDetector.some(rowsText, "Infected")) {
+                    GameDetector.subGame = ChildGame.INFECTION_MYSTERY;
+                } else if (GameDetector.some(rowsText, "Bow #1")) {
+                    GameDetector.subGame = ChildGame.DOUBLE_UP_MYSTERY;
+                } else {
+                    GameDetector.subGame = ChildGame.NULL;
+                }
+            }
+            default -> {
                 GameDetector.rootGame = ParentGame.NULL;
                 GameDetector.subGame = ChildGame.NULL;
-                return;
             }
-
-//            ServerInfo serverInfo = client.getNetworkHandler().getServerInfo();
-//            if (serverInfo == null) return;
-
-            String headerText = ScoreboardL.getUnformattedHeader(client);
-            String[] rowsText = ScoreboardL.getUnformattedRows(client);
-            switch (headerText) {
-                case "SKYBLOCK" -> {
-                    GameDetector.rootGame = ParentGame.SKYBLOCK;
-                    GameDetector.subGame = ChildGame.NULL;
-                }
-                case "BED WARS" -> {
-                    GameDetector.rootGame = ParentGame.BEDWARS;
-                    if (this.some(rowsText, "Red")) {
-                        GameDetector.subGame = ChildGame.INSTANCED_BEDWARS;
-                    } else {
-                        GameDetector.subGame = ChildGame.NULL;
-                    }
-                }
-                case "MURDER MYSTERY" -> {
-                    GameDetector.rootGame = ParentGame.MURDER_MYSTERY;
-                    if (this.some(rowsText, "Detective")) {
-                        GameDetector.subGame = ChildGame.CLASSIC_MYSTERY;
-                    } else if (this.some(rowsText, "Infected")) {
-                        GameDetector.subGame = ChildGame.INFECTION_MYSTERY;
-                    } else if (this.some(rowsText, "Bow #1")) {
-                        GameDetector.subGame = ChildGame.DOUBLE_UP_MYSTERY;
-                    } else {
-                        GameDetector.subGame = ChildGame.NULL;
-                    }
-                }
-                default -> {
-                    GameDetector.rootGame = ParentGame.NULL;
-                    GameDetector.subGame = ChildGame.NULL;
-                }
-            }
-        });
+        }
     }
 
-    private boolean some(String[] target, String source) {
+    private static void unset() {
+        GameDetector.rootGame = ParentGame.NULL;
+        GameDetector.subGame = ChildGame.NULL;
+    }
+
+    private static boolean some(String[] target, String source) {
         for (String str : target) {
             if (str.contains(source)) return true;
         }
         return false;
     }
 
-    private @Nullable String find(String[] target, String source) {
+    private static @Nullable String find(String[] target, String source) {
         for (String str : target) {
             if (str.contains(source)) return str;
         }

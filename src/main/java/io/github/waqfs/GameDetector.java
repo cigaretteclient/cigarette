@@ -38,12 +38,16 @@ public class GameDetector implements ClientModInitializer {
                 }
                 case "MURDER MYSTERY" -> {
                     GameDetector.rootGame = ParentGame.MURDER_MYSTERY;
-                    if (this.some(rowsText, "Detective")) {
-                        GameDetector.subGame = ChildGame.CLASSIC_MYSTERY;
-                    } else if (this.some(rowsText, "Infected")) {
-                        GameDetector.subGame = ChildGame.INFECTION_MYSTERY;
-                    } else if (this.some(rowsText, "Bow #1")) {
-                        GameDetector.subGame = ChildGame.DOUBLE_UP_MYSTERY;
+                    if (this.some(rowsText, "Time Left")) {
+                        if (this.some(rowsText, "Detective:") || this.some(rowsText, "Bow:")) {
+                            GameDetector.subGame = ChildGame.CLASSIC_MYSTERY;
+                        } else if (this.some(rowsText, "Infected")) {
+                            GameDetector.subGame = ChildGame.INFECTION_MYSTERY;
+                        } else if (this.some(rowsText, "Bow #1")) {
+                            GameDetector.subGame = ChildGame.DOUBLE_UP_MYSTERY;
+                        } else {
+                            GameDetector.subGame = ChildGame.NULL;
+                        }
                     } else {
                         GameDetector.subGame = ChildGame.NULL;
                     }

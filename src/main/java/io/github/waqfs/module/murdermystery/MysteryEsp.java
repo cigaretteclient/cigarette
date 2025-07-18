@@ -2,10 +2,14 @@ package io.github.waqfs.module.murdermystery;
 
 import io.github.waqfs.GameDetector;
 import io.github.waqfs.lib.Glow;
+import io.github.waqfs.lib.PlayerEntityL;
+import io.github.waqfs.lib.TextL;
 import io.github.waqfs.module.BaseModule;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 
 import java.util.HashMap;
 import java.util.UUID;
@@ -20,13 +24,32 @@ public class MysteryEsp extends BaseModule {
     public MysteryEsp() {
         super(MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
         ClientTickEvents.START_CLIENT_TICK.register(client -> {
-            if (GameDetector.subGame != GameDetector.ChildGame.CLASSIC_MYSTERY) {
+            if (GameDetector.rootGame != GameDetector.ParentGame.MURDER_MYSTERY || GameDetector.subGame == GameDetector.ChildGame.NULL) {
                 this.glowContext.removeAll();
                 this.uuidStates.clear();
                 return;
             }
             if (client.world == null) return;
             for (PlayerEntity playerEntity : client.world.getPlayers()) {
+                if (playerEntity.getEyeY() - playerEntity.getY() <= 0.3) {
+                    this.removeState(playerEntity);
+                    continue;
+                }
+                ItemStack item = PlayerEntityL.getHeldItem(playerEntity);
+                if (item != null) {
+                    if (item.isOf(Items.FILLED_MAP)) continue;
+                    if (item.isOf(Items.GOLD_INGOT)) continue;
+                    if (item.isOf(Items.ARMOR_STAND)) continue;
+                    if (item.isOf(Items.ARROW) || item.isOf(Items.BOW)) {
+                        this.setDetective(playerEntity);
+                        continue;
+                    }
+                    String itemName = TextL.toColorCodedString(item.getFormattedName());
+                    if (itemName.startsWith("§r§a")) {
+                        this.setMurderer(playerEntity);
+                        continue;
+                    }
+                }
                 this.setInnocent(playerEntity);
             }
         });
@@ -55,6 +78,12 @@ public class MysteryEsp extends BaseModule {
         }
         this.uuidStates.put(uuid, Role.DETECTIVE);
         this.glowContext.addGlow(uuid, 0x00FF00);
+    }
+
+    private void removeState(Entity entity) {
+        UUID uuid = entity.getUuid();
+        this.uuidStates.remove(uuid);
+        this.glowContext.removeGlow(uuid);
     }
 
     private enum Role {

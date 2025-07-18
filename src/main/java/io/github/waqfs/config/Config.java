@@ -3,13 +3,14 @@ package io.github.waqfs.config;
 import io.github.waqfs.gui.instance.Category;
 import io.github.waqfs.module.keybind.AddGlassBlock;
 import io.github.waqfs.module.keybind.BreakBlock;
+import io.github.waqfs.module.keybind.VClip;
 
 public class Config {
-    public Category category1 = new Category("Keybinds", 10, 10);
+    public Category keybinds = new Category("Keybinds", 10, 10);
 
-    public Category[] allCategories = new Category[]{category1};
+    public Category[] allCategories = new Category[]{keybinds};
 
     public Config() {
-        this.category1.attach(new AddGlassBlock(), new BreakBlock());
+        this.keybinds.attach(new AddGlassBlock(), new BreakBlock(), new VClip());
     }
 }

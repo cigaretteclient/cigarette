@@ -32,12 +32,16 @@ public class GameDetector {
             }
             case "MURDER MYSTERY" -> {
                 GameDetector.rootGame = ParentGame.MURDER_MYSTERY;
-                if (GameDetector.some(rowsText, "Detective")) {
-                    GameDetector.subGame = ChildGame.CLASSIC_MYSTERY;
-                } else if (GameDetector.some(rowsText, "Infected")) {
-                    GameDetector.subGame = ChildGame.INFECTION_MYSTERY;
-                } else if (GameDetector.some(rowsText, "Bow #1")) {
-                    GameDetector.subGame = ChildGame.DOUBLE_UP_MYSTERY;
+                if (GameDetector.some(rowsText, "Time Left")) {
+                    if (GameDetector.some(rowsText, "Detective:") || GameDetector.some(rowsText, "Bow:")) {
+                        GameDetector.subGame = ChildGame.CLASSIC_MYSTERY;
+                    } else if (GameDetector.some(rowsText, "Infected")) {
+                        GameDetector.subGame = ChildGame.INFECTION_MYSTERY;
+                    } else if (GameDetector.some(rowsText, "Bow #1")) {
+                        GameDetector.subGame = ChildGame.DOUBLE_UP_MYSTERY;
+                    } else {
+                        GameDetector.subGame = ChildGame.NULL;
+                    }
                 } else {
                     GameDetector.subGame = ChildGame.NULL;
                 }

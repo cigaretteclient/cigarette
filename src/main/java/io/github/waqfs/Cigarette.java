@@ -2,6 +2,7 @@ package io.github.waqfs;
 
 import io.github.waqfs.config.Config;
 import io.github.waqfs.config.FileSystem;
+import io.github.waqfs.lib.ChatLogger;
 import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +14,7 @@ public class Cigarette implements ModInitializer {
     // It is considered best practice to use your mod id as the logger's name.
     // That way, it's clear which mod wrote info, warnings, and errors.
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+    public static final ChatLogger CHAT_LOGGER = new ChatLogger();
 
     public static Config CONFIG = new Config();
 

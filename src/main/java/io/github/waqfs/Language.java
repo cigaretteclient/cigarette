@@ -1,8 +1,17 @@
 package io.github.waqfs;
 
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.suggestion.SuggestionProvider;
+import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientCommandSource;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.resource.Resource;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
@@ -12,11 +21,35 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 public class Language implements ClientModInitializer {
     private static final HashMap<Lang, LanguageMapping> LANGUAGE_MAP = new HashMap<>();
     private static final Lang[] SUPPORTED_LANGUAGES = new Lang[]{Lang.ENGLISH};
     private static Lang SELECTED_LANGUAGE = Lang.ENGLISH;
+
+    private static int setLang(CommandContext<ClientCommandSource> context) {
+        String lang = StringArgumentType.getString(context, "lang");
+        ClientPlayerEntity player = MinecraftClient.getInstance().player;
+        if (player == null) {
+            return 1;
+        }
+        boolean set = false;
+        for (Lang supportedLang : SUPPORTED_LANGUAGES) {
+            if (supportedLang.getId().equals(lang)) {
+                SELECTED_LANGUAGE = supportedLang;
+                set = true;
+                break;
+            }
+        }
+        if (set) {
+            Cigarette.CHAT_LOGGER.info("Updated language to " + lang + ".");
+        } else {
+            Cigarette.CHAT_LOGGER.info("Language not supported.");
+        }
+        MinecraftClient.getInstance().player.networkHandler.sendChatCommand("language " + lang);
+        return 1;
+    }
 
     @Override
     public void onInitializeClient() {
@@ -38,6 +71,9 @@ public class Language implements ClientModInitializer {
                 }
                 LANGUAGE_MAP.put(supportedLang, new LanguageMapping(supportedLang, phrases));
             }
+        });
+        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
+            dispatcher.register(ClientCommandManager.literal("lang").then(ClientCommandManager.argument("lang", StringArgumentType.string()).suggests((SuggestionProvider) new LanguageSuggestionProvider()).executes(Language::setLang)));
         });
     }
 
@@ -67,6 +103,16 @@ public class Language implements ClientModInitializer {
 
         public String getPhrase(Phrase phrase) {
             return this.map.getOrDefault(phrase, "undefined");
+        }
+    }
+
+    private static class LanguageSuggestionProvider implements SuggestionProvider<ClientCommandSource> {
+        @Override
+        public CompletableFuture<Suggestions> getSuggestions(CommandContext<ClientCommandSource> context, SuggestionsBuilder builder) {
+            for (Lang lang : SUPPORTED_LANGUAGES) {
+                builder.suggest(lang.getId());
+            }
+            return builder.buildFuture();
         }
     }
 

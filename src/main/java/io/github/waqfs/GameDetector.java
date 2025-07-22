@@ -15,6 +15,13 @@ public class GameDetector {
             return;
         }
 
+        final String BEDWARS_RED = Language.getPhrase(Language.Phrase.DETECTOR_BEDWARS_RED);
+        final String MYSTERY_TIMELEFT = Language.getPhrase(Language.Phrase.DETECTOR_MYSTERY_TIMELEFT);
+        final String MYSTERY_DETECTIVE = Language.getPhrase(Language.Phrase.DETECTOR_MYSTERY_DETECTIVE);
+        final String MYSTERY_BOW = Language.getPhrase(Language.Phrase.DETECTOR_MYSTERY_BOW);
+        final String MYSTERY_INFECTED = Language.getPhrase(Language.Phrase.DETECTOR_MYSTERY_INFECTED);
+        final String MYSTERY_BOW1 = Language.getPhrase(Language.Phrase.DETECTOR_MYSTERY_BOW1);
+
         String headerText = ScoreboardL.getUnformattedHeader(client);
         String[] rowsText = ScoreboardL.getUnformattedRows(client);
         switch (headerText) {
@@ -24,7 +31,7 @@ public class GameDetector {
             }
             case "BED WARS" -> {
                 GameDetector.rootGame = ParentGame.BEDWARS;
-                if (GameDetector.some(rowsText, "Red")) {
+                if (GameDetector.some(rowsText, BEDWARS_RED)) {
                     GameDetector.subGame = ChildGame.INSTANCED_BEDWARS;
                 } else {
                     GameDetector.subGame = ChildGame.NULL;
@@ -32,12 +39,12 @@ public class GameDetector {
             }
             case "MURDER MYSTERY" -> {
                 GameDetector.rootGame = ParentGame.MURDER_MYSTERY;
-                if (GameDetector.some(rowsText, "Time Left")) {
-                    if (GameDetector.some(rowsText, "Detective:") || GameDetector.some(rowsText, "Bow:")) {
+                if (GameDetector.some(rowsText, MYSTERY_TIMELEFT)) {
+                    if (GameDetector.some(rowsText, MYSTERY_DETECTIVE) || GameDetector.some(rowsText, MYSTERY_BOW)) {
                         GameDetector.subGame = ChildGame.CLASSIC_MYSTERY;
-                    } else if (GameDetector.some(rowsText, "Infected")) {
+                    } else if (GameDetector.some(rowsText, MYSTERY_INFECTED)) {
                         GameDetector.subGame = ChildGame.INFECTION_MYSTERY;
-                    } else if (GameDetector.some(rowsText, "Bow #1")) {
+                    } else if (GameDetector.some(rowsText, MYSTERY_BOW1)) {
                         GameDetector.subGame = ChildGame.DOUBLE_UP_MYSTERY;
                     } else {
                         GameDetector.subGame = ChildGame.NULL;

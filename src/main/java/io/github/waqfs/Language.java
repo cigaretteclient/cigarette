@@ -5,6 +5,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+import io.github.waqfs.config.FileSystem;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
@@ -28,20 +29,28 @@ public class Language implements ClientModInitializer {
     private static final Lang[] SUPPORTED_LANGUAGES = new Lang[]{Lang.ENGLISH};
     private static Lang SELECTED_LANGUAGE = Lang.ENGLISH;
 
+    private static void saveToConfig() {
+        FileSystem.updateState("language", SELECTED_LANGUAGE.getId());
+    }
+
+    private static boolean trySetLang(String lang) {
+        for (Lang supportedLang : SUPPORTED_LANGUAGES) {
+            if (supportedLang.getId().equals(lang)) {
+                SELECTED_LANGUAGE = supportedLang;
+                saveToConfig();
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static int setLang(CommandContext<ClientCommandSource> context) {
         String lang = StringArgumentType.getString(context, "lang");
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         if (player == null) {
             return 1;
         }
-        boolean set = false;
-        for (Lang supportedLang : SUPPORTED_LANGUAGES) {
-            if (supportedLang.getId().equals(lang)) {
-                SELECTED_LANGUAGE = supportedLang;
-                set = true;
-                break;
-            }
-        }
+        boolean set = trySetLang(lang);
         if (set) {
             Cigarette.CHAT_LOGGER.info("Updated language to " + lang + ".");
         } else {
@@ -53,6 +62,13 @@ public class Language implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        FileSystem.registerUpdate("language", newState -> {
+            if (newState instanceof String) {
+                trySetLang((String) newState);
+            } else {
+                saveToConfig();
+            }
+        });
         ClientLifecycleEvents.CLIENT_STARTED.register(event -> {
             ResourceManager manager = MinecraftClient.getInstance().getResourceManager();
             for (Lang supportedLang : SUPPORTED_LANGUAGES) {

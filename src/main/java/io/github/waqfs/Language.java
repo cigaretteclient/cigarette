@@ -26,7 +26,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class Language implements ClientModInitializer {
     private static final HashMap<Lang, LanguageMapping> LANGUAGE_MAP = new HashMap<>();
-    private static final Lang[] SUPPORTED_LANGUAGES = new Lang[]{Lang.ENGLISH};
+    private static final Lang[] SUPPORTED_LANGUAGES = new Lang[]{Lang.ENGLISH, Lang.SPANISH};
     private static Lang SELECTED_LANGUAGE = Lang.ENGLISH;
 
     private static void saveToConfig() {
@@ -35,7 +35,7 @@ public class Language implements ClientModInitializer {
 
     private static boolean trySetLang(String lang) {
         for (Lang supportedLang : SUPPORTED_LANGUAGES) {
-            if (supportedLang.getId().equals(lang)) {
+            if (supportedLang.getId().equals(lang.toUpperCase())) {
                 SELECTED_LANGUAGE = supportedLang;
                 saveToConfig();
                 return true;
@@ -133,7 +133,7 @@ public class Language implements ClientModInitializer {
     }
 
     public enum Lang {
-        ENGLISH("ENGLISH", "lang/english.lang");
+        ENGLISH("ENGLISH", "lang/english.lang"), SPANISH("SPANISH", "lang/spanish.lang");
         private final String id;
         private final String resourcePath;
 

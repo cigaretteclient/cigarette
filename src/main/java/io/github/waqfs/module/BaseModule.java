@@ -6,9 +6,8 @@ import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class BaseModule {
-    private boolean state = false;
+    protected boolean state = false;
     private final String key;
-
     public ToggleOptionsWidget widget;
 
     public void enable() {

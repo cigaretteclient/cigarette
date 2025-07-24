@@ -4,16 +4,19 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import io.github.waqfs.GameDetector;
 import io.github.waqfs.agent.BedwarsAgent;
 import io.github.waqfs.lib.Renderer;
-import io.github.waqfs.module.BaseModule;
+import io.github.waqfs.module.RenderModule;
 import io.github.waqfs.precomputed.PyramidQuadrant;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
+import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 
 import java.util.HashMap;
@@ -21,7 +24,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.OptionalDouble;
 
-public class DefenseViewer extends BaseModule {
+public class DefenseViewer extends RenderModule {
     protected static final String MODULE_NAME = "Defense Viewer";
     protected static final String MODULE_TOOLTIP = "ESPs bed blocks and the defensive blocks around them.";
     protected static final String MODULE_ID = "bedwars.defenseesp";
@@ -66,57 +69,63 @@ public class DefenseViewer extends BaseModule {
 
     public DefenseViewer() {
         super(MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
-        ClientTickEvents.START_CLIENT_TICK.register(client -> {
-            if (!this.isEnabled() || client.world == null || client.player == null || GameDetector.rootGame != GameDetector.ParentGame.BEDWARS || GameDetector.subGame != GameDetector.ChildGame.INSTANCED_BEDWARS) {
-                return;
-            }
-            HashSet<BedwarsAgent.PersistentBed> beds = BedwarsAgent.getVisibleBeds();
+    }
 
-            bedBlocks.clear();
-            defensiveBlocks.clear();
-            for (BedwarsAgent.PersistentBed bed : beds) {
-                boolean playerClose = bed.head().isWithinDistance(client.player.getPos(), 10);
-                if (playerClose) {
-                    bedBlocks.add(bed.head());
-                    bedBlocks.add(bed.foot());
-                    continue;
-                }
-                HashSet<BlockPos> blocksInLayer = this.getBlocksInLayer(bed, this.layer);
-                for (BlockPos pos : blocksInLayer) {
-                    BlockState state = client.world.getBlockState(pos);
-                    int color = getColorFromBlockState(state);
-                    if (color != 0) defensiveBlocks.put(pos, color);
-                }
-            }
-        });
-        WorldRenderEvents.BEFORE_DEBUG_RENDER.register(ctx -> {
-            if (!this.isEnabled() || GameDetector.rootGame != GameDetector.ParentGame.BEDWARS || GameDetector.subGame != GameDetector.ChildGame.INSTANCED_BEDWARS) {
-                return;
-            }
-            MatrixStack matrixStack = ctx.matrixStack();
-            if (matrixStack == null) return;
-            matrixStack.push();
+    @Override
+    protected void onWorldRender(WorldRenderContext ctx, @NotNull MatrixStack matrixStack) {
+        matrixStack.push();
 
-            Matrix4f matrix = Renderer.getCameraTranslatedMatrix(matrixStack, ctx);
+        Matrix4f matrix = Renderer.getCameraTranslatedMatrix(matrixStack, ctx);
 
-            Tessellator tessellator = Tessellator.getInstance();
-            BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+        Tessellator tessellator = Tessellator.getInstance();
+        BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
 
-            for (BlockPos pos : bedBlocks) {
-                Renderer.drawYQuad(buffer, matrix, 0xFFFF0000, pos.getY() + 0.5f, pos.getX(), pos.getZ(), pos.getX() + 1f, pos.getZ() + 1f);
-                Renderer.drawYQuad(buffer, matrix, 0xFFFF0000, pos.getY(), pos.getX(), pos.getZ(), pos.getX() + 1f, pos.getZ() + 1f);
-                Renderer.drawXQuad(buffer, matrix, 0xFFFF0000, pos.getX(), pos.getY(), pos.getZ(), pos.getY() + 0.5f, pos.getZ() + 1f);
-                Renderer.drawXQuad(buffer, matrix, 0xFFFF0000, pos.getX() + 1f, pos.getY(), pos.getZ(), pos.getY() + 0.5f, pos.getZ() + 1f);
-                Renderer.drawZQuad(buffer, matrix, 0xFFFF0000, pos.getZ(), pos.getX(), pos.getY(), pos.getX() + 1f, pos.getY() + 0.5f);
-                Renderer.drawZQuad(buffer, matrix, 0xFFFF0000, pos.getZ() + 1f, pos.getX(), pos.getY(), pos.getX() + 1f, pos.getY() + 0.5f);
+        for (BlockPos pos : bedBlocks) {
+            Renderer.drawYQuad(buffer, matrix, 0xFFFF0000, pos.getY() + 0.5f, pos.getX(), pos.getZ(), pos.getX() + 1f, pos.getZ() + 1f);
+            Renderer.drawYQuad(buffer, matrix, 0xFFFF0000, pos.getY(), pos.getX(), pos.getZ(), pos.getX() + 1f, pos.getZ() + 1f);
+            Renderer.drawXQuad(buffer, matrix, 0xFFFF0000, pos.getX(), pos.getY(), pos.getZ(), pos.getY() + 0.5f, pos.getZ() + 1f);
+            Renderer.drawXQuad(buffer, matrix, 0xFFFF0000, pos.getX() + 1f, pos.getY(), pos.getZ(), pos.getY() + 0.5f, pos.getZ() + 1f);
+            Renderer.drawZQuad(buffer, matrix, 0xFFFF0000, pos.getZ(), pos.getX(), pos.getY(), pos.getX() + 1f, pos.getY() + 0.5f);
+            Renderer.drawZQuad(buffer, matrix, 0xFFFF0000, pos.getZ() + 1f, pos.getX(), pos.getY(), pos.getX() + 1f, pos.getY() + 0.5f);
+        }
+        for (Map.Entry<BlockPos, Integer> entry : defensiveBlocks.entrySet()) {
+            Renderer.drawBlock(buffer, matrix, entry.getValue(), entry.getKey());
+        }
+
+        BuiltBuffer built = buffer.endNullable();
+        if (built != null) RENDER_LAYER.draw(built);
+        matrixStack.pop();
+    }
+
+    @Override
+    protected void onEnabledTick(MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
+        this.bedBlocks.clear();
+        this.defensiveBlocks.clear();
+        HashSet<BedwarsAgent.PersistentBed> beds = BedwarsAgent.getVisibleBeds();
+        for (BedwarsAgent.PersistentBed bed : beds) {
+            boolean playerClose = bed.head().isWithinDistance(player.getPos(), 10);
+            if (playerClose) {
+                bedBlocks.add(bed.head());
+                bedBlocks.add(bed.foot());
+                continue;
             }
-            for (Map.Entry<BlockPos, Integer> entry : defensiveBlocks.entrySet()) {
-                Renderer.drawBlock(buffer, matrix, entry.getValue(), entry.getKey());
+            HashSet<BlockPos> blocksInLayer = this.getBlocksInLayer(bed, this.layer);
+            for (BlockPos pos : blocksInLayer) {
+                BlockState state = world.getBlockState(pos);
+                int color = getColorFromBlockState(state);
+                if (color != 0) defensiveBlocks.put(pos, color);
             }
+        }
+    }
 
-            BuiltBuffer built = buffer.endNullable();
-            if (built != null) RENDER_LAYER.draw(built);
-            matrixStack.pop();
-        });
+    @Override
+    protected void onDisabledTick(MinecraftClient client) {
+        this.bedBlocks.clear();
+        this.defensiveBlocks.clear();
+    }
+
+    @Override
+    protected boolean inValidGame() {
+        return GameDetector.rootGame == GameDetector.ParentGame.BEDWARS && GameDetector.subGame == GameDetector.ChildGame.INSTANCED_BEDWARS;
     }
 }

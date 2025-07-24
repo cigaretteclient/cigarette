@@ -17,11 +17,12 @@ public class PlayerESP extends BaseModule {
     public PlayerESP() {
         super(MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
         ClientTickEvents.START_CLIENT_TICK.register(client -> {
+            this.glowContext.removeAll();
+
             if (!this.isEnabled() || GameDetector.rootGame != GameDetector.ParentGame.BEDWARS || GameDetector.subGame != GameDetector.ChildGame.INSTANCED_BEDWARS)
                 return;
             if (client.world == null) return;
 
-            this.glowContext.removeAll();
             for (PlayerEntity playerEntity : client.world.getPlayers()) {
                 UUID uuid = playerEntity.getUuid();
                 int teamColor = playerEntity.getTeamColorValue();

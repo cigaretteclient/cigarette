@@ -13,6 +13,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 
 public class Renderer {
     public static final RenderPipeline BLOCK_ESP = RenderPipelines.register(RenderPipeline.builder(RenderPipelines.POSITION_COLOR_SNIPPET).withLocation("pipeline/cigarette.blockesp").withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.QUADS).withCull(false).withBlend(BlendFunction.TRANSLUCENT).withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST).build());
@@ -31,6 +32,43 @@ public class Renderer {
         drawWestBlockFace(buffer, matrix, argb, pos);
         drawUpBlockFace(buffer, matrix, argb, pos);
         drawDownBlockFace(buffer, matrix, argb, pos);
+    }
+
+    public static void drawCube(BufferBuilder buffer, Matrix4f matrix, int argb, Vec3d pos, float width) {
+        float radius = width / 2;
+        drawXQuad(buffer, matrix, argb, (float) pos.x - radius, (float) pos.y - radius, (float) pos.z - radius, (float) pos.y + radius, (float) pos.z + radius);
+        drawXQuad(buffer, matrix, argb, (float) pos.x + radius, (float) pos.y - radius, (float) pos.z - radius, (float) pos.y + radius, (float) pos.z + radius);
+        drawYQuad(buffer, matrix, argb, (float) pos.y - radius, (float) pos.x - radius, (float) pos.z - radius, (float) pos.x + radius, (float) pos.z + radius);
+        drawYQuad(buffer, matrix, argb, (float) pos.y + radius, (float) pos.x - radius, (float) pos.z - radius, (float) pos.x + radius, (float) pos.z + radius);
+        drawZQuad(buffer, matrix, argb, (float) pos.z - radius, (float) pos.x - radius, (float) pos.y - radius, (float) pos.x + radius, (float) pos.y + radius);
+        drawZQuad(buffer, matrix, argb, (float) pos.z + radius, (float) pos.x - radius, (float) pos.y - radius, (float) pos.x + radius, (float) pos.y + radius);
+    }
+
+    public static void drawFakeLine(BufferBuilder buffer, Matrix4f matrix, int argb, Vector3f start, Vector3f end, float thickness) {
+        buffer.vertex(matrix, start.x - thickness, start.y - thickness, start.z - thickness).color(argb);
+        buffer.vertex(matrix, end.x - thickness, end.y - thickness, end.z - thickness).color(argb);
+        buffer.vertex(matrix, end.x - thickness, end.y + thickness, end.z - thickness).color(argb);
+        buffer.vertex(matrix, start.x - thickness, start.y + thickness, start.z - thickness).color(argb);
+        buffer.vertex(matrix, start.x + thickness, start.y - thickness, start.z + thickness).color(argb);
+        buffer.vertex(matrix, end.x + thickness, end.y - thickness, end.z + thickness).color(argb);
+        buffer.vertex(matrix, end.x + thickness, end.y + thickness, end.z + thickness).color(argb);
+        buffer.vertex(matrix, start.x + thickness, start.y + thickness, start.z + thickness).color(argb);
+        buffer.vertex(matrix, start.x - thickness, start.y + thickness, start.z - thickness).color(argb);
+        buffer.vertex(matrix, end.x - thickness, end.y + thickness, end.z - thickness).color(argb);
+        buffer.vertex(matrix, end.x + thickness, end.y + thickness, end.z + thickness).color(argb);
+        buffer.vertex(matrix, start.x + thickness, start.y + thickness, start.z + thickness).color(argb);
+        buffer.vertex(matrix, start.x - thickness, start.y - thickness, start.z - thickness).color(argb);
+        buffer.vertex(matrix, end.x - thickness, end.y - thickness, end.z - thickness).color(argb);
+        buffer.vertex(matrix, end.x + thickness, end.y - thickness, end.z + thickness).color(argb);
+        buffer.vertex(matrix, start.x + thickness, start.y - thickness, start.z + thickness).color(argb);
+        buffer.vertex(matrix, start.x - thickness, start.y - thickness, start.z - thickness).color(argb);
+        buffer.vertex(matrix, start.x - thickness, start.y + thickness, start.z - thickness).color(argb);
+        buffer.vertex(matrix, start.x + thickness, start.y + thickness, start.z + thickness).color(argb);
+        buffer.vertex(matrix, start.x + thickness, start.y - thickness, start.z + thickness).color(argb);
+        buffer.vertex(matrix, end.x - thickness, end.y - thickness, end.z - thickness).color(argb);
+        buffer.vertex(matrix, end.x - thickness, end.y + thickness, end.z - thickness).color(argb);
+        buffer.vertex(matrix, end.x + thickness, end.y + thickness, end.z + thickness).color(argb);
+        buffer.vertex(matrix, end.x + thickness, end.y - thickness, end.z + thickness).color(argb);
     }
 
     public static void drawBlockFace(BufferBuilder buffer, Matrix4f matrix, int argb, BlockPos pos, Direction direction) {

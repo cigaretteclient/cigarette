@@ -26,7 +26,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class Language implements ClientModInitializer {
     private static final HashMap<Lang, LanguageMapping> LANGUAGE_MAP = new HashMap<>();
-    private static final Lang[] SUPPORTED_LANGUAGES = new Lang[]{Lang.ENGLISH, Lang.SPANISH};
+    private static final Lang[] SUPPORTED_LANGUAGES = new Lang[]{Lang.ENGLISH, Lang.SPANISH, Lang.CHINESE_SIMPLIFIED, Lang.CHINESE_TRADITIONAL, Lang.CZECH, Lang.DANISH, Lang.DUTCH, Lang.FINNISH, Lang.FRENCH, Lang.GERMAN, Lang.HUNGARIAN, Lang.ITALIAN, Lang.JAPANESE, Lang.KOREAN, Lang.NORWEGIAN, Lang.PIRATE, Lang.POLISH, Lang.PORTUGUESE_BR, Lang.PORTUGUESE_PT, Lang.ROMANIAN, Lang.RUSSIAN, Lang.SWEDISH, Lang.TURKISH, Lang.UKRAINIAN};
     private static Lang SELECTED_LANGUAGE = Lang.ENGLISH;
 
     private static void saveToConfig() {
@@ -133,7 +133,8 @@ public class Language implements ClientModInitializer {
     }
 
     public enum Lang {
-        ENGLISH("ENGLISH", "lang/english.lang"), SPANISH("SPANISH", "lang/spanish.lang");
+        ENGLISH("ENGLISH", "lang/english.lang"), SPANISH("SPANISH", "lang/spanish.lang"), CHINESE_SIMPLIFIED("CHINESE_SIMPLIFIED", "lang/chinese_simplified.lang"), CHINESE_TRADITIONAL("CHINESE_TRADITIONAL", "lang/chinese_traditional.lang"), CZECH("CZECH", "lang/czech.lang"), DANISH("DANISH", "lang/danish.lang"), DUTCH("DUTCH", "lang/dutch.lang"), FINNISH("FINNISH", "lang/finnish.lang"), FRENCH("FRENCH", "lang/french.lang"), GERMAN("GERMAN", "lang/german.lang"), HUNGARIAN("HUNGARIAN", "lang/hungarian.lang"), ITALIAN("ITALIAN", "lang/italian.lang"), JAPANESE("JAPANESE", "lang/japanese.lang"), KOREAN("KOREAN", "lang/korean.lang"), NORWEGIAN("NORWEGIAN", "lang/norwegian.lang"), PIRATE("PIRATE", "lang/pirate.lang"), POLISH("POLISH", "lang/polish.lang"), PORTUGUESE_BR("PORTUGUESE_BR", "lang/portuguese_br.lang"), PORTUGUESE_PT("PORTUGUESE_PT", "lang/portuguese_pt.lang"), ROMANIAN("ROMANIAN", "lang/romanian.lang"), RUSSIAN("RUSSIAN", "lang/russian.lang"), SWEDISH("SWEDISH", "lang/swedish.lang"), TURKISH("TURKISH", "lang/turkish.lang"), UKRAINIAN("UKRAINIAN", "lang/ukrainian.lang");
+
         private final String id;
         private final String resourcePath;
 
@@ -153,6 +154,7 @@ public class Language implements ClientModInitializer {
 
     public enum Phrase {
         DETECTOR_BEDWARS_RED("gamedetector.bedwars.red"), DETECTOR_MYSTERY_TIMELEFT("gamedetector.murdermystery.timeleft"), DETECTOR_MYSTERY_DETECTIVE("gamedetector.murdermystery.detective"), DETECTOR_MYSTERY_BOW("gamedetector.murdermystery.bow"), DETECTOR_MYSTERY_INFECTED("gamedetector.murdermystery.infected"), DETECTOR_MYSTERY_BOW1("gamedetector.murdermystery.bow1"), MYSTERY_KNIFE("murdermystery.knife");
+
         private final String key;
 
         Phrase(String key) {

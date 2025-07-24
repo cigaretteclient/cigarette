@@ -1,6 +1,7 @@
 package io.github.waqfs.agent;
 
 import io.github.waqfs.GameDetector;
+import io.github.waqfs.Language;
 import io.github.waqfs.lib.PlayerEntityL;
 import io.github.waqfs.lib.TextL;
 import net.fabricmc.api.ClientModInitializer;
@@ -28,6 +29,7 @@ public class MurderMysteryAgent implements ClientModInitializer {
             }
 
             this.cleanupAvailableGold();
+            String[] knives = Language.getPhraseFromAll(Language.Phrase.MYSTERY_KNIFE);
 
             for (Entity entity : client.world.getEntities()) {
                 if (entity instanceof PlayerEntity player) {
@@ -35,15 +37,19 @@ public class MurderMysteryAgent implements ClientModInitializer {
 
                     ItemStack item = PlayerEntityL.getHeldItem(player);
                     if (item == null) continue;
-                    if (this.isNeutralItem(item)) continue;
                     if (this.isDetectiveItem(item)) {
                         existingPlayer.setDetective();
                         continue;
                     }
 
                     String itemName = TextL.toColorCodedString(item.getFormattedName());
-                    if (itemName.startsWith("§r§a")) {
-                        existingPlayer.setMurderer();
+                    if (!itemName.startsWith("§r§a")) continue;
+                    String knifeLang = itemName.substring(4);
+                    for (String knife : knives) {
+                        if (knife.equals(knifeLang)) {
+                            existingPlayer.setMurderer();
+                            break;
+                        }
                     }
                     continue;
                 }
@@ -81,18 +87,6 @@ public class MurderMysteryAgent implements ClientModInitializer {
         for (AvailableGold gold : scheduleGold) {
             availableGold.remove(gold);
         }
-    }
-
-    private boolean isNeutralItem(ItemStack item) {
-        if (item.isOf(Items.FILLED_MAP)) return true;
-        if (item.isOf(Items.GOLD_INGOT)) return true;
-        if (item.isOf(Items.ARMOR_STAND)) return true;
-        if (item.isOf(Items.FIREWORK_STAR)) return true;
-        if (item.isOf(Items.BLUE_STAINED_GLASS)) return true;
-        if (item.isOf(Items.COMPASS)) return true;
-        if (item.isOf(Items.COMPARATOR)) return true;
-        if (item.isOf(Items.RED_BED)) return true;
-        return false;
     }
 
     private boolean isDetectiveItem(ItemStack item) {

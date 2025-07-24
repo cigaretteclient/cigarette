@@ -19,6 +19,7 @@
       "io.github.waqfs.Cigarette"
     ],
     "client": [
+      "io.github.waqfs.Language",
       "io.github.waqfs.gui.KeyBinding",
       "io.github.waqfs.agent.BedwarsAgent",
       "io.github.waqfs.agent.MurderMysteryAgent",

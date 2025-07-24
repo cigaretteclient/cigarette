@@ -47,8 +47,9 @@ public abstract class BaseModule {
             FileSystem.updateState(this.key, newState);
         });
         FileSystem.registerUpdate(key, newState -> {
-            this.state = newState;
-            this.widget.setState(newState);
+            if (!(newState instanceof Boolean)) return;
+            this.state = (Boolean) newState;
+            this.widget.setState(this.state);
         });
     }
 

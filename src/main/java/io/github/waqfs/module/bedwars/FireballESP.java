@@ -2,6 +2,7 @@ package io.github.waqfs.module.bedwars;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
 import io.github.waqfs.GameDetector;
+import io.github.waqfs.lib.Glow;
 import io.github.waqfs.lib.Renderer;
 import io.github.waqfs.module.BaseModule;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -23,6 +24,7 @@ public class FireballESP extends BaseModule {
     protected static final String MODULE_ID = "bedwars.fireballesp";
     private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockesp", 1536, Renderer.BLOCK_ESP, RenderLayer.MultiPhaseParameters.builder().build(false));
     private final HashSet<Fireball> fireballs = new HashSet<>();
+    private final Glow.Context glowContext = new Glow.Context();
 
     public FireballESP() {
         super(MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
@@ -56,6 +58,7 @@ public class FireballESP extends BaseModule {
                     }
                 }
                 fireballs.add(fireball);
+                glowContext.addGlow(entityfb.getUuid(), 0xFF0000);
             }
         });
         WorldRenderEvents.BEFORE_DEBUG_RENDER.register(ctx -> {
@@ -86,6 +89,7 @@ public class FireballESP extends BaseModule {
 
     private void unset() {
         this.fireballs.clear();
+        this.glowContext.removeAll();
     }
 
     private static class Fireball {

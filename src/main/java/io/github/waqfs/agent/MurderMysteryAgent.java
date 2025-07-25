@@ -4,66 +4,23 @@ import io.github.waqfs.GameDetector;
 import io.github.waqfs.Language;
 import io.github.waqfs.lib.PlayerEntityL;
 import io.github.waqfs.lib.TextL;
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.UUID;
 
-public class MurderMysteryAgent implements ClientModInitializer {
+public class MurderMysteryAgent extends BaseAgent {
     private static final HashMap<String, PersistentPlayer> persistentPlayers = new HashMap<>();
     private static final HashSet<AvailableGold> availableGold = new HashSet<>();
-
-    @Override
-    public void onInitializeClient() {
-        ClientTickEvents.START_CLIENT_TICK.register(client -> {
-            if (client.world == null || GameDetector.rootGame != GameDetector.ParentGame.MURDER_MYSTERY || GameDetector.subGame == GameDetector.ChildGame.NULL) {
-                this.unset();
-                return;
-            }
-
-            this.cleanupAvailableGold();
-            String[] knives = Language.getPhraseFromAll(Language.Phrase.MYSTERY_KNIFE);
-
-            for (Entity entity : client.world.getEntities()) {
-                if (entity instanceof PlayerEntity player) {
-                    PersistentPlayer existingPlayer = this.getOrCreatePersistentPlayer(player);
-
-                    ItemStack item = PlayerEntityL.getHeldItem(player);
-                    if (item == null) continue;
-                    if (this.isDetectiveItem(item)) {
-                        existingPlayer.setDetective();
-                        continue;
-                    }
-
-                    String itemName = TextL.toColorCodedString(item.getFormattedName());
-                    if (!itemName.startsWith("§r§a")) continue;
-                    String knifeLang = itemName.substring(4);
-                    for (String knife : knives) {
-                        if (knife.equals(knifeLang)) {
-                            existingPlayer.setMurderer();
-                            break;
-                        }
-                    }
-                    continue;
-                }
-                if (entity instanceof ItemEntity item) {
-                    ItemStack stack = item.getStack();
-                    if (stack.isOf(Items.GOLD_INGOT)) {
-                        if (this.goldExists(item)) continue;
-                        this.createGold(item);
-                        continue;
-                    }
-                }
-            }
-        });
-    }
 
     public static HashSet<PersistentPlayer> getVisiblePlayers() {
         HashSet<PersistentPlayer> visiblePlayers = new HashSet<>();
@@ -119,7 +76,52 @@ public class MurderMysteryAgent implements ClientModInitializer {
         availableGold.add(gold);
     }
 
-    private void unset() {
+
+    @Override
+    protected boolean inValidGame() {
+        return GameDetector.rootGame == GameDetector.ParentGame.MURDER_MYSTERY && GameDetector.subGame != GameDetector.ChildGame.NULL;
+    }
+
+    @Override
+    protected void onValidTick(MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
+        this.cleanupAvailableGold();
+        String[] knives = Language.getPhraseFromAll(Language.Phrase.MYSTERY_KNIFE);
+
+        for (Entity entity : world.getEntities()) {
+            if (entity instanceof PlayerEntity entityPlyaer) {
+                PersistentPlayer existingPlayer = this.getOrCreatePersistentPlayer(entityPlyaer);
+
+                ItemStack item = PlayerEntityL.getHeldItem(entityPlyaer);
+                if (item == null) continue;
+                if (this.isDetectiveItem(item)) {
+                    existingPlayer.setDetective();
+                    continue;
+                }
+
+                String itemName = TextL.toColorCodedString(item.getFormattedName());
+                if (!itemName.startsWith("§r§a")) continue;
+                String knifeLang = itemName.substring(4);
+                for (String knife : knives) {
+                    if (knife.equals(knifeLang)) {
+                        existingPlayer.setMurderer();
+                        break;
+                    }
+                }
+                continue;
+            }
+            if (entity instanceof ItemEntity item) {
+                ItemStack stack = item.getStack();
+                if (stack.isOf(Items.GOLD_INGOT)) {
+                    if (this.goldExists(item)) continue;
+                    this.createGold(item);
+                    continue;
+                }
+            }
+        }
+    }
+
+    @Override
+    protected void onInvalidTick(MinecraftClient client) {
         persistentPlayers.clear();
         availableGold.clear();
     }

@@ -1,31 +1,21 @@
 package io.github.waqfs.agent;
 
 import io.github.waqfs.GameDetector;
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.block.BedBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.HorizontalFacingBlock;
 import net.minecraft.block.enums.BedPart;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
 
-public class BedwarsAgent implements ClientModInitializer {
+public class BedwarsAgent extends BaseAgent {
     private static final HashSet<PersistentBed> persistentBeds = new HashSet<>();
-
-    @Override
-    public void onInitializeClient() {
-        ClientTickEvents.START_CLIENT_TICK.register(client -> {
-            if (client.world == null || GameDetector.rootGame != GameDetector.ParentGame.BEDWARS) {
-                this.unset();
-                return;
-            }
-        });
-    }
 
     public static HashSet<PersistentBed> getVisibleBeds() {
         HashSet<PersistentBed> visibleBeds = new HashSet<>();
@@ -61,7 +51,17 @@ public class BedwarsAgent implements ClientModInitializer {
         persistentBeds.add(new PersistentBed(isHead ? pos : otherBedPos, facing, isFoot ? pos : otherBedPos, facing.getOpposite()));
     }
 
-    private void unset() {
+    @Override
+    protected boolean inValidGame() {
+        return GameDetector.rootGame == GameDetector.ParentGame.BEDWARS;
+    }
+
+    @Override
+    protected void onValidTick(MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
+    }
+
+    @Override
+    protected void onInvalidTick(MinecraftClient client) {
         persistentBeds.clear();
     }
 

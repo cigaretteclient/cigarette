@@ -6,6 +6,7 @@ import io.github.waqfs.lib.Glow;
 import io.github.waqfs.lib.Renderer;
 import io.github.waqfs.module.RenderModule;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
+import net.minecraft.block.ShapeContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.*;
@@ -13,10 +14,13 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.projectile.FireballEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 
 import java.util.HashSet;
@@ -82,6 +86,22 @@ public class FireballESP extends RenderModule {
             fireballs.add(fireball);
             glowContext.addGlow(entityfb.getUuid(), 0xFF0000);
         }
+        ItemStack heldItem = player.getInventory().getSelectedStack();
+        if (heldItem.isOf(Items.FIRE_CHARGE)) {
+            Entity camera = client.getCameraEntity();
+            if (camera == null) return;
+            Vec3d start = player.getEyePos();
+            Vec3d end = start.add(camera.getRotationVector().multiply(1000));
+
+            RaycastContext ctx = new RaycastContext(start, end, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, ShapeContext.absent());
+            BlockHitResult result = world.raycast(ctx);
+            switch (result.getType()) {
+                case BLOCK, ENTITY -> {
+                    Vec3d collisionEnd = result.getPos();
+                    fireballs.add(new Fireball(null, -1, collisionEnd, collisionEnd, true));
+                }
+            }
+        }
     }
 
     @Override
@@ -96,13 +116,13 @@ public class FireballESP extends RenderModule {
     }
 
     private static class Fireball {
-        public final FireballEntity entity;
+        public final @Nullable FireballEntity entity;
         public final double time;
         public final Vec3d collisionPathStart;
         public final Vec3d collisionPathEnd;
         public final boolean collisionNearPlayer;
 
-        public Fireball(FireballEntity entity, double time, Vec3d start, Vec3d end, boolean nearPlayer) {
+        public Fireball(@Nullable FireballEntity entity, double time, Vec3d start, Vec3d end, boolean nearPlayer) {
             this.entity = entity;
             this.time = time;
             this.collisionPathStart = start;

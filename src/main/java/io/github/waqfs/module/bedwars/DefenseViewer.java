@@ -1,41 +1,47 @@
 package io.github.waqfs.module.bedwars;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
-import io.github.waqfs.GameDetector;
 import io.github.waqfs.agent.BedwarsAgent;
 import io.github.waqfs.lib.Renderer;
 import io.github.waqfs.module.RenderModule;
 import io.github.waqfs.precomputed.PyramidQuadrant;
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.render.*;
+import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.OptionalDouble;
 
-public class DefenseViewer extends RenderModule {
+public class DefenseViewer extends RenderModule implements ClientModInitializer {
     protected static final String MODULE_NAME = "Defense Viewer";
     protected static final String MODULE_TOOLTIP = "ESPs bed blocks and the defensive blocks around them.";
     protected static final String MODULE_ID = "bedwars.defenseesp";
     private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockesp", 1536, Renderer.BLOCK_ESP, RenderLayer.MultiPhaseParameters.builder().lineWidth(new RenderPhase.LineWidth(OptionalDouble.of(1))).build(false));
     private final HashSet<BlockPos> bedBlocks = new HashSet<>();
     private final HashMap<BlockPos, Integer> defensiveBlocks = new HashMap<>();
+    private static KeyBinding decreaseKeyBinding;
+    private static KeyBinding increaseKeyBinding;
     private int layer = 0;
 
 
     private HashSet<BlockPos> getBlocksInLayer(BedwarsAgent.PersistentBed bed, int layer) {
-        if (layer < 0 || layer >= PyramidQuadrant.MAX_LAYER) {
+        if (layer < 0 || layer > PyramidQuadrant.MAX_LAYER) {
             throw new ArrayIndexOutOfBoundsException("Layer must be between 0 and " + PyramidQuadrant.MAX_LAYER + ", given " + layer);
         }
 
@@ -69,6 +75,12 @@ public class DefenseViewer extends RenderModule {
 
     public DefenseViewer() {
         super(MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+    }
+
+    @Override
+    public void onInitializeClient() {
+        increaseKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding("increase_defense.bedwars.cigarette.waqfs", InputUtil.Type.KEYSYM, GLFW.GLFW_NOT_INITIALIZED, "bedwars.cigarette.waqfs"));
+        decreaseKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding("decrease_defense.bedwars.cigarette.waqfs", InputUtil.Type.KEYSYM, GLFW.GLFW_NOT_INITIALIZED, "bedwars.cigarette.waqfs"));
     }
 
     @Override
@@ -116,6 +128,14 @@ public class DefenseViewer extends RenderModule {
                 if (color != 0) defensiveBlocks.put(pos, color);
             }
         }
+        while (increaseKeyBinding.wasPressed()) {
+            this.layer = Math.min(this.layer + 1, PyramidQuadrant.MAX_LAYER);
+            System.out.println("layer = " + this.layer);
+        }
+        while (decreaseKeyBinding.wasPressed()) {
+            this.layer = Math.max(this.layer - 1, 0);
+            System.out.println("layer = " + this.layer);
+        }
     }
 
     @Override
@@ -124,8 +144,8 @@ public class DefenseViewer extends RenderModule {
         this.defensiveBlocks.clear();
     }
 
-    @Override
-    protected boolean inValidGame() {
-        return GameDetector.rootGame == GameDetector.ParentGame.BEDWARS && GameDetector.subGame == GameDetector.ChildGame.INSTANCED_BEDWARS;
-    }
+//    @Override
+//    protected boolean inValidGame() {
+//        return GameDetector.rootGame == GameDetector.ParentGame.BEDWARS && GameDetector.subGame == GameDetector.ChildGame.INSTANCED_BEDWARS;
+//    }
 }

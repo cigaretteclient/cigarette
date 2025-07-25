@@ -21,8 +21,6 @@
     "client": [
       "io.github.waqfs.Language",
       "io.github.waqfs.gui.KeyBinding",
-      "io.github.waqfs.agent.BedwarsAgent",
-      "io.github.waqfs.agent.MurderMysteryAgent",
       "io.github.waqfs.module.bedwars.DefenseViewer",
       "io.github.waqfs.module.keybind.BreakBlock",
       "io.github.waqfs.module.keybind.AddGlassBlock",

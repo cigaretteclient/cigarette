@@ -88,10 +88,11 @@ public class MurderMysteryAgent extends BaseAgent {
         String[] knives = Language.getPhraseFromAll(Language.Phrase.MYSTERY_KNIFE);
 
         for (Entity entity : world.getEntities()) {
-            if (entity instanceof PlayerEntity entityPlyaer) {
-                PersistentPlayer existingPlayer = this.getOrCreatePersistentPlayer(entityPlyaer);
+            if (entity instanceof PlayerEntity entityPlayer) {
+                if (entityPlayer.getY() < 0) continue;
+                PersistentPlayer existingPlayer = this.getOrCreatePersistentPlayer(entityPlayer);
 
-                ItemStack item = PlayerEntityL.getHeldItem(entityPlyaer);
+                ItemStack item = PlayerEntityL.getHeldItem(entityPlayer);
                 if (item == null) continue;
                 if (this.isDetectiveItem(item)) {
                     existingPlayer.setDetective();

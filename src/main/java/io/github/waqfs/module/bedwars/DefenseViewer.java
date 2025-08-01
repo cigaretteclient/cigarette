@@ -1,6 +1,7 @@
 package io.github.waqfs.module.bedwars;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
+import io.github.waqfs.GameDetector;
 import io.github.waqfs.agent.BedwarsAgent;
 import io.github.waqfs.lib.Renderer;
 import io.github.waqfs.module.RenderModule;
@@ -144,8 +145,8 @@ public class DefenseViewer extends RenderModule implements ClientModInitializer 
         this.defensiveBlocks.clear();
     }
 
-//    @Override
-//    protected boolean inValidGame() {
-//        return GameDetector.rootGame == GameDetector.ParentGame.BEDWARS && GameDetector.subGame == GameDetector.ChildGame.INSTANCED_BEDWARS;
-//    }
+    @Override
+    protected boolean inValidGame() {
+        return GameDetector.rootGame == GameDetector.ParentGame.BEDWARS && GameDetector.subGame == GameDetector.ChildGame.INSTANCED_BEDWARS;
+    }
 }

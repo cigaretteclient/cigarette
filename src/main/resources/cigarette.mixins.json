@@ -5,7 +5,8 @@
   "mixins": [
     "BedBlockMixin",
     "EntityMixin",
-    "ScoreboardMixin"
+    "ScoreboardMixin",
+    "PropertyMixin"
   ],
   "injectors": {
     "defaultRequire": 1

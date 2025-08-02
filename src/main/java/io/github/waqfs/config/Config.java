@@ -4,6 +4,7 @@ import io.github.waqfs.gui.instance.Category;
 import io.github.waqfs.module.bedwars.DefenseViewer;
 import io.github.waqfs.module.bedwars.FireballESP;
 import io.github.waqfs.module.bedwars.JumpReset;
+import io.github.waqfs.module.bedwars.PerfectHit;
 import io.github.waqfs.module.keybind.AddGlassBlock;
 import io.github.waqfs.module.keybind.BreakBlock;
 import io.github.waqfs.module.keybind.VClip;
@@ -19,6 +20,6 @@ public class Config {
     public Config() {
         this.keybinds.attach(new AddGlassBlock(), new BreakBlock(), new VClip());
         this.murderMystery.attach(new io.github.waqfs.module.murdermystery.PlayerESP(), new GoldESP());
-        this.bedwars.attach(new io.github.waqfs.module.bedwars.PlayerESP(), new FireballESP(), new DefenseViewer(), new JumpReset());
+        this.bedwars.attach(new io.github.waqfs.module.bedwars.PlayerESP(), new FireballESP(), new DefenseViewer(), new JumpReset(), new PerfectHit());
     }
 }

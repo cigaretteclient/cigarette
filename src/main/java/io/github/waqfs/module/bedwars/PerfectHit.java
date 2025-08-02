@@ -53,7 +53,6 @@ public class PerfectHit extends TickModule {
 
     @Override
     protected boolean inValidGame() {
-        return true;
-        // return GameDetector.rootGame == GameDetector.ParentGame.BEDWARS && GameDetector.subGame == GameDetector.ChildGame.INSTANCED_BEDWARS;
+        return GameDetector.rootGame == GameDetector.ParentGame.BEDWARS && GameDetector.subGame == GameDetector.ChildGame.INSTANCED_BEDWARS;
     }
 }

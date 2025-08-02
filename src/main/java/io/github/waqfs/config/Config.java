@@ -11,7 +11,7 @@ import io.github.waqfs.module.murdermystery.GoldESP;
 public class Config {
     public Category keybinds = new Category("Keybinds", 10, 10);
     public Category murderMystery = new Category("Murder Mystery", 120, 10);
-    public Category bedwars = new Category("Bedwars", 230, 10);
+    public Category bedwars = new Category("Bed Wars", 230, 10);
 
     public Category[] allCategories = new Category[]{keybinds, murderMystery, bedwars};
 

@@ -84,4 +84,6 @@ public class BedwarsAgent extends BaseAgent {
             return this.head.equals(pos) || this.foot.equals(pos);
         }
     }
+
+    public static boolean jumpResetEnabled = false;
 }

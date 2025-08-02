@@ -6,7 +6,8 @@
     "BedBlockMixin",
     "EntityMixin",
     "ScoreboardMixin",
-    "PropertyMixin"
+    "PropertyMixin",
+    "PlayerEntityMixin"
   ],
   "injectors": {
     "defaultRequire": 1

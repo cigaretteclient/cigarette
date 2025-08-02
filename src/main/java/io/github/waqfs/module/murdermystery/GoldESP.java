@@ -11,13 +11,13 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
 
-public class GoldEsp extends TickModule {
+public class GoldESP extends TickModule {
     protected static final String MODULE_NAME = "GoldESP";
     protected static final String MODULE_TOOLTIP = "Highlights all the gold ingots on the ground.";
     protected static final String MODULE_ID = "murdermystery.goldesp";
     private final Glow.Context glowContext = new Glow.Context();
 
-    public GoldEsp() {
+    public GoldESP() {
         super(MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
     }
 

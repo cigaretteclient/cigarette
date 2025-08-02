@@ -6,7 +6,7 @@ import io.github.waqfs.module.bedwars.FireballESP;
 import io.github.waqfs.module.keybind.AddGlassBlock;
 import io.github.waqfs.module.keybind.BreakBlock;
 import io.github.waqfs.module.keybind.VClip;
-import io.github.waqfs.module.murdermystery.GoldEsp;
+import io.github.waqfs.module.murdermystery.GoldESP;
 
 public class Config {
     public Category keybinds = new Category("Keybinds", 10, 10);
@@ -17,7 +17,7 @@ public class Config {
 
     public Config() {
         this.keybinds.attach(new AddGlassBlock(), new BreakBlock(), new VClip());
-        this.murderMystery.attach(new io.github.waqfs.module.murdermystery.PlayerESP(), new GoldEsp());
+        this.murderMystery.attach(new io.github.waqfs.module.murdermystery.PlayerESP(), new GoldESP());
         this.bedwars.attach(new io.github.waqfs.module.bedwars.PlayerESP(), new FireballESP(), new DefenseViewer());
     }
 }

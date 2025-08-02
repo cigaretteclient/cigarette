@@ -19,7 +19,6 @@ public class PlayerEntityMixin {
 
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         if (player != null && thisEntity.getGameProfile().getId().equals(player.getGameProfile().getId()) && player.isOnGround()) {
-            System.out.println("Activated " + player.getRecentDamageSource() + " " + player.getDamageTracker().getTimeSinceLastAttack());
             player.jump();
         }
     }

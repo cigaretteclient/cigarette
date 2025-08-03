@@ -1,6 +1,8 @@
 package io.github.waqfs.agent;
 
 import io.github.waqfs.GameDetector;
+import io.github.waqfs.module.bedwars.AutoClicker;
+import io.github.waqfs.module.bedwars.PerfectHit;
 import net.minecraft.block.BedBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.HorizontalFacingBlock;
@@ -86,4 +88,7 @@ public class BedwarsAgent extends BaseAgent {
     }
 
     public static boolean jumpResetEnabled = false;
+
+    public static PerfectHit perfectHitModule;
+    public static AutoClicker autoClickerModule;
 }

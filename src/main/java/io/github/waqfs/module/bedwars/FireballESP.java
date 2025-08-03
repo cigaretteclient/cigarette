@@ -1,6 +1,7 @@
 package io.github.waqfs.module.bedwars;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
+import io.github.waqfs.GameDetector;
 import io.github.waqfs.lib.Glow;
 import io.github.waqfs.lib.Raycast;
 import io.github.waqfs.lib.Renderer;
@@ -110,8 +111,7 @@ public class FireballESP extends RenderModule {
 
     @Override
     protected boolean inValidGame() {
-        return true;
-//        return GameDetector.rootGame == GameDetector.ParentGame.BEDWARS && GameDetector.subGame == GameDetector.ChildGame.INSTANCED_BEDWARS;
+        return GameDetector.rootGame == GameDetector.ParentGame.BEDWARS && GameDetector.subGame == GameDetector.ChildGame.INSTANCED_BEDWARS;
     }
 
     private static class Fireball {

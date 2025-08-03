@@ -1,0 +1,150 @@
+package io.github.waqfs.gui.widget;
+
+import io.github.waqfs.config.FileSystem;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
+import net.minecraft.client.gui.tooltip.Tooltip;
+import net.minecraft.client.gui.widget.ClickableWidget;
+import net.minecraft.text.Text;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.function.Consumer;
+
+public class SliderWidget extends ClickableWidget {
+    private static final int BASE_COLOR = 0xFF1A1A1A;
+    private static final int HOVERED_COLOR = 0xFF000000;
+    private static final int BASE_TEXT_COLOR = 0xFFFFFFFF;
+    private static final int SLIDER_PADDING = 4;
+    private @Nullable Consumer<Double> sliderCallback = null;
+    private double maxState = 0;
+    private double minState = 0;
+    private int decimalPlaces = 0;
+    private double sliderState = 0;
+    private boolean dragging = false;
+
+    public void setState(double state) {
+        this.setAccurateState(state);
+        if (sliderCallback != null) sliderCallback.accept(state);
+    }
+
+    private void setAccurateState(double state) {
+        if (state > maxState) return;
+        if (state < minState) return;
+        double mult = Math.pow(10, decimalPlaces);
+        this.sliderState = Math.round(state * mult) / mult;
+    }
+
+    private void setStateFromDrag(double mouseX) {
+        int left = this.getX() + SLIDER_PADDING;
+        int width = this.getWidth() - 2 * SLIDER_PADDING;
+        double percentage = (mouseX - left) / width;
+        double value = percentage * (maxState - minState) + minState;
+        this.setState(value);
+    }
+
+    public double getState() {
+        return this.sliderState;
+    }
+
+    public SliderWidget(int x, int y, int width, int height, Text message, @Nullable Text tooltip) {
+        super(x, y, width, height, message);
+        this.setTooltip(Tooltip.of(tooltip));
+    }
+
+    public SliderWidget(int x, int y, int width, int height, Text message) {
+        super(x, y, width, height, message);
+    }
+
+    public SliderWidget(Text message, Text tooltip) {
+        super(0, 0, 0, 0, message);
+        this.setTooltip(Tooltip.of(tooltip));
+    }
+
+    public SliderWidget(Text message) {
+        super(0, 0, 0, 0, message);
+    }
+
+    public SliderWidget withBounds(double min, double def, double max) {
+        this.minState = min;
+        this.maxState = max;
+        this.setState(def);
+        return this;
+    }
+
+    public SliderWidget withAccuracy(int decimalPlaces) {
+        this.decimalPlaces = decimalPlaces;
+        return this;
+    }
+
+    public void registerAsOption(String key) {
+        this.registerUpdate(newState -> {
+            this.setAccurateState(newState);
+            FileSystem.updateState(key, this.sliderState);
+        });
+        FileSystem.registerUpdate(key, newState -> {
+            if (!(newState instanceof Double doubleState)) return;
+            this.setState(doubleState);
+        });
+    }
+
+    public void registerUpdate(Consumer<Double> callback) {
+        this.sliderCallback = callback;
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (!isMouseOver(mouseX, mouseY)) return false;
+        this.dragging = true;
+        return true;
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double ignored, double ignored_) {
+        if (!dragging) return false;
+        this.setStateFromDrag(mouseX);
+        return true;
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        dragging = false;
+        return false;
+    }
+
+    @Override
+    public boolean isMouseOver(double mouseX, double mouseY) {
+        return mouseX > getX() && mouseX < getRight() && mouseY > getY() && mouseY < getBottom();
+    }
+
+    @Override
+    protected void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
+        int left = getX();
+        int right = getRight();
+        int top = getY();
+        int bottom = getBottom();
+
+        if (isMouseOver(mouseX, mouseY)) {
+            context.fillGradient(left, top, right, bottom, BASE_COLOR, HOVERED_COLOR);
+        } else {
+            context.fill(left, top, right, bottom, BASE_COLOR);
+        }
+
+        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+        context.drawTextWithShadow(textRenderer, getMessage(), left + 4, top + 2, BASE_TEXT_COLOR);
+
+        Text value = Text.literal(Double.toString(sliderState));
+        context.drawTextWithShadow(textRenderer, value, right - textRenderer.getWidth(value) - 4, top + 2, BASE_TEXT_COLOR);
+
+        int sliderXState = (int) ((sliderState - minState) / (maxState - minState) * (width - 2 * SLIDER_PADDING)) + (left + SLIDER_PADDING);
+        context.drawHorizontalLine(left + SLIDER_PADDING, left + width - SLIDER_PADDING, bottom - 4, BASE_TEXT_COLOR);
+        context.drawVerticalLine(sliderXState - 1, bottom - 6, bottom - 2, BASE_TEXT_COLOR);
+        context.drawVerticalLine(sliderXState, bottom - 7, bottom - 1, BASE_TEXT_COLOR);
+        context.drawVerticalLine(sliderXState + 1, bottom - 6, bottom - 2, BASE_TEXT_COLOR);
+    }
+
+    @Override
+    protected void appendClickableNarrations(NarrationMessageBuilder builder) {
+    }
+}

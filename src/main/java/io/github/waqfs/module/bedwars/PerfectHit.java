@@ -1,11 +1,11 @@
 package io.github.waqfs.module.bedwars;
 
 import io.github.waqfs.GameDetector;
+import io.github.waqfs.agent.BedwarsAgent;
 import io.github.waqfs.mixin.MinecraftClientInvoker;
 import io.github.waqfs.module.TickModule;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
@@ -24,6 +24,7 @@ public class PerfectHit extends TickModule {
 
     public PerfectHit() {
         super(MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+        BedwarsAgent.perfectHitModule = this;
     }
 
     @Override
@@ -54,5 +55,10 @@ public class PerfectHit extends TickModule {
     @Override
     protected boolean inValidGame() {
         return GameDetector.rootGame == GameDetector.ParentGame.BEDWARS && GameDetector.subGame == GameDetector.ChildGame.INSTANCED_BEDWARS;
+    }
+
+    @Override
+    protected void whenEnabled() {
+        BedwarsAgent.autoClickerModule.widget.setState(false);
     }
 }

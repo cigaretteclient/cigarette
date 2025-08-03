@@ -2,12 +2,14 @@ package io.github.waqfs.module.bedwars;
 
 import io.github.waqfs.GameDetector;
 import io.github.waqfs.agent.BedwarsAgent;
+import io.github.waqfs.gui.widget.SliderWidget;
 import io.github.waqfs.mixin.KeyBindingAccessor;
 import io.github.waqfs.module.TickModule;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.text.Text;
 import net.minecraft.util.hit.HitResult;
 import org.jetbrains.annotations.NotNull;
 
@@ -15,11 +17,12 @@ public class AutoClicker extends TickModule {
     protected static final String MODULE_NAME = "AutoClicker";
     protected static final String MODULE_TOOLTIP = "Automatically clicks at a rate of ~18 clicks/second when holding attack.";
     protected static final String MODULE_ID = "bedwars.autoclicker";
-
-    private static final double CLICK_PERCENT = 0.9;
+    private final SliderWidget clickPercent = new SliderWidget(Text.literal("Click Percent"), Text.literal("The percentage chance for a click to occur each tick of the game while holding left-click.")).withBounds(0, 0.9, 1).withAccuracy(2);
 
     public AutoClicker() {
         super(MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+        this.widget.setOptions(clickPercent);
+        clickPercent.registerAsOption("bedwars.autoclicker.clickpercent");
         BedwarsAgent.autoClickerModule = this;
     }
 
@@ -30,7 +33,7 @@ public class AutoClicker extends TickModule {
         KeyBinding attackKey = KeyBinding.byId("key.attack");
         KeyBindingAccessor attackKeyAccessor = (KeyBindingAccessor) attackKey;
         if (hitResult == null || attackKey == null || !attackKey.isPressed()) return;
-        if (Math.random() > CLICK_PERCENT) return;
+        if (Math.random() > clickPercent.getState()) return;
         if (hitResult.getType() != HitResult.Type.BLOCK) {
             attackKeyAccessor.setTimesPressed(attackKeyAccessor.getTimesPressed() + 1);
         }

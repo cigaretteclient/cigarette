@@ -78,6 +78,10 @@ public class DraggableWidget extends ClickableWidget {
     public void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
         context.fill(getX(), getY(), getRight(), getBottom(), BASE_COLOR);
-        context.drawCenteredTextWithShadow(textRenderer, getMessage(), getX() + width / 2, getY() + height / 3, BASE_TEXT_COLOR);
+        Text text = getMessage();
+        int textWidth = textRenderer.getWidth(text);
+        int horizontalMargin = (width - textWidth) / 2;
+        int verticalMargin = (height - textRenderer.fontHeight) / 2;
+        context.drawText(textRenderer, text, getX() + horizontalMargin, getY() + verticalMargin + 1, BASE_TEXT_COLOR, false);
     }
 }

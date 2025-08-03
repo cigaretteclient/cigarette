@@ -26,6 +26,7 @@ public class MurderMysteryAgent extends BaseAgent {
         HashSet<PersistentPlayer> visiblePlayers = new HashSet<>();
         for (PersistentPlayer player : persistentPlayers.values()) {
             if (!player.playerEntity.isAlive()) continue;
+            if (player.playerEntity.getEyeY() - player.playerEntity.getY() < 0.5) continue;
             visiblePlayers.add(player);
         }
         return visiblePlayers;

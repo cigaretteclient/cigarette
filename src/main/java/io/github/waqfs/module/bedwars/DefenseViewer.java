@@ -10,7 +10,6 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.KeyBinding;
@@ -61,16 +60,12 @@ public class DefenseViewer extends RenderModule implements ClientModInitializer 
     }
 
     private int getColorFromBlockState(BlockState state) {
-        if (state.isOf(Blocks.WHITE_WOOL) || state.isOf(Blocks.BLACK_WOOL) || state.isOf(Blocks.BLUE_WOOL) || state.isOf(Blocks.BROWN_WOOL) || state.isOf(Blocks.CYAN_WOOL) || state.isOf(Blocks.GRAY_WOOL) || state.isOf(Blocks.GREEN_WOOL) || state.isOf(Blocks.LIGHT_BLUE_WOOL) || state.isOf(Blocks.LIGHT_GRAY_WOOL) || state.isOf(Blocks.LIME_WOOL) || state.isOf(Blocks.MAGENTA_WOOL) || state.isOf(Blocks.ORANGE_WOOL) || state.isOf(Blocks.PINK_WOOL) || state.isOf(Blocks.PURPLE_WOOL) || state.isOf(Blocks.RED_WOOL) || state.isOf(Blocks.YELLOW_WOOL))
-            return 0x7FFFFFFF;
-        if (state.isOf(Blocks.END_STONE)) return 0x7FFFFF00;
-        if (state.isOf(Blocks.OAK_PLANKS) || state.isOf(Blocks.ACACIA_PLANKS) || state.isOf(Blocks.SPRUCE_PLANKS) || state.isOf(Blocks.DARK_OAK_PLANKS) || state.isOf(Blocks.BIRCH_PLANKS) || state.isOf(Blocks.ACACIA_LOG) || state.isOf(Blocks.BIRCH_LOG) || state.isOf(Blocks.DARK_OAK_LOG) || state.isOf(Blocks.JUNGLE_LOG) || state.isOf(Blocks.OAK_LOG) || state.isOf(Blocks.SPRUCE_LOG))
-            return 0x7FFF0000;
-        if (state.isOf(Blocks.TERRACOTTA) || state.isOf(Blocks.BLACK_TERRACOTTA) || state.isOf(Blocks.BLUE_TERRACOTTA) || state.isOf(Blocks.BROWN_TERRACOTTA) || state.isOf(Blocks.CYAN_TERRACOTTA) || state.isOf(Blocks.GRAY_TERRACOTTA) || state.isOf(Blocks.GREEN_TERRACOTTA) || state.isOf(Blocks.LIGHT_BLUE_TERRACOTTA) || state.isOf(Blocks.LIGHT_GRAY_TERRACOTTA) || state.isOf(Blocks.LIME_TERRACOTTA) || state.isOf(Blocks.MAGENTA_TERRACOTTA) || state.isOf(Blocks.ORANGE_TERRACOTTA) || state.isOf(Blocks.PINK_TERRACOTTA) || state.isOf(Blocks.PURPLE_TERRACOTTA) || state.isOf(Blocks.RED_TERRACOTTA) || state.isOf(Blocks.WHITE_TERRACOTTA) || state.isOf(Blocks.YELLOW_TERRACOTTA))
-            return 0x7F0000FF;
-        if (state.isOf(Blocks.OBSIDIAN)) return 0x7FFF00FF;
-        if (state.isOf(Blocks.BLACK_STAINED_GLASS) || state.isOf(Blocks.BLUE_STAINED_GLASS) || state.isOf(Blocks.BROWN_STAINED_GLASS) || state.isOf(Blocks.CYAN_STAINED_GLASS) || state.isOf(Blocks.GRAY_STAINED_GLASS) || state.isOf(Blocks.GREEN_STAINED_GLASS) || state.isOf(Blocks.LIGHT_BLUE_STAINED_GLASS) || state.isOf(Blocks.LIGHT_GRAY_STAINED_GLASS) || state.isOf(Blocks.LIME_STAINED_GLASS) || state.isOf(Blocks.MAGENTA_STAINED_GLASS) || state.isOf(Blocks.ORANGE_STAINED_GLASS) || state.isOf(Blocks.PINK_STAINED_GLASS) || state.isOf(Blocks.PURPLE_STAINED_GLASS) || state.isOf(Blocks.RED_STAINED_GLASS) || state.isOf(Blocks.WHITE_STAINED_GLASS) || state.isOf(Blocks.YELLOW_STAINED_GLASS))
-            return 0x7F00FF00;
+        if (BedwarsAgent.isWool(state)) return 0x7FFFFFFF;
+        if (BedwarsAgent.isEndStone(state)) return 0x7FFFFF00;
+        if (BedwarsAgent.isWood(state)) return 0x7FFF0000;
+        if (BedwarsAgent.isClay(state)) return 0x7F0000FF;
+        if (BedwarsAgent.isObsidian(state)) return 0x7FFF00FF;
+        if (BedwarsAgent.isGlass(state)) return 0x7F00FF00;
         return 0;
     }
 

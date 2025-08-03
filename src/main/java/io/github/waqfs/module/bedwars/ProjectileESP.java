@@ -61,13 +61,11 @@ public class ProjectileESP extends RenderModule {
         BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
         for (Projectile projectile : projectiles) {
             Raycast.SteppedTrajectory trajectory = projectile.trajectory;
-            assert trajectory.collision != null;
-            assert trajectory.collisionPos != null;
-            assert trajectory.collisionStep != null;
 
+            int collisionStep = trajectory.collisionStep != null ? trajectory.collisionStep : (int) maxTicks.getState();
             Vec3d start = trajectory.steps[0];
             for (int tick = 1; tick < maxTicks.getState(); tick++) {
-                if (tick > trajectory.collisionStep) break;
+                if (tick > collisionStep) break;
                 Vec3d end = trajectory.steps[tick];
                 Renderer.drawFakeLine(buffer, matrix, projectile.color, start.toVector3f(), end.toVector3f(), 0.1f);
                 start = end;
@@ -94,7 +92,6 @@ public class ProjectileESP extends RenderModule {
             if (entity instanceof EggEntity && !enableEggs.getState()) continue;
 
             Raycast.SteppedTrajectory trajectory = Raycast.trajectory((ProjectileEntity) entity, (int) maxTicks.getState());
-            if (trajectory.collisionPos == null) continue;
 
             int color = 0xFFFFFFFF;
             if (trajectory.collision instanceof EntityHitResult) color = 0xFFFF0000;

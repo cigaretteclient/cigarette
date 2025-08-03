@@ -3,7 +3,6 @@ package io.github.waqfs.lib;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
@@ -32,22 +31,22 @@ public class Raycast {
 
     public static HitResult raycast(Vec3d start, Vec3d end, Entity entity) {
         BlockHitResult blockResult = raycastBlock(start, end, entity);
-        EntityHitResult entityResult = raycastEntity(start, end);
+        EntityHitResult entityResult = raycastEntity(start, end, entity);
         return first(blockResult, entityResult, start);
     }
 
     public static HitResult raycast(Vec3d start, Vec3d end, ShapeContext shape) {
         BlockHitResult blockResult = raycastBlock(start, end, shape);
-        EntityHitResult entityResult = raycastEntity(start, end);
+        EntityHitResult entityResult = raycastEntity(start, end, null);
         return first(blockResult, entityResult, start);
     }
 
-    public static EntityHitResult raycastEntity(Vec3d start, Vec3d end) {
-        ClientPlayerEntity player = MinecraftClient.getInstance().player;
-        assert player != null;
+    public static EntityHitResult raycastEntity(Vec3d start, Vec3d end, @Nullable Entity excludedEntity) {
+        Entity cameraEntity = MinecraftClient.getInstance().cameraEntity;
+        assert cameraEntity != null;
 
         double distance = start.distanceTo(end);
-        return ProjectileUtil.raycast(player, start, end, new Box(start, end).expand(3), EntityPredicates.CAN_HIT, distance);
+        return ProjectileUtil.raycast(excludedEntity != null ? excludedEntity : cameraEntity, start, end, new Box(start, end).expand(3), EntityPredicates.CAN_HIT, distance);
     }
 
     public static BlockHitResult raycastBlock(Vec3d start, Vec3d end, ShapeContext shape) {

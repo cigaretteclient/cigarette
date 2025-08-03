@@ -131,10 +131,10 @@ public class SliderWidget extends ClickableWidget {
         }
 
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
-        context.drawTextWithShadow(textRenderer, getMessage(), left + 4, top + 2, CigaretteScreen.PRIMARY_TEXT_COLOR);
+        context.drawTextWithShadow(textRenderer, getMessage(), left + 4, top + 4, CigaretteScreen.PRIMARY_TEXT_COLOR);
 
         Text value = Text.literal(Double.toString(sliderState));
-        context.drawTextWithShadow(textRenderer, value, right - textRenderer.getWidth(value) - 4, top + 2, CigaretteScreen.PRIMARY_COLOR);
+        context.drawTextWithShadow(textRenderer, value, right - textRenderer.getWidth(value) - 4, top + 4, CigaretteScreen.PRIMARY_COLOR);
 
         int sliderXState = (int) ((sliderState - minState) / (maxState - minState) * (width - 2 * SLIDER_PADDING)) + (left + SLIDER_PADDING);
         context.drawHorizontalLine(left + SLIDER_PADDING, left + width - SLIDER_PADDING, bottom - 4, CigaretteScreen.SECONDARY_COLOR);

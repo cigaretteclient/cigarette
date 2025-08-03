@@ -3,6 +3,7 @@ package io.github.waqfs.module.bedwars;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import io.github.waqfs.GameDetector;
 import io.github.waqfs.lib.Glow;
+import io.github.waqfs.lib.Raycast;
 import io.github.waqfs.lib.Renderer;
 import io.github.waqfs.module.RenderModule;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
@@ -16,9 +17,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.projectile.FireballEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.RaycastContext;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
@@ -68,8 +68,7 @@ public class FireballESP extends RenderModule {
             Vec3d start = entityfb.getPos();
             Vec3d end = start.add(velocity.multiply(1000));
 
-            RaycastContext ctx = new RaycastContext(start, end, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, entityfb);
-            BlockHitResult result = world.raycast(ctx);
+            HitResult result = Raycast.raycast(start, end, entityfb);
 
             Fireball fireball = null;
             switch (result.getType()) {
@@ -90,11 +89,11 @@ public class FireballESP extends RenderModule {
         if (heldItem.isOf(Items.FIRE_CHARGE)) {
             Entity camera = client.getCameraEntity();
             if (camera == null) return;
+
             Vec3d start = player.getEyePos();
             Vec3d end = start.add(camera.getRotationVector().multiply(1000));
+            HitResult result = Raycast.raycast(start, end, ShapeContext.absent());
 
-            RaycastContext ctx = new RaycastContext(start, end, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, ShapeContext.absent());
-            BlockHitResult result = world.raycast(ctx);
             switch (result.getType()) {
                 case BLOCK, ENTITY -> {
                     Vec3d collisionEnd = result.getPos();

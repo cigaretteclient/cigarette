@@ -27,7 +27,7 @@ public class AddGlassBlock extends TickModule implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        keyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding("addglassblock.standalone.cigarette.waqfs", InputUtil.Type.KEYSYM, GLFW.GLFW_NOT_INITIALIZED, "standalone.cigarette.waqfs"));
+        keyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding("Place Glass Block", InputUtil.Type.KEYSYM, GLFW.GLFW_NOT_INITIALIZED, "Cigarette | Standalone"));
     }
 
     @Override

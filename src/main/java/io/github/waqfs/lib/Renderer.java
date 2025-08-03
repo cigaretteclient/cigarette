@@ -16,7 +16,8 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 public class Renderer {
-    public static final RenderPipeline BLOCK_ESP = RenderPipelines.register(RenderPipeline.builder(RenderPipelines.POSITION_COLOR_SNIPPET).withLocation("pipeline/cigarette.blockesp").withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.QUADS).withCull(false).withBlend(BlendFunction.TRANSLUCENT).withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST).build());
+    public static final RenderPipeline BLOCK_ESP_PHASE = RenderPipelines.register(RenderPipeline.builder(RenderPipelines.POSITION_COLOR_SNIPPET).withLocation("pipeline/cigarette.blockesp").withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.QUADS).withCull(false).withBlend(BlendFunction.TRANSLUCENT).withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST).build());
+    public static final RenderPipeline BLOCK_ESP_NOPHASE = RenderPipelines.register(RenderPipeline.builder(RenderPipelines.POSITION_COLOR_SNIPPET).withLocation("pipeline/cigarette.blockespnophase").withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.QUADS).withCull(false).withBlend(BlendFunction.TRANSLUCENT).withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST).build());
 
     public static Matrix4f getCameraTranslatedMatrix(MatrixStack matrixStack, WorldRenderContext ctx) {
         Matrix4f matrix = matrixStack.peek().getPositionMatrix();

@@ -29,7 +29,7 @@ public class FireballESP extends RenderModule {
     protected static final String MODULE_NAME = "FireballESP";
     protected static final String MODULE_TOOLTIP = "Displays the trajectory and blast radius of all fireballs.";
     protected static final String MODULE_ID = "bedwars.fireballesp";
-    private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockesp", 1536, Renderer.BLOCK_ESP, RenderLayer.MultiPhaseParameters.builder().build(false));
+    private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockespnophase", 1536, Renderer.BLOCK_ESP_NOPHASE, RenderLayer.MultiPhaseParameters.builder().build(false));
     private final HashSet<Fireball> fireballs = new HashSet<>();
     private final Glow.Context glowContext = new Glow.Context();
 

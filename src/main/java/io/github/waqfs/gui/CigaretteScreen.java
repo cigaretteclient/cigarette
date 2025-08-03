@@ -9,6 +9,12 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 public class CigaretteScreen extends Screen {
+    public static final int PRIMARY_COLOR = 0xFFFE5F00;
+    public static final int SECONDARY_COLOR = 0xFFC44700;
+    public static final int PRIMARY_TEXT_COLOR = 0xFFFFFFFF;
+    public static final int BACKGROUND_COLOR = 0xFF1A1A1A;
+    public static final int DARK_BACKGROUND_COLOR = 0xFF000000;
+    public static final int ENABLED_COLOR = 0xFF3AFC3A;
     private Screen parent = null;
 
     protected CigaretteScreen() {

@@ -1,5 +1,6 @@
 package io.github.waqfs.gui.widget;
 
+import io.github.waqfs.config.FileSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
@@ -36,6 +37,10 @@ public class ToggleOptionsWidget extends PassthroughWidget<ClickableWidget> {
         }
     }
 
+    public boolean getState() {
+        return this.toggledState;
+    }
+
     public ToggleOptionsWidget(int x, int y, int width, int height, Text message, @Nullable Text tooltip, @Nullable ClickableWidget... options) {
         super(x, y, width, height, message);
         this.setTooltip(Tooltip.of(tooltip));
@@ -63,6 +68,18 @@ public class ToggleOptionsWidget extends PassthroughWidget<ClickableWidget> {
     public ToggleOptionsWidget setOptions(@Nullable ClickableWidget... options) {
         this.children = new ClickableWidget[]{new ScrollableWidget<>(0, 0).setChildren(options)};
         return this;
+    }
+
+    public void registerAsOption(String key) {
+        this.registerUpdate(newState -> {
+            this.toggledState = newState;
+            FileSystem.updateState(key, newState);
+        });
+        FileSystem.registerUpdate(key, newState -> {
+            if (!(newState instanceof Boolean booleanState)) return;
+            this.toggledState = booleanState;
+            this.setState(booleanState);
+        });
     }
 
     public void registerUpdate(Consumer<Boolean> callback) {

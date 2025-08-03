@@ -4,6 +4,7 @@ import io.github.waqfs.GameDetector;
 import io.github.waqfs.agent.BedwarsAgent;
 import io.github.waqfs.module.TickModule;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
@@ -45,7 +46,7 @@ public class AutoTool extends TickModule {
     }
 
     private boolean shouldAxe(BlockState state) {
-        return BedwarsAgent.isWood(state);
+        return BedwarsAgent.isWood(state) || state.isOf(Blocks.LADDER);
     }
 
     private boolean shouldShears(BlockState state) {

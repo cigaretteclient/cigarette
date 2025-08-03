@@ -25,7 +25,7 @@ public class VClip extends TickModule implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        keyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding("vclip_d5.standalone.cigarette.waqfs", InputUtil.Type.KEYSYM, GLFW.GLFW_NOT_INITIALIZED, "standalone.cigarette.waqfs"));
+        keyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding("V-Clip Downward", InputUtil.Type.KEYSYM, GLFW.GLFW_NOT_INITIALIZED, "Cigarette | Standalone"));
     }
 
     @Override

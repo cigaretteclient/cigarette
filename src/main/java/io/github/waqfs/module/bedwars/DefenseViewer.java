@@ -75,8 +75,8 @@ public class DefenseViewer extends RenderModule implements ClientModInitializer 
 
     @Override
     public void onInitializeClient() {
-        increaseKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding("increase_defense.bedwars.cigarette.waqfs", InputUtil.Type.KEYSYM, GLFW.GLFW_NOT_INITIALIZED, "bedwars.cigarette.waqfs"));
-        decreaseKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding("decrease_defense.bedwars.cigarette.waqfs", InputUtil.Type.KEYSYM, GLFW.GLFW_NOT_INITIALIZED, "bedwars.cigarette.waqfs"));
+        increaseKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding("Increase Defense Viewer Layer", InputUtil.Type.KEYSYM, GLFW.GLFW_NOT_INITIALIZED, "Cigarette | Bedwars"));
+        decreaseKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding("Decrease Defense Viewer Layer", InputUtil.Type.KEYSYM, GLFW.GLFW_NOT_INITIALIZED, "Cigarette | Bedwars"));
     }
 
     @Override

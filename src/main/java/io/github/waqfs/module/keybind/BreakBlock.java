@@ -25,7 +25,7 @@ public class BreakBlock extends TickModule implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        keyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding("breakblock.standalone.cigarette.waqfs", InputUtil.Type.KEYSYM, GLFW.GLFW_NOT_INITIALIZED, "standalone.cigarette.waqfs"));
+        keyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding("Break Block", InputUtil.Type.KEYSYM, GLFW.GLFW_NOT_INITIALIZED, "Cigarette | Standalone"));
     }
 
     @Override

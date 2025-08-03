@@ -16,7 +16,7 @@ public class KeyBinding implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        keyBinding = KeyBindingHelper.registerKeyBinding(new net.minecraft.client.option.KeyBinding("toggle.gui.cigarette.waqfs", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT_SHIFT, "gui.cigarette.waqfs"));
+        keyBinding = KeyBindingHelper.registerKeyBinding(new net.minecraft.client.option.KeyBinding("Toggle GUI", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT_SHIFT, "Cigarette | User Interface"));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (keyBinding.wasPressed()) {

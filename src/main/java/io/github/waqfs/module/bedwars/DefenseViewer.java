@@ -32,7 +32,7 @@ public class DefenseViewer extends RenderModule implements ClientModInitializer 
     protected static final String MODULE_NAME = "Defense Viewer";
     protected static final String MODULE_TOOLTIP = "ESPs bed blocks and the defensive blocks around them.";
     protected static final String MODULE_ID = "bedwars.defenseesp";
-    private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockesp", 1536, Renderer.BLOCK_ESP, RenderLayer.MultiPhaseParameters.builder().lineWidth(new RenderPhase.LineWidth(OptionalDouble.of(1))).build(false));
+    private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockesp", 1536, Renderer.BLOCK_ESP_PHASE, RenderLayer.MultiPhaseParameters.builder().lineWidth(new RenderPhase.LineWidth(OptionalDouble.of(1))).build(false));
     private final HashSet<BlockPos> bedBlocks = new HashSet<>();
     private final HashMap<BlockPos, Integer> defensiveBlocks = new HashMap<>();
     private static KeyBinding decreaseKeyBinding;

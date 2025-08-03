@@ -1,7 +1,6 @@
 package io.github.waqfs.module.bedwars;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
-import io.github.waqfs.GameDetector;
 import io.github.waqfs.lib.Glow;
 import io.github.waqfs.lib.Raycast;
 import io.github.waqfs.lib.Renderer;
@@ -24,12 +23,14 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 
 import java.util.HashSet;
+import java.util.List;
 
 public class FireballESP extends RenderModule {
     protected static final String MODULE_NAME = "FireballESP";
     protected static final String MODULE_TOOLTIP = "Displays the trajectory and blast radius of all fireballs.";
     protected static final String MODULE_ID = "bedwars.fireballesp";
     private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockespnophase", 1536, Renderer.BLOCK_ESP_NOPHASE, RenderLayer.MultiPhaseParameters.builder().build(false));
+    private static final RenderLayer RENDER_LAYER_SPHERE = RenderLayer.of("cigarette.triespnophase", 1536, Renderer.TRI_ESP_NOPHASE, RenderLayer.MultiPhaseParameters.builder().build(false));
     private final HashSet<Fireball> fireballs = new HashSet<>();
     private final Glow.Context glowContext = new Glow.Context();
 
@@ -44,16 +45,26 @@ public class FireballESP extends RenderModule {
         Matrix4f matrix = Renderer.getCameraTranslatedMatrix(matrixStack, ctx);
         Tessellator tessellator = Tessellator.getInstance();
 
-        BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+        BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_COLOR);
+
         for (Fireball fireball : fireballs) {
-            if (fireball.collisionNearPlayer) {
-                Renderer.drawCube(buffer, matrix, 0x4FFF0000, fireball.collisionPathEnd, 5f);
+            if (fireball.collisionNearPlayer && fireball.triangles != null) {
+                Renderer.drawSphere(buffer, matrix, 0x4FFF0000, fireball.triangles);
             }
-            Renderer.drawFakeLine(buffer, matrix, 0xFFFF0000, fireball.collisionPathStart.toVector3f(), fireball.collisionPathEnd.toVector3f(), 0.1f);
         }
 
         BuiltBuffer build = buffer.endNullable();
+        if (build != null) RENDER_LAYER_SPHERE.draw(build);
+
+        buffer = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+
+        for (Fireball fireball : fireballs) {
+            Renderer.drawFakeLine(buffer, matrix, 0xFFFF0000, fireball.collisionPathStart.toVector3f(), fireball.collisionPathEnd.toVector3f(), 0.1f);
+        }
+
+        build = buffer.endNullable();
         if (build != null) RENDER_LAYER.draw(build);
+
         matrixStack.pop();
     }
 
@@ -76,10 +87,10 @@ public class FireballESP extends RenderModule {
                     Vec3d collisionEnd = result.getPos();
                     double timeToCollision = start.distanceTo(collisionEnd) / velocity.length();
                     boolean nearPlayer = collisionEnd.distanceTo(player.getPos()) < 100;
-                    fireball = new Fireball(entityfb, timeToCollision, start, collisionEnd, nearPlayer);
+                    fireball = new Fireball(entityfb, timeToCollision, start, collisionEnd, nearPlayer, Renderer.calculateSphere(collisionEnd, 8.4f, player.getEyePos()));
                 }
                 case MISS -> {
-                    fireball = new Fireball(entityfb, -1, start, end, false);
+                    fireball = new Fireball(entityfb, -1, start, end, false, null);
                 }
             }
             fireballs.add(fireball);
@@ -97,7 +108,7 @@ public class FireballESP extends RenderModule {
             switch (result.getType()) {
                 case BLOCK, ENTITY -> {
                     Vec3d collisionEnd = result.getPos();
-                    fireballs.add(new Fireball(null, -1, collisionEnd, collisionEnd, true));
+                    fireballs.add(new Fireball(null, -1, collisionEnd, collisionEnd, true, Renderer.calculateSphere(collisionEnd, 8.4f, player.getEyePos())));
                 }
             }
         }
@@ -111,7 +122,8 @@ public class FireballESP extends RenderModule {
 
     @Override
     protected boolean inValidGame() {
-        return GameDetector.rootGame == GameDetector.ParentGame.BEDWARS && GameDetector.subGame == GameDetector.ChildGame.INSTANCED_BEDWARS;
+        return true;
+        // return GameDetector.rootGame == GameDetector.ParentGame.BEDWARS && GameDetector.subGame == GameDetector.ChildGame.INSTANCED_BEDWARS;
     }
 
     private static class Fireball {
@@ -120,13 +132,15 @@ public class FireballESP extends RenderModule {
         public final Vec3d collisionPathStart;
         public final Vec3d collisionPathEnd;
         public final boolean collisionNearPlayer;
+        public final @Nullable List<Vec3d[]> triangles;
 
-        public Fireball(@Nullable FireballEntity entity, double time, Vec3d start, Vec3d end, boolean nearPlayer) {
+        public Fireball(@Nullable FireballEntity entity, double time, Vec3d start, Vec3d end, boolean nearPlayer, @Nullable List<Vec3d[]> triangles) {
             this.entity = entity;
             this.time = time;
             this.collisionPathStart = start;
             this.collisionPathEnd = end;
             this.collisionNearPlayer = nearPlayer;
+            this.triangles = triangles;
         }
     }
 }

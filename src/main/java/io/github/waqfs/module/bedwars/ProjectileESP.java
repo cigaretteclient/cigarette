@@ -1,6 +1,8 @@
 package io.github.waqfs.module.bedwars;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
+import io.github.waqfs.GameDetector;
+import io.github.waqfs.gui.widget.SliderWidget;
 import io.github.waqfs.gui.widget.ToggleOptionsWidget;
 import io.github.waqfs.lib.Glow;
 import io.github.waqfs.lib.Raycast;
@@ -30,7 +32,6 @@ public class ProjectileESP extends RenderModule {
     protected static final String MODULE_NAME = "ProjectileESP";
     protected static final String MODULE_TOOLTIP = "Displays the trajectory of all projectiles.";
     protected static final String MODULE_ID = "bedwars.projectileesp";
-    private static final int MAX_TICKS = 200;
     private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockespnophase", 1536, Renderer.BLOCK_ESP_NOPHASE, RenderLayer.MultiPhaseParameters.builder().build(false));
     private final HashSet<Projectile> projectiles = new HashSet<>();
     private final Glow.Context glowContext = new Glow.Context();
@@ -38,14 +39,16 @@ public class ProjectileESP extends RenderModule {
     private final ToggleOptionsWidget enablePearls = new ToggleOptionsWidget(Text.literal("Thrown Pearls"), Text.literal("Display the trajectory of thrown Pearls."));
     private final ToggleOptionsWidget enableSnowballs = new ToggleOptionsWidget(Text.literal("Thrown Snowballs"), Text.literal("Display the trajectory of thrown Snowballs."));
     private final ToggleOptionsWidget enableEggs = new ToggleOptionsWidget(Text.literal("Thrown Eggs"), Text.literal("Display the trajectory of thrown Eggs."));
+    private final SliderWidget maxTicks = new SliderWidget(Text.literal("Max Ticks"), Text.literal("The maximum ticks the projection calculates into the future.")).withBounds(20, 200, 200);
 
     public ProjectileESP() {
         super(MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
-        this.widget.setOptions(enableArrows, enablePearls, enableSnowballs, enableEggs);
+        this.widget.setOptions(enableArrows, enablePearls, enableSnowballs, enableEggs, maxTicks);
         enableArrows.registerAsOption("bedwars.projectileesp.arrows");
         enablePearls.registerAsOption("bedwars.projectileesp.pearls");
         enableSnowballs.registerAsOption("bedwars.projectileesp.snowballs");
         enableEggs.registerAsOption("bedwars.projectileesp.eggs");
+        maxTicks.registerAsOption("bedwars.projectileesp.maxticks");
     }
 
     @Override
@@ -63,7 +66,7 @@ public class ProjectileESP extends RenderModule {
             assert trajectory.collisionStep != null;
 
             Vec3d start = trajectory.steps[0];
-            for (int tick = 1; tick < MAX_TICKS; tick++) {
+            for (int tick = 1; tick < maxTicks.getState(); tick++) {
                 if (tick > trajectory.collisionStep) break;
                 Vec3d end = trajectory.steps[tick];
                 Renderer.drawFakeLine(buffer, matrix, projectile.color, start.toVector3f(), end.toVector3f(), 0.1f);
@@ -90,7 +93,7 @@ public class ProjectileESP extends RenderModule {
             if (entity instanceof SnowballEntity && !enableSnowballs.getState()) continue;
             if (entity instanceof EggEntity && !enableEggs.getState()) continue;
 
-            Raycast.SteppedTrajectory trajectory = Raycast.trajectory((ProjectileEntity) entity, MAX_TICKS);
+            Raycast.SteppedTrajectory trajectory = Raycast.trajectory((ProjectileEntity) entity, (int) maxTicks.getState());
             if (trajectory.collisionPos == null) continue;
 
             int color = 0xFFFFFFFF;
@@ -112,8 +115,7 @@ public class ProjectileESP extends RenderModule {
 
     @Override
     protected boolean inValidGame() {
-        return true;
-//        return GameDetector.rootGame == GameDetector.ParentGame.BEDWARS && GameDetector.subGame == GameDetector.ChildGame.INSTANCED_BEDWARS;
+        return GameDetector.rootGame == GameDetector.ParentGame.BEDWARS && GameDetector.subGame == GameDetector.ChildGame.INSTANCED_BEDWARS;
     }
 
     private record Projectile(Entity entity, Raycast.SteppedTrajectory trajectory, int color) {

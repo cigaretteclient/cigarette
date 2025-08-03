@@ -1,6 +1,7 @@
 package io.github.waqfs.gui.widget;
 
 import io.github.waqfs.config.FileSystem;
+import io.github.waqfs.gui.CigaretteScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -13,8 +14,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.function.Consumer;
 
 public class SliderWidget extends ClickableWidget {
-    private static final int BASE_COLOR = 0xFF1A1A1A;
-    private static final int HOVERED_COLOR = 0xFF000000;
     private static final int BASE_TEXT_COLOR = 0xFFFFFFFF;
     private static final int SLIDER_PADDING = 4;
     private @Nullable Consumer<Double> sliderCallback = null;
@@ -126,22 +125,22 @@ public class SliderWidget extends ClickableWidget {
         int bottom = getBottom();
 
         if (isMouseOver(mouseX, mouseY)) {
-            context.fillGradient(left, top, right, bottom, BASE_COLOR, HOVERED_COLOR);
+            context.fillGradient(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR, CigaretteScreen.DARK_BACKGROUND_COLOR);
         } else {
-            context.fill(left, top, right, bottom, BASE_COLOR);
+            context.fill(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR);
         }
 
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
-        context.drawTextWithShadow(textRenderer, getMessage(), left + 4, top + 2, BASE_TEXT_COLOR);
+        context.drawTextWithShadow(textRenderer, getMessage(), left + 4, top + 2, CigaretteScreen.PRIMARY_TEXT_COLOR);
 
         Text value = Text.literal(Double.toString(sliderState));
-        context.drawTextWithShadow(textRenderer, value, right - textRenderer.getWidth(value) - 4, top + 2, BASE_TEXT_COLOR);
+        context.drawTextWithShadow(textRenderer, value, right - textRenderer.getWidth(value) - 4, top + 2, CigaretteScreen.PRIMARY_COLOR);
 
         int sliderXState = (int) ((sliderState - minState) / (maxState - minState) * (width - 2 * SLIDER_PADDING)) + (left + SLIDER_PADDING);
-        context.drawHorizontalLine(left + SLIDER_PADDING, left + width - SLIDER_PADDING, bottom - 4, BASE_TEXT_COLOR);
-        context.drawVerticalLine(sliderXState - 1, bottom - 6, bottom - 2, BASE_TEXT_COLOR);
-        context.drawVerticalLine(sliderXState, bottom - 7, bottom - 1, BASE_TEXT_COLOR);
-        context.drawVerticalLine(sliderXState + 1, bottom - 6, bottom - 2, BASE_TEXT_COLOR);
+        context.drawHorizontalLine(left + SLIDER_PADDING, left + width - SLIDER_PADDING, bottom - 4, CigaretteScreen.SECONDARY_COLOR);
+        context.drawVerticalLine(sliderXState - 1, bottom - 6, bottom - 2, CigaretteScreen.PRIMARY_COLOR);
+        context.drawVerticalLine(sliderXState, bottom - 7, bottom - 1, CigaretteScreen.PRIMARY_COLOR);
+        context.drawVerticalLine(sliderXState + 1, bottom - 6, bottom - 2, CigaretteScreen.PRIMARY_COLOR);
     }
 
     @Override

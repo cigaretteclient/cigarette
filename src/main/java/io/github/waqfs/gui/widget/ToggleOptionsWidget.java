@@ -1,6 +1,7 @@
 package io.github.waqfs.gui.widget;
 
 import io.github.waqfs.config.FileSystem;
+import io.github.waqfs.gui.CigaretteScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
@@ -13,11 +14,6 @@ import org.lwjgl.glfw.GLFW;
 import java.util.function.Consumer;
 
 public class ToggleOptionsWidget extends PassthroughWidget<ClickableWidget> {
-    private static final int BASE_COLOR = 0xFF1A1A1A;
-    private static final int DROPDOWN_SELECTED_COLOR = 0xFFFE5F00;
-    private static final int HOVERED_COLOR = 0xFF000000;
-    private static final int BASE_TEXT_COLOR = 0xFFFFFFFF;
-    private static final int ENABLED_TEXT_COLOR = 0xFFB3FF80;
     private static final byte MAX_HOVER_TICKS = 35;
     private boolean dropdownVisible = false;
     private boolean toggledState = false;
@@ -145,13 +141,13 @@ public class ToggleOptionsWidget extends PassthroughWidget<ClickableWidget> {
 
         if (isMouseOver(mouseX, mouseY)) {
             ticksOnHover = Math.min(ticksOnHover + 1, MAX_HOVER_TICKS);
-            context.fillGradient(left, top, right, bottom, BASE_COLOR, HOVERED_COLOR);
+            context.fillGradient(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR, CigaretteScreen.DARK_BACKGROUND_COLOR);
         } else {
             ticksOnHover = Math.max(ticksOnHover - 1, 0);
-            context.fill(left, top, right, bottom, BASE_COLOR);
+            context.fill(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR);
         }
 
-        int textColor = toggledState ? ENABLED_TEXT_COLOR : BASE_TEXT_COLOR;
+        int textColor = toggledState ? CigaretteScreen.ENABLED_COLOR : CigaretteScreen.PRIMARY_TEXT_COLOR;
 
         if (ticksOnHover > 0) {
             float progress = (float) ticksOnHover / MAX_HOVER_TICKS;
@@ -163,9 +159,9 @@ public class ToggleOptionsWidget extends PassthroughWidget<ClickableWidget> {
 
         context.drawTextWithShadow(MinecraftClient.getInstance().textRenderer, getMessage(), left + 4, top + height / 3, textColor);
         if (dropdownVisible && children != null) {
-            context.drawVerticalLine(right - 3, top, bottom, DROPDOWN_SELECTED_COLOR);
-            context.drawVerticalLine(right - 2, top, bottom, DROPDOWN_SELECTED_COLOR);
-            context.drawVerticalLine(right - 1, top, bottom, DROPDOWN_SELECTED_COLOR);
+            context.drawVerticalLine(right - 3, top, bottom, CigaretteScreen.SECONDARY_COLOR);
+            context.drawVerticalLine(right - 2, top, bottom, CigaretteScreen.SECONDARY_COLOR);
+            context.drawVerticalLine(right - 1, top, bottom, CigaretteScreen.SECONDARY_COLOR);
             for (ClickableWidget child : children) {
                 if (child == null) continue;
                 child.setX(right);

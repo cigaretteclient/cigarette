@@ -1,5 +1,6 @@
 package io.github.waqfs.gui.widget;
 
+import io.github.waqfs.gui.CigaretteScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -10,11 +11,9 @@ import org.jetbrains.annotations.Nullable;
 
 public class DraggableWidget extends ClickableWidget {
     public interface DragCallback {
-        public void updateParentPosition(int newX, int newY, int deltaX, int deltaY);
+        void updateParentPosition(int newX, int newY, int deltaX, int deltaY);
     }
 
-    private static final int BASE_COLOR = 0xFFFE5F00;
-    private static final int BASE_TEXT_COLOR = 0xFF000000;
     private boolean dragging = false;
     private int startingX = 0;
     private int startingY = 0;
@@ -77,11 +76,11 @@ public class DraggableWidget extends ClickableWidget {
     @Override
     public void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
-        context.fill(getX(), getY(), getRight(), getBottom(), BASE_COLOR);
+        context.fill(getX(), getY(), getRight(), getBottom(), CigaretteScreen.PRIMARY_COLOR);
         Text text = getMessage();
         int textWidth = textRenderer.getWidth(text);
         int horizontalMargin = (width - textWidth) / 2;
         int verticalMargin = (height - textRenderer.fontHeight) / 2;
-        context.drawText(textRenderer, text, getX() + horizontalMargin, getY() + verticalMargin + 1, BASE_TEXT_COLOR, false);
+        context.drawText(textRenderer, text, getX() + horizontalMargin, getY() + verticalMargin + 1, CigaretteScreen.PRIMARY_TEXT_COLOR, true);
     }
 }

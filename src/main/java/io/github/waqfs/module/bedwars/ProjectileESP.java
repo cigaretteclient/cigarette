@@ -1,6 +1,7 @@
 package io.github.waqfs.module.bedwars;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
+import io.github.waqfs.gui.widget.ToggleOptionsWidget;
 import io.github.waqfs.lib.Glow;
 import io.github.waqfs.lib.Raycast;
 import io.github.waqfs.lib.Renderer;
@@ -17,6 +18,7 @@ import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.entity.projectile.thrown.EggEntity;
 import net.minecraft.entity.projectile.thrown.EnderPearlEntity;
 import net.minecraft.entity.projectile.thrown.SnowballEntity;
+import net.minecraft.text.Text;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
@@ -32,9 +34,18 @@ public class ProjectileESP extends RenderModule {
     private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockespnophase", 1536, Renderer.BLOCK_ESP_NOPHASE, RenderLayer.MultiPhaseParameters.builder().build(false));
     private final HashSet<Projectile> projectiles = new HashSet<>();
     private final Glow.Context glowContext = new Glow.Context();
+    private final ToggleOptionsWidget enableArrows = new ToggleOptionsWidget(Text.literal("Shot Arrows"), Text.literal("Display the trajectory of shot Arrows."));
+    private final ToggleOptionsWidget enablePearls = new ToggleOptionsWidget(Text.literal("Thrown Pearls"), Text.literal("Display the trajectory of thrown Pearls."));
+    private final ToggleOptionsWidget enableSnowballs = new ToggleOptionsWidget(Text.literal("Thrown Snowballs"), Text.literal("Display the trajectory of thrown Snowballs."));
+    private final ToggleOptionsWidget enableEggs = new ToggleOptionsWidget(Text.literal("Thrown Eggs"), Text.literal("Display the trajectory of thrown Eggs."));
 
     public ProjectileESP() {
         super(MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+        this.widget.setOptions(enableArrows, enablePearls, enableSnowballs, enableEggs);
+        enableArrows.registerAsOption("bedwars.projectileesp.arrows");
+        enablePearls.registerAsOption("bedwars.projectileesp.pearls");
+        enableSnowballs.registerAsOption("bedwars.projectileesp.snowballs");
+        enableEggs.registerAsOption("bedwars.projectileesp.eggs");
     }
 
     @Override
@@ -74,6 +85,10 @@ public class ProjectileESP extends RenderModule {
             if (!(entity instanceof ArrowEntity) && !(entity instanceof EggEntity) && !(entity instanceof SnowballEntity) && !(entity instanceof EnderPearlEntity))
                 continue;
             if (!entity.isPushedByFluids()) continue;
+            if (entity instanceof ArrowEntity && !enableArrows.getState()) continue;
+            if (entity instanceof EnderPearlEntity && !enablePearls.getState()) continue;
+            if (entity instanceof SnowballEntity && !enableSnowballs.getState()) continue;
+            if (entity instanceof EggEntity && !enableEggs.getState()) continue;
 
             Raycast.SteppedTrajectory trajectory = Raycast.trajectory((ProjectileEntity) entity, MAX_TICKS);
             if (trajectory.collisionPos == null) continue;

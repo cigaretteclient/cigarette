@@ -25,14 +25,13 @@ public class AutoClicker extends TickModule {
 
     @Override
     protected void onEnabledTick(MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
-        System.out.println(client.attackCooldown);
+        client.attackCooldown = 0;
         HitResult hitResult = client.crosshairTarget;
         KeyBinding attackKey = KeyBinding.byId("key.attack");
         KeyBindingAccessor attackKeyAccessor = (KeyBindingAccessor) attackKey;
         if (hitResult == null || attackKey == null || !attackKey.isPressed()) return;
         if (Math.random() > CLICK_PERCENT) return;
         if (hitResult.getType() != HitResult.Type.BLOCK) {
-            client.attackCooldown = 0;
             attackKeyAccessor.setTimesPressed(attackKeyAccessor.getTimesPressed() + 1);
         }
     }

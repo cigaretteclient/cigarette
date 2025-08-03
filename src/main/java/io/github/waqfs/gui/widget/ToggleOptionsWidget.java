@@ -14,6 +14,7 @@ import java.util.function.Consumer;
 
 public class ToggleOptionsWidget extends PassthroughWidget<ClickableWidget> {
     private static final int BASE_COLOR = 0xFF1A1A1A;
+    private static final int DROPDOWN_SELECTED_COLOR = 0xFFFE5F00;
     private static final int HOVERED_COLOR = 0xFF000000;
     private static final int BASE_TEXT_COLOR = 0xFFFFFFFF;
     private static final int ENABLED_TEXT_COLOR = 0xFFB3FF80;
@@ -162,6 +163,9 @@ public class ToggleOptionsWidget extends PassthroughWidget<ClickableWidget> {
 
         context.drawTextWithShadow(MinecraftClient.getInstance().textRenderer, getMessage(), left + 4, top + height / 3, textColor);
         if (dropdownVisible && children != null) {
+            context.drawVerticalLine(right - 3, top, bottom, DROPDOWN_SELECTED_COLOR);
+            context.drawVerticalLine(right - 2, top, bottom, DROPDOWN_SELECTED_COLOR);
+            context.drawVerticalLine(right - 1, top, bottom, DROPDOWN_SELECTED_COLOR);
             for (ClickableWidget child : children) {
                 if (child == null) continue;
                 child.setX(right);

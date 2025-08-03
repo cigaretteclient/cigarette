@@ -13,7 +13,7 @@ public class DraggableWidget extends ClickableWidget {
         public void updateParentPosition(int newX, int newY, int deltaX, int deltaY);
     }
 
-    private static final int BASE_COLOR = 0xFFCC8D49;
+    private static final int BASE_COLOR = 0xFFFE5F00;
     private static final int BASE_TEXT_COLOR = 0xFF000000;
     private boolean dragging = false;
     private int startingX = 0;

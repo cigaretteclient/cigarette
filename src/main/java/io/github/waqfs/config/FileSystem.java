@@ -29,9 +29,24 @@ public class FileSystem {
         saveConfig();
     }
 
-    private static Integer parseInt(String value) {
+    private static Object parseNumber(String value) {
+        String actualNumber = value.substring(0, value.length() - 1);
+        String suffix = value.substring(value.length() - 1);
         try {
-            return Integer.valueOf(value);
+            switch (suffix) {
+                case "i" -> {
+                    return Integer.valueOf(actualNumber);
+                }
+                case "f" -> {
+                    return Float.valueOf(actualNumber);
+                }
+                case "d" -> {
+                    return Double.valueOf(actualNumber);
+                }
+                default -> {
+                    return null;
+                }
+            }
         } catch (NumberFormatException ignored) {
             return null;
         }
@@ -61,11 +76,10 @@ public class FileSystem {
                     else if (value.equals("false")) parsedValue = false;
                     else if (value.startsWith("\"") && value.endsWith("\""))
                         parsedValue = value.substring(1, value.length() - 2);
-                    else if (value.matches("^[\\d.]+$")) parsedValue = FileSystem.parseInt(value);
+                    else if (value.matches("^[\\d.]+[a-z]$")) parsedValue = FileSystem.parseNumber(value);
 
                     if (OPTION_CALLBACKS.get(key) != null) {
                         @Nullable Object previous = OPTIONS.getOrDefault(key, null);
-                        System.out.println("Cigarette -> config." + key + " = " + parsedValue);
                         if (previous == null || previous.equals(parsedValue)) {
                             OPTION_CALLBACKS.get(key).accept(parsedValue);
                         }
@@ -91,10 +105,14 @@ public class FileSystem {
         }
         try (FileWriter writer = new FileWriter(CONFIG_FILE)) {
             for (Map.Entry<String, Object> entry : OPTIONS.entrySet()) {
-                if (entry.getValue() instanceof String) {
-                    writer.write(entry.getKey() + " = \"" + entry.getValue() + "\"\n");
+                Object value = entry.getValue();
+                if (value instanceof Boolean) {
+                    writer.write(entry.getKey() + " = " + value + "\n");
+                } else if (value instanceof String) {
+                    writer.write(entry.getKey() + " = \"" + value + "\"\n");
                 } else {
-                    writer.write(entry.getKey() + " = " + entry.getValue() + "\n");
+                    String suffix = value instanceof Integer ? "i" : value instanceof Float ? "f" : value instanceof Double ? "d" : "?";
+                    writer.write(entry.getKey() + " = " + value + suffix + "\n");
                 }
             }
         } catch (Exception error) {

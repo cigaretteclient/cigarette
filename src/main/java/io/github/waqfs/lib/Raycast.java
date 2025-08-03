@@ -6,7 +6,8 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.projectile.ArrowEntity;
+import net.minecraft.entity.projectile.PersistentProjectileEntity;
+import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.entity.projectile.ProjectileUtil;
 import net.minecraft.predicate.entity.EntityPredicates;
 import net.minecraft.util.hit.BlockHitResult;
@@ -19,9 +20,11 @@ import net.minecraft.world.RaycastContext;
 import org.jetbrains.annotations.Nullable;
 
 public class Raycast {
-    private static final double GRAVITY = -0.05;
+    private static final double ARROW_GRAVITY = -0.05;
+    private static final double ITEM_GRAVITY = -0.03;
     private static final double DEFAULT_DRAG = 0.99;
-    private static final double FLUID_DRAG = 0.6;
+    private static final double FLUID_ARROW_DRAG = 0.6;
+    private static final double FLUID_ITEM_DRAG = 0.8;
 
     public static HitResult first(BlockHitResult blockResult, @Nullable EntityHitResult entityResult, Vec3d source) {
         return entityResult != null && entityResult.getPos().squaredDistanceTo(source) < blockResult.getPos().squaredDistanceTo(source) ? entityResult : blockResult;
@@ -77,11 +80,12 @@ public class Raycast {
         return withEntity(entity, box, region);
     }
 
-    public static SteppedTrajectory arrowTrajectory(ArrowEntity entity, int ticks) {
+    public static SteppedTrajectory trajectory(ProjectileEntity entity, int ticks) {
         ClientWorld world = MinecraftClient.getInstance().world;
         assert ticks > 0;
         assert world != null;
 
+        boolean isArrow = entity instanceof PersistentProjectileEntity;
         SteppedTrajectory trajectory = new SteppedTrajectory(ticks);
 
         Vec3d previousPosition = entity.getPos();
@@ -92,7 +96,7 @@ public class Raycast {
         for (int tick = 0; tick < ticks; tick++) {
             Vec3d position = previousPosition.add(previousVelocity);
 
-            EntityHitResult entityResult = withEntity(entity, position, 1 / 16d);
+            EntityHitResult entityResult = withEntity(entity, position, 1 / 12d);
             if (entityResult != null) {
                 trajectory.collision = entityResult;
                 trajectory.collisionPos = position;
@@ -114,7 +118,7 @@ public class Raycast {
             if (collided) break;
 
             boolean inFluid = world.getBlockState(new BlockPos((int) position.x, (int) position.y, (int) position.z)).isOf(Blocks.WATER);
-            previousVelocity = previousVelocity.multiply(inFluid ? FLUID_DRAG : DEFAULT_DRAG).add(0, GRAVITY, 0);
+            previousVelocity = isArrow ? previousVelocity.multiply(inFluid ? FLUID_ARROW_DRAG : DEFAULT_DRAG).add(0, ARROW_GRAVITY, 0) : previousVelocity.add(0, ITEM_GRAVITY, 0).multiply(inFluid ? FLUID_ITEM_DRAG : DEFAULT_DRAG);
         }
 
         return trajectory;

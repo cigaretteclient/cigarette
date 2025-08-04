@@ -1,11 +1,11 @@
 bedwars.header=BED WARS
-gamedetector.bedwars.red=Red
+bedwars.red=Red
 murdermystery.header=MURDER MYSTERY
-gamedetector.murdermystery.timeleft=Time Left
-gamedetector.murdermystery.detective=Detective:
-gamedetector.murdermystery.bow=Bow:
-gamedetector.murdermystery.infected=Infected
-gamedetector.murdermystery.bow1=Bow #1
+murdermystery.timeleft=Time Left
+murdermystery.detective=Detective:
+murdermystery.bow=Bow:
+murdermystery.infected=Infected
+murdermystery.bow1=Bow #1
 murdermystery.knife=Knife
 skyblock.header=SKYBLOCK
 zombies.header=ZOMBIES

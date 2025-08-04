@@ -21,6 +21,7 @@ public class GameDetector {
         final String MYSTERY_BOW = Language.getPhrase(Language.Phrase.DETECTOR_MYSTERY_BOW);
         final String MYSTERY_INFECTED = Language.getPhrase(Language.Phrase.DETECTOR_MYSTERY_INFECTED);
         final String MYSTERY_BOW1 = Language.getPhrase(Language.Phrase.DETECTOR_MYSTERY_BOW1);
+        final String ZOMBIES_ZOMBIESLEFT = Language.getPhrase(Language.Phrase.ZOMBIES_ZOMBIESLEFT);
 
         String headerText = ScoreboardL.getUnformattedHeader(client);
         String[] rowsText = ScoreboardL.getUnformattedRows(client);
@@ -53,6 +54,14 @@ public class GameDetector {
                     GameDetector.subGame = ChildGame.NULL;
                 }
             }
+            case "ZOMBIES" -> {
+                GameDetector.rootGame = ParentGame.ZOMBIES;
+                if (GameDetector.some(rowsText, ZOMBIES_ZOMBIESLEFT)) {
+                    GameDetector.subGame = ChildGame.INSTANCED_ZOMBIES;
+                } else {
+                    GameDetector.subGame = ChildGame.NULL;
+                }
+            }
             default -> {
                 GameDetector.rootGame = ParentGame.NULL;
                 GameDetector.subGame = ChildGame.NULL;
@@ -72,6 +81,13 @@ public class GameDetector {
         return false;
     }
 
+    private static boolean some(String target, String[] sources) {
+        for (String str : sources) {
+            if (target.contains(str)) return true;
+        }
+        return false;
+    }
+
     private static @Nullable String find(String[] target, String source) {
         for (String str : target) {
             if (str.contains(source)) return str;
@@ -80,7 +96,7 @@ public class GameDetector {
     }
 
     public enum ParentGame {
-        NULL(0), SKYBLOCK(1), BEDWARS(2), MURDER_MYSTERY(3);
+        NULL(0), SKYBLOCK(1), BEDWARS(2), MURDER_MYSTERY(3), ZOMBIES(4);
 
         private final int id;
 
@@ -94,7 +110,7 @@ public class GameDetector {
     }
 
     public enum ChildGame {
-        NULL(0), INSTANCED_BEDWARS(1), CLASSIC_MYSTERY(2), DOUBLE_UP_MYSTERY(3), INFECTION_MYSTERY(4);
+        NULL(0), INSTANCED_BEDWARS(1), CLASSIC_MYSTERY(2), DOUBLE_UP_MYSTERY(3), INFECTION_MYSTERY(4), INSTANCED_ZOMBIES(5);
 
         private final int id;
 

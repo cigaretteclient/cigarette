@@ -80,6 +80,7 @@ public class Language implements ClientModInitializer {
                     while ((line = reader.readLine()) != null) {
                         if (!line.contains("=")) continue;
                         String[] split = line.split("=");
+                        if (split.length != 2) continue;
                         Phrase phrase = Phrase.from(split[0]);
                         if (phrase != null) phrases.put(phrase, split[1]);
                     }

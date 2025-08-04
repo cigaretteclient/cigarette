@@ -153,7 +153,7 @@ public class Language implements ClientModInitializer {
     }
 
     public enum Phrase {
-        BEDWARS_HEADER("bedwars.header"), DETECTOR_BEDWARS_RED("gamedetector.bedwars.red"), MYSTERY_HEADER("murdermystery.header"), DETECTOR_MYSTERY_TIMELEFT("gamedetector.murdermystery.timeleft"), DETECTOR_MYSTERY_DETECTIVE("gamedetector.murdermystery.detective"), DETECTOR_MYSTERY_BOW("gamedetector.murdermystery.bow"), DETECTOR_MYSTERY_INFECTED("gamedetector.murdermystery.infected"), DETECTOR_MYSTERY_BOW1("gamedetector.murdermystery.bow1"), MYSTERY_KNIFE("murdermystery.knife"), SKYBLOCK_HEADER("skyblock.header"), ZOMBIES_HEADER("zombies.header"), ZOMBIES_ZOMBIESLEFT("zombies.zombiesleft");
+        BEDWARS_HEADER("bedwars.header"), DETECTOR_BEDWARS_RED("bedwars.red"), MYSTERY_HEADER("murdermystery.header"), DETECTOR_MYSTERY_TIMELEFT("murdermystery.timeleft"), DETECTOR_MYSTERY_DETECTIVE("murdermystery.detective"), DETECTOR_MYSTERY_BOW("murdermystery.bow"), DETECTOR_MYSTERY_INFECTED("murdermystery.infected"), DETECTOR_MYSTERY_BOW1("murdermystery.bow1"), MYSTERY_KNIFE("murdermystery.knife"), SKYBLOCK_HEADER("skyblock.header"), ZOMBIES_HEADER("zombies.header"), ZOMBIES_ZOMBIESLEFT("zombies.zombiesleft");
 
         private final String key;
 

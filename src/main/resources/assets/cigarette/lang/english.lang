@@ -1,5 +1,6 @@
 bedwars.header=BED WARS
 bedwars.red=Red
+
 murdermystery.header=MURDER MYSTERY
 murdermystery.timeleft=Time Left
 murdermystery.detective=Detective:
@@ -7,6 +8,8 @@ murdermystery.bow=Bow:
 murdermystery.infected=Infected
 murdermystery.bow1=Bow #1
 murdermystery.knife=Knife
+
 skyblock.header=SKYBLOCK
+
 zombies.header=ZOMBIES
 zombies.zombiesleft=Zombies Left

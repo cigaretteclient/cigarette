@@ -1,8 +1,15 @@
+bedwars.header=
 bedwars.red=Rojo
+
+murdermystery.header=
 murdermystery.timeleft=Tiempo Restante
 murdermystery.detective=Detective:
 murdermystery.bow=Arco:
 murdermystery.infected=Infectado
 murdermystery.bow1=Arco #1
 murdermystery.knife=Cuchillo
+
+skyblock.header=
+
+zombies.header=
 zombies.zombiesleft=Zombies Restantes

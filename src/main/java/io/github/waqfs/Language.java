@@ -93,13 +93,13 @@ public class Language implements ClientModInitializer {
         });
     }
 
-    public static String getPhrase(Phrase phrase) {
+    public static @Nullable String getPhrase(Phrase phrase) {
         LanguageMapping map = LANGUAGE_MAP.get(SELECTED_LANGUAGE);
-        if (map == null) return "undefined";
+        if (map == null) return null;
         return map.getPhrase(phrase);
     }
 
-    public static String[] getPhraseFromAll(Phrase phrase) {
+    public static @Nullable String[] getPhraseFromAll(Phrase phrase) {
         String[] phrases = new String[LANGUAGE_MAP.size()];
         int i = 0;
         for (LanguageMapping map : LANGUAGE_MAP.values()) {
@@ -153,7 +153,7 @@ public class Language implements ClientModInitializer {
     }
 
     public enum Phrase {
-        DETECTOR_BEDWARS_RED("gamedetector.bedwars.red"), DETECTOR_MYSTERY_TIMELEFT("gamedetector.murdermystery.timeleft"), DETECTOR_MYSTERY_DETECTIVE("gamedetector.murdermystery.detective"), DETECTOR_MYSTERY_BOW("gamedetector.murdermystery.bow"), DETECTOR_MYSTERY_INFECTED("gamedetector.murdermystery.infected"), DETECTOR_MYSTERY_BOW1("gamedetector.murdermystery.bow1"), MYSTERY_KNIFE("murdermystery.knife"), ZOMBIES_HEADER("zombies.header"), ZOMBIES_ZOMBIESLEFT("zombies.zombiesleft");
+        BEDWARS_HEADER("bedwars.header"), DETECTOR_BEDWARS_RED("gamedetector.bedwars.red"), MYSTERY_HEADER("murdermystery.header"), DETECTOR_MYSTERY_TIMELEFT("gamedetector.murdermystery.timeleft"), DETECTOR_MYSTERY_DETECTIVE("gamedetector.murdermystery.detective"), DETECTOR_MYSTERY_BOW("gamedetector.murdermystery.bow"), DETECTOR_MYSTERY_INFECTED("gamedetector.murdermystery.infected"), DETECTOR_MYSTERY_BOW1("gamedetector.murdermystery.bow1"), MYSTERY_KNIFE("murdermystery.knife"), SKYBLOCK_HEADER("skyblock.header"), ZOMBIES_HEADER("zombies.header"), ZOMBIES_ZOMBIESLEFT("zombies.zombiesleft");
 
         private final String key;
 

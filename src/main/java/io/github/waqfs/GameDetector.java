@@ -15,57 +15,63 @@ public class GameDetector {
             return;
         }
 
-        final String BEDWARS_RED = Language.getPhrase(Language.Phrase.DETECTOR_BEDWARS_RED);
-        final String MYSTERY_TIMELEFT = Language.getPhrase(Language.Phrase.DETECTOR_MYSTERY_TIMELEFT);
-        final String MYSTERY_DETECTIVE = Language.getPhrase(Language.Phrase.DETECTOR_MYSTERY_DETECTIVE);
-        final String MYSTERY_BOW = Language.getPhrase(Language.Phrase.DETECTOR_MYSTERY_BOW);
-        final String MYSTERY_INFECTED = Language.getPhrase(Language.Phrase.DETECTOR_MYSTERY_INFECTED);
-        final String MYSTERY_BOW1 = Language.getPhrase(Language.Phrase.DETECTOR_MYSTERY_BOW1);
-        final String ZOMBIES_ZOMBIESLEFT = Language.getPhrase(Language.Phrase.ZOMBIES_ZOMBIESLEFT);
+        final String[] BEDWARS_HEADER = Language.getPhraseFromAll(Language.Phrase.BEDWARS_HEADER);
+        final String[] MYSTERY_HEADER = Language.getPhraseFromAll(Language.Phrase.MYSTERY_HEADER);
+        final String[] SKYBLOCK_HEADER = Language.getPhraseFromAll(Language.Phrase.SKYBLOCK_HEADER);
+        final String[] ZOMBIES_HEADER = Language.getPhraseFromAll(Language.Phrase.ZOMBIES_HEADER);
 
         String headerText = ScoreboardL.getUnformattedHeader(client);
         String[] rowsText = ScoreboardL.getUnformattedRows(client);
-        switch (headerText) {
-            case "SKYBLOCK" -> {
-                GameDetector.rootGame = ParentGame.SKYBLOCK;
+
+        if (GameDetector.some(headerText, BEDWARS_HEADER)) {
+            GameDetector.rootGame = ParentGame.BEDWARS;
+
+            final String[] BEDWARS_RED = Language.getPhraseFromAll(Language.Phrase.DETECTOR_BEDWARS_RED);
+            if (GameDetector.some(rowsText, BEDWARS_RED)) {
+                GameDetector.subGame = ChildGame.INSTANCED_BEDWARS;
+            } else {
                 GameDetector.subGame = ChildGame.NULL;
             }
-            case "BED WARS" -> {
-                GameDetector.rootGame = ParentGame.BEDWARS;
-                if (GameDetector.some(rowsText, BEDWARS_RED)) {
-                    GameDetector.subGame = ChildGame.INSTANCED_BEDWARS;
+
+        } else if (GameDetector.some(headerText, MYSTERY_HEADER)) {
+            GameDetector.rootGame = ParentGame.MURDER_MYSTERY;
+
+            final String[] MYSTERY_TIMELEFT = Language.getPhraseFromAll(Language.Phrase.DETECTOR_MYSTERY_TIMELEFT);
+            final String[] MYSTERY_DETECTIVE = Language.getPhraseFromAll(Language.Phrase.DETECTOR_MYSTERY_DETECTIVE);
+            final String[] MYSTERY_BOW = Language.getPhraseFromAll(Language.Phrase.DETECTOR_MYSTERY_BOW);
+            final String[] MYSTERY_INFECTED = Language.getPhraseFromAll(Language.Phrase.DETECTOR_MYSTERY_INFECTED);
+            final String[] MYSTERY_BOW1 = Language.getPhraseFromAll(Language.Phrase.DETECTOR_MYSTERY_BOW1);
+            if (GameDetector.some(rowsText, MYSTERY_TIMELEFT)) {
+                if (GameDetector.some(rowsText, MYSTERY_DETECTIVE) || GameDetector.some(rowsText, MYSTERY_BOW)) {
+                    GameDetector.subGame = ChildGame.CLASSIC_MYSTERY;
+                } else if (GameDetector.some(rowsText, MYSTERY_INFECTED)) {
+                    GameDetector.subGame = ChildGame.INFECTION_MYSTERY;
+                } else if (GameDetector.some(rowsText, MYSTERY_BOW1)) {
+                    GameDetector.subGame = ChildGame.DOUBLE_UP_MYSTERY;
                 } else {
                     GameDetector.subGame = ChildGame.NULL;
                 }
-            }
-            case "MURDER MYSTERY" -> {
-                GameDetector.rootGame = ParentGame.MURDER_MYSTERY;
-                if (GameDetector.some(rowsText, MYSTERY_TIMELEFT)) {
-                    if (GameDetector.some(rowsText, MYSTERY_DETECTIVE) || GameDetector.some(rowsText, MYSTERY_BOW)) {
-                        GameDetector.subGame = ChildGame.CLASSIC_MYSTERY;
-                    } else if (GameDetector.some(rowsText, MYSTERY_INFECTED)) {
-                        GameDetector.subGame = ChildGame.INFECTION_MYSTERY;
-                    } else if (GameDetector.some(rowsText, MYSTERY_BOW1)) {
-                        GameDetector.subGame = ChildGame.DOUBLE_UP_MYSTERY;
-                    } else {
-                        GameDetector.subGame = ChildGame.NULL;
-                    }
-                } else {
-                    GameDetector.subGame = ChildGame.NULL;
-                }
-            }
-            case "ZOMBIES" -> {
-                GameDetector.rootGame = ParentGame.ZOMBIES;
-                if (GameDetector.some(rowsText, ZOMBIES_ZOMBIESLEFT)) {
-                    GameDetector.subGame = ChildGame.INSTANCED_ZOMBIES;
-                } else {
-                    GameDetector.subGame = ChildGame.NULL;
-                }
-            }
-            default -> {
-                GameDetector.rootGame = ParentGame.NULL;
+            } else {
                 GameDetector.subGame = ChildGame.NULL;
             }
+
+        } else if (GameDetector.some(headerText, SKYBLOCK_HEADER)) {
+            GameDetector.rootGame = ParentGame.SKYBLOCK;
+            GameDetector.subGame = ChildGame.NULL;
+
+        } else if (GameDetector.some(headerText, ZOMBIES_HEADER)) {
+            GameDetector.rootGame = ParentGame.ZOMBIES;
+
+            final String[] ZOMBIES_ZOMBIESLEFT = Language.getPhraseFromAll(Language.Phrase.ZOMBIES_ZOMBIESLEFT);
+            if (GameDetector.some(rowsText, ZOMBIES_ZOMBIESLEFT)) {
+                GameDetector.subGame = ChildGame.INSTANCED_ZOMBIES;
+            } else {
+                GameDetector.subGame = ChildGame.NULL;
+            }
+
+        } else {
+            GameDetector.rootGame = ParentGame.NULL;
+            GameDetector.subGame = ChildGame.NULL;
         }
     }
 
@@ -74,16 +80,20 @@ public class GameDetector {
         GameDetector.subGame = ChildGame.NULL;
     }
 
-    private static boolean some(String[] target, String source) {
-        for (String str : target) {
-            if (str.contains(source)) return true;
+    private static boolean some(String target, @Nullable String[] sources) {
+        for (String source : sources) {
+            if (source == null) continue;
+            if (target.contains(source)) return true;
         }
         return false;
     }
 
-    private static boolean some(String target, String[] sources) {
-        for (String str : sources) {
-            if (target.contains(str)) return true;
+    private static boolean some(String[] targets, @Nullable String[] sources) {
+        for (String source : sources) {
+            if (source == null) continue;
+            for (String target : targets) {
+                if (target.contains(source)) return true;
+            }
         }
         return false;
     }

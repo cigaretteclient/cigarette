@@ -28,7 +28,7 @@ public class SliderWidget extends ClickableWidget {
         if (sliderCallback != null) sliderCallback.accept(state);
     }
 
-    private void setAccurateState(double state) {
+    protected void setAccurateState(double state) {
         if (state > maxState) return;
         if (state < minState) return;
         double mult = Math.pow(10, decimalPlaces);

@@ -24,6 +24,8 @@ public class SliderWidget extends ClickableWidget {
     private boolean dragging = false;
 
     public void setState(double state) {
+        if (state > maxState) return;
+        if (state < minState) return;
         this.setAccurateState(state);
         if (sliderCallback != null) sliderCallback.accept(state);
     }

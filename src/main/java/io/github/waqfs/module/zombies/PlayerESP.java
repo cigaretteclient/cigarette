@@ -2,6 +2,7 @@ package io.github.waqfs.module.zombies;
 
 import io.github.waqfs.GameDetector;
 import io.github.waqfs.lib.Glow;
+import io.github.waqfs.lib.WorldL;
 import io.github.waqfs.module.TickModule;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -24,7 +25,7 @@ public class PlayerESP extends TickModule {
     @Override
     protected void onEnabledTick(MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
         this.glowContext.removeAll();
-        for (PlayerEntity playerEntity : world.getPlayers()) {
+        for (PlayerEntity playerEntity : WorldL.getRealPlayers()) {
             UUID uuid = playerEntity.getUuid();
             this.glowContext.addGlow(uuid, 0xFCF805);
         }

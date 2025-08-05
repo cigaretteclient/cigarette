@@ -4,6 +4,7 @@ import io.github.waqfs.GameDetector;
 import io.github.waqfs.Language;
 import io.github.waqfs.lib.PlayerEntityL;
 import io.github.waqfs.lib.TextL;
+import io.github.waqfs.lib.WorldL;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
@@ -90,6 +91,7 @@ public class MurderMysteryAgent extends BaseAgent {
 
         for (Entity entity : world.getEntities()) {
             if (entity instanceof PlayerEntity entityPlayer) {
+                if (!WorldL.isRealPlayer(entityPlayer)) continue;
                 if (entityPlayer.getY() < 0) continue;
                 PersistentPlayer existingPlayer = this.getOrCreatePersistentPlayer(entityPlayer);
 

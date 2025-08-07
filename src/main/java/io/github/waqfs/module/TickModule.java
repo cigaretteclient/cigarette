@@ -1,5 +1,6 @@
 package io.github.waqfs.module;
 
+import io.github.waqfs.gui.widget.RootModule;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
@@ -8,9 +9,9 @@ import net.minecraft.client.world.ClientWorld;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class TickModule extends BaseModule {
-    public TickModule(String key, String displayName, @Nullable String tooltip) {
-        super(key, displayName, tooltip);
+public abstract class TickModule<T extends RootModule<T>> extends BaseModule<T> {
+    public TickModule(T widgetClass, String key, String displayName, @Nullable String tooltip) {
+        super(widgetClass, key, displayName, tooltip);
         ClientTickEvents.START_CLIENT_TICK.register(client -> {
             if (this.state && client.world != null && client.player != null && this._inValidGame()) {
                 onEnabledTick(client, client.world, client.player);

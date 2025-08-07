@@ -1,6 +1,7 @@
 package io.github.waqfs.module.bedwars;
 
 import io.github.waqfs.GameDetector;
+import io.github.waqfs.gui.widget.ToggleOptionsWidget;
 import io.github.waqfs.lib.InputOverride;
 import io.github.waqfs.mixin.KeyBindingAccessor;
 import io.github.waqfs.module.TickModule;
@@ -13,13 +14,13 @@ import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.NotNull;
 
-public class Bridger extends TickModule {
+public class Bridger extends TickModule<ToggleOptionsWidget> {
     protected static final String MODULE_NAME = "Bridger";
     protected static final String MODULE_TOOLTIP = "Automatically bridges.";
     protected static final String MODULE_ID = "bedwars.bridger";
 
     public Bridger() {
-        super(MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+        super(ToggleOptionsWidget.base, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
     }
 
     private int liftTicks = 0;

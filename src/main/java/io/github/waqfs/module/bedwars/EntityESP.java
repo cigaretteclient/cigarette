@@ -21,7 +21,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.UUID;
 
-public class EntityESP extends TickModule {
+public class EntityESP extends TickModule<ToggleOptionsWidget> {
     protected static final String MODULE_NAME = "EntityESP";
     protected static final String MODULE_TOOLTIP = "Highlights all miscellaneous entities with their team color.";
     protected static final String MODULE_ID = "bedwars.entityesp";
@@ -31,7 +31,7 @@ public class EntityESP extends TickModule {
     private final Glow.Context glowContext = new Glow.Context();
 
     public EntityESP() {
-        super(MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+        super(ToggleOptionsWidget.base, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
         TextWidget header = new TextWidget(Text.literal("Types")).withUnderline();
         this.widget.setOptions(header, enableEnderDragons, enableIronGolems, enableSilverfish);
         enableEnderDragons.registerAsOption("bedwars.entityesp.enderdragons");

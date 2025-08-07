@@ -2,6 +2,7 @@ package io.github.waqfs.module.bedwars;
 
 import io.github.waqfs.GameDetector;
 import io.github.waqfs.agent.BedwarsAgent;
+import io.github.waqfs.gui.widget.ToggleOptionsWidget;
 import io.github.waqfs.module.TickModule;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -16,13 +17,13 @@ import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.NotNull;
 
-public class AutoTool extends TickModule {
+public class AutoTool extends TickModule<ToggleOptionsWidget> {
     protected static final String MODULE_NAME = "Auto Tool";
     protected static final String MODULE_TOOLTIP = "Automatically swaps your tool to the correct one when breaking blocks.";
     protected static final String MODULE_ID = "bedwars.autotool";
 
     public AutoTool() {
-        super(MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+        super(ToggleOptionsWidget.base, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
     }
 
     private boolean isTool(ItemStack item) {

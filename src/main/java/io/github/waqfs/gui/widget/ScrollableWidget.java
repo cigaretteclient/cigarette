@@ -17,7 +17,6 @@ public class ScrollableWidget<T extends ClickableWidget> extends PassthroughWidg
     private boolean shouldScroll = false;
     private double scrollPosition = 0D;
     private @Nullable DraggableWidget header;
-    private @Nullable T[] internalChildren;
 
     @SafeVarargs
     public ScrollableWidget(int x, int y, @Nullable Text headerText, @Nullable T... children) {
@@ -37,55 +36,63 @@ public class ScrollableWidget<T extends ClickableWidget> extends PassthroughWidg
     }
 
     private boolean updateShouldScroll() {
-        this.shouldScroll = ((internalChildren.length + (header != null ? 1 : 0)) * rowHeight) > DEFAULT_HEIGHT;
+        this.shouldScroll = ((children.length + (header != null ? 1 : 0)) * rowHeight) > DEFAULT_HEIGHT;
         return this.shouldScroll;
     }
 
     @SafeVarargs
     public final ScrollableWidget<T> setChildren(@Nullable T... children) {
-        this.internalChildren = children;
-        return mergeInternalChildren();
+        this.children = children;
+        return updateWidths();
     }
 
     public ScrollableWidget<T> setHeader(@Nullable Text headerText) {
         if (headerText == null) {
             this.header = null;
-            return mergeInternalChildren();
+            return updateWidths();
         }
         this.header = new DraggableWidget(getX(), getY(), width, rowHeight, headerText);
         this.header.onDrag((newX, newY, deltaX, deltaY) -> {
             setX(newX);
             setY(newY);
         });
-        return mergeInternalChildren();
+        return updateWidths();
     }
 
-    private ScrollableWidget<T> mergeInternalChildren() {
-        int length = (internalChildren == null ? 0 : internalChildren.length) + (header == null ? 0 : 1);
-        ClickableWidget[] temp = new ClickableWidget[length];
-        int index = 0;
-        if (header != null) {
-            temp[0] = header;
-            index++;
-        }
-        int rightMargin = updateShouldScroll() ? DEFAULT_SCROLLBAR_WIDTH : 0;
-        if (internalChildren != null) {
-            for (T child : internalChildren) {
+    private ScrollableWidget<T> updateWidths() {
+        if (this.children != null) {
+            int rightMargin = this.updateShouldScroll() ? DEFAULT_SCROLLBAR_WIDTH : 0;
+            for (ClickableWidget child : children) {
                 if (child == null) continue;
                 child.setHeight(rowHeight);
                 child.setWidth(width - rightMargin);
-                temp[index] = child;
-                index++;
             }
         }
-        this.children = temp;
         return this;
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        return (this.header != null && this.header.mouseClicked(mouseX, mouseY, button)) || super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (header != null) {
+            this.header.mouseReleased(mouseX, mouseY, button);
+        }
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+        return (this.header != null && this.header.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) || super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
         if (isMouseOver(mouseX, mouseY)) {
-            int rowCount = children == null ? 0 : children.length;
+            int rowCount = (children == null ? 0 : children.length) + (header == null ? 0 : 1);
             scrollPosition = Math.max(0, Math.min(scrollPosition - verticalAmount * VERTICAL_SCROLL_MULTIPLIER, rowCount * rowHeight - height));
             return true;
         }
@@ -95,20 +102,21 @@ public class ScrollableWidget<T extends ClickableWidget> extends PassthroughWidg
     @Override
     public void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
         if (children != null) {
-            int realTop = getY() + (header != null ? header.getHeight() : 0);
+            boolean hasHeader = header != null;
+            int hasHeaderInt = hasHeader ? 1 : 0;
+            int realTop = getY() + (hasHeader ? header.getHeight() : 0);
             Scissor.pushExclusive(context, getX(), realTop, getRight(), getBottom());
-            for (int index = header != null ? 1 : 0; index < children.length; index++) {
+            for (int index = 0; index < children.length; index++) {
                 ClickableWidget child = children[index];
                 if (child == null) continue;
                 child.setX(getX());
-                child.setY(getY() - (int) scrollPosition + index * rowHeight);
+                child.setY(getY() - (int) scrollPosition + (index + hasHeaderInt) * rowHeight);
                 child.render(context, mouseX, mouseY, deltaTicks);
             }
             if (this.shouldScroll) {
                 context.fill(getRight() - DEFAULT_SCROLLBAR_WIDTH, realTop, getRight(), getBottom(), CigaretteScreen.BACKGROUND_COLOR);
-                int realHeight = height - (header != null ? rowHeight : 0);
-                int childCount = children.length - (header != null ? 1 : 0);
-                double overflowHeight = (childCount * rowHeight) - (double) realHeight;
+                int realHeight = height - hasHeaderInt * rowHeight;
+                double overflowHeight = (children.length * rowHeight) - (double) realHeight;
                 if (overflowHeight > realHeight - rowHeight) {
                     int topMargin = (int) ((scrollPosition / overflowHeight) * (realHeight - rowHeight));
                     context.fill(getRight() - DEFAULT_SCROLLBAR_WIDTH, realTop + topMargin, getRight(), realTop + topMargin + rowHeight, CigaretteScreen.SECONDARY_COLOR);

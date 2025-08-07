@@ -30,11 +30,11 @@ public class AutoTool extends TickModule {
     }
 
     private boolean isPickaxe(ItemStack item) {
-        return item.isOf(Items.WOODEN_PICKAXE) || item.isOf(Items.IRON_PICKAXE) || item.isOf(Items.GOLDEN_PICKAXE) || item.isOf(Items.DIAMOND_PICKAXE);
+        return item.isOf(Items.WOODEN_PICKAXE) || item.isOf(Items.STONE_PICKAXE) || item.isOf(Items.IRON_PICKAXE) || item.isOf(Items.GOLDEN_PICKAXE) || item.isOf(Items.DIAMOND_PICKAXE);
     }
 
     private boolean isAxe(ItemStack item) {
-        return item.isOf(Items.WOODEN_AXE) || item.isOf(Items.IRON_AXE) || item.isOf(Items.GOLDEN_AXE) || item.isOf(Items.DIAMOND_AXE);
+        return item.isOf(Items.WOODEN_AXE) || item.isOf(Items.STONE_AXE) || item.isOf(Items.IRON_AXE) || item.isOf(Items.GOLDEN_AXE) || item.isOf(Items.DIAMOND_AXE);
     }
 
     private boolean isShears(ItemStack item) {

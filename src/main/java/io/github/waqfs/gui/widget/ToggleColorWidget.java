@@ -58,30 +58,30 @@ public class ToggleColorWidget extends PassthroughWidget<ClickableWidget> {
         return this.toggle.getState();
     }
 
-    public ToggleColorWidget(int x, int y, int width, int height, Text message, @Nullable Text tooltip) {
+    public ToggleColorWidget(int x, int y, int width, int height, Text message, @Nullable Text tooltip, boolean withAlpha) {
         super(x, y, width, height, message);
         this.setTooltip(Tooltip.of(tooltip));
         this.toggle = new ToggleOptionsWidget(x, y, width, height, message);
-        this.attachChildren();
+        this.attachChildren(withAlpha);
     }
 
-    public ToggleColorWidget(int x, int y, int width, int height, Text message) {
+    public ToggleColorWidget(int x, int y, int width, int height, Text message, boolean withAlpha) {
         super(x, y, width, height, message);
         this.toggle = new ToggleOptionsWidget(x, y, width, height, message);
-        this.attachChildren();
+        this.attachChildren(withAlpha);
     }
 
-    public ToggleColorWidget(Text message, Text tooltip) {
+    public ToggleColorWidget(Text message, Text tooltip, boolean withAlpha) {
         super(0, 0, 0, 0, message);
         this.setTooltip(Tooltip.of(tooltip));
         this.toggle = new ToggleOptionsWidget(0, 0, 0, 0, message);
-        this.attachChildren();
+        this.attachChildren(withAlpha);
     }
 
-    public ToggleColorWidget(Text message) {
+    public ToggleColorWidget(Text message, boolean withAlpha) {
         super(0, 0, 0, 0, message);
         this.toggle = new ToggleOptionsWidget(0, 0, 0, 0, message);
-        this.attachChildren();
+        this.attachChildren(withAlpha);
     }
 
     public ToggleColorWidget withDefaultColor(int argb) {
@@ -96,8 +96,8 @@ public class ToggleColorWidget extends PassthroughWidget<ClickableWidget> {
         return this;
     }
 
-    private void attachChildren() {
-        ScrollableWidget<ClickableWidget> wrapper = new ScrollableWidget<>(0, 0, this.sliderRed, this.sliderGreen, this.sliderBlue, this.sliderAlpha);
+    private void attachChildren(boolean withAlpha) {
+        ScrollableWidget<ClickableWidget> wrapper = new ScrollableWidget<>(0, 0, this.sliderRed, this.sliderGreen, this.sliderBlue, withAlpha ? this.sliderAlpha : null);
         this.children = new ScrollableWidget[]{wrapper};
         this.sliderRed.registerUpdate((newColor -> {
             int red = (int) (double) newColor;

@@ -159,7 +159,7 @@ public class ToggleOptionsWidget extends PassthroughWidget<ClickableWidget> {
         if (ticksOnHover > 0) {
             float progress = (float) ticksOnHover / MAX_HOVER_TICKS;
             context.drawHorizontalLine(left, (int) (left + width * progress), top, textColor);
-            context.drawHorizontalLine((int) (right - width * progress), right, bottom, textColor);
+            context.drawHorizontalLine((int) (right - width * progress), right, bottom - 1, textColor);
             context.drawVerticalLine(left, (int) (bottom - height * progress), bottom, textColor);
             context.drawVerticalLine(right - 1, top, (int) (top + height * progress), textColor);
         }

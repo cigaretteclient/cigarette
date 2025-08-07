@@ -1,5 +1,6 @@
 package io.github.waqfs.gui.widget;
 
+import io.github.waqfs.gui.CigaretteScreen;
 import io.github.waqfs.gui.util.Scissor;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
@@ -11,38 +12,38 @@ public class ScrollableWidget<T extends ClickableWidget> extends PassthroughWidg
     private static final int VERTICAL_SCROLL_MULTIPLIER = 6;
     private static final int DEFAULT_WIDTH = 100;
     private static final int DEFAULT_HEIGHT = 200;
+    private static final int DEFAULT_SCROLLBAR_WIDTH = 3;
     private final int rowHeight = 20;
+    private boolean shouldScroll = false;
     private double scrollPosition = 0D;
     private @Nullable DraggableWidget header;
     private @Nullable T[] internalChildren;
 
     @SafeVarargs
     public ScrollableWidget(int x, int y, @Nullable Text headerText, @Nullable T... children) {
-        super(x, y, DEFAULT_WIDTH, DEFAULT_HEIGHT, null);
+        super(x, y, DEFAULT_WIDTH + DEFAULT_SCROLLBAR_WIDTH, DEFAULT_HEIGHT, null);
         this.setChildren(children);
         this.setHeader(headerText);
     }
 
     @SafeVarargs
     public ScrollableWidget(int x, int y, @Nullable T... children) {
-        super(x, y, DEFAULT_WIDTH, DEFAULT_HEIGHT, null);
+        super(x, y, DEFAULT_WIDTH + DEFAULT_SCROLLBAR_WIDTH, DEFAULT_HEIGHT, null);
         this.setChildren(children);
     }
 
     public ScrollableWidget(int x, int y) {
-        super(x, y, DEFAULT_WIDTH, DEFAULT_HEIGHT, null);
+        super(x, y, DEFAULT_WIDTH + DEFAULT_SCROLLBAR_WIDTH, DEFAULT_HEIGHT, null);
     }
 
-    public ScrollableWidget<T> setChildren(@Nullable T... children) {
+    private boolean updateShouldScroll() {
+        this.shouldScroll = ((internalChildren.length + (header != null ? 1 : 0)) * rowHeight) > DEFAULT_HEIGHT;
+        return this.shouldScroll;
+    }
+
+    @SafeVarargs
+    public final ScrollableWidget<T> setChildren(@Nullable T... children) {
         this.internalChildren = children;
-//        this.children = children;
-        if (children != null) {
-            for (T child : children) {
-                if (child == null) continue;
-                child.setWidth(width);
-                child.setHeight(rowHeight);
-            }
-        }
         return mergeInternalChildren();
     }
 
@@ -67,8 +68,12 @@ public class ScrollableWidget<T extends ClickableWidget> extends PassthroughWidg
             temp[0] = header;
             index++;
         }
+        int rightMargin = updateShouldScroll() ? DEFAULT_SCROLLBAR_WIDTH : 0;
         if (internalChildren != null) {
             for (T child : internalChildren) {
+                if (child == null) continue;
+                child.setHeight(rowHeight);
+                child.setWidth(width - rightMargin);
                 temp[index] = child;
                 index++;
             }
@@ -80,7 +85,7 @@ public class ScrollableWidget<T extends ClickableWidget> extends PassthroughWidg
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
         if (isMouseOver(mouseX, mouseY)) {
-            int rowCount = (header == null ? 0 : 1) + (children == null ? 0 : children.length);
+            int rowCount = children == null ? 0 : children.length;
             scrollPosition = Math.max(0, Math.min(scrollPosition - verticalAmount * VERTICAL_SCROLL_MULTIPLIER, rowCount * rowHeight - height));
             return true;
         }
@@ -90,13 +95,27 @@ public class ScrollableWidget<T extends ClickableWidget> extends PassthroughWidg
     @Override
     public void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
         if (children != null) {
-            Scissor.pushExclusive(context, getX(), getY(), getRight(), getBottom());
+            int realTop = getY() + (header != null ? header.getHeight() : 0);
+            Scissor.pushExclusive(context, getX(), realTop, getRight(), getBottom());
             for (int index = header != null ? 1 : 0; index < children.length; index++) {
                 ClickableWidget child = children[index];
                 if (child == null) continue;
                 child.setX(getX());
                 child.setY(getY() - (int) scrollPosition + index * rowHeight);
                 child.render(context, mouseX, mouseY, deltaTicks);
+            }
+            if (this.shouldScroll) {
+                context.fill(getRight() - DEFAULT_SCROLLBAR_WIDTH, realTop, getRight(), getBottom(), CigaretteScreen.BACKGROUND_COLOR);
+                int realHeight = height - (header != null ? rowHeight : 0);
+                int childCount = children.length - (header != null ? 1 : 0);
+                double overflowHeight = (childCount * rowHeight) - (double) realHeight;
+                if (overflowHeight > realHeight - rowHeight) {
+                    int topMargin = (int) ((scrollPosition / overflowHeight) * (realHeight - rowHeight));
+                    context.fill(getRight() - DEFAULT_SCROLLBAR_WIDTH, realTop + topMargin, getRight(), realTop + topMargin + rowHeight, CigaretteScreen.SECONDARY_COLOR);
+                } else {
+                    int scrollbarHeight = realHeight - (int) overflowHeight;
+                    context.fill(getRight() - DEFAULT_SCROLLBAR_WIDTH, realTop + (int) scrollPosition, getRight(), realTop + (int) scrollPosition + scrollbarHeight, CigaretteScreen.SECONDARY_COLOR);
+                }
             }
             Scissor.popExclusive();
         }

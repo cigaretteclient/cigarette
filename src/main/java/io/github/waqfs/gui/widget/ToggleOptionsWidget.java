@@ -165,15 +165,19 @@ public class ToggleOptionsWidget extends PassthroughWidget<ClickableWidget> {
         }
 
         context.drawTextWithShadow(MinecraftClient.getInstance().textRenderer, getMessage(), left + 4, top + height / 3, textColor);
-        if (dropdownVisible && children != null) {
-            context.drawVerticalLine(right - 3, top, bottom, CigaretteScreen.SECONDARY_COLOR);
-            context.drawVerticalLine(right - 2, top, bottom, CigaretteScreen.SECONDARY_COLOR);
-            context.drawVerticalLine(right - 1, top, bottom, CigaretteScreen.SECONDARY_COLOR);
-            for (ClickableWidget child : children) {
-                if (child == null) continue;
-                child.setX(right);
-                child.setY(top);
-                child.render(context, mouseX, mouseY, deltaTicks);
+        if (children != null) {
+            context.drawVerticalLine(right - 3, top + 4, bottom - 4, textColor);
+            context.drawVerticalLine(right - 2, top + 4, bottom - 4, textColor);
+            if (dropdownVisible) {
+                context.drawVerticalLine(right - 3, top, bottom, CigaretteScreen.SECONDARY_COLOR);
+                context.drawVerticalLine(right - 2, top, bottom, CigaretteScreen.SECONDARY_COLOR);
+                context.drawVerticalLine(right - 1, top, bottom, CigaretteScreen.SECONDARY_COLOR);
+                for (ClickableWidget child : children) {
+                    if (child == null) continue;
+                    child.setX(right);
+                    child.setY(top);
+                    child.render(context, mouseX, mouseY, deltaTicks);
+                }
             }
         }
     }

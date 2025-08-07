@@ -5,13 +5,17 @@
   "mixins": [
     "BedBlockMixin",
     "EntityMixin",
-    "ScoreboardMixin",
-    "PropertyMixin",
-    "PlayerEntityMixin",
+    "KeyBindingAccessor",
     "MinecraftClientInvoker",
-    "KeyBindingAccessor"
+    "PlayerEntityMixin",
+    "PropertyMixin",
+    "ScoreboardMixin"
   ],
   "injectors": {
     "defaultRequire": 1
-  }
+  },
+  "client": [
+    "KeyboardInputMixin",
+    "MouseMixin"
+  ]
 }

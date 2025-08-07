@@ -2,11 +2,16 @@ package io.github.waqfs.gui;
 
 import io.github.waqfs.Cigarette;
 import io.github.waqfs.gui.instance.Category;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
+
+import java.util.Stack;
 
 public class CigaretteScreen extends Screen {
     public static final int PRIMARY_COLOR = 0xFFFE5F00;
@@ -15,6 +20,7 @@ public class CigaretteScreen extends Screen {
     public static final int BACKGROUND_COLOR = 0xFF1A1A1A;
     public static final int DARK_BACKGROUND_COLOR = 0xFF000000;
     public static final int ENABLED_COLOR = 0xFF3AFC3A;
+    private final Stack<ClickableWidget> priority = new Stack<>();
     private Screen parent = null;
 
     protected CigaretteScreen() {
@@ -30,23 +36,32 @@ public class CigaretteScreen extends Screen {
         for (Category category : Cigarette.CONFIG.allCategories) {
             if (category == null) continue;
             addDrawableChild(category.widget);
+            this.priority.addFirst(category.widget);
         }
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        for (Element child : this.children()) {
+        for (ClickableWidget child : priority) {
             boolean handled = child.mouseClicked(mouseX, mouseY, button);
-            if (handled) return true;
+            if (handled) {
+                priority.remove(child);
+                priority.addFirst(child);
+                return true;
+            }
         }
         return false;
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
-        for (Element child : this.children()) {
+        for (ClickableWidget child : priority) {
             boolean handled = child.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
-            if (handled) return true;
+            if (handled) {
+                priority.remove(child);
+                priority.addFirst(child);
+                return true;
+            }
         }
         return false;
     }
@@ -87,5 +102,15 @@ public class CigaretteScreen extends Screen {
             case GLFW.GLFW_KEY_ESCAPE, GLFW.GLFW_KEY_RIGHT_SHIFT -> this.close();
         }
         return true;
+    }
+
+    @Override
+    public void render(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
+        this.renderBackground(context, mouseX, mouseY, deltaTicks);
+
+        for (int i = priority.size() - 1; i >= 0; i--) {
+            Drawable drawable = priority.get(i);
+            drawable.render(context, mouseX, mouseY, deltaTicks);
+        }
     }
 }

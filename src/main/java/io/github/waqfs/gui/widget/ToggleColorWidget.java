@@ -25,11 +25,15 @@ public class ToggleColorWidget extends PassthroughWidget<ClickableWidget> {
 
     public void setState(int color) {
         this.colorState = color;
+        this.setSliderStates(color);
+        this.updateState();
+    }
+
+    private void setSliderStates(int color) {
         sliderAlpha.setAccurateState(color >> 24);
         sliderRed.setAccurateState((color >> 16) & 0xFF);
         sliderGreen.setAccurateState((color >> 8) & 0xFF);
         sliderBlue.setAccurateState(color & 0xFF);
-        this.updateState();
     }
 
     public void updateState() {
@@ -80,9 +84,10 @@ public class ToggleColorWidget extends PassthroughWidget<ClickableWidget> {
         this.attachChildren();
     }
 
-    public ToggleColorWidget withDefaultColor(int color) {
-        this.defaultColorState = color;
-        this.colorState = color;
+    public ToggleColorWidget withDefaultColor(int argb) {
+        this.defaultColorState = argb;
+        this.colorState = argb;
+        this.setSliderStates(argb);
         return this;
     }
 
@@ -97,18 +102,22 @@ public class ToggleColorWidget extends PassthroughWidget<ClickableWidget> {
         this.sliderRed.registerUpdate((newColor -> {
             int red = (int) (double) newColor;
             this.colorState = (this.colorState & 0xFF00FFFF) + (red << 16);
+            this.updateState();
         }));
         this.sliderGreen.registerUpdate((newColor -> {
             int green = (int) (double) newColor;
             this.colorState = (this.colorState & 0xFFFF00FF) + (green << 8);
+            this.updateState();
         }));
         this.sliderBlue.registerUpdate((newColor -> {
             int blue = (int) (double) newColor;
             this.colorState = (this.colorState & 0xFFFFFF00) + blue;
+            this.updateState();
         }));
         this.sliderAlpha.registerUpdate((newColor -> {
             int alpha = (int) (double) newColor;
             this.colorState = (alpha << 24) + (this.colorState & 0xFFFFFF);
+            this.updateState();
         }));
     }
 

@@ -86,6 +86,11 @@ public class ToggleColorWidget extends PassthroughWidget<ClickableWidget> {
         return this;
     }
 
+    public ToggleColorWidget withDefaultState(boolean state) {
+        this.toggle.withDefaultState(state);
+        return this;
+    }
+
     private void attachChildren() {
         ScrollableWidget<ClickableWidget> wrapper = new ScrollableWidget<>(0, 0, this.sliderRed, this.sliderGreen, this.sliderBlue, this.sliderAlpha);
         this.children = new ScrollableWidget[]{wrapper};

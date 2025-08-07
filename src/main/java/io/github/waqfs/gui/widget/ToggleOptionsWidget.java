@@ -16,6 +16,7 @@ import java.util.function.Consumer;
 public class ToggleOptionsWidget extends PassthroughWidget<ClickableWidget> {
     private static final byte MAX_HOVER_TICKS = 35;
     private boolean dropdownVisible = false;
+    private boolean defaultToggledState = false;
     private boolean toggledState = false;
     private @Nullable Consumer<Boolean> toggledCallback = null;
     private int ticksOnHover = 0;
@@ -64,6 +65,12 @@ public class ToggleOptionsWidget extends PassthroughWidget<ClickableWidget> {
 
     public ToggleOptionsWidget setOptions(@Nullable ClickableWidget... options) {
         this.children = new ClickableWidget[]{new ScrollableWidget<>(0, 0).setChildren(options)};
+        return this;
+    }
+
+    public ToggleOptionsWidget withDefaultState(boolean state) {
+        this.defaultToggledState = state;
+        this.toggledState = state;
         return this;
     }
 

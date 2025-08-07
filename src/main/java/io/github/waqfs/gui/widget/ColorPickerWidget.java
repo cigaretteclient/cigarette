@@ -50,26 +50,26 @@ public class ColorPickerWidget extends PassthroughWidget<ClickableWidget> {
         return this.colorState & 0xFFFFFF;
     }
 
-    public ColorPickerWidget(int x, int y, int width, int height, Text message, @Nullable Text tooltip) {
+    public ColorPickerWidget(int x, int y, int width, int height, Text message, @Nullable Text tooltip, boolean withAlpha) {
         super(x, y, width, height, message);
         this.setTooltip(Tooltip.of(tooltip));
-        this.attachChildren();
+        this.attachChildren(withAlpha);
     }
 
-    public ColorPickerWidget(int x, int y, int width, int height, Text message) {
+    public ColorPickerWidget(int x, int y, int width, int height, Text message, boolean withAlpha) {
         super(x, y, width, height, message);
-        this.attachChildren();
+        this.attachChildren(withAlpha);
     }
 
-    public ColorPickerWidget(Text message, Text tooltip) {
+    public ColorPickerWidget(Text message, Text tooltip, boolean withAlpha) {
         super(0, 0, 0, 0, message);
         this.setTooltip(Tooltip.of(tooltip));
-        this.attachChildren();
+        this.attachChildren(withAlpha);
     }
 
-    public ColorPickerWidget(Text message) {
+    public ColorPickerWidget(Text message, boolean withAlpha) {
         super(0, 0, 0, 0, message);
-        this.attachChildren();
+        this.attachChildren(withAlpha);
     }
 
     public ColorPickerWidget withDefaultColor(int color) {
@@ -78,8 +78,8 @@ public class ColorPickerWidget extends PassthroughWidget<ClickableWidget> {
         return this;
     }
 
-    private void attachChildren() {
-        ScrollableWidget<ClickableWidget> wrapper = new ScrollableWidget<>(0, 0, this.sliderRed, this.sliderGreen, this.sliderBlue, this.sliderAlpha);
+    private void attachChildren(boolean withAlpha) {
+        ScrollableWidget<ClickableWidget> wrapper = new ScrollableWidget<>(0, 0, this.sliderRed, this.sliderGreen, this.sliderBlue, withAlpha ? this.sliderAlpha : null);
         this.children = new ScrollableWidget[]{wrapper};
         this.sliderRed.registerUpdate((newColor -> {
             int red = (int) (double) newColor;

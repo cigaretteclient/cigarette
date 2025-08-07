@@ -76,7 +76,7 @@ public class FileSystem {
                     else if (value.equals("false")) parsedValue = false;
                     else if (value.startsWith("\"") && value.endsWith("\""))
                         parsedValue = value.substring(1, value.length() - 2);
-                    else if (value.matches("^[\\d.]+[a-z]$")) parsedValue = FileSystem.parseNumber(value);
+                    else if (value.matches("^-*[\\d.]+[a-z]$")) parsedValue = FileSystem.parseNumber(value);
 
                     if (OPTION_CALLBACKS.get(key) != null) {
                         @Nullable Object previous = OPTIONS.getOrDefault(key, null);

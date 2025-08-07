@@ -2,6 +2,8 @@ package io.github.waqfs.module.bedwars;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
 import io.github.waqfs.GameDetector;
+import io.github.waqfs.gui.widget.ColorPickerWidget;
+import io.github.waqfs.gui.widget.ToggleColorWidget;
 import io.github.waqfs.lib.Glow;
 import io.github.waqfs.lib.Raycast;
 import io.github.waqfs.lib.Renderer;
@@ -17,6 +19,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.projectile.FireballEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.text.Text;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
@@ -34,9 +37,16 @@ public class FireballESP extends RenderModule {
     private static final RenderLayer RENDER_LAYER_SPHERE = RenderLayer.of("cigarette.triespnophase", 1536, Renderer.TRI_ESP_NOPHASE, RenderLayer.MultiPhaseParameters.builder().build(false));
     private final HashSet<Fireball> fireballs = new HashSet<>();
     private final Glow.Context glowContext = new Glow.Context();
+    private final ToggleColorWidget enableGlow = new ToggleColorWidget(Text.literal("Glowing"), Text.literal("Applies the glowing effect to the fireball entities"), false).withDefaultColor(0xFFFF0000);
+    private final ColorPickerWidget sphereColor = new ColorPickerWidget(Text.literal("Sphere Color"), true).withDefaultColor(0x4FFF0000);
+    private final ColorPickerWidget lineColor = new ColorPickerWidget(Text.literal("Projection Color"), true).withDefaultColor(0xFFFF0000);
 
     public FireballESP() {
         super(MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+        this.widget.setOptions(enableGlow, sphereColor, lineColor);
+        enableGlow.registerAsOption("bedwars.fireballesp.glow");
+        sphereColor.registerAsOption("bedwars.fireballesp.spherecolor");
+        lineColor.registerAsOption("bedwars.fireballesp.linecolor");
     }
 
     @Override
@@ -50,7 +60,7 @@ public class FireballESP extends RenderModule {
 
         for (Fireball fireball : fireballs) {
             if (fireball.collisionNearPlayer && fireball.triangles != null) {
-                Renderer.drawSphere(buffer, matrix, 0x4FFF0000, fireball.triangles);
+                Renderer.drawSphere(buffer, matrix, sphereColor.getStateARGB(), fireball.triangles);
             }
         }
 
@@ -60,7 +70,7 @@ public class FireballESP extends RenderModule {
         buffer = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
 
         for (Fireball fireball : fireballs) {
-            Renderer.drawFakeLine(buffer, matrix, 0xFFFF0000, fireball.collisionPathStart.toVector3f(), fireball.collisionPathEnd.toVector3f(), 0.1f);
+            Renderer.drawFakeLine(buffer, matrix, lineColor.getStateARGB(), fireball.collisionPathStart.toVector3f(), fireball.collisionPathEnd.toVector3f(), 0.1f);
         }
 
         build = buffer.endNullable();
@@ -95,7 +105,7 @@ public class FireballESP extends RenderModule {
                 }
             }
             fireballs.add(fireball);
-            glowContext.addGlow(entityfb.getUuid(), 0xFF0000);
+            if (enableGlow.getToggleState()) glowContext.addGlow(entityfb.getUuid(), enableGlow.getStateRGB());
         }
         ItemStack heldItem = player.getInventory().getSelectedStack();
         if (heldItem.isOf(Items.FIRE_CHARGE)) {

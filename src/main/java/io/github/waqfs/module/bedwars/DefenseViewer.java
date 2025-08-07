@@ -3,6 +3,7 @@ package io.github.waqfs.module.bedwars;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import io.github.waqfs.GameDetector;
 import io.github.waqfs.agent.BedwarsAgent;
+import io.github.waqfs.gui.widget.ToggleOptionsWidget;
 import io.github.waqfs.lib.Renderer;
 import io.github.waqfs.module.RenderModule;
 import io.github.waqfs.precomputed.PyramidQuadrant;
@@ -28,7 +29,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.OptionalDouble;
 
-public class DefenseViewer extends RenderModule implements ClientModInitializer {
+public class DefenseViewer extends RenderModule<ToggleOptionsWidget> implements ClientModInitializer {
     protected static final String MODULE_NAME = "Defense Viewer";
     protected static final String MODULE_TOOLTIP = "ESPs bed blocks and the defensive blocks around them.";
     protected static final String MODULE_ID = "bedwars.defenseesp";
@@ -70,7 +71,7 @@ public class DefenseViewer extends RenderModule implements ClientModInitializer 
     }
 
     public DefenseViewer() {
-        super(MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+        super(ToggleOptionsWidget.base, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
     }
 
     @Override

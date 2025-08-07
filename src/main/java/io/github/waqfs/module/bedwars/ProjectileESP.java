@@ -30,7 +30,7 @@ import org.joml.Matrix4f;
 
 import java.util.HashSet;
 
-public class ProjectileESP extends RenderModule {
+public class ProjectileESP extends RenderModule<ToggleOptionsWidget> {
     protected static final String MODULE_NAME = "ProjectileESP";
     protected static final String MODULE_TOOLTIP = "Displays the trajectory of all projectiles.";
     protected static final String MODULE_ID = "bedwars.projectileesp";
@@ -46,7 +46,7 @@ public class ProjectileESP extends RenderModule {
     private final SliderWidget maxTicks = new SliderWidget(Text.literal("Max Ticks"), Text.literal("The maximum ticks the projection calculates into the future.")).withBounds(20, 200, 200);
 
     public ProjectileESP() {
-        super(MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+        super(ToggleOptionsWidget.base, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
         TextWidget header = new TextWidget(Text.literal("Types")).withUnderline();
         this.widget.setOptions(enableGlow, customHitColor, header, enableArrows, enablePearls, enableSnowballs, enableEggs, maxTicks);
         enableGlow.registerAsOption("bedwars.projectileesp.glow");

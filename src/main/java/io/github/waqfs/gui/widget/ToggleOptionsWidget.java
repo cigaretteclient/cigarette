@@ -4,7 +4,6 @@ import io.github.waqfs.config.FileSystem;
 import io.github.waqfs.gui.CigaretteScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.Text;
@@ -13,7 +12,8 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.function.Consumer;
 
-public class ToggleOptionsWidget extends PassthroughWidget<ClickableWidget> {
+public class ToggleOptionsWidget extends RootModule<ToggleOptionsWidget> {
+    public static ToggleOptionsWidget base = new ToggleOptionsWidget(Text.literal(""), null);
     private static final byte MAX_HOVER_TICKS = 35;
     private boolean dropdownVisible = false;
     private boolean defaultToggledState = false;
@@ -54,6 +54,11 @@ public class ToggleOptionsWidget extends PassthroughWidget<ClickableWidget> {
         super(x, y, width, height, message);
     }
 
+    @Override
+    public ToggleOptionsWidget buildModule(String message, @Nullable String tooltip) {
+        return new ToggleOptionsWidget(Text.of(message), tooltip == null ? null : Text.of(tooltip));
+    }
+
     public ToggleOptionsWidget(Text message, Text tooltip) {
         super(0, 0, 0, 0, message);
         this.setTooltip(Tooltip.of(tooltip));
@@ -78,11 +83,13 @@ public class ToggleOptionsWidget extends PassthroughWidget<ClickableWidget> {
         this.registerUpdate(newState -> {
             this.toggledState = newState;
             FileSystem.updateState(key, newState);
+            this.triggerModuleStateUpdate(newState);
         });
         FileSystem.registerUpdate(key, newState -> {
             if (!(newState instanceof Boolean booleanState)) return;
             this.toggledState = booleanState;
             this.setState(booleanState);
+            this.triggerModuleStateUpdate(booleanState);
         });
     }
 
@@ -180,9 +187,5 @@ public class ToggleOptionsWidget extends PassthroughWidget<ClickableWidget> {
                 }
             }
         }
-    }
-
-    @Override
-    protected void appendClickableNarrations(NarrationMessageBuilder builder) {
     }
 }

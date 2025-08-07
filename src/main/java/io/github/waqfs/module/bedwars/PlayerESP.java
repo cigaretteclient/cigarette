@@ -1,6 +1,7 @@
 package io.github.waqfs.module.bedwars;
 
 import io.github.waqfs.GameDetector;
+import io.github.waqfs.gui.widget.ToggleOptionsWidget;
 import io.github.waqfs.lib.Glow;
 import io.github.waqfs.lib.WorldL;
 import io.github.waqfs.module.TickModule;
@@ -12,14 +13,14 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
-public class PlayerESP extends TickModule {
+public class PlayerESP extends TickModule<ToggleOptionsWidget> {
     protected static final String MODULE_NAME = "PlayerESP";
     protected static final String MODULE_TOOLTIP = "Highlights all the players in the game.";
     protected static final String MODULE_ID = "bedwars.playeresp";
     private final Glow.Context glowContext = new Glow.Context();
 
     public PlayerESP() {
-        super(MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+        super(ToggleOptionsWidget.base, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
     }
 
     @Override

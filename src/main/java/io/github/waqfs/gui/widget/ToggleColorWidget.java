@@ -3,7 +3,6 @@ package io.github.waqfs.gui.widget;
 import io.github.waqfs.config.FileSystem;
 import io.github.waqfs.gui.CigaretteScreen;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.Text;
@@ -12,7 +11,8 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.function.Consumer;
 
-public class ToggleColorWidget extends PassthroughWidget<ClickableWidget> {
+public class ToggleColorWidget extends RootModule<ToggleColorWidget> {
+    public static ToggleColorWidget base = new ToggleColorWidget(Text.literal(""), false);
     private boolean dropdownVisible = false;
     private int defaultColorState = 0xFFFFFFFF;
     private int colorState = 0xFFFFFFFF;
@@ -22,6 +22,7 @@ public class ToggleColorWidget extends PassthroughWidget<ClickableWidget> {
     private final SliderWidget sliderBlue = new SliderWidget(Text.literal("Blue")).withBounds(0, 255, 255);
     private final SliderWidget sliderAlpha = new SliderWidget(Text.literal("Alpha")).withBounds(0, 255, 255);
     private @Nullable Consumer<Integer> colorCallback = null;
+    @Nullable Consumer<Boolean> moduleStateCallback = null;
 
     public void setState(int color) {
         this.colorState = color;
@@ -123,6 +124,7 @@ public class ToggleColorWidget extends PassthroughWidget<ClickableWidget> {
 
     public void registerAsOption(String key) {
         this.toggle.registerAsOption(key);
+        this.toggle.moduleStateCallback = this.moduleStateCallback;
 
         String colorKey = key + ".color";
         this.registerUpdate(newState -> {
@@ -194,6 +196,7 @@ public class ToggleColorWidget extends PassthroughWidget<ClickableWidget> {
     }
 
     @Override
-    protected void appendClickableNarrations(NarrationMessageBuilder builder) {
+    public ToggleColorWidget buildModule(String message, @Nullable String tooltip) {
+        return new ToggleColorWidget(Text.of(message), tooltip == null ? null : Text.of(tooltip), true);
     }
 }

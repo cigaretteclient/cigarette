@@ -1,6 +1,7 @@
 package io.github.waqfs.module.zombies;
 
 import io.github.waqfs.GameDetector;
+import io.github.waqfs.gui.widget.ColorPickerWidget;
 import io.github.waqfs.lib.Glow;
 import io.github.waqfs.lib.WorldL;
 import io.github.waqfs.module.TickModule;
@@ -8,6 +9,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
@@ -17,9 +19,12 @@ public class PlayerESP extends TickModule {
     protected static final String MODULE_TOOLTIP = "Highlights all the players in the game.";
     protected static final String MODULE_ID = "zombies.playeresp";
     private final Glow.Context glowContext = new Glow.Context();
+    private final ColorPickerWidget color = new ColorPickerWidget(Text.literal("Color"), false).withDefaultColor(0xFFFCF805);
 
     public PlayerESP() {
         super(MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+        this.widget.setOptions(color);
+        color.registerAsOption("zombies.playeresp.color");
     }
 
     @Override
@@ -27,7 +32,7 @@ public class PlayerESP extends TickModule {
         this.glowContext.removeAll();
         for (PlayerEntity playerEntity : WorldL.getRealPlayers()) {
             UUID uuid = playerEntity.getUuid();
-            this.glowContext.addGlow(uuid, 0xFCF805);
+            this.glowContext.addGlow(uuid, color.getStateRGB());
         }
     }
 

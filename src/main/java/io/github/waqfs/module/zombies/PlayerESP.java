@@ -2,6 +2,7 @@ package io.github.waqfs.module.zombies;
 
 import io.github.waqfs.GameDetector;
 import io.github.waqfs.gui.widget.ColorPickerWidget;
+import io.github.waqfs.gui.widget.ToggleOptionsWidget;
 import io.github.waqfs.lib.Glow;
 import io.github.waqfs.lib.WorldL;
 import io.github.waqfs.module.TickModule;
@@ -14,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
-public class PlayerESP extends TickModule {
+public class PlayerESP extends TickModule<ToggleOptionsWidget> {
     protected static final String MODULE_NAME = "PlayerESP";
     protected static final String MODULE_TOOLTIP = "Highlights all the players in the game.";
     protected static final String MODULE_ID = "zombies.playeresp";
@@ -22,7 +23,7 @@ public class PlayerESP extends TickModule {
     private final ColorPickerWidget color = new ColorPickerWidget(Text.literal("Color"), false).withDefaultColor(0xFFFCF805);
 
     public PlayerESP() {
-        super(MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+        super(ToggleOptionsWidget.base, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
         this.widget.setOptions(color);
         color.registerAsOption("zombies.playeresp.color");
     }

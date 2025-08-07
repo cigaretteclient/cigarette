@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import io.github.waqfs.GameDetector;
 import io.github.waqfs.gui.widget.ColorPickerWidget;
 import io.github.waqfs.gui.widget.ToggleColorWidget;
+import io.github.waqfs.gui.widget.ToggleOptionsWidget;
 import io.github.waqfs.lib.Glow;
 import io.github.waqfs.lib.Raycast;
 import io.github.waqfs.lib.Renderer;
@@ -29,7 +30,7 @@ import org.joml.Matrix4f;
 import java.util.HashSet;
 import java.util.List;
 
-public class FireballESP extends RenderModule {
+public class FireballESP extends RenderModule<ToggleOptionsWidget> {
     protected static final String MODULE_NAME = "FireballESP";
     protected static final String MODULE_TOOLTIP = "Displays the trajectory and blast radius of all fireballs.";
     protected static final String MODULE_ID = "bedwars.fireballesp";
@@ -42,7 +43,7 @@ public class FireballESP extends RenderModule {
     private final ColorPickerWidget lineColor = new ColorPickerWidget(Text.literal("Projection Color"), true).withDefaultColor(0xFFFF0000);
 
     public FireballESP() {
-        super(MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+        super(ToggleOptionsWidget.base, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
         this.widget.setOptions(enableGlow, sphereColor, lineColor);
         enableGlow.registerAsOption("bedwars.fireballesp.glow");
         sphereColor.registerAsOption("bedwars.fireballesp.spherecolor");

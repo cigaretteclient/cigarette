@@ -2,6 +2,7 @@ package io.github.waqfs.module.bedwars;
 
 import io.github.waqfs.GameDetector;
 import io.github.waqfs.agent.BedwarsAgent;
+import io.github.waqfs.gui.widget.ToggleOptionsWidget;
 import io.github.waqfs.module.TickModule;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -9,13 +10,13 @@ import net.minecraft.client.world.ClientWorld;
 import org.jetbrains.annotations.NotNull;
 
 
-public class JumpReset extends TickModule {
+public class JumpReset extends TickModule<ToggleOptionsWidget> {
     protected static final String MODULE_NAME = "JumpReset";
     protected static final String MODULE_TOOLTIP = "Jumps upon taking damage to reduce knockback.";
     protected static final String MODULE_ID = "bedwars.jumpreset";
 
     public JumpReset() {
-        super(MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+        super(ToggleOptionsWidget.base, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
     }
 
     @Override

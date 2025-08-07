@@ -145,6 +145,7 @@ public class ToggleColorWidget extends RootModule<ToggleColorWidget> {
                 case GLFW.GLFW_MOUSE_BUTTON_LEFT -> toggle.mouseClicked(mouseX, mouseY, button);
                 case GLFW.GLFW_MOUSE_BUTTON_RIGHT -> dropdownVisible = !dropdownVisible;
             }
+            return true;
         }
         return dropdownVisible && super.mouseClicked(mouseX, mouseY, button);
     }

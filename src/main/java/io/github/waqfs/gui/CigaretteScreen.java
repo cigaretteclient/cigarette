@@ -108,9 +108,12 @@ public class CigaretteScreen extends Screen {
     public void render(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
         this.renderBackground(context, mouseX, mouseY, deltaTicks);
 
-        for (int i = priority.size() - 1; i >= 0; i--) {
+        for (int i = 0; i < priority.size(); i++) {
             Drawable drawable = priority.get(i);
+            context.getMatrices().push();
+            context.getMatrices().translate(0, 0, priority.size() - i);
             drawable.render(context, mouseX, mouseY, deltaTicks);
+            context.getMatrices().pop();
         }
     }
 }

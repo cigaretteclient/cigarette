@@ -180,7 +180,7 @@ public class ToggleColorWidget extends RootModule<ToggleColorWidget> {
         this.toggle.render(context, mouseX, mouseY, deltaTicks);
 
         int colorBoxWidth = (bottom - top) - 6;
-        context.fill(right - 5 - colorBoxWidth, top + 3, right - 5, bottom - 3, this.colorState);
+        context.fill(right - 3 - colorBoxWidth, top + 3, right - 3, bottom - 3, this.colorState);
 
         if (dropdownVisible) {
             context.drawVerticalLine(right - 3, top, bottom, CigaretteScreen.SECONDARY_COLOR);

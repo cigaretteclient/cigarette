@@ -152,7 +152,7 @@ public class ColorPickerWidget extends PassthroughWidget<ClickableWidget> {
         context.drawTextWithShadow(MinecraftClient.getInstance().textRenderer, getMessage(), left + 4, top + height / 3, CigaretteScreen.PRIMARY_TEXT_COLOR);
 
         int colorBoxWidth = (bottom - top) - 6;
-        context.fill(right - 5 - colorBoxWidth, top + 3, right - 5, bottom - 3, this.colorState);
+        context.fill(right - 3 - colorBoxWidth, top + 3, right - 3, bottom - 3, this.colorState);
 
         if (dropdownVisible) {
             context.drawVerticalLine(right - 3, top, bottom, CigaretteScreen.SECONDARY_COLOR);

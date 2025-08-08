@@ -174,12 +174,8 @@ public class ToggleOptionsWidget extends RootModule<ToggleOptionsWidget> {
 
         context.drawTextWithShadow(MinecraftClient.getInstance().textRenderer, getMessage(), left + 4, top + height / 3, textColor);
         if (children != null) {
-            context.drawVerticalLine(right - 3, top + 4, bottom - 4, textColor);
-            context.drawVerticalLine(right - 2, top + 4, bottom - 4, textColor);
+            context.drawHorizontalLine(right - 10, right - 4, top + (height / 2), CigaretteScreen.SECONDARY_COLOR);
             if (dropdownVisible) {
-                context.drawVerticalLine(right - 3, top, bottom, CigaretteScreen.SECONDARY_COLOR);
-                context.drawVerticalLine(right - 2, top, bottom, CigaretteScreen.SECONDARY_COLOR);
-                context.drawVerticalLine(right - 1, top, bottom, CigaretteScreen.SECONDARY_COLOR);
                 for (ClickableWidget child : children) {
                     if (child == null) continue;
                     child.setX(right);

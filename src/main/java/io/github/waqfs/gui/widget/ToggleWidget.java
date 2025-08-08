@@ -1,5 +1,6 @@
 package io.github.waqfs.gui.widget;
 
+import io.github.waqfs.config.FileSystem;
 import io.github.waqfs.gui.CigaretteScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
@@ -7,13 +8,33 @@ import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.function.Consumer;
+
 public class ToggleWidget extends BaseWidget<Boolean> {
     private static final int MAX_HOVER_TICKS = 35;
     private int ticksOnHover = 0;
+    private @Nullable Consumer<Boolean> callback = null;
 
     public ToggleWidget(Text message, @Nullable Text tooltip) {
         super(message, tooltip);
         this.captureHover().withDefault(false);
+    }
+
+    public void registerAsOption(String key) {
+        this.registerUpdate(newState -> {
+            this.setRawState(newState);
+            FileSystem.updateState(key, newState);
+            if (this.callback != null) this.callback.accept(newState);
+        });
+        FileSystem.registerUpdate(key, newState -> {
+            if (!(newState instanceof Boolean booleanState)) return;
+            this.setRawState(booleanState);
+            if (this.callback != null) this.callback.accept(booleanState);
+        });
+    }
+
+    public void registerUpdate(Consumer<Boolean> callback) {
+        this.callback = callback;
     }
 
     @Override
@@ -24,7 +45,6 @@ public class ToggleWidget extends BaseWidget<Boolean> {
         }
         return true;
     }
-
 
     @Override
     protected void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left, int top, int right, int bottom) {

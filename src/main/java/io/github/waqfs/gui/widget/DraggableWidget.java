@@ -75,6 +75,10 @@ public class DraggableWidget extends ClickableWidget {
 
     @Override
     public void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
+        if (isMouseOver(mouseX, mouseY) && !CigaretteScreen.hoverHandled) {
+            CigaretteScreen.hoverHandled = true;
+        }
+
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
         context.fill(getX(), getY(), getRight(), getBottom(), CigaretteScreen.PRIMARY_COLOR);
         Text text = getMessage();

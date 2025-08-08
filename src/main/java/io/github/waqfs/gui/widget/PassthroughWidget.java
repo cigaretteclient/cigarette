@@ -7,6 +7,7 @@ import org.jetbrains.annotations.Nullable;
 
 public abstract class PassthroughWidget<T extends Element> extends ClickableWidget {
     protected @Nullable T[] children;
+    protected int childLeftOffset = 0;
 
     public PassthroughWidget(int x, int y, int width, int height, Text message) {
         super(x, y, width, height, message);

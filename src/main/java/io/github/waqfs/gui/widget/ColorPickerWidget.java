@@ -160,7 +160,7 @@ public class ColorPickerWidget extends PassthroughWidget<ClickableWidget> {
             context.drawVerticalLine(right - 1, top, bottom, CigaretteScreen.SECONDARY_COLOR);
             for (ClickableWidget child : children) {
                 if (child == null) continue;
-                child.setX(right);
+                child.setX(right + childLeftOffset);
                 child.setY(top);
                 child.render(context, mouseX, mouseY, deltaTicks);
             }

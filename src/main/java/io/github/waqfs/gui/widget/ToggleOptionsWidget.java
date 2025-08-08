@@ -177,7 +177,7 @@ public class ToggleOptionsWidget extends RootModule<ToggleOptionsWidget> {
             if (dropdownVisible) {
                 for (ClickableWidget child : children) {
                     if (child == null) continue;
-                    child.setX(right);
+                    child.setX(right + childLeftOffset);
                     child.setY(top);
                     child.render(context, mouseX, mouseY, deltaTicks);
                 }

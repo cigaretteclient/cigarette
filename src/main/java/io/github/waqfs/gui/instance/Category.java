@@ -18,7 +18,8 @@ public class Category {
     public Category attach(BaseModule<?, ?>... children) {
         BaseWidget<?>[] childWidgets = new BaseWidget[children.length];
         for (int i = 0; i < children.length; i++) {
-            childWidgets[i] = children[i].widget;
+            BaseModule<?, ?> module = children[i];
+            childWidgets[i] = module.wrapper != null ? module.wrapper : module.widget;
             this.children.add(children[i]);
         }
         this.widget.setChildren(childWidgets);

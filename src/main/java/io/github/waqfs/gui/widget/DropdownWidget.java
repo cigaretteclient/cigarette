@@ -33,13 +33,12 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType> extends Pas
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (isMouseOver(mouseX, mouseY)) {
-            switch (button) {
-                case GLFW.GLFW_MOUSE_BUTTON_LEFT -> {
-                    if (this.header != null) this.header.mouseClicked(mouseX, mouseY, button);
-                }
-                case GLFW.GLFW_MOUSE_BUTTON_RIGHT -> {
-                    dropdownVisible = children != null && !dropdownVisible;
-                }
+            if (this.header == null) return false;
+            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && this.header.mouseClicked(mouseX, mouseY, button)) {
+                return true;
+            }
+            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT || button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+                dropdownVisible = children != null && !dropdownVisible;
             }
             return true;
         }
@@ -75,6 +74,7 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType> extends Pas
         int maxHeight = 0;
         for (BaseWidget<?> child : children) {
             if (child == null) continue;
+            child.withWH(width, height);
             maxWidth += child.getWidth();
             maxHeight += child.getHeight();
         }

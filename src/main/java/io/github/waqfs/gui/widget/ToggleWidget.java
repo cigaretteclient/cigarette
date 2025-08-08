@@ -21,6 +21,11 @@ public class ToggleWidget extends BaseWidget<Boolean> {
         this.captureHover().withDefault(false);
     }
 
+    public ToggleWidget withDefaultState(boolean state) {
+        this.withDefault(state);
+        return this;
+    }
+
     public void registerAsOption(String key) {
         this.registerUpdate(newState -> {
             this.setRawState(newState);

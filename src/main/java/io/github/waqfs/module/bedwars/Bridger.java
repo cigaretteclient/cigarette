@@ -14,7 +14,7 @@ import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.NotNull;
 
-public class Bridger extends TickModule<ToggleOptionsWidget> {
+public class Bridger extends TickModule<ToggleOptionsWidget, Boolean> {
     protected static final String MODULE_NAME = "Bridger";
     protected static final String MODULE_TOOLTIP = "Automatically bridges.";
     protected static final String MODULE_ID = "bedwars.bridger";

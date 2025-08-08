@@ -5,20 +5,18 @@ import io.github.waqfs.gui.CigaretteScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
 
-public class SliderWidget extends BaseWidget {
+public class SliderWidget extends BaseWidget<Double> {
     private static final int BASE_TEXT_COLOR = 0xFFFFFFFF;
     private static final int SLIDER_PADDING = 4;
     private @Nullable Consumer<Double> sliderCallback = null;
     private double maxState = 0;
     private double minState = 0;
     private int decimalPlaces = 0;
-    private double sliderState = 0;
     private boolean dragging = false;
 
     public void setState(double state) {
@@ -32,7 +30,7 @@ public class SliderWidget extends BaseWidget {
         if (state > maxState) return;
         if (state < minState) return;
         double mult = Math.pow(10, decimalPlaces);
-        this.sliderState = Math.round(state * mult) / mult;
+        this.setRawState(Math.round(state * mult) / mult);
     }
 
     private void setStateFromDrag(double mouseX) {
@@ -43,30 +41,24 @@ public class SliderWidget extends BaseWidget {
         this.setState(value);
     }
 
-    public double getState() {
-        return this.sliderState;
-    }
-
     public SliderWidget(int x, int y, int width, int height, Text message, @Nullable Text tooltip) {
-        super(x, y, width, height, message);
-        this.setTooltip(Tooltip.of(tooltip));
-        this.captureHover();
+        super(message, tooltip);
+        this.captureHover().withXY(x, y).withWH(width, height).withDefault(0d);
     }
 
     public SliderWidget(int x, int y, int width, int height, Text message) {
-        super(x, y, width, height, message);
-        this.captureHover();
+        super(message, null);
+        this.captureHover().withXY(x, y).withWH(width, height).withDefault(0d);
     }
 
     public SliderWidget(Text message, Text tooltip) {
-        super(0, 0, 0, 0, message);
-        this.setTooltip(Tooltip.of(tooltip));
-        this.captureHover();
+        super(message, tooltip);
+        this.captureHover().withDefault(0d);
     }
 
     public SliderWidget(Text message) {
-        super(0, 0, 0, 0, message);
-        this.captureHover();
+        super(message, null);
+        this.captureHover().withDefault(0d);
     }
 
     public SliderWidget withBounds(double min, double def, double max) {
@@ -84,7 +76,7 @@ public class SliderWidget extends BaseWidget {
     public void registerAsOption(String key) {
         this.registerUpdate(newState -> {
             this.setAccurateState(newState);
-            FileSystem.updateState(key, this.sliderState);
+            FileSystem.updateState(key, this.getRawState());
         });
         FileSystem.registerUpdate(key, newState -> {
             if (!(newState instanceof Double doubleState)) return;
@@ -127,10 +119,10 @@ public class SliderWidget extends BaseWidget {
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
         context.drawTextWithShadow(textRenderer, getMessage(), left + 4, top + 4, CigaretteScreen.PRIMARY_TEXT_COLOR);
 
-        Text value = Text.literal(Double.toString(sliderState));
+        Text value = Text.literal(Double.toString(this.getRawState()));
         context.drawTextWithShadow(textRenderer, value, right - textRenderer.getWidth(value) - 4, top + 4, CigaretteScreen.PRIMARY_COLOR);
 
-        int sliderXState = (int) ((sliderState - minState) / (maxState - minState) * (width - 2 * SLIDER_PADDING)) + (left + SLIDER_PADDING);
+        int sliderXState = (int) ((this.getRawState() - minState) / (maxState - minState) * (width - 2 * SLIDER_PADDING)) + (left + SLIDER_PADDING);
         context.drawHorizontalLine(left + SLIDER_PADDING, left + width - SLIDER_PADDING, bottom - 4, CigaretteScreen.SECONDARY_COLOR);
         context.drawVerticalLine(sliderXState - 1, bottom - 6, bottom - 2, CigaretteScreen.PRIMARY_COLOR);
         context.drawVerticalLine(sliderXState, bottom - 7, bottom - 1, CigaretteScreen.PRIMARY_COLOR);

@@ -14,7 +14,7 @@ import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
-public class VClip extends TickModule<ToggleOptionsWidget> implements ClientModInitializer {
+public class VClip extends TickModule<ToggleOptionsWidget, Boolean> implements ClientModInitializer {
     protected static final String MODULE_NAME = "V-Clip Down";
     protected static final String MODULE_TOOLTIP = "Vertically clips you down through floors.";
     protected static final String MODULE_ID = "keybind.vclip";

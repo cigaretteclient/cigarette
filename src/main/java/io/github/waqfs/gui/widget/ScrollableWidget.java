@@ -7,7 +7,7 @@ import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 
-public class ScrollableWidget<T extends BaseWidget> extends PassthroughWidget<BaseWidget> {
+public class ScrollableWidget<Widgets extends BaseWidget<?>> extends PassthroughWidget<BaseWidget<?>, BaseWidget.Stateless> {
     private static final int VERTICAL_SCROLL_MULTIPLIER = 6;
     private static final int DEFAULT_WIDTH = 100;
     private static final int DEFAULT_HEIGHT = 200;
@@ -18,14 +18,13 @@ public class ScrollableWidget<T extends BaseWidget> extends PassthroughWidget<Ba
     private @Nullable DraggableWidget header;
 
     @SafeVarargs
-    public ScrollableWidget(int x, int y, @Nullable Text headerText, @Nullable T... children) {
+    public ScrollableWidget(int x, int y, @Nullable Text headerText, @Nullable Widgets... children) {
         super(x, y, DEFAULT_WIDTH + DEFAULT_SCROLLBAR_WIDTH, DEFAULT_HEIGHT, null);
-        this.setChildren(children);
-        this.setHeader(headerText);
+        this.setChildren(children).setHeader(headerText);
     }
 
     @SafeVarargs
-    public ScrollableWidget(int x, int y, @Nullable T... children) {
+    public ScrollableWidget(int x, int y, @Nullable Widgets... children) {
         super(x, y, DEFAULT_WIDTH + DEFAULT_SCROLLBAR_WIDTH, DEFAULT_HEIGHT, null);
         this.setChildren(children);
     }
@@ -40,12 +39,12 @@ public class ScrollableWidget<T extends BaseWidget> extends PassthroughWidget<Ba
     }
 
     @SafeVarargs
-    public final ScrollableWidget<T> setChildren(@Nullable T... children) {
+    public final ScrollableWidget<Widgets> setChildren(@Nullable Widgets... children) {
         this.children = children;
         return updateWidths();
     }
 
-    public ScrollableWidget<T> setHeader(@Nullable Text headerText) {
+    public ScrollableWidget<Widgets> setHeader(@Nullable Text headerText) {
         if (headerText == null) {
             this.header = null;
             return updateWidths();
@@ -58,7 +57,7 @@ public class ScrollableWidget<T extends BaseWidget> extends PassthroughWidget<Ba
         return updateWidths();
     }
 
-    private ScrollableWidget<T> updateWidths() {
+    private ScrollableWidget<Widgets> updateWidths() {
         if (this.children != null) {
             int rightMargin = this.updateShouldScroll() ? DEFAULT_SCROLLBAR_WIDTH : 0;
             for (ClickableWidget child : children) {

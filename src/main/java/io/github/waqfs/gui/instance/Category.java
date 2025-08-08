@@ -8,15 +8,15 @@ import net.minecraft.text.Text;
 import java.util.HashSet;
 
 public class Category {
-    public final ScrollableWidget<BaseWidget> widget;
-    public final HashSet<BaseModule> children = new HashSet<>();
+    public final ScrollableWidget<BaseWidget<?>> widget;
+    public final HashSet<BaseModule<?, ?>> children = new HashSet<>();
 
     public Category(String displayName, int x, int y) {
         this.widget = new ScrollableWidget<>(x, y).setHeader(Text.literal(displayName));
     }
 
-    public Category attach(BaseModule... children) {
-        BaseWidget[] childWidgets = new BaseWidget[children.length];
+    public Category attach(BaseModule<?, ?>... children) {
+        BaseWidget<?>[] childWidgets = new BaseWidget[children.length];
         for (int i = 0; i < children.length; i++) {
             childWidgets[i] = children[i].widget;
             this.children.add(children[i]);

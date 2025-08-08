@@ -14,7 +14,7 @@ import net.minecraft.util.hit.HitResult;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
-public class BreakBlock extends TickModule<ToggleOptionsWidget> implements ClientModInitializer {
+public class BreakBlock extends TickModule<ToggleOptionsWidget, Boolean> implements ClientModInitializer {
     protected static final String MODULE_NAME = "Break Block";
     protected static final String MODULE_TOOLTIP = "Breaks the block you're looking at client-side.";
     protected static final String MODULE_ID = "keybind.break_block";

@@ -16,7 +16,7 @@ import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
-public class AddGlassBlock extends TickModule<ToggleOptionsWidget> implements ClientModInitializer {
+public class AddGlassBlock extends TickModule<ToggleOptionsWidget, Boolean> implements ClientModInitializer {
     protected static final String MODULE_NAME = "Place Glass";
     protected static final String MODULE_TOOLTIP = "Places a client-side block where you are facing.";
     protected static final String MODULE_ID = "keybind.place_glass";

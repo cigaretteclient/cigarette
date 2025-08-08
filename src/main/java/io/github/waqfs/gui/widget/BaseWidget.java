@@ -9,31 +9,30 @@ import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class BaseWidget extends ClickableWidget {
+public abstract class BaseWidget<StateType> extends ClickableWidget {
+    private StateType defaultState;
+    private StateType state;
     protected boolean captureHover = false;
     protected boolean hovered = false;
     private final TooltipState tooltip = new TooltipState();
-
-    public BaseWidget(int x, int y, int width, int height, Text message, @Nullable Text tooltip) {
-        super(x, y, width, height, message);
-        this.setTooltip(Tooltip.of(tooltip));
-    }
-
-    public BaseWidget(int x, int y, int width, int height, Text message) {
-        super(x, y, width, height, message);
-    }
 
     public BaseWidget(Text message, @Nullable Text tooltip) {
         super(0, 0, 0, 0, message);
         this.setTooltip(Tooltip.of(tooltip));
     }
 
-    public BaseWidget(Text message) {
-        super(0, 0, 0, 0, message);
+    public final void setRawState(StateType state) {
+        this.state = state;
     }
 
-    protected void captureHover() {
+    public final StateType getRawState() {
+        if (this.state instanceof Stateless) throw new IllegalStateException("Cannot get state from a stateless component.");
+        return this.state;
+    }
+
+    protected BaseWidget<StateType> captureHover() {
         this.captureHover = true;
+        return this;
     }
 
     @Override
@@ -41,15 +40,21 @@ public abstract class BaseWidget extends ClickableWidget {
         this.tooltip.setTooltip(tooltip);
     }
 
-    public BaseWidget withXY(int x, int y) {
+    public BaseWidget<StateType> withXY(int x, int y) {
         this.setX(x);
         this.setY(y);
         return this;
     }
 
-    public BaseWidget withWH(int w, int h) {
+    public BaseWidget<StateType> withWH(int w, int h) {
         this.setWidth(w);
         this.setHeight(h);
+        return this;
+    }
+
+    public BaseWidget<StateType> withDefault(StateType state) {
+        this.defaultState = state;
+        this.state = state;
         return this;
     }
 
@@ -69,5 +74,8 @@ public abstract class BaseWidget extends ClickableWidget {
 
     @Override
     protected void appendClickableNarrations(NarrationMessageBuilder builder) {
+    }
+
+    public static class Stateless {
     }
 }

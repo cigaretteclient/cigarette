@@ -5,14 +5,14 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
 
-public abstract class RootModule<T extends PassthroughWidget<?>> extends PassthroughWidget<BaseWidget> {
+public abstract class RootModule<Widget extends PassthroughWidget<?, StateType>, StateType> extends PassthroughWidget<BaseWidget<?>, StateType> {
     protected @Nullable Consumer<Boolean> moduleStateCallback = null;
 
     public RootModule(int x, int y, int width, int height, Text message) {
         super(x, y, width, height, message);
     }
 
-    public abstract T buildModule(String message, @Nullable String tooltip);
+    public abstract Widget buildModule(String message, @Nullable String tooltip);
 
     public void onStateSwitch(Consumer<Boolean> newState) {
         this.moduleStateCallback = newState;

@@ -4,16 +4,13 @@ import net.minecraft.client.gui.Element;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class PassthroughWidget<T extends BaseWidget> extends BaseWidget {
-    protected @Nullable T[] children;
+public abstract class PassthroughWidget<ChildType extends BaseWidget<?>, StateType> extends BaseWidget<StateType> {
+    protected @Nullable ChildType[] children;
     protected int childLeftOffset = 0;
 
-    public PassthroughWidget(int x, int y, int width, int height, Text message, @Nullable Text tooltip) {
-        super(x, y, width, height, message, tooltip);
-    }
-
     public PassthroughWidget(int x, int y, int width, int height, Text message) {
-        super(x, y, width, height, message);
+        super(message, null);
+        this.withXY(x, y).withWH(width, height);
     }
 
     public PassthroughWidget(Text message, @Nullable Text tooltip) {
@@ -21,7 +18,7 @@ public abstract class PassthroughWidget<T extends BaseWidget> extends BaseWidget
     }
 
     public PassthroughWidget(Text message) {
-        super(message);
+        super(message, null);
     }
 
     @Override

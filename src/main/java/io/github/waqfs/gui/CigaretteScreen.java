@@ -20,7 +20,7 @@ public class CigaretteScreen extends Screen {
     public static final int DARK_BACKGROUND_COLOR = 0xFF000000;
     public static final int ENABLED_COLOR = 0xFF3AFC3A;
     public static @Nullable Object hoverHandled = null;
-    private final Stack<BaseWidget> priority = new Stack<>();
+    private final Stack<BaseWidget<?>> priority = new Stack<>();
     private Screen parent = null;
 
     protected CigaretteScreen() {
@@ -42,7 +42,7 @@ public class CigaretteScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        for (BaseWidget child : priority) {
+        for (BaseWidget<?> child : priority) {
             boolean handled = child.mouseClicked(mouseX, mouseY, button);
             if (handled) {
                 priority.remove(child);
@@ -55,7 +55,7 @@ public class CigaretteScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
-        for (BaseWidget child : priority) {
+        for (BaseWidget<?> child : priority) {
             boolean handled = child.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
             if (handled) {
                 priority.remove(child);
@@ -118,7 +118,7 @@ public class CigaretteScreen extends Screen {
 
         CigaretteScreen.hoverHandled = null;
         for (int i = 0; i < priority.size(); i++) {
-            BaseWidget widget = priority.get(i);
+            BaseWidget<?> widget = priority.get(i);
             context.getMatrices().push();
             context.getMatrices().translate(0, 0, priority.size() - i);
             widget._render(context, mouseX, mouseY, deltaTicks);

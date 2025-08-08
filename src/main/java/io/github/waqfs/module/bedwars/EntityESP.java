@@ -21,7 +21,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.UUID;
 
-public class EntityESP extends TickModule<ToggleOptionsWidget> {
+public class EntityESP extends TickModule<ToggleOptionsWidget, Boolean> {
     protected static final String MODULE_NAME = "EntityESP";
     protected static final String MODULE_TOOLTIP = "Highlights all miscellaneous entities with their team color.";
     protected static final String MODULE_ID = "bedwars.entityesp";
@@ -69,9 +69,9 @@ public class EntityESP extends TickModule<ToggleOptionsWidget> {
         this.glowContext.removeAll();
         for (Entity entity : world.getEntities()) {
             if (!(entity instanceof EnderDragonEntity) && !(entity instanceof IronGolemEntity) && !(entity instanceof SilverfishEntity)) continue;
-            if (entity instanceof EnderDragonEntity && !enableEnderDragons.getState()) continue;
-            if (entity instanceof IronGolemEntity && !enableIronGolems.getState()) continue;
-            if (entity instanceof SilverfishEntity && !enableSilverfish.getState()) continue;
+            if (entity instanceof EnderDragonEntity && !enableEnderDragons.getRawState()) continue;
+            if (entity instanceof IronGolemEntity && !enableIronGolems.getRawState()) continue;
+            if (entity instanceof SilverfishEntity && !enableSilverfish.getRawState()) continue;
             UUID uuid = entity.getUuid();
             int nameColor = getNameColor(entity);
             this.glowContext.addGlow(uuid, nameColor);

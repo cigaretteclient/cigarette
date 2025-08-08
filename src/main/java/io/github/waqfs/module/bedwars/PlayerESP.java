@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
-public class PlayerESP extends TickModule<ToggleOptionsWidget> {
+public class PlayerESP extends TickModule<ToggleOptionsWidget, Boolean> {
     protected static final String MODULE_NAME = "PlayerESP";
     protected static final String MODULE_TOOLTIP = "Highlights all the players in the game.";
     protected static final String MODULE_ID = "bedwars.playeresp";

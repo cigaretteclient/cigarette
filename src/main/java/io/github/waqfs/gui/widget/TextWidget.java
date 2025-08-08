@@ -7,18 +7,18 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 
-public class TextWidget extends BaseWidget {
+public class TextWidget extends BaseWidget<BaseWidget.Stateless> {
     private boolean underlined = false;
     private boolean centered = true;
 
     public TextWidget(int x, int y, int width, int height, Text message, @Nullable Text tooltip) {
-        super(x, y, width, height, message, tooltip);
-        this.captureHover();
+        super(message, tooltip);
+        this.captureHover().withXY(x, y).withWH(width, height);
     }
 
     public TextWidget(int x, int y, int width, int height, Text message) {
-        super(x, y, width, height, message);
-        this.captureHover();
+        super(message, null);
+        this.captureHover().withXY(x, y).withWH(width, height);
     }
 
     public TextWidget(Text message, @Nullable Text tooltip) {
@@ -27,7 +27,7 @@ public class TextWidget extends BaseWidget {
     }
 
     public TextWidget(Text message) {
-        super(message);
+        super(message, null);
         this.captureHover();
     }
 

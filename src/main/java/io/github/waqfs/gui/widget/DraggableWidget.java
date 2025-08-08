@@ -7,7 +7,7 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 
-public class DraggableWidget extends BaseWidget {
+public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
     public interface DragCallback {
         void updateParentPosition(int newX, int newY, int deltaX, int deltaY);
     }
@@ -20,12 +20,12 @@ public class DraggableWidget extends BaseWidget {
     private @Nullable DragCallback dragCallback = null;
 
     public DraggableWidget(int x, int y, int width, int height, Text message) {
-        super(x, y, width, height, message);
-        this.captureHover();
+        super(message, null);
+        this.captureHover().withXY(x, y).withWH(width, height);
     }
 
     public DraggableWidget(Text message) {
-        super(message);
+        super(message, null);
         this.captureHover();
     }
 

@@ -17,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
-public class ZombieESP extends TickModule<ToggleOptionsWidget> {
+public class ZombieESP extends TickModule<ToggleOptionsWidget, Boolean> {
     protected static final String MODULE_NAME = "ZombieESP";
     protected static final String MODULE_TOOLTIP = "Highlights all the zombies in ESP.";
     protected static final String MODULE_ID = "zombies.zombieesp";

@@ -10,11 +10,9 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.function.Consumer;
 
-public class ToggleColorWidget extends RootModule<ToggleColorWidget> {
+public class ToggleColorWidget extends RootModule<ToggleColorWidget, Integer> {
     public static ToggleColorWidget base = new ToggleColorWidget(Text.literal(""), false);
     private boolean dropdownVisible = false;
-    private int defaultColorState = 0xFFFFFFFF;
-    private int colorState = 0xFFFFFFFF;
     private final ToggleOptionsWidget toggle;
     private final SliderWidget sliderRed = new SliderWidget(Text.literal("Red")).withBounds(0, 255, 255);
     private final SliderWidget sliderGreen = new SliderWidget(Text.literal("Green")).withBounds(0, 255, 255);
@@ -24,7 +22,7 @@ public class ToggleColorWidget extends RootModule<ToggleColorWidget> {
     @Nullable Consumer<Boolean> moduleStateCallback = null;
 
     public void setState(int color) {
-        this.colorState = color;
+        this.setRawState(color);
         this.setSliderStates(color);
         this.updateState();
     }
@@ -38,59 +36,54 @@ public class ToggleColorWidget extends RootModule<ToggleColorWidget> {
 
     public void updateState() {
         if (this.colorCallback != null) {
-            this.colorCallback.accept(this.colorState);
+            this.colorCallback.accept(this.getRawState());
         }
     }
 
     public int getStateARGB() {
-        return this.colorState;
+        return this.getRawState();
     }
 
     public int getStateRGBA() {
-        return ((this.colorState & 0xFFFFFF) << 8) + (this.colorState >> 24);
+        return ((this.getRawState() & 0xFFFFFF) << 8) + (this.getRawState() >> 24);
     }
 
     public int getStateRGB() {
-        return this.colorState & 0xFFFFFF;
+        return this.getRawState() & 0xFFFFFF;
     }
 
     public boolean getToggleState() {
-        return this.toggle.getState();
+        return this.toggle.getRawState();
     }
 
     public ToggleColorWidget(int x, int y, int width, int height, Text message, @Nullable Text tooltip, boolean withAlpha) {
         super(x, y, width, height, message);
         this.setTooltip(Tooltip.of(tooltip));
         this.toggle = new ToggleOptionsWidget(x, y, width, height, message);
-        this.attachChildren(withAlpha);
-        this.captureHover();
+        this.attachChildren(withAlpha).captureHover().withDefault(0xFFFFFFFF);
     }
 
     public ToggleColorWidget(int x, int y, int width, int height, Text message, boolean withAlpha) {
         super(x, y, width, height, message);
         this.toggle = new ToggleOptionsWidget(x, y, width, height, message);
-        this.attachChildren(withAlpha);
-        this.captureHover();
+        this.attachChildren(withAlpha).captureHover().withDefault(0xFFFFFFFF);
     }
 
     public ToggleColorWidget(Text message, Text tooltip, boolean withAlpha) {
         super(0, 0, 0, 0, message);
         this.setTooltip(Tooltip.of(tooltip));
         this.toggle = new ToggleOptionsWidget(0, 0, 0, 0, message);
-        this.attachChildren(withAlpha);
-        this.captureHover();
+        this.attachChildren(withAlpha).captureHover().withDefault(0xFFFFFFFF);
     }
 
     public ToggleColorWidget(Text message, boolean withAlpha) {
         super(0, 0, 0, 0, message);
         this.toggle = new ToggleOptionsWidget(0, 0, 0, 0, message);
-        this.attachChildren(withAlpha);
-        this.captureHover();
+        this.attachChildren(withAlpha).captureHover().withDefault(0xFFFFFFFF);
     }
 
     public ToggleColorWidget withDefaultColor(int argb) {
-        this.defaultColorState = argb;
-        this.colorState = argb;
+        this.withDefault(argb);
         this.setSliderStates(argb);
         return this;
     }
@@ -100,29 +93,30 @@ public class ToggleColorWidget extends RootModule<ToggleColorWidget> {
         return this;
     }
 
-    private void attachChildren(boolean withAlpha) {
-        ScrollableWidget<BaseWidget> wrapper = new ScrollableWidget<>(0, 0, this.sliderRed, this.sliderGreen, this.sliderBlue, withAlpha ? this.sliderAlpha : null);
+    private ToggleColorWidget attachChildren(boolean withAlpha) {
+        ScrollableWidget<BaseWidget<?>> wrapper = new ScrollableWidget<>(0, 0, this.sliderRed, this.sliderGreen, this.sliderBlue, withAlpha ? this.sliderAlpha : null);
         this.children = new ScrollableWidget[]{wrapper};
         this.sliderRed.registerUpdate((newColor -> {
             int red = (int) (double) newColor;
-            this.colorState = (this.colorState & 0xFF00FFFF) + (red << 16);
+            this.setRawState((this.getRawState() & 0xFF00FFFF) + (red << 16));
             this.updateState();
         }));
         this.sliderGreen.registerUpdate((newColor -> {
             int green = (int) (double) newColor;
-            this.colorState = (this.colorState & 0xFFFF00FF) + (green << 8);
+            this.setRawState((this.getRawState() & 0xFFFF00FF) + (green << 8));
             this.updateState();
         }));
         this.sliderBlue.registerUpdate((newColor -> {
             int blue = (int) (double) newColor;
-            this.colorState = (this.colorState & 0xFFFFFF00) + blue;
+            this.setRawState((this.getRawState() & 0xFFFFFF00) + blue);
             this.updateState();
         }));
         this.sliderAlpha.registerUpdate((newColor -> {
             int alpha = (int) (double) newColor;
-            this.colorState = (alpha << 24) + (this.colorState & 0xFFFFFF);
+            this.setRawState((alpha << 24) + (this.getRawState() & 0xFFFFFF));
             this.updateState();
         }));
+        return this;
     }
 
     public void registerAsOption(String key) {
@@ -131,12 +125,12 @@ public class ToggleColorWidget extends RootModule<ToggleColorWidget> {
 
         String colorKey = key + ".color";
         this.registerUpdate(newState -> {
-            this.colorState = newState;
+            this.setRawState(newState);
             FileSystem.updateState(colorKey, newState);
         });
         FileSystem.registerUpdate(colorKey, newState -> {
             if (!(newState instanceof Integer integerState)) return;
-            this.colorState = integerState;
+            this.setRawState(integerState);
             this.setState(integerState);
         });
     }
@@ -174,7 +168,7 @@ public class ToggleColorWidget extends RootModule<ToggleColorWidget> {
         this.toggle.withXY(left, top).withWH(width, height).renderWidget(context, mouseX, mouseY, deltaTicks);
 
         int colorBoxWidth = (bottom - top) - 6;
-        context.fill(right - 3 - colorBoxWidth, top + 3, right - 3, bottom - 3, this.colorState);
+        context.fill(right - 3 - colorBoxWidth, top + 3, right - 3, bottom - 3, this.getRawState());
 
         if (dropdownVisible) {
             context.fill(right - 3, top, right - 1, bottom, CigaretteScreen.SECONDARY_COLOR);

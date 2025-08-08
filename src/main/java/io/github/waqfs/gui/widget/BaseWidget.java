@@ -2,6 +2,7 @@ package io.github.waqfs.gui.widget;
 
 import io.github.waqfs.gui.CigaretteScreen;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.tooltip.TooltipState;
 import net.minecraft.client.gui.widget.ClickableWidget;
@@ -48,4 +49,8 @@ public abstract class BaseWidget extends ClickableWidget {
     }
 
     protected abstract void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left, int top, int right, int bottom);
+
+    @Override
+    protected void appendClickableNarrations(NarrationMessageBuilder builder) {
+    }
 }

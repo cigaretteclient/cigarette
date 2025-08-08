@@ -126,7 +126,8 @@ public class SliderWidget extends ClickableWidget {
         int top = getY();
         int bottom = getBottom();
 
-        if (isMouseOver(mouseX, mouseY)) {
+        if (isMouseOver(mouseX, mouseY) && !CigaretteScreen.hoverHandled) {
+            CigaretteScreen.hoverHandled = true;
             context.fillGradient(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR, CigaretteScreen.DARK_BACKGROUND_COLOR);
         } else {
             context.fill(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR);

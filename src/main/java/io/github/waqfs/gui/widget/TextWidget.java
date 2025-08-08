@@ -44,8 +44,8 @@ public class TextWidget extends ClickableWidget {
 
     @Override
     protected void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
-        if (isMouseOver(mouseX, mouseY) && !CigaretteScreen.hoverHandled) {
-            CigaretteScreen.hoverHandled = true;
+        if (isMouseOver(mouseX, mouseY)) {
+            CigaretteScreen.isHoverable(this);
         }
 
         int left = getX();

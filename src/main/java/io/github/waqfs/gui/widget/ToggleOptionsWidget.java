@@ -153,8 +153,7 @@ public class ToggleOptionsWidget extends RootModule<ToggleOptionsWidget> {
         int top = getY();
         int bottom = getBottom();
 
-        if (isMouseOver(mouseX, mouseY) && !CigaretteScreen.hoverHandled) {
-            CigaretteScreen.hoverHandled = true;
+        if (isMouseOver(mouseX, mouseY) && CigaretteScreen.isHoverable(this)) {
             ticksOnHover = Math.min(ticksOnHover + 1, MAX_HOVER_TICKS);
             context.fillGradient(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR, CigaretteScreen.DARK_BACKGROUND_COLOR);
         } else {

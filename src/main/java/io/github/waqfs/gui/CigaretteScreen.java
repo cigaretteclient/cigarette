@@ -20,7 +20,7 @@ public class CigaretteScreen extends Screen {
     public static final int BACKGROUND_COLOR = 0xFF1A1A1A;
     public static final int DARK_BACKGROUND_COLOR = 0xFF000000;
     public static final int ENABLED_COLOR = 0xFF3AFC3A;
-    public static boolean hoverHandled = false;
+    public static @Nullable Object hoverHandled = null;
     private final Stack<ClickableWidget> priority = new Stack<>();
     private Screen parent = null;
 
@@ -105,11 +105,19 @@ public class CigaretteScreen extends Screen {
         return true;
     }
 
+    public static boolean isHoverable(Object obj) {
+        if (hoverHandled == null) {
+            hoverHandled = obj;
+            return true;
+        }
+        return hoverHandled == obj;
+    }
+
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
         this.renderBackground(context, mouseX, mouseY, deltaTicks);
 
-        CigaretteScreen.hoverHandled = false;
+        CigaretteScreen.hoverHandled = null;
         for (int i = 0; i < priority.size(); i++) {
             Drawable drawable = priority.get(i);
             context.getMatrices().push();

@@ -168,6 +168,10 @@ public class ToggleColorWidget extends RootModule<ToggleColorWidget> {
 
     @Override
     protected void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
+        if (isMouseOver(mouseX, mouseY)) {
+            CigaretteScreen.isHoverable(this);
+        }
+
         int left = getX();
         int right = getRight();
         int top = getY();

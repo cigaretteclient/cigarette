@@ -18,7 +18,7 @@ public abstract class BaseWidget<StateType> extends ClickableWidget {
 
     public BaseWidget(Text message, @Nullable Text tooltip) {
         super(0, 0, 0, 0, message);
-        this.setTooltip(Tooltip.of(tooltip));
+        if(tooltip != null) this.setTooltip(Tooltip.of(tooltip));
     }
 
     public final void setRawState(StateType state) {

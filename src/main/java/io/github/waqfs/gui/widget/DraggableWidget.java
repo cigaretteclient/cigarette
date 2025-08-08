@@ -74,11 +74,11 @@ public class DraggableWidget extends BaseWidget {
     @Override
     public void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left, int top, int right, int bottom) {
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
-        context.fill(getX(), getY(), getRight(), getBottom(), CigaretteScreen.PRIMARY_COLOR);
+        context.fill(left, top, right, bottom, CigaretteScreen.PRIMARY_COLOR);
         Text text = getMessage();
         int textWidth = textRenderer.getWidth(text);
         int horizontalMargin = (width - textWidth) / 2;
         int verticalMargin = (height - textRenderer.fontHeight) / 2;
-        context.drawText(textRenderer, text, getX() + horizontalMargin, getY() + verticalMargin + 1, CigaretteScreen.PRIMARY_TEXT_COLOR, true);
+        context.drawText(textRenderer, text, left + horizontalMargin, top + verticalMargin + 1, CigaretteScreen.PRIMARY_TEXT_COLOR, true);
     }
 }

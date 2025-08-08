@@ -153,9 +153,7 @@ public class ColorPickerWidget extends PassthroughWidget<BaseWidget> {
             context.drawVerticalLine(right - 1, top, bottom, CigaretteScreen.SECONDARY_COLOR);
             for (BaseWidget child : children) {
                 if (child == null) continue;
-                child.setX(right + childLeftOffset);
-                child.setY(top);
-                child.renderWidget(context, mouseX, mouseY, deltaTicks);
+                child.withXY(right + childLeftOffset, top).renderWidget(context, mouseX, mouseY, deltaTicks);
             }
         }
     }

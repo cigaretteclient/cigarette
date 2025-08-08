@@ -36,6 +36,18 @@ public abstract class BaseWidget extends ClickableWidget {
         this.tooltip.setTooltip(tooltip);
     }
 
+    public BaseWidget withXY(int x, int y) {
+        this.setX(x);
+        this.setY(y);
+        return this;
+    }
+
+    public BaseWidget withWH(int w, int h) {
+        this.setWidth(w);
+        this.setHeight(h);
+        return this;
+    }
+
     public void _render(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
         if (!this.visible) return;
         this.hovered = isMouseOver(mouseX, mouseY) && CigaretteScreen.isHoverable(this);

@@ -106,25 +106,23 @@ public class ScrollableWidget<T extends BaseWidget> extends PassthroughWidget<Ba
         if (children != null) {
             boolean hasHeader = header != null;
             int hasHeaderInt = hasHeader ? 1 : 0;
-            int realTop = getY() + (hasHeader ? header.getHeight() : 0);
-            Scissor.pushExclusive(context, getX(), realTop, getRight(), getBottom());
+            int realTop = top + (hasHeader ? header.getHeight() : 0);
+            Scissor.pushExclusive(context, left, realTop, right, bottom);
             for (int index = 0; index < children.length; index++) {
                 BaseWidget child = children[index];
                 if (child == null) continue;
-                child.setX(getX());
-                child.setY(getY() - (int) scrollPosition + (index + hasHeaderInt) * rowHeight);
-                child.renderWidget(context, mouseX, mouseY, deltaTicks);
+                child.withXY(left, top - (int) scrollPosition + (index + hasHeaderInt) * rowHeight).renderWidget(context, mouseX, mouseY, deltaTicks);
             }
             if (this.shouldScroll) {
-                context.fill(getRight() - DEFAULT_SCROLLBAR_WIDTH, realTop, getRight(), getBottom(), CigaretteScreen.BACKGROUND_COLOR);
+                context.fill(right - DEFAULT_SCROLLBAR_WIDTH, realTop, right, bottom, CigaretteScreen.BACKGROUND_COLOR);
                 int realHeight = height - hasHeaderInt * rowHeight;
                 double overflowHeight = (children.length * rowHeight) - (double) realHeight;
                 if (overflowHeight > realHeight - rowHeight) {
                     int topMargin = (int) ((scrollPosition / overflowHeight) * (realHeight - rowHeight));
-                    context.fill(getRight() - DEFAULT_SCROLLBAR_WIDTH, realTop + topMargin, getRight(), realTop + topMargin + rowHeight, CigaretteScreen.SECONDARY_COLOR);
+                    context.fill(right - DEFAULT_SCROLLBAR_WIDTH, realTop + topMargin, right, realTop + topMargin + rowHeight, CigaretteScreen.SECONDARY_COLOR);
                 } else {
                     int scrollbarHeight = realHeight - (int) overflowHeight;
-                    context.fill(getRight() - DEFAULT_SCROLLBAR_WIDTH, realTop + (int) scrollPosition, getRight(), realTop + (int) scrollPosition + scrollbarHeight, CigaretteScreen.SECONDARY_COLOR);
+                    context.fill(right - DEFAULT_SCROLLBAR_WIDTH, realTop + (int) scrollPosition, right, realTop + (int) scrollPosition + scrollbarHeight, CigaretteScreen.SECONDARY_COLOR);
                 }
             }
             Scissor.popExclusive();

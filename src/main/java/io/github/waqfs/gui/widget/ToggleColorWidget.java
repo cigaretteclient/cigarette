@@ -167,24 +167,16 @@ public class ToggleColorWidget extends RootModule<ToggleColorWidget> {
 
     @Override
     protected void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left, int top, int right, int bottom) {
-        this.toggle.setY(top);
-        this.toggle.setX(left);
-        this.toggle.setWidth(width);
-        this.toggle.setHeight(height);
-        this.toggle.renderWidget(context, mouseX, mouseY, deltaTicks);
+        this.toggle.withXY(left, top).withWH(width, height).renderWidget(context, mouseX, mouseY, deltaTicks);
 
         int colorBoxWidth = (bottom - top) - 6;
         context.fill(right - 3 - colorBoxWidth, top + 3, right - 3, bottom - 3, this.colorState);
 
         if (dropdownVisible) {
-            context.drawVerticalLine(right - 3, top, bottom, CigaretteScreen.SECONDARY_COLOR);
-            context.drawVerticalLine(right - 2, top, bottom, CigaretteScreen.SECONDARY_COLOR);
-            context.drawVerticalLine(right - 1, top, bottom, CigaretteScreen.SECONDARY_COLOR);
+            context.fill(right - 3, top, right - 1, bottom, CigaretteScreen.SECONDARY_COLOR);
             for (BaseWidget child : children) {
                 if (child == null) continue;
-                child.setX(right);
-                child.setY(top);
-                child.renderWidget(context, mouseX, mouseY, deltaTicks);
+                child.withXY(right, top).renderWidget(context, mouseX, mouseY, deltaTicks);
             }
         }
 

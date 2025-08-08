@@ -62,11 +62,6 @@ public class DraggableWidget extends BaseWidget {
         return false;
     }
 
-    @Override
-    public boolean isMouseOver(double mouseX, double mouseY) {
-        return mouseX > getX() && mouseX < getRight() && mouseY > getY() && mouseY < getBottom();
-    }
-
     public void onDrag(DragCallback callback) {
         this.dragCallback = callback;
     }

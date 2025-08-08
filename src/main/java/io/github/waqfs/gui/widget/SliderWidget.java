@@ -113,11 +113,6 @@ public class SliderWidget extends BaseWidget {
     }
 
     @Override
-    public boolean isMouseOver(double mouseX, double mouseY) {
-        return mouseX > getX() && mouseX < getRight() && mouseY > getY() && mouseY < getBottom();
-    }
-
-    @Override
     protected void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left, int top, int right, int bottom) {
         if (hovered) {
             context.fillGradient(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR, CigaretteScreen.DARK_BACKGROUND_COLOR);

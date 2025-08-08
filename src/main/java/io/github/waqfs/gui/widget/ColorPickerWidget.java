@@ -52,22 +52,26 @@ public class ColorPickerWidget extends PassthroughWidget<BaseWidget> {
         super(x, y, width, height, message);
         this.setTooltip(Tooltip.of(tooltip));
         this.attachChildren(withAlpha);
+        this.captureHover();
     }
 
     public ColorPickerWidget(int x, int y, int width, int height, Text message, boolean withAlpha) {
         super(x, y, width, height, message);
         this.attachChildren(withAlpha);
+        this.captureHover();
     }
 
     public ColorPickerWidget(Text message, Text tooltip, boolean withAlpha) {
         super(0, 0, 0, 0, message);
         this.setTooltip(Tooltip.of(tooltip));
         this.attachChildren(withAlpha);
+        this.captureHover();
     }
 
     public ColorPickerWidget(Text message, boolean withAlpha) {
         super(0, 0, 0, 0, message);
         this.attachChildren(withAlpha);
+        this.captureHover();
     }
 
     public ColorPickerWidget withDefaultColor(int color) {

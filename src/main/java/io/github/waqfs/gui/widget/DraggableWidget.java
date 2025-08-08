@@ -21,10 +21,12 @@ public class DraggableWidget extends BaseWidget {
 
     public DraggableWidget(int x, int y, int width, int height, Text message) {
         super(x, y, width, height, message);
+        this.captureHover();
     }
 
     public DraggableWidget(Text message) {
         super(message);
+        this.captureHover();
     }
 
     @Override

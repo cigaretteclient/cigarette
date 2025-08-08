@@ -13,18 +13,22 @@ public class TextWidget extends BaseWidget {
 
     public TextWidget(int x, int y, int width, int height, Text message, @Nullable Text tooltip) {
         super(x, y, width, height, message, tooltip);
+        this.captureHover();
     }
 
     public TextWidget(int x, int y, int width, int height, Text message) {
         super(x, y, width, height, message);
+        this.captureHover();
     }
 
     public TextWidget(Text message, @Nullable Text tooltip) {
         super(message, tooltip);
+        this.captureHover();
     }
 
     public TextWidget(Text message) {
         super(message);
+        this.captureHover();
     }
 
     public TextWidget withUnderline() {

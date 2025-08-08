@@ -10,6 +10,7 @@ import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class BaseWidget extends ClickableWidget {
+    protected boolean captureHover = false;
     protected boolean hovered = false;
     private final TooltipState tooltip = new TooltipState();
 
@@ -31,6 +32,10 @@ public abstract class BaseWidget extends ClickableWidget {
         super(0, 0, 0, 0, message);
     }
 
+    protected void captureHover() {
+        this.captureHover = true;
+    }
+
     @Override
     public void setTooltip(Tooltip tooltip) {
         this.tooltip.setTooltip(tooltip);
@@ -50,7 +55,7 @@ public abstract class BaseWidget extends ClickableWidget {
 
     public void _render(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
         if (!this.visible) return;
-        this.hovered = isMouseOver(mouseX, mouseY) && CigaretteScreen.isHoverable(this);
+        this.hovered = captureHover && isMouseOver(mouseX, mouseY) && CigaretteScreen.isHoverable(this);
         this.render(context, this.hovered, mouseX, mouseY, deltaTicks, getX(), getY(), getRight(), getBottom());
         if (this.hovered) this.tooltip.render(true, this.isFocused(), this.getNavigationFocus());
     }

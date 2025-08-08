@@ -42,29 +42,34 @@ public class ToggleOptionsWidget extends RootModule<ToggleOptionsWidget> {
         super(x, y, width, height, message);
         this.setTooltip(Tooltip.of(tooltip));
         this.setOptions(options);
+        this.captureHover();
     }
 
     public ToggleOptionsWidget(int x, int y, int width, int height, Text message, @Nullable Text tooltip) {
         super(x, y, width, height, message);
         this.setTooltip(Tooltip.of(tooltip));
+        this.captureHover();
     }
 
     public ToggleOptionsWidget(int x, int y, int width, int height, Text message) {
         super(x, y, width, height, message);
-    }
-
-    @Override
-    public ToggleOptionsWidget buildModule(String message, @Nullable String tooltip) {
-        return new ToggleOptionsWidget(Text.of(message), tooltip == null ? null : Text.of(tooltip));
+        this.captureHover();
     }
 
     public ToggleOptionsWidget(Text message, Text tooltip) {
         super(0, 0, 0, 0, message);
         this.setTooltip(Tooltip.of(tooltip));
+        this.captureHover();
     }
 
     public ToggleOptionsWidget(Text message) {
         super(0, 0, 0, 0, message);
+        this.captureHover();
+    }
+
+    @Override
+    public ToggleOptionsWidget buildModule(String message, @Nullable String tooltip) {
+        return new ToggleOptionsWidget(Text.of(message), tooltip == null ? null : Text.of(tooltip));
     }
 
     public ToggleOptionsWidget setOptions(@Nullable BaseWidget... options) {

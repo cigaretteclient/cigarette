@@ -50,19 +50,23 @@ public class SliderWidget extends BaseWidget {
     public SliderWidget(int x, int y, int width, int height, Text message, @Nullable Text tooltip) {
         super(x, y, width, height, message);
         this.setTooltip(Tooltip.of(tooltip));
+        this.captureHover();
     }
 
     public SliderWidget(int x, int y, int width, int height, Text message) {
         super(x, y, width, height, message);
+        this.captureHover();
     }
 
     public SliderWidget(Text message, Text tooltip) {
         super(0, 0, 0, 0, message);
         this.setTooltip(Tooltip.of(tooltip));
+        this.captureHover();
     }
 
     public SliderWidget(Text message) {
         super(0, 0, 0, 0, message);
+        this.captureHover();
     }
 
     public SliderWidget withBounds(double min, double def, double max) {

@@ -63,12 +63,14 @@ public class ToggleColorWidget extends RootModule<ToggleColorWidget> {
         this.setTooltip(Tooltip.of(tooltip));
         this.toggle = new ToggleOptionsWidget(x, y, width, height, message);
         this.attachChildren(withAlpha);
+        this.captureHover();
     }
 
     public ToggleColorWidget(int x, int y, int width, int height, Text message, boolean withAlpha) {
         super(x, y, width, height, message);
         this.toggle = new ToggleOptionsWidget(x, y, width, height, message);
         this.attachChildren(withAlpha);
+        this.captureHover();
     }
 
     public ToggleColorWidget(Text message, Text tooltip, boolean withAlpha) {
@@ -76,12 +78,14 @@ public class ToggleColorWidget extends RootModule<ToggleColorWidget> {
         this.setTooltip(Tooltip.of(tooltip));
         this.toggle = new ToggleOptionsWidget(0, 0, 0, 0, message);
         this.attachChildren(withAlpha);
+        this.captureHover();
     }
 
     public ToggleColorWidget(Text message, boolean withAlpha) {
         super(0, 0, 0, 0, message);
         this.toggle = new ToggleOptionsWidget(0, 0, 0, 0, message);
         this.attachChildren(withAlpha);
+        this.captureHover();
     }
 
     public ToggleColorWidget withDefaultColor(int argb) {

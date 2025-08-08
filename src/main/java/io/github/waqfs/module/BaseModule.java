@@ -1,6 +1,5 @@
 package io.github.waqfs.module;
 
-import io.github.waqfs.config.FileSystem;
 import io.github.waqfs.gui.widget.BaseWidget;
 import io.github.waqfs.gui.widget.DropdownWidget;
 import net.minecraft.text.Text;
@@ -16,14 +15,14 @@ public abstract class BaseModule<Widget extends BaseWidget<Boolean>, Boolean> {
         GeneratedWidgets<Widget, Boolean> widgets = func.accept(Text.literal(displayName), tooltip == null ? null : Text.literal(tooltip));
         this.wrapper = widgets.dropdown;
         this.widget = widgets.widget;
-        this.widget.registerCallback(newState -> {
+        this.widget.registerModuleCallback(newState -> {
             if ((boolean) newState) {
                 this.whenEnabled();
             } else {
                 this.whenDisabled();
             }
-            FileSystem.updateState(this.key, newState);
         });
+        this.widget.registerConfigKey(key);
     }
 
     public boolean getRawState() {

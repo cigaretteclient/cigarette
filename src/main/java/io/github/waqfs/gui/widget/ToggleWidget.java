@@ -1,6 +1,5 @@
 package io.github.waqfs.gui.widget;
 
-import io.github.waqfs.config.FileSystem;
 import io.github.waqfs.gui.CigaretteScreen;
 import io.github.waqfs.module.BaseModule;
 import net.minecraft.client.MinecraftClient;
@@ -24,23 +23,6 @@ public class ToggleWidget extends BaseWidget<Boolean> {
     public ToggleWidget withDefaultState(boolean state) {
         this.withDefault(state);
         return this;
-    }
-
-    public void registerAsOption(String key) {
-        this.registerUpdate(newState -> {
-            this.setRawState(newState);
-            FileSystem.updateState(key, newState);
-            if (this.callback != null) this.callback.accept(newState);
-        });
-        FileSystem.registerUpdate(key, newState -> {
-            if (!(newState instanceof Boolean booleanState)) return;
-            this.setRawState(booleanState);
-            if (this.callback != null) this.callback.accept(booleanState);
-        });
-    }
-
-    public void registerUpdate(Consumer<Boolean> callback) {
-        this.callback = callback;
     }
 
     public static BaseModule.GeneratedWidgets<ToggleWidget, Boolean> module(Text displayName, @Nullable Text tooltip) {

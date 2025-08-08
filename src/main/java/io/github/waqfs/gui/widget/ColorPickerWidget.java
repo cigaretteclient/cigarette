@@ -65,19 +65,19 @@ public class ColorPickerWidget extends PassthroughWidget<BaseWidget<?>, Integer>
     private ColorPickerWidget attachChildren(boolean withAlpha) {
         ScrollableWidget<BaseWidget<?>> wrapper = new ScrollableWidget<BaseWidget<?>>(0, 0, this.sliderRed, this.sliderGreen, this.sliderBlue, withAlpha ? this.sliderAlpha : null);
         this.children = new ScrollableWidget[]{wrapper};
-        this.sliderRed.registerUpdate((newColor -> {
+        this.sliderRed.stateCallback = ((newColor -> {
             int red = (int) (double) newColor;
             this.setRawState((this.getRawState() & 0xFF00FFFF) + (red << 16));
         }));
-        this.sliderGreen.registerUpdate((newColor -> {
+        this.sliderGreen.stateCallback = ((newColor -> {
             int green = (int) (double) newColor;
             this.setRawState((this.getRawState() & 0xFFFF00FF) + (green << 8));
         }));
-        this.sliderBlue.registerUpdate((newColor -> {
+        this.sliderBlue.stateCallback = ((newColor -> {
             int blue = (int) (double) newColor;
             this.setRawState((this.getRawState() & 0xFFFFFF00) + blue);
         }));
-        this.sliderAlpha.registerUpdate((newColor -> {
+        this.sliderAlpha.stateCallback = ((newColor -> {
             int alpha = (int) (double) newColor;
             this.setRawState((alpha << 24) + (this.getRawState() & 0xFFFFFF));
         }));

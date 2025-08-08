@@ -34,9 +34,9 @@ public class EntityESP extends TickModule<ToggleWidget, Boolean> {
         super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
         TextWidget header = new TextWidget(Text.literal("Types")).withUnderline();
         this.setChildren(header, enableEnderDragons, enableIronGolems, enableSilverfish);
-        enableEnderDragons.registerAsOption("bedwars.entityesp.enderdragons");
-        enableIronGolems.registerAsOption("bedwars.entityesp.irongolems");
-        enableSilverfish.registerAsOption("bedwars.entityesp.silverfish");
+        enableEnderDragons.registerConfigKey("bedwars.entityesp.enderdragons");
+        enableIronGolems.registerConfigKey("bedwars.entityesp.irongolems");
+        enableSilverfish.registerConfigKey("bedwars.entityesp.silverfish");
     }
 
     private int getNameColor(Entity entity) {

@@ -96,22 +96,22 @@ public class ToggleColorWidget extends RootModule<ToggleColorWidget, Integer> {
     private ToggleColorWidget attachChildren(boolean withAlpha) {
         ScrollableWidget<BaseWidget<?>> wrapper = new ScrollableWidget<>(0, 0, this.sliderRed, this.sliderGreen, this.sliderBlue, withAlpha ? this.sliderAlpha : null);
         this.children = new ScrollableWidget[]{wrapper};
-        this.sliderRed.registerUpdate((newColor -> {
+        this.sliderRed.stateCallback = ((newColor -> {
             int red = (int) (double) newColor;
             this.setRawState((this.getRawState() & 0xFF00FFFF) + (red << 16));
             this.updateState();
         }));
-        this.sliderGreen.registerUpdate((newColor -> {
+        this.sliderGreen.stateCallback = ((newColor -> {
             int green = (int) (double) newColor;
             this.setRawState((this.getRawState() & 0xFFFF00FF) + (green << 8));
             this.updateState();
         }));
-        this.sliderBlue.registerUpdate((newColor -> {
+        this.sliderBlue.stateCallback = ((newColor -> {
             int blue = (int) (double) newColor;
             this.setRawState((this.getRawState() & 0xFFFFFF00) + blue);
             this.updateState();
         }));
-        this.sliderAlpha.registerUpdate((newColor -> {
+        this.sliderAlpha.stateCallback = ((newColor -> {
             int alpha = (int) (double) newColor;
             this.setRawState((alpha << 24) + (this.getRawState() & 0xFFFFFF));
             this.updateState();
@@ -120,7 +120,7 @@ public class ToggleColorWidget extends RootModule<ToggleColorWidget, Integer> {
     }
 
     public void registerAsOption(String key) {
-        this.toggle.registerAsOption(key);
+        this.toggle.registerConfigKey(key);
 //        this.toggle.moduleCallback = this.moduleCallback;
 
         String colorKey = key + ".color";

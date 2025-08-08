@@ -84,7 +84,7 @@ public class DefenseViewer extends RenderModule<ToggleWidget, Boolean> implement
         TextWidget header = new TextWidget(Text.literal("Block Types")).withUnderline();
         this.setChildren(enableBeds, bedDistance, header, enableWool, enableEndStone, enableWood, enableClay, enableObsidian, enableGlass);
         enableBeds.registerAsOption("bedwars.defenseesp.bed");
-        bedDistance.registerAsOption("bedwars.defenseesp.distance");
+        bedDistance.registerConfigKey("bedwars.defenseesp.distance");
         enableWood.registerAsOption("bedwars.defenseesp.wood");
         enableEndStone.registerAsOption("bedwars.defenseesp.endstone");
         enableWool.registerAsOption("bedwars.defenseesp.wool");

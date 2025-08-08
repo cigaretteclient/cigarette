@@ -46,13 +46,13 @@ public class ProjectileESP extends RenderModule<ToggleWidget, Boolean> {
         super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
         TextWidget header = new TextWidget(Text.literal("Types")).withUnderline();
         this.setChildren(enableGlow, customHitColor, header, enableArrows, enablePearls, enableSnowballs, enableEggs, maxTicks);
-        enableGlow.registerAsOption("bedwars.projectileesp.glow");
+        enableGlow.registerConfigKey("bedwars.projectileesp.glow");
         customHitColor.registerAsOption("bedwars.projectileesp.collision");
         enableArrows.registerAsOption("bedwars.projectileesp.arrows");
         enablePearls.registerAsOption("bedwars.projectileesp.pearls");
         enableSnowballs.registerAsOption("bedwars.projectileesp.snowballs");
         enableEggs.registerAsOption("bedwars.projectileesp.eggs");
-        maxTicks.registerAsOption("bedwars.projectileesp.maxticks");
+        maxTicks.registerConfigKey("bedwars.projectileesp.maxticks");
     }
 
     @Override

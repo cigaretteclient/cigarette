@@ -23,7 +23,7 @@ public class AutoClicker extends TickModule<ToggleWidget, Boolean> {
     public AutoClicker() {
         super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
         this.setChildren(clickPercent);
-        clickPercent.registerAsOption("bedwars.autoclicker.clickpercent");
+        clickPercent.registerConfigKey("bedwars.autoclicker.clickpercent");
         BedwarsAgent.autoClickerModule = this;
     }
 

@@ -1,5 +1,6 @@
 package io.github.waqfs.gui.widget;
 
+import io.github.waqfs.config.FileSystem;
 import io.github.waqfs.gui.CigaretteScreen;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
@@ -16,8 +17,11 @@ public abstract class BaseWidget<StateType> extends ClickableWidget {
     private StateType state;
     protected boolean captureHover = false;
     protected boolean hovered = false;
+    protected String configKey;
     private final TooltipState tooltip = new TooltipState();
-    private @Nullable Consumer<StateType> moduleCallback = null;
+    protected @Nullable Consumer<StateType> stateCallback = null;
+    protected @Nullable Consumer<Object> fsCallback = null;
+    protected @Nullable Consumer<StateType> moduleCallback = null;
 
     public BaseWidget(Text message, @Nullable Text tooltip) {
         super(0, 0, 0, 0, message);
@@ -26,9 +30,8 @@ public abstract class BaseWidget<StateType> extends ClickableWidget {
 
     public final void setRawState(StateType state) {
         this.state = state;
-        if (moduleCallback != null) {
-            moduleCallback.accept(this.state);
-        }
+        if (moduleCallback != null) moduleCallback.accept(this.state);
+        if (stateCallback != null) stateCallback.accept(this.state);
     }
 
     @SuppressWarnings("unchecked")
@@ -45,8 +48,24 @@ public abstract class BaseWidget<StateType> extends ClickableWidget {
         return this.state;
     }
 
-    public void registerCallback(Consumer<StateType> callback) {
+    public void registerModuleCallback(Consumer<StateType> callback) {
         this.moduleCallback = callback;
+    }
+
+    @SuppressWarnings("unchecked")
+    public void registerConfigKey(String key) {
+        if (this.configKey != null) throw new IllegalStateException("Cannot configure a config key more than once.");
+        this.configKey = key;
+        this.stateCallback = newState -> FileSystem.updateState(key, newState);
+        this.fsCallback = newState -> {
+            try {
+                StateType typedState = (StateType) newState;
+                this.state = typedState;
+                if (this.moduleCallback != null) this.moduleCallback.accept(typedState);
+            } catch (ClassCastException ignored) {
+            }
+        };
+        FileSystem.registerUpdate(key, this.fsCallback);
     }
 
     protected BaseWidget<StateType> captureHover() {

@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 public class DropdownWidget<Widget extends BaseWidget<?>, StateType> extends PassthroughWidget<BaseWidget<?>, BaseWidget.Stateless> {
-    private Widget header;
+    protected Widget header;
     private boolean dropdownVisible = false;
 
     public DropdownWidget(Text message, @Nullable Text tooltip) {
@@ -22,6 +22,11 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType> extends Pas
     public DropdownWidget<Widget, StateType> setChildren(@Nullable BaseWidget<?>... children) {
         this.children = children;
         return this;
+    }
+
+    @Override
+    public void registerConfigKey(String key) {
+        this.header.registerConfigKey(key);
     }
 
     @Override

@@ -22,7 +22,7 @@ public abstract class BaseModule<Widget extends BaseWidget<Boolean>, Boolean> {
                 this.whenDisabled();
             }
         });
-        this.widget.registerConfigKey(key);
+        this.wrapper.registerConfigKey(key);
     }
 
     public boolean getRawState() {

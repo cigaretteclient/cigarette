@@ -17,7 +17,7 @@ import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.NotNull;
 
-public class AutoTool extends TickModule<ToggleOptionsWidget> {
+public class AutoTool extends TickModule<ToggleOptionsWidget, Boolean> {
     protected static final String MODULE_NAME = "Auto Tool";
     protected static final String MODULE_TOOLTIP = "Automatically swaps your tool to the correct one when breaking blocks.";
     protected static final String MODULE_ID = "bedwars.autotool";

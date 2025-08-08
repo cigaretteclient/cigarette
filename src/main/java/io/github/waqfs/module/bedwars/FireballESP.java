@@ -30,7 +30,7 @@ import org.joml.Matrix4f;
 import java.util.HashSet;
 import java.util.List;
 
-public class FireballESP extends RenderModule<ToggleOptionsWidget> {
+public class FireballESP extends RenderModule<ToggleOptionsWidget, Boolean> {
     protected static final String MODULE_NAME = "FireballESP";
     protected static final String MODULE_TOOLTIP = "Displays the trajectory and blast radius of all fireballs.";
     protected static final String MODULE_ID = "bedwars.fireballesp";

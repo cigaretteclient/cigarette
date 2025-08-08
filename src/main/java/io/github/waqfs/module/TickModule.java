@@ -9,8 +9,8 @@ import net.minecraft.client.world.ClientWorld;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class TickModule<T extends RootModule<T>> extends BaseModule<T> {
-    public TickModule(T widgetClass, String key, String displayName, @Nullable String tooltip) {
+public abstract class TickModule<Widget extends RootModule<Widget, StateType>, StateType> extends BaseModule<Widget, StateType> {
+    public TickModule(Widget widgetClass, String key, String displayName, @Nullable String tooltip) {
         super(widgetClass, key, displayName, tooltip);
         ClientTickEvents.START_CLIENT_TICK.register(client -> {
             if (this.state && client.world != null && client.player != null && this._inValidGame()) {

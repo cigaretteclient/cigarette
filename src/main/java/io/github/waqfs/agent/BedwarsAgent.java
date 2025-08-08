@@ -1,6 +1,5 @@
 package io.github.waqfs.agent;
 
-import io.github.waqfs.Cigarette;
 import io.github.waqfs.GameDetector;
 import io.github.waqfs.gui.widget.ToggleOptionsWidget;
 import io.github.waqfs.module.bedwars.AutoClicker;
@@ -87,7 +86,7 @@ public class BedwarsAgent extends BaseAgent {
 
     @Override
     protected boolean inValidGame() {
-        return (Cigarette.IN_DEV_ENVIRONMENT && DevWidget.bedwarsAgent.getState()) || GameDetector.rootGame == GameDetector.ParentGame.BEDWARS;
+        return GameDetector.rootGame == GameDetector.ParentGame.BEDWARS;
     }
 
     @Override

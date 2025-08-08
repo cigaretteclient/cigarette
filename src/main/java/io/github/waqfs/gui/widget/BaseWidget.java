@@ -9,12 +9,15 @@ import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.function.Consumer;
+
 public abstract class BaseWidget<StateType> extends ClickableWidget {
     private StateType defaultState;
     private StateType state;
     protected boolean captureHover = false;
     protected boolean hovered = false;
     private final TooltipState tooltip = new TooltipState();
+    private @Nullable Consumer<StateType> moduleCallback = null;
 
     public BaseWidget(Text message, @Nullable Text tooltip) {
         super(0, 0, 0, 0, message);
@@ -23,12 +26,15 @@ public abstract class BaseWidget<StateType> extends ClickableWidget {
 
     public final void setRawState(StateType state) {
         this.state = state;
+        if (moduleCallback != null) {
+            moduleCallback.accept(this.state);
+        }
     }
 
     @SuppressWarnings("unchecked")
     public final void toggleRawState() {
         if (this.state instanceof Boolean booleanState) {
-            this.state = (StateType) (Boolean) !booleanState;
+            this.setRawState((StateType) (Boolean) !booleanState);
             return;
         }
         throw new IllegalStateException("Cannot toggle state from a non-boolean component.");
@@ -37,6 +43,10 @@ public abstract class BaseWidget<StateType> extends ClickableWidget {
     public final StateType getRawState() {
         if (this.state instanceof Stateless) throw new IllegalStateException("Cannot get state from a stateless component.");
         return this.state;
+    }
+
+    public void registerCallback(Consumer<StateType> callback) {
+        this.moduleCallback = callback;
     }
 
     protected BaseWidget<StateType> captureHover() {

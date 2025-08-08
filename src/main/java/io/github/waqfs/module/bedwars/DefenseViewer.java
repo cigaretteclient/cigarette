@@ -3,6 +3,9 @@ package io.github.waqfs.module.bedwars;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import io.github.waqfs.GameDetector;
 import io.github.waqfs.agent.BedwarsAgent;
+import io.github.waqfs.gui.widget.SliderWidget;
+import io.github.waqfs.gui.widget.TextWidget;
+import io.github.waqfs.gui.widget.ToggleColorWidget;
 import io.github.waqfs.gui.widget.ToggleOptionsWidget;
 import io.github.waqfs.lib.Renderer;
 import io.github.waqfs.module.RenderModule;
@@ -18,6 +21,7 @@ import net.minecraft.client.render.*;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import org.jetbrains.annotations.NotNull;
@@ -39,6 +43,14 @@ public class DefenseViewer extends RenderModule<ToggleOptionsWidget> implements 
     private static KeyBinding decreaseKeyBinding;
     private static KeyBinding increaseKeyBinding;
     private int layer = 0;
+    private final ToggleColorWidget enableBeds = new ToggleColorWidget(Text.literal("Bed Color"), Text.literal("The ESP color used to highlight bed blocks once you are within a small range of the bed."), true).withDefaultColor(0xFFFF0000).withDefaultState(true);
+    private final SliderWidget bedDistance = new SliderWidget(Text.literal("Distance"), Text.literal("The max distance the player must be away from the bed for this to stop highlighting blocks and to start highlighting the bed.")).withBounds(0, 10, 30).withAccuracy(1);
+    private final ToggleColorWidget enableWool = new ToggleColorWidget(Text.literal("Wool"), true).withDefaultColor(0x7FFFFFFF).withDefaultState(true);
+    private final ToggleColorWidget enableEndStone = new ToggleColorWidget(Text.literal("Endstone"), true).withDefaultColor(0x7FFFFF00).withDefaultState(true);
+    private final ToggleColorWidget enableWood = new ToggleColorWidget(Text.literal("Wood"), true).withDefaultColor(0x7FFF0000).withDefaultState(true);
+    private final ToggleColorWidget enableClay = new ToggleColorWidget(Text.literal("Clay"), true).withDefaultColor(0x7F0000FF).withDefaultState(true);
+    private final ToggleColorWidget enableObsidian = new ToggleColorWidget(Text.literal("Obsidian"), true).withDefaultColor(0x7FFF00FF).withDefaultState(true);
+    private final ToggleColorWidget enableGlass = new ToggleColorWidget(Text.literal("Glass"), true).withDefaultColor(0x7F00FF00).withDefaultState(true);
 
 
     private HashSet<BlockPos> getBlocksInLayer(BedwarsAgent.PersistentBed bed, int layer) {
@@ -61,17 +73,27 @@ public class DefenseViewer extends RenderModule<ToggleOptionsWidget> implements 
     }
 
     private int getColorFromBlockState(BlockState state) {
-        if (BedwarsAgent.isWool(state)) return 0x7FFFFFFF;
-        if (BedwarsAgent.isEndStone(state)) return 0x7FFFFF00;
-        if (BedwarsAgent.isWood(state)) return 0x7FFF0000;
-        if (BedwarsAgent.isClay(state)) return 0x7F0000FF;
-        if (BedwarsAgent.isObsidian(state)) return 0x7FFF00FF;
-        if (BedwarsAgent.isGlass(state)) return 0x7F00FF00;
+        if (BedwarsAgent.isWool(state) && enableWool.getToggleState()) return enableWool.getStateARGB();
+        if (BedwarsAgent.isEndStone(state) && enableEndStone.getToggleState()) return enableEndStone.getStateARGB();
+        if (BedwarsAgent.isWood(state) && enableWood.getToggleState()) return enableWood.getStateARGB();
+        if (BedwarsAgent.isClay(state) && enableClay.getToggleState()) return enableClay.getStateARGB();
+        if (BedwarsAgent.isObsidian(state) && enableObsidian.getToggleState()) return enableObsidian.getStateARGB();
+        if (BedwarsAgent.isGlass(state) && enableGlass.getToggleState()) return enableGlass.getStateARGB();
         return 0;
     }
 
     public DefenseViewer() {
         super(ToggleOptionsWidget.base, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+        TextWidget header = new TextWidget(Text.literal("Block Types")).withUnderline();
+        this.widget.setOptions(enableBeds, bedDistance, header, enableWool, enableEndStone, enableWood, enableClay, enableObsidian, enableGlass);
+        enableBeds.registerAsOption("bedwars.defenseesp.bed");
+        bedDistance.registerAsOption("bedwars.defenseesp.distance");
+        enableWood.registerAsOption("bedwars.defenseesp.wood");
+        enableEndStone.registerAsOption("bedwars.defenseesp.endstone");
+        enableWool.registerAsOption("bedwars.defenseesp.wool");
+        enableClay.registerAsOption("bedwars.defenseesp.clay");
+        enableObsidian.registerAsOption("bedwars.defenseesp.obsidian");
+        enableGlass.registerAsOption("bedwars.defenseesp.glass");
     }
 
     @Override
@@ -89,13 +111,15 @@ public class DefenseViewer extends RenderModule<ToggleOptionsWidget> implements 
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
 
-        for (BlockPos pos : bedBlocks) {
-            Renderer.drawYQuad(buffer, matrix, 0xFFFF0000, pos.getY() + 0.5f, pos.getX(), pos.getZ(), pos.getX() + 1f, pos.getZ() + 1f);
-            Renderer.drawYQuad(buffer, matrix, 0xFFFF0000, pos.getY(), pos.getX(), pos.getZ(), pos.getX() + 1f, pos.getZ() + 1f);
-            Renderer.drawXQuad(buffer, matrix, 0xFFFF0000, pos.getX(), pos.getY(), pos.getZ(), pos.getY() + 0.5f, pos.getZ() + 1f);
-            Renderer.drawXQuad(buffer, matrix, 0xFFFF0000, pos.getX() + 1f, pos.getY(), pos.getZ(), pos.getY() + 0.5f, pos.getZ() + 1f);
-            Renderer.drawZQuad(buffer, matrix, 0xFFFF0000, pos.getZ(), pos.getX(), pos.getY(), pos.getX() + 1f, pos.getY() + 0.5f);
-            Renderer.drawZQuad(buffer, matrix, 0xFFFF0000, pos.getZ() + 1f, pos.getX(), pos.getY(), pos.getX() + 1f, pos.getY() + 0.5f);
+        if (enableBeds.getToggleState()) {
+            for (BlockPos pos : bedBlocks) {
+                Renderer.drawYQuad(buffer, matrix, enableBeds.getStateARGB(), pos.getY() + 0.5f, pos.getX(), pos.getZ(), pos.getX() + 1f, pos.getZ() + 1f);
+                Renderer.drawYQuad(buffer, matrix, enableBeds.getStateARGB(), pos.getY(), pos.getX(), pos.getZ(), pos.getX() + 1f, pos.getZ() + 1f);
+                Renderer.drawXQuad(buffer, matrix, enableBeds.getStateARGB(), pos.getX(), pos.getY(), pos.getZ(), pos.getY() + 0.5f, pos.getZ() + 1f);
+                Renderer.drawXQuad(buffer, matrix, enableBeds.getStateARGB(), pos.getX() + 1f, pos.getY(), pos.getZ(), pos.getY() + 0.5f, pos.getZ() + 1f);
+                Renderer.drawZQuad(buffer, matrix, enableBeds.getStateARGB(), pos.getZ(), pos.getX(), pos.getY(), pos.getX() + 1f, pos.getY() + 0.5f);
+                Renderer.drawZQuad(buffer, matrix, enableBeds.getStateARGB(), pos.getZ() + 1f, pos.getX(), pos.getY(), pos.getX() + 1f, pos.getY() + 0.5f);
+            }
         }
         for (Map.Entry<BlockPos, Integer> entry : defensiveBlocks.entrySet()) {
             Renderer.drawBlock(buffer, matrix, entry.getValue(), entry.getKey());
@@ -112,7 +136,7 @@ public class DefenseViewer extends RenderModule<ToggleOptionsWidget> implements 
         this.defensiveBlocks.clear();
         HashSet<BedwarsAgent.PersistentBed> beds = BedwarsAgent.getVisibleBeds();
         for (BedwarsAgent.PersistentBed bed : beds) {
-            boolean playerClose = bed.head().isWithinDistance(player.getPos(), 10);
+            boolean playerClose = bed.head().isWithinDistance(player.getPos(), bedDistance.getState());
             if (playerClose) {
                 bedBlocks.add(bed.head());
                 bedBlocks.add(bed.foot());
@@ -127,11 +151,9 @@ public class DefenseViewer extends RenderModule<ToggleOptionsWidget> implements 
         }
         while (increaseKeyBinding.wasPressed()) {
             this.layer = Math.min(this.layer + 1, PyramidQuadrant.MAX_LAYER);
-            System.out.println("layer = " + this.layer);
         }
         while (decreaseKeyBinding.wasPressed()) {
             this.layer = Math.max(this.layer - 1, 0);
-            System.out.println("layer = " + this.layer);
         }
     }
 

@@ -2,6 +2,7 @@ package io.github.waqfs.gui.widget;
 
 import io.github.waqfs.config.FileSystem;
 import io.github.waqfs.gui.CigaretteScreen;
+import io.github.waqfs.module.BaseModule;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.Text;
@@ -35,6 +36,13 @@ public class ToggleWidget extends BaseWidget<Boolean> {
 
     public void registerUpdate(Consumer<Boolean> callback) {
         this.callback = callback;
+    }
+
+    public static BaseModule.GeneratedWidgets<ToggleWidget, Boolean> module(Text displayName, @Nullable Text tooltip) {
+        DropdownWidget<ToggleWidget, Boolean> wrapper = new DropdownWidget<>(displayName, tooltip);
+        ToggleWidget widget = new ToggleWidget(displayName, tooltip);
+        wrapper.setHeader(widget);
+        return new BaseModule.GeneratedWidgets<>(wrapper, widget);
     }
 
     @Override

@@ -66,6 +66,9 @@ public class ScrollableWidget<T extends ClickableWidget> extends PassthroughWidg
                 if (child == null) continue;
                 child.setHeight(rowHeight);
                 child.setWidth(width - rightMargin);
+                if (this.shouldScroll && child instanceof PassthroughWidget widget) {
+                    widget.childLeftOffset = DEFAULT_SCROLLBAR_WIDTH;
+                }
             }
         }
         return this;

@@ -1,6 +1,8 @@
 package io.github.waqfs.agent;
 
+import io.github.waqfs.Cigarette;
 import io.github.waqfs.GameDetector;
+import io.github.waqfs.gui.widget.ToggleOptionsWidget;
 import io.github.waqfs.module.bedwars.AutoClicker;
 import io.github.waqfs.module.bedwars.PerfectHit;
 import net.minecraft.block.BedBlock;
@@ -14,11 +16,16 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
 
 public class BedwarsAgent extends BaseAgent {
     private static final HashSet<PersistentBed> persistentBeds = new HashSet<>();
+
+    public BedwarsAgent(@Nullable ToggleOptionsWidget devToggle) {
+        super(devToggle);
+    }
 
     public static HashSet<PersistentBed> getVisibleBeds() {
         HashSet<PersistentBed> visibleBeds = new HashSet<>();
@@ -80,7 +87,7 @@ public class BedwarsAgent extends BaseAgent {
 
     @Override
     protected boolean inValidGame() {
-        return GameDetector.rootGame == GameDetector.ParentGame.BEDWARS;
+        return (Cigarette.IN_DEV_ENVIRONMENT && DevWidget.bedwarsAgent.getState()) || GameDetector.rootGame == GameDetector.ParentGame.BEDWARS;
     }
 
     @Override

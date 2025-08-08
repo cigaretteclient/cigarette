@@ -5,7 +5,6 @@ import io.github.waqfs.gui.CigaretteScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
@@ -39,7 +38,7 @@ public class ToggleOptionsWidget extends RootModule<ToggleOptionsWidget> {
         return this.toggledState;
     }
 
-    public ToggleOptionsWidget(int x, int y, int width, int height, Text message, @Nullable Text tooltip, @Nullable ClickableWidget... options) {
+    public ToggleOptionsWidget(int x, int y, int width, int height, Text message, @Nullable Text tooltip, @Nullable BaseWidget... options) {
         super(x, y, width, height, message);
         this.setTooltip(Tooltip.of(tooltip));
         this.setOptions(options);
@@ -68,8 +67,8 @@ public class ToggleOptionsWidget extends RootModule<ToggleOptionsWidget> {
         super(0, 0, 0, 0, message);
     }
 
-    public ToggleOptionsWidget setOptions(@Nullable ClickableWidget... options) {
-        this.children = new ClickableWidget[]{new ScrollableWidget<>(0, 0).setChildren(options)};
+    public ToggleOptionsWidget setOptions(@Nullable BaseWidget... options) {
+        this.children = new BaseWidget[]{new ScrollableWidget<>(0, 0).setChildren(options)};
         return this;
     }
 
@@ -147,13 +146,8 @@ public class ToggleOptionsWidget extends RootModule<ToggleOptionsWidget> {
     }
 
     @Override
-    public void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
-        int left = getX();
-        int right = getRight();
-        int top = getY();
-        int bottom = getBottom();
-
-        if (isMouseOver(mouseX, mouseY) && CigaretteScreen.isHoverable(this)) {
+    public void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left, int top, int right, int bottom) {
+        if (hovered) {
             ticksOnHover = Math.min(ticksOnHover + 1, MAX_HOVER_TICKS);
             context.fillGradient(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR, CigaretteScreen.DARK_BACKGROUND_COLOR);
         } else {
@@ -175,11 +169,11 @@ public class ToggleOptionsWidget extends RootModule<ToggleOptionsWidget> {
         if (children != null) {
             context.drawHorizontalLine(right - 10, right - 4, top + (height / 2), CigaretteScreen.SECONDARY_COLOR);
             if (dropdownVisible) {
-                for (ClickableWidget child : children) {
+                for (BaseWidget child : children) {
                     if (child == null) continue;
                     child.setX(right + childLeftOffset);
                     child.setY(top);
-                    child.render(context, mouseX, mouseY, deltaTicks);
+                    child.renderWidget(context, mouseX, mouseY, deltaTicks);
                 }
             }
         }

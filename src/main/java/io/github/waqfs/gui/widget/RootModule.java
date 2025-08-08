@@ -1,13 +1,11 @@
 package io.github.waqfs.gui.widget;
 
-import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
-import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
 
-public abstract class RootModule<T extends PassthroughWidget<?>> extends PassthroughWidget<ClickableWidget> {
+public abstract class RootModule<T extends PassthroughWidget<?>> extends PassthroughWidget<BaseWidget> {
     protected @Nullable Consumer<Boolean> moduleStateCallback = null;
 
     public RootModule(int x, int y, int width, int height, Text message) {
@@ -25,9 +23,5 @@ public abstract class RootModule<T extends PassthroughWidget<?>> extends Passthr
     public void triggerModuleStateUpdate(boolean state) {
         if (moduleStateCallback == null) return;
         moduleStateCallback.accept(state);
-    }
-
-    @Override
-    protected void appendClickableNarrations(NarrationMessageBuilder builder) {
     }
 }

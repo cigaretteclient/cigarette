@@ -5,7 +5,6 @@ import io.github.waqfs.gui.CigaretteScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 
@@ -78,7 +77,7 @@ public class ColorPickerWidget extends PassthroughWidget<BaseWidget> {
     }
 
     private void attachChildren(boolean withAlpha) {
-        ScrollableWidget<ClickableWidget> wrapper = new ScrollableWidget<>(0, 0, this.sliderRed, this.sliderGreen, this.sliderBlue, withAlpha ? this.sliderAlpha : null);
+        ScrollableWidget<BaseWidget> wrapper = new ScrollableWidget<>(0, 0, this.sliderRed, this.sliderGreen, this.sliderBlue, withAlpha ? this.sliderAlpha : null);
         this.children = new ScrollableWidget[]{wrapper};
         this.sliderRed.registerUpdate((newColor -> {
             int red = (int) (double) newColor;

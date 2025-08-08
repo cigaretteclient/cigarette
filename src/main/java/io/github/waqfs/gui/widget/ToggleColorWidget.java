@@ -4,7 +4,6 @@ import io.github.waqfs.config.FileSystem;
 import io.github.waqfs.gui.CigaretteScreen;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
@@ -98,7 +97,7 @@ public class ToggleColorWidget extends RootModule<ToggleColorWidget> {
     }
 
     private void attachChildren(boolean withAlpha) {
-        ScrollableWidget<ClickableWidget> wrapper = new ScrollableWidget<>(0, 0, this.sliderRed, this.sliderGreen, this.sliderBlue, withAlpha ? this.sliderAlpha : null);
+        ScrollableWidget<BaseWidget> wrapper = new ScrollableWidget<>(0, 0, this.sliderRed, this.sliderGreen, this.sliderBlue, withAlpha ? this.sliderAlpha : null);
         this.children = new ScrollableWidget[]{wrapper};
         this.sliderRed.registerUpdate((newColor -> {
             int red = (int) (double) newColor;
@@ -167,21 +166,12 @@ public class ToggleColorWidget extends RootModule<ToggleColorWidget> {
     }
 
     @Override
-    protected void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
-        if (isMouseOver(mouseX, mouseY)) {
-            CigaretteScreen.isHoverable(this);
-        }
-
-        int left = getX();
-        int right = getRight();
-        int top = getY();
-        int bottom = getBottom();
-
+    protected void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left, int top, int right, int bottom) {
         this.toggle.setY(top);
         this.toggle.setX(left);
         this.toggle.setWidth(width);
         this.toggle.setHeight(height);
-        this.toggle.render(context, mouseX, mouseY, deltaTicks);
+        this.toggle.renderWidget(context, mouseX, mouseY, deltaTicks);
 
         int colorBoxWidth = (bottom - top) - 6;
         context.fill(right - 3 - colorBoxWidth, top + 3, right - 3, bottom - 3, this.colorState);
@@ -190,11 +180,11 @@ public class ToggleColorWidget extends RootModule<ToggleColorWidget> {
             context.drawVerticalLine(right - 3, top, bottom, CigaretteScreen.SECONDARY_COLOR);
             context.drawVerticalLine(right - 2, top, bottom, CigaretteScreen.SECONDARY_COLOR);
             context.drawVerticalLine(right - 1, top, bottom, CigaretteScreen.SECONDARY_COLOR);
-            for (ClickableWidget child : children) {
+            for (BaseWidget child : children) {
                 if (child == null) continue;
                 child.setX(right);
                 child.setY(top);
-                child.render(context, mouseX, mouseY, deltaTicks);
+                child.renderWidget(context, mouseX, mouseY, deltaTicks);
             }
         }
 

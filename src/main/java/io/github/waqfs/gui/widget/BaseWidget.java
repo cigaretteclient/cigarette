@@ -18,11 +18,20 @@ public abstract class BaseWidget<StateType> extends ClickableWidget {
 
     public BaseWidget(Text message, @Nullable Text tooltip) {
         super(0, 0, 0, 0, message);
-        if(tooltip != null) this.setTooltip(Tooltip.of(tooltip));
+        if (tooltip != null) this.setTooltip(Tooltip.of(tooltip));
     }
 
     public final void setRawState(StateType state) {
         this.state = state;
+    }
+
+    @SuppressWarnings("unchecked")
+    public final void toggleRawState() {
+        if (this.state instanceof Boolean booleanState) {
+            this.state = (StateType) (Boolean) !booleanState;
+            return;
+        }
+        throw new IllegalStateException("Cannot toggle state from a non-boolean component.");
     }
 
     public final StateType getRawState() {

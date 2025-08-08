@@ -1,8 +1,8 @@
 package io.github.waqfs.module;
 
+import io.github.waqfs.Cigarette;
 import io.github.waqfs.gui.widget.RootModule;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
@@ -22,7 +22,7 @@ public abstract class TickModule<T extends RootModule<T>> extends BaseModule<T> 
     }
 
     private boolean _inValidGame() {
-        if (FabricLoader.getInstance().isDevelopmentEnvironment()) return true;
+        if (Cigarette.IN_DEV_ENVIRONMENT) return true;
         return this.inValidGame();
     }
 

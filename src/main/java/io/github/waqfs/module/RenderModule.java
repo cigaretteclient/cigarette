@@ -1,9 +1,9 @@
 package io.github.waqfs.module;
 
+import io.github.waqfs.Cigarette;
 import io.github.waqfs.gui.widget.RootModule;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.util.math.MatrixStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -21,7 +21,7 @@ public abstract class RenderModule<T extends RootModule<T>> extends TickModule<T
     }
 
     private boolean _inValidGame() {
-        if (FabricLoader.getInstance().isDevelopmentEnvironment()) return true;
+        if (Cigarette.IN_DEV_ENVIRONMENT) return true;
         return this.inValidGame();
     }
 

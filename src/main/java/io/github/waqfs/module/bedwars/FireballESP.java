@@ -38,7 +38,7 @@ public class FireballESP extends RenderModule<ToggleWidget, Boolean> {
     private static final RenderLayer RENDER_LAYER_SPHERE = RenderLayer.of("cigarette.triespnophase", 1536, Renderer.TRI_ESP_NOPHASE, RenderLayer.MultiPhaseParameters.builder().build(false));
     private final HashSet<Fireball> fireballs = new HashSet<>();
     private final Glow.Context glowContext = new Glow.Context();
-    private final ColorDropdownWidget<ToggleWidget, Boolean> enableGlow = ColorDropdownWidget.build(Text.literal("Glowing"), Text.literal("Applies the glowing effect to the fireball entities")).withAlpha(false).withDefaultColor(0xFFFF0000);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableGlow = ColorDropdownWidget.buildToggle(Text.literal("Glowing"), Text.literal("Applies the glowing effect to the fireball entities")).withAlpha(false).withDefaultColor(0xFFFF0000);
     private final ColorPickerWidget sphereColor = new ColorPickerWidget(Text.literal("Sphere Color"), true).withDefaultColor(0x4FFF0000);
     private final ColorPickerWidget lineColor = new ColorPickerWidget(Text.literal("Projection Color"), true).withDefaultColor(0xFFFF0000);
 

@@ -92,13 +92,13 @@ public class ColorDropdownWidget<Widget extends ToggleWidget, StateType> extends
         return new BaseModule.GeneratedWidgets<>(wrapper, widget);
     }
 
-    public static ColorDropdownWidget<ToggleWidget, Boolean> build(Text displayName, @Nullable Text tooltip) {
+    public static ColorDropdownWidget<ToggleWidget, Boolean> buildToggle(Text displayName, @Nullable Text tooltip) {
         ColorDropdownWidget<ToggleWidget, Boolean> wrapper = new ColorDropdownWidget<>(displayName, tooltip, true);
         ToggleWidget widget = new ToggleWidget(displayName, tooltip);
         wrapper.setHeader(widget);
         return wrapper;
     }
-
+    
     @Override
     public void registerConfigKey(String key) {
         this.header.registerConfigKey(key);

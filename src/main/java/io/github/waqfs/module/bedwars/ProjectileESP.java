@@ -35,11 +35,11 @@ public class ProjectileESP extends RenderModule<ToggleWidget, Boolean> {
     private final HashSet<Projectile> projectiles = new HashSet<>();
     private final Glow.Context glowContext = new Glow.Context();
     private final ToggleWidget enableGlow = new ToggleWidget(Text.literal("Glowing"), Text.literal("Applies the glowing effect to the entities in the same color as the trajectory.")).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> customHitColor = ColorDropdownWidget.build(Text.literal("Hit Color"), Text.literal("Overrides the glow and trajectory color if the projectile is colliding with an entity.")).withDefaultColor(0xFFFF0000).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> enableArrows = ColorDropdownWidget.build(Text.literal("Shot Arrows"), Text.literal("Display the trajectory of shot Arrows.")).withDefaultColor(0xFF0000FF).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> enablePearls = ColorDropdownWidget.build(Text.literal("Thrown Pearls"), Text.literal("Display the trajectory of thrown Pearls.")).withDefaultColor(0xFF00FF00).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> enableSnowballs = ColorDropdownWidget.build(Text.literal("Thrown Snowballs"), Text.literal("Display the trajectory of thrown Snowballs.")).withDefaultColor(0xFFFFFFFF).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> enableEggs = ColorDropdownWidget.build(Text.literal("Thrown Eggs"), Text.literal("Display the trajectory of thrown Eggs.")).withDefaultColor(0xFFFFFF00).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> customHitColor = ColorDropdownWidget.buildToggle(Text.literal("Hit Color"), Text.literal("Overrides the glow and trajectory color if the projectile is colliding with an entity.")).withDefaultColor(0xFFFF0000).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableArrows = ColorDropdownWidget.buildToggle(Text.literal("Shot Arrows"), Text.literal("Display the trajectory of shot Arrows.")).withDefaultColor(0xFF0000FF).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enablePearls = ColorDropdownWidget.buildToggle(Text.literal("Thrown Pearls"), Text.literal("Display the trajectory of thrown Pearls.")).withDefaultColor(0xFF00FF00).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableSnowballs = ColorDropdownWidget.buildToggle(Text.literal("Thrown Snowballs"), Text.literal("Display the trajectory of thrown Snowballs.")).withDefaultColor(0xFFFFFFFF).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableEggs = ColorDropdownWidget.buildToggle(Text.literal("Thrown Eggs"), Text.literal("Display the trajectory of thrown Eggs.")).withDefaultColor(0xFFFFFF00).withDefaultState(true);
     private final SliderWidget maxTicks = new SliderWidget(Text.literal("Max Ticks"), Text.literal("The maximum ticks the projection calculates into the future.")).withBounds(20, 200, 200);
 
     public ProjectileESP() {

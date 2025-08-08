@@ -3,10 +3,7 @@ package io.github.waqfs.module.bedwars;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import io.github.waqfs.GameDetector;
 import io.github.waqfs.agent.BedwarsAgent;
-import io.github.waqfs.gui.widget.SliderWidget;
-import io.github.waqfs.gui.widget.TextWidget;
-import io.github.waqfs.gui.widget.ToggleColorWidget;
-import io.github.waqfs.gui.widget.ToggleOptionsWidget;
+import io.github.waqfs.gui.widget.*;
 import io.github.waqfs.lib.Renderer;
 import io.github.waqfs.module.RenderModule;
 import io.github.waqfs.precomputed.PyramidQuadrant;
@@ -33,7 +30,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.OptionalDouble;
 
-public class DefenseViewer extends RenderModule<ToggleOptionsWidget, Boolean> implements ClientModInitializer {
+public class DefenseViewer extends RenderModule<ToggleWidget, Boolean> implements ClientModInitializer {
     protected static final String MODULE_NAME = "Defense Viewer";
     protected static final String MODULE_TOOLTIP = "ESPs bed blocks and the defensive blocks around them.";
     protected static final String MODULE_ID = "bedwars.defenseesp";
@@ -83,9 +80,9 @@ public class DefenseViewer extends RenderModule<ToggleOptionsWidget, Boolean> im
     }
 
     public DefenseViewer() {
-        super(ToggleOptionsWidget.base, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
         TextWidget header = new TextWidget(Text.literal("Block Types")).withUnderline();
-        this.widget.setOptions(enableBeds, bedDistance, header, enableWool, enableEndStone, enableWood, enableClay, enableObsidian, enableGlass);
+        this.setChildren(enableBeds, bedDistance, header, enableWool, enableEndStone, enableWood, enableClay, enableObsidian, enableGlass);
         enableBeds.registerAsOption("bedwars.defenseesp.bed");
         bedDistance.registerAsOption("bedwars.defenseesp.distance");
         enableWood.registerAsOption("bedwars.defenseesp.wood");

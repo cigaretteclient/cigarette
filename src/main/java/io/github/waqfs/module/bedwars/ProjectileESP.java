@@ -2,10 +2,7 @@ package io.github.waqfs.module.bedwars;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
 import io.github.waqfs.GameDetector;
-import io.github.waqfs.gui.widget.SliderWidget;
-import io.github.waqfs.gui.widget.TextWidget;
-import io.github.waqfs.gui.widget.ToggleColorWidget;
-import io.github.waqfs.gui.widget.ToggleOptionsWidget;
+import io.github.waqfs.gui.widget.*;
 import io.github.waqfs.lib.Glow;
 import io.github.waqfs.lib.Raycast;
 import io.github.waqfs.lib.Renderer;
@@ -30,14 +27,14 @@ import org.joml.Matrix4f;
 
 import java.util.HashSet;
 
-public class ProjectileESP extends RenderModule<ToggleOptionsWidget, Boolean> {
+public class ProjectileESP extends RenderModule<ToggleWidget, Boolean> {
     protected static final String MODULE_NAME = "ProjectileESP";
     protected static final String MODULE_TOOLTIP = "Displays the trajectory of all projectiles.";
     protected static final String MODULE_ID = "bedwars.projectileesp";
     private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockespnophase", 1536, Renderer.BLOCK_ESP_NOPHASE, RenderLayer.MultiPhaseParameters.builder().build(false));
     private final HashSet<Projectile> projectiles = new HashSet<>();
     private final Glow.Context glowContext = new Glow.Context();
-    private final ToggleOptionsWidget enableGlow = new ToggleOptionsWidget(Text.literal("Glowing"), Text.literal("Applies the glowing effect to the entities in the same color as the trajectory.")).withDefaultState(true);
+    private final ToggleWidget enableGlow = new ToggleWidget(Text.literal("Glowing"), Text.literal("Applies the glowing effect to the entities in the same color as the trajectory.")).withDefaultState(true);
     private final ToggleColorWidget customHitColor = new ToggleColorWidget(Text.literal("Hit Color"), Text.literal("Overrides the glow and trajectory color if the projectile is colliding with an entity."), true).withDefaultColor(0xFFFF0000).withDefaultState(true);
     private final ToggleColorWidget enableArrows = new ToggleColorWidget(Text.literal("Shot Arrows"), Text.literal("Display the trajectory of shot Arrows."), true).withDefaultColor(0xFF0000FF).withDefaultState(true);
     private final ToggleColorWidget enablePearls = new ToggleColorWidget(Text.literal("Thrown Pearls"), Text.literal("Display the trajectory of thrown Pearls."), true).withDefaultColor(0xFF00FF00).withDefaultState(true);
@@ -46,9 +43,9 @@ public class ProjectileESP extends RenderModule<ToggleOptionsWidget, Boolean> {
     private final SliderWidget maxTicks = new SliderWidget(Text.literal("Max Ticks"), Text.literal("The maximum ticks the projection calculates into the future.")).withBounds(20, 200, 200);
 
     public ProjectileESP() {
-        super(ToggleOptionsWidget.base, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
         TextWidget header = new TextWidget(Text.literal("Types")).withUnderline();
-        this.widget.setOptions(enableGlow, customHitColor, header, enableArrows, enablePearls, enableSnowballs, enableEggs, maxTicks);
+        this.setChildren(enableGlow, customHitColor, header, enableArrows, enablePearls, enableSnowballs, enableEggs, maxTicks);
         enableGlow.registerAsOption("bedwars.projectileesp.glow");
         customHitColor.registerAsOption("bedwars.projectileesp.collision");
         enableArrows.registerAsOption("bedwars.projectileesp.arrows");

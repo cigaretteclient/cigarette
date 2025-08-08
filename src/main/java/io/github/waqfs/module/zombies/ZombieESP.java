@@ -1,9 +1,7 @@
 package io.github.waqfs.module.zombies;
 
 import io.github.waqfs.GameDetector;
-import io.github.waqfs.gui.widget.TextWidget;
-import io.github.waqfs.gui.widget.ToggleColorWidget;
-import io.github.waqfs.gui.widget.ToggleOptionsWidget;
+import io.github.waqfs.gui.widget.*;
 import io.github.waqfs.lib.Glow;
 import io.github.waqfs.module.TickModule;
 import net.minecraft.client.MinecraftClient;
@@ -17,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
-public class ZombieESP extends TickModule<ToggleOptionsWidget, Boolean> {
+public class ZombieESP extends TickModule<ToggleWidget, Boolean> {
     protected static final String MODULE_NAME = "ZombieESP";
     protected static final String MODULE_TOOLTIP = "Highlights all the zombies in ESP.";
     protected static final String MODULE_ID = "zombies.zombieesp";
@@ -31,11 +29,10 @@ public class ZombieESP extends TickModule<ToggleOptionsWidget, Boolean> {
     private final ToggleColorWidget enableSlimes = new ToggleColorWidget(Text.literal("Slimes"), false).withDefaultColor(0xFF6DFC5D).withDefaultState(true);
     private final ToggleColorWidget enableWitches = new ToggleColorWidget(Text.literal("Witches"), false).withDefaultColor(0xFFA625F7).withDefaultState(true);
 
-
     public ZombieESP() {
-        super(ToggleOptionsWidget.base, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
         TextWidget header = new TextWidget(Text.literal("Types")).withUnderline();
-        this.widget.setOptions(header, enableZombies, enableBlazes, enableWolves, enableCreepers, enableMagmaCubes, enableSlimes, enableWitches);
+        this.setChildren(header, enableZombies, enableBlazes, enableWolves, enableCreepers, enableMagmaCubes, enableSlimes, enableWitches);
         enableZombies.registerAsOption("zombies.zombieesp.zombies");
         enableBlazes.registerAsOption("zombies.zombieesp.blazes");
         enableWolves.registerAsOption("zombies.zombieesp.wolves");

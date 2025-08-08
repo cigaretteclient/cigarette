@@ -13,7 +13,7 @@ import java.util.function.Consumer;
 public class ToggleColorWidget extends RootModule<ToggleColorWidget, Integer> {
     public static ToggleColorWidget base = new ToggleColorWidget(Text.literal(""), false);
     private boolean dropdownVisible = false;
-    private final ToggleOptionsWidget toggle;
+    private final ToggleWidget toggle;
     private final SliderWidget sliderRed = new SliderWidget(Text.literal("Red")).withBounds(0, 255, 255);
     private final SliderWidget sliderGreen = new SliderWidget(Text.literal("Green")).withBounds(0, 255, 255);
     private final SliderWidget sliderBlue = new SliderWidget(Text.literal("Blue")).withBounds(0, 255, 255);
@@ -59,26 +59,26 @@ public class ToggleColorWidget extends RootModule<ToggleColorWidget, Integer> {
     public ToggleColorWidget(int x, int y, int width, int height, Text message, @Nullable Text tooltip, boolean withAlpha) {
         super(x, y, width, height, message);
         this.setTooltip(Tooltip.of(tooltip));
-        this.toggle = new ToggleOptionsWidget(x, y, width, height, message);
+        this.toggle = new ToggleWidget(message, null);
         this.attachChildren(withAlpha).captureHover().withDefault(0xFFFFFFFF);
     }
 
     public ToggleColorWidget(int x, int y, int width, int height, Text message, boolean withAlpha) {
         super(x, y, width, height, message);
-        this.toggle = new ToggleOptionsWidget(x, y, width, height, message);
+        this.toggle = new ToggleWidget(message, null);
         this.attachChildren(withAlpha).captureHover().withDefault(0xFFFFFFFF);
     }
 
     public ToggleColorWidget(Text message, Text tooltip, boolean withAlpha) {
         super(0, 0, 0, 0, message);
         this.setTooltip(Tooltip.of(tooltip));
-        this.toggle = new ToggleOptionsWidget(0, 0, 0, 0, message);
+        this.toggle = new ToggleWidget(message, null);
         this.attachChildren(withAlpha).captureHover().withDefault(0xFFFFFFFF);
     }
 
     public ToggleColorWidget(Text message, boolean withAlpha) {
         super(0, 0, 0, 0, message);
-        this.toggle = new ToggleOptionsWidget(0, 0, 0, 0, message);
+        this.toggle = new ToggleWidget(message, null);
         this.attachChildren(withAlpha).captureHover().withDefault(0xFFFFFFFF);
     }
 
@@ -121,7 +121,7 @@ public class ToggleColorWidget extends RootModule<ToggleColorWidget, Integer> {
 
     public void registerAsOption(String key) {
         this.toggle.registerAsOption(key);
-        this.toggle.moduleStateCallback = this.moduleStateCallback;
+//        this.toggle.moduleCallback = this.moduleCallback;
 
         String colorKey = key + ".color";
         this.registerUpdate(newState -> {

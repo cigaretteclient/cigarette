@@ -4,7 +4,7 @@ import io.github.waqfs.GameDetector;
 import io.github.waqfs.agent.MurderMysteryAgent;
 import io.github.waqfs.gui.widget.TextWidget;
 import io.github.waqfs.gui.widget.ToggleColorWidget;
-import io.github.waqfs.gui.widget.ToggleOptionsWidget;
+import io.github.waqfs.gui.widget.ToggleWidget;
 import io.github.waqfs.lib.Glow;
 import io.github.waqfs.module.TickModule;
 import net.minecraft.client.MinecraftClient;
@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
 
-public class PlayerESP extends TickModule<ToggleOptionsWidget, Boolean> {
+public class PlayerESP extends TickModule<ToggleWidget, Boolean> {
     protected static final String MODULE_NAME = "PlayerESP";
     protected static final String MODULE_TOOLTIP = "Highlights all the players in ESP.";
     protected static final String MODULE_ID = "murdermystery.playeresp";
@@ -25,9 +25,9 @@ public class PlayerESP extends TickModule<ToggleOptionsWidget, Boolean> {
     private final ToggleColorWidget murderer = new ToggleColorWidget(Text.literal("Murderer"), Text.literal("The glow color of the murderer."), false).withDefaultColor(0xFFFF0000).withDefaultState(true);
 
     public PlayerESP() {
-        super(ToggleOptionsWidget.base, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
         TextWidget header = new TextWidget(Text.literal("Types")).withUnderline();
-        this.widget.setOptions(header, innocent, detective, murderer);
+        this.setChildren(header, innocent, detective, murderer);
         innocent.registerAsOption("murdermystery.playeresp.innocent");
         detective.registerAsOption("murdermystery.playeresp.detective");
         murderer.registerAsOption("murdermystery.playeresp.murderer");

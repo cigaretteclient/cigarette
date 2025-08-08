@@ -2,7 +2,7 @@ package io.github.waqfs.agent;
 
 import io.github.waqfs.GameDetector;
 import io.github.waqfs.Language;
-import io.github.waqfs.gui.widget.ToggleOptionsWidget;
+import io.github.waqfs.gui.widget.ToggleWidget;
 import io.github.waqfs.lib.PlayerEntityL;
 import io.github.waqfs.lib.TextL;
 import io.github.waqfs.lib.WorldL;
@@ -25,7 +25,7 @@ public class MurderMysteryAgent extends BaseAgent {
     private static final HashMap<String, PersistentPlayer> persistentPlayers = new HashMap<>();
     private static final HashSet<AvailableGold> availableGold = new HashSet<>();
 
-    public MurderMysteryAgent(@Nullable ToggleOptionsWidget devToggle) {
+    public MurderMysteryAgent(@Nullable ToggleWidget devToggle) {
         super(devToggle);
     }
 

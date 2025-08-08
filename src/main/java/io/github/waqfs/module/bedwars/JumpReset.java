@@ -10,7 +10,7 @@ import net.minecraft.client.world.ClientWorld;
 import org.jetbrains.annotations.NotNull;
 
 
-public class JumpReset extends TickModule<ToggleOptionsWidget> {
+public class JumpReset extends TickModule<ToggleOptionsWidget, Boolean> {
     protected static final String MODULE_NAME = "JumpReset";
     protected static final String MODULE_TOOLTIP = "Jumps upon taking damage to reduce knockback.";
     protected static final String MODULE_ID = "bedwars.jumpreset";

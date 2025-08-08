@@ -30,7 +30,7 @@ import org.joml.Matrix4f;
 
 import java.util.HashSet;
 
-public class ProjectileESP extends RenderModule<ToggleOptionsWidget> {
+public class ProjectileESP extends RenderModule<ToggleOptionsWidget, Boolean> {
     protected static final String MODULE_NAME = "ProjectileESP";
     protected static final String MODULE_TOOLTIP = "Displays the trajectory of all projectiles.";
     protected static final String MODULE_ID = "bedwars.projectileesp";
@@ -69,9 +69,9 @@ public class ProjectileESP extends RenderModule<ToggleOptionsWidget> {
         for (Projectile projectile : projectiles) {
             Raycast.SteppedTrajectory trajectory = projectile.trajectory;
 
-            int collisionStep = trajectory.collisionStep != null ? trajectory.collisionStep : (int) maxTicks.getState();
+            int collisionStep = trajectory.collisionStep != null ? trajectory.collisionStep : maxTicks.getRawState().intValue();
             Vec3d start = trajectory.steps[0];
-            for (int tick = 1; tick < maxTicks.getState(); tick++) {
+            for (int tick = 1; tick < maxTicks.getRawState(); tick++) {
                 if (tick > collisionStep) break;
                 Vec3d end = trajectory.steps[tick];
                 Renderer.drawFakeLine(buffer, matrix, projectile.color, start.toVector3f(), end.toVector3f(), 0.1f);
@@ -97,7 +97,7 @@ public class ProjectileESP extends RenderModule<ToggleOptionsWidget> {
             if (entity instanceof SnowballEntity && !enableSnowballs.getToggleState()) continue;
             if (entity instanceof EggEntity && !enableEggs.getToggleState()) continue;
 
-            Raycast.SteppedTrajectory trajectory = Raycast.trajectory((ProjectileEntity) entity, (int) maxTicks.getState());
+            Raycast.SteppedTrajectory trajectory = Raycast.trajectory((ProjectileEntity) entity, maxTicks.getRawState().intValue());
 
             int color = 0xFFFFFFFF;
             if (trajectory.collision instanceof EntityHitResult && customHitColor.getToggleState()) color = customHitColor.getStateARGB();
@@ -107,7 +107,7 @@ public class ProjectileESP extends RenderModule<ToggleOptionsWidget> {
 
             Projectile projectile = new Projectile(entity, trajectory, color);
             projectiles.add(projectile);
-            if (this.enableGlow.getState()) this.glowContext.addGlow(entity.getUuid(), color & 0xFFFFFF);
+            if (this.enableGlow.getRawState()) this.glowContext.addGlow(entity.getUuid(), color & 0xFFFFFF);
         }
     }
 

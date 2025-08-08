@@ -5,53 +5,59 @@ import io.github.waqfs.gui.CigaretteScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.function.Consumer;
 
-public class ToggleOptionsWidget extends RootModule<ToggleOptionsWidget> {
+public class ToggleOptionsWidget extends RootModule<ToggleOptionsWidget, Boolean> {
     public static ToggleOptionsWidget base = new ToggleOptionsWidget(Text.literal(""), null);
     private static final byte MAX_HOVER_TICKS = 35;
     private boolean dropdownVisible = false;
-    private boolean defaultToggledState = false;
-    private boolean toggledState = false;
     private @Nullable Consumer<Boolean> toggledCallback = null;
     private int ticksOnHover = 0;
 
     private void toggleState() {
-        this.toggledState = !this.toggledState;
+        this.setRawState(!this.getRawState());
         if (this.toggledCallback != null) {
-            this.toggledCallback.accept(this.toggledState);
+            this.toggledCallback.accept(this.getRawState());
         }
     }
 
     public void setState(boolean state) {
-        this.toggledState = state;
+        this.setRawState(state);
         if (this.toggledCallback != null) {
-            this.toggledCallback.accept(this.toggledState);
+            this.toggledCallback.accept(this.getRawState());
         }
     }
 
-    public boolean getState() {
-        return this.toggledState;
-    }
-
-    public ToggleOptionsWidget(int x, int y, int width, int height, Text message, @Nullable Text tooltip, @Nullable ClickableWidget... options) {
+    public ToggleOptionsWidget(int x, int y, int width, int height, Text message, @Nullable Text tooltip, @Nullable BaseWidget<?>... options) {
         super(x, y, width, height, message);
         this.setTooltip(Tooltip.of(tooltip));
-        this.setOptions(options);
+        this.setOptions(options).captureHover().withDefault(false);
     }
 
     public ToggleOptionsWidget(int x, int y, int width, int height, Text message, @Nullable Text tooltip) {
         super(x, y, width, height, message);
         this.setTooltip(Tooltip.of(tooltip));
+        this.captureHover().withDefault(false);
     }
 
     public ToggleOptionsWidget(int x, int y, int width, int height, Text message) {
         super(x, y, width, height, message);
+        this.captureHover().withDefault(false);
+    }
+
+    public ToggleOptionsWidget(Text message, Text tooltip) {
+        super(0, 0, 0, 0, message);
+        this.setTooltip(Tooltip.of(tooltip));
+        this.captureHover().withDefault(false);
+    }
+
+    public ToggleOptionsWidget(Text message) {
+        super(0, 0, 0, 0, message);
+        this.captureHover().withDefault(false);
     }
 
     @Override
@@ -59,35 +65,25 @@ public class ToggleOptionsWidget extends RootModule<ToggleOptionsWidget> {
         return new ToggleOptionsWidget(Text.of(message), tooltip == null ? null : Text.of(tooltip));
     }
 
-    public ToggleOptionsWidget(Text message, Text tooltip) {
-        super(0, 0, 0, 0, message);
-        this.setTooltip(Tooltip.of(tooltip));
-    }
-
-    public ToggleOptionsWidget(Text message) {
-        super(0, 0, 0, 0, message);
-    }
-
-    public ToggleOptionsWidget setOptions(@Nullable ClickableWidget... options) {
-        this.children = new ClickableWidget[]{new ScrollableWidget<>(0, 0).setChildren(options)};
+    public ToggleOptionsWidget setOptions(@Nullable BaseWidget<?>... options) {
+        this.children = new BaseWidget[]{new ScrollableWidget<>(0, 0).setChildren(options)};
         return this;
     }
 
     public ToggleOptionsWidget withDefaultState(boolean state) {
-        this.defaultToggledState = state;
-        this.toggledState = state;
+        this.withDefault(state);
         return this;
     }
 
     public void registerAsOption(String key) {
         this.registerUpdate(newState -> {
-            this.toggledState = newState;
+            this.setRawState(newState);
             FileSystem.updateState(key, newState);
             this.triggerModuleStateUpdate(newState);
         });
         FileSystem.registerUpdate(key, newState -> {
             if (!(newState instanceof Boolean booleanState)) return;
-            this.toggledState = booleanState;
+            this.setRawState(booleanState);
             this.setState(booleanState);
             this.triggerModuleStateUpdate(booleanState);
         });
@@ -147,13 +143,8 @@ public class ToggleOptionsWidget extends RootModule<ToggleOptionsWidget> {
     }
 
     @Override
-    public void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
-        int left = getX();
-        int right = getRight();
-        int top = getY();
-        int bottom = getBottom();
-
-        if (isMouseOver(mouseX, mouseY) && CigaretteScreen.isHoverable(this)) {
+    public void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left, int top, int right, int bottom) {
+        if (hovered) {
             ticksOnHover = Math.min(ticksOnHover + 1, MAX_HOVER_TICKS);
             context.fillGradient(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR, CigaretteScreen.DARK_BACKGROUND_COLOR);
         } else {
@@ -161,7 +152,7 @@ public class ToggleOptionsWidget extends RootModule<ToggleOptionsWidget> {
             context.fill(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR);
         }
 
-        int textColor = toggledState ? CigaretteScreen.ENABLED_COLOR : CigaretteScreen.PRIMARY_TEXT_COLOR;
+        int textColor = this.getRawState() ? CigaretteScreen.ENABLED_COLOR : CigaretteScreen.PRIMARY_TEXT_COLOR;
 
         if (ticksOnHover > 0) {
             float progress = (float) ticksOnHover / MAX_HOVER_TICKS;
@@ -175,11 +166,9 @@ public class ToggleOptionsWidget extends RootModule<ToggleOptionsWidget> {
         if (children != null) {
             context.drawHorizontalLine(right - 10, right - 4, top + (height / 2), CigaretteScreen.SECONDARY_COLOR);
             if (dropdownVisible) {
-                for (ClickableWidget child : children) {
+                for (BaseWidget<?> child : children) {
                     if (child == null) continue;
-                    child.setX(right + childLeftOffset);
-                    child.setY(top);
-                    child.render(context, mouseX, mouseY, deltaTicks);
+                    child.withXY(right + childLeftOffset, top).renderWidget(context, mouseX, mouseY, deltaTicks);
                 }
             }
         }

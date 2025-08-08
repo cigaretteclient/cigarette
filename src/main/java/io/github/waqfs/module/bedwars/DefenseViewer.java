@@ -33,7 +33,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.OptionalDouble;
 
-public class DefenseViewer extends RenderModule<ToggleOptionsWidget> implements ClientModInitializer {
+public class DefenseViewer extends RenderModule<ToggleOptionsWidget, Boolean> implements ClientModInitializer {
     protected static final String MODULE_NAME = "Defense Viewer";
     protected static final String MODULE_TOOLTIP = "ESPs bed blocks and the defensive blocks around them.";
     protected static final String MODULE_ID = "bedwars.defenseesp";
@@ -136,7 +136,7 @@ public class DefenseViewer extends RenderModule<ToggleOptionsWidget> implements 
         this.defensiveBlocks.clear();
         HashSet<BedwarsAgent.PersistentBed> beds = BedwarsAgent.getVisibleBeds();
         for (BedwarsAgent.PersistentBed bed : beds) {
-            boolean playerClose = bed.head().isWithinDistance(player.getPos(), bedDistance.getState());
+            boolean playerClose = bed.head().isWithinDistance(player.getPos(), bedDistance.getRawState());
             if (playerClose) {
                 bedBlocks.add(bed.head());
                 bedBlocks.add(bed.foot());

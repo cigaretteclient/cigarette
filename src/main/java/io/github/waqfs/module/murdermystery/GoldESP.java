@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
 
-public class GoldESP extends TickModule<ToggleColorWidget> {
+public class GoldESP extends TickModule<ToggleColorWidget, Integer> {
     protected static final String MODULE_NAME = "GoldESP";
     protected static final String MODULE_TOOLTIP = "Highlights all the gold ingots on the ground.";
     protected static final String MODULE_ID = "murdermystery.goldesp";

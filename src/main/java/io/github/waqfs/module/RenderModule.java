@@ -8,8 +8,8 @@ import net.minecraft.client.util.math.MatrixStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class RenderModule<T extends RootModule<T>> extends TickModule<T> {
-    public RenderModule(T widgetClass, String key, String displayName, @Nullable String tooltip) {
+public abstract class RenderModule<Widget extends RootModule<Widget, StateType>, StateType> extends TickModule<Widget, StateType> {
+    public RenderModule(Widget widgetClass, String key, String displayName, @Nullable String tooltip) {
         super(widgetClass, key, displayName, tooltip);
         WorldRenderEvents.BEFORE_DEBUG_RENDER.register(ctx -> {
             if (!this.state) return;

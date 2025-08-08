@@ -24,7 +24,7 @@ public abstract class BaseAgent {
     }
 
     protected boolean _inValidGame() {
-        return (Cigarette.IN_DEV_ENVIRONMENT && devToggle != null && devToggle.getState()) || this.inValidGame();
+        return (Cigarette.IN_DEV_ENVIRONMENT && devToggle != null && devToggle.getRawState()) || this.inValidGame();
     }
 
     protected abstract boolean inValidGame();

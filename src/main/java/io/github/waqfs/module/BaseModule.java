@@ -4,12 +4,12 @@ import io.github.waqfs.config.FileSystem;
 import io.github.waqfs.gui.widget.RootModule;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class BaseModule<T extends RootModule<T>> {
+public abstract class BaseModule<Widget extends RootModule<Widget, StateType>, StateType> {
     protected boolean state = false;
     private final String key;
-    public T widget;
+    public Widget widget;
 
-    public BaseModule(T widgetClass, String key, String displayName, @Nullable String tooltip) {
+    public BaseModule(Widget widgetClass, String key, String displayName, @Nullable String tooltip) {
         this.key = key;
         this.widget = widgetClass.buildModule(displayName, tooltip);
         this.widget.registerAsOption(key);

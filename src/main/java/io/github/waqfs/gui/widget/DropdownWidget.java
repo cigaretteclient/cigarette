@@ -6,7 +6,7 @@ import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
-public class DropdownWidget<Widget extends PassthroughWidget<BaseWidget<?>, StateType>, StateType> extends PassthroughWidget<BaseWidget<?>, BaseWidget.Stateless> {
+public class DropdownWidget<Widget extends BaseWidget<?>, StateType> extends PassthroughWidget<BaseWidget<?>, BaseWidget.Stateless> {
     private Widget header;
     private boolean dropdownVisible = false;
 

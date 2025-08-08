@@ -35,11 +35,11 @@ public class ProjectileESP extends RenderModule<ToggleWidget, Boolean> {
     private final HashSet<Projectile> projectiles = new HashSet<>();
     private final Glow.Context glowContext = new Glow.Context();
     private final ToggleWidget enableGlow = new ToggleWidget(Text.literal("Glowing"), Text.literal("Applies the glowing effect to the entities in the same color as the trajectory.")).withDefaultState(true);
-    private final ToggleColorWidget customHitColor = new ToggleColorWidget(Text.literal("Hit Color"), Text.literal("Overrides the glow and trajectory color if the projectile is colliding with an entity."), true).withDefaultColor(0xFFFF0000).withDefaultState(true);
-    private final ToggleColorWidget enableArrows = new ToggleColorWidget(Text.literal("Shot Arrows"), Text.literal("Display the trajectory of shot Arrows."), true).withDefaultColor(0xFF0000FF).withDefaultState(true);
-    private final ToggleColorWidget enablePearls = new ToggleColorWidget(Text.literal("Thrown Pearls"), Text.literal("Display the trajectory of thrown Pearls."), true).withDefaultColor(0xFF00FF00).withDefaultState(true);
-    private final ToggleColorWidget enableSnowballs = new ToggleColorWidget(Text.literal("Thrown Snowballs"), Text.literal("Display the trajectory of thrown Snowballs."), true).withDefaultColor(0xFFFFFFFF).withDefaultState(true);
-    private final ToggleColorWidget enableEggs = new ToggleColorWidget(Text.literal("Thrown Eggs"), Text.literal("Display the trajectory of thrown Eggs."), true).withDefaultColor(0xFFFFFF00).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> customHitColor = ColorDropdownWidget.build(Text.literal("Hit Color"), Text.literal("Overrides the glow and trajectory color if the projectile is colliding with an entity.")).withDefaultColor(0xFFFF0000).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableArrows = ColorDropdownWidget.build(Text.literal("Shot Arrows"), Text.literal("Display the trajectory of shot Arrows.")).withDefaultColor(0xFF0000FF).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enablePearls = ColorDropdownWidget.build(Text.literal("Thrown Pearls"), Text.literal("Display the trajectory of thrown Pearls.")).withDefaultColor(0xFF00FF00).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableSnowballs = ColorDropdownWidget.build(Text.literal("Thrown Snowballs"), Text.literal("Display the trajectory of thrown Snowballs.")).withDefaultColor(0xFFFFFFFF).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableEggs = ColorDropdownWidget.build(Text.literal("Thrown Eggs"), Text.literal("Display the trajectory of thrown Eggs.")).withDefaultColor(0xFFFFFF00).withDefaultState(true);
     private final SliderWidget maxTicks = new SliderWidget(Text.literal("Max Ticks"), Text.literal("The maximum ticks the projection calculates into the future.")).withBounds(20, 200, 200);
 
     public ProjectileESP() {
@@ -47,11 +47,11 @@ public class ProjectileESP extends RenderModule<ToggleWidget, Boolean> {
         TextWidget header = new TextWidget(Text.literal("Types")).withUnderline();
         this.setChildren(enableGlow, customHitColor, header, enableArrows, enablePearls, enableSnowballs, enableEggs, maxTicks);
         enableGlow.registerConfigKey("bedwars.projectileesp.glow");
-        customHitColor.registerAsOption("bedwars.projectileesp.collision");
-        enableArrows.registerAsOption("bedwars.projectileesp.arrows");
-        enablePearls.registerAsOption("bedwars.projectileesp.pearls");
-        enableSnowballs.registerAsOption("bedwars.projectileesp.snowballs");
-        enableEggs.registerAsOption("bedwars.projectileesp.eggs");
+        customHitColor.registerConfigKey("bedwars.projectileesp.collision");
+        enableArrows.registerConfigKey("bedwars.projectileesp.arrows");
+        enablePearls.registerConfigKey("bedwars.projectileesp.pearls");
+        enableSnowballs.registerConfigKey("bedwars.projectileesp.snowballs");
+        enableEggs.registerConfigKey("bedwars.projectileesp.eggs");
         maxTicks.registerConfigKey("bedwars.projectileesp.maxticks");
     }
 

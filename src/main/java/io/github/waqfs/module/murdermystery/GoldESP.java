@@ -2,7 +2,8 @@ package io.github.waqfs.module.murdermystery;
 
 import io.github.waqfs.GameDetector;
 import io.github.waqfs.agent.MurderMysteryAgent;
-import io.github.waqfs.gui.widget.ToggleColorWidget;
+import io.github.waqfs.gui.widget.ColorDropdownWidget;
+import io.github.waqfs.gui.widget.ToggleWidget;
 import io.github.waqfs.lib.Glow;
 import io.github.waqfs.module.TickModule;
 import net.minecraft.client.MinecraftClient;
@@ -12,14 +13,14 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
 
-public class GoldESP extends TickModule<ToggleColorWidget, Integer> {
+public class GoldESP extends TickModule<ToggleWidget, Boolean> {
     protected static final String MODULE_NAME = "GoldESP";
     protected static final String MODULE_TOOLTIP = "Highlights all the gold ingots on the ground.";
     protected static final String MODULE_ID = "murdermystery.goldesp";
     private final Glow.Context glowContext = new Glow.Context();
 
     public GoldESP() {
-        super(ToggleColorWidget.base, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+        super(ColorDropdownWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
     }
 
     @Override
@@ -27,7 +28,7 @@ public class GoldESP extends TickModule<ToggleColorWidget, Integer> {
         this.glowContext.removeAll();
         HashSet<MurderMysteryAgent.AvailableGold> availableGold = MurderMysteryAgent.getVisibleGold();
         for (MurderMysteryAgent.AvailableGold gold : availableGold) {
-            this.glowContext.addGlow(gold.uuid, this.widget.getStateRGB());
+            this.glowContext.addGlow(gold.uuid, ((ColorDropdownWidget<ToggleWidget, Boolean>) this.wrapper).getStateRGB());
         }
     }
 

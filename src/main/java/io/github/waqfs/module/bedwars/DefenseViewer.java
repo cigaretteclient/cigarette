@@ -40,14 +40,14 @@ public class DefenseViewer extends RenderModule<ToggleWidget, Boolean> implement
     private static KeyBinding decreaseKeyBinding;
     private static KeyBinding increaseKeyBinding;
     private int layer = 0;
-    private final ToggleColorWidget enableBeds = new ToggleColorWidget(Text.literal("Bed Color"), Text.literal("The ESP color used to highlight bed blocks once you are within a small range of the bed."), true).withDefaultColor(0xFFFF0000).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableBeds = ColorDropdownWidget.build(Text.literal("Bed Color"), Text.literal("The ESP color used to highlight bed blocks once you are within a small range of the bed.")).withDefaultColor(0xFFFF0000).withDefaultState(true);
     private final SliderWidget bedDistance = new SliderWidget(Text.literal("Distance"), Text.literal("The max distance the player must be away from the bed for this to stop highlighting blocks and to start highlighting the bed.")).withBounds(0, 10, 30).withAccuracy(1);
-    private final ToggleColorWidget enableWool = new ToggleColorWidget(Text.literal("Wool"), true).withDefaultColor(0x7FFFFFFF).withDefaultState(true);
-    private final ToggleColorWidget enableEndStone = new ToggleColorWidget(Text.literal("Endstone"), true).withDefaultColor(0x7FFFFF00).withDefaultState(true);
-    private final ToggleColorWidget enableWood = new ToggleColorWidget(Text.literal("Wood"), true).withDefaultColor(0x7FFF0000).withDefaultState(true);
-    private final ToggleColorWidget enableClay = new ToggleColorWidget(Text.literal("Clay"), true).withDefaultColor(0x7F0000FF).withDefaultState(true);
-    private final ToggleColorWidget enableObsidian = new ToggleColorWidget(Text.literal("Obsidian"), true).withDefaultColor(0x7FFF00FF).withDefaultState(true);
-    private final ToggleColorWidget enableGlass = new ToggleColorWidget(Text.literal("Glass"), true).withDefaultColor(0x7F00FF00).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableWool = ColorDropdownWidget.build(Text.literal("Wool"), null).withDefaultColor(0x7FFFFFFF).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableEndStone = ColorDropdownWidget.build(Text.literal("Endstone"), null).withDefaultColor(0x7FFFFF00).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableWood = ColorDropdownWidget.build(Text.literal("Wood"), null).withDefaultColor(0x7FFF0000).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableClay = ColorDropdownWidget.build(Text.literal("Clay"), null).withDefaultColor(0x7F0000FF).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableObsidian = ColorDropdownWidget.build(Text.literal("Obsidian"), null).withDefaultColor(0x7FFF00FF).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableGlass = ColorDropdownWidget.build(Text.literal("Glass"), null).withDefaultColor(0x7F00FF00).withDefaultState(true);
 
 
     private HashSet<BlockPos> getBlocksInLayer(BedwarsAgent.PersistentBed bed, int layer) {
@@ -83,14 +83,14 @@ public class DefenseViewer extends RenderModule<ToggleWidget, Boolean> implement
         super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
         TextWidget header = new TextWidget(Text.literal("Block Types")).withUnderline();
         this.setChildren(enableBeds, bedDistance, header, enableWool, enableEndStone, enableWood, enableClay, enableObsidian, enableGlass);
-        enableBeds.registerAsOption("bedwars.defenseesp.bed");
+        enableBeds.registerConfigKey("bedwars.defenseesp.bed");
         bedDistance.registerConfigKey("bedwars.defenseesp.distance");
-        enableWood.registerAsOption("bedwars.defenseesp.wood");
-        enableEndStone.registerAsOption("bedwars.defenseesp.endstone");
-        enableWool.registerAsOption("bedwars.defenseesp.wool");
-        enableClay.registerAsOption("bedwars.defenseesp.clay");
-        enableObsidian.registerAsOption("bedwars.defenseesp.obsidian");
-        enableGlass.registerAsOption("bedwars.defenseesp.glass");
+        enableWood.registerConfigKey("bedwars.defenseesp.wood");
+        enableEndStone.registerConfigKey("bedwars.defenseesp.endstone");
+        enableWool.registerConfigKey("bedwars.defenseesp.wool");
+        enableClay.registerConfigKey("bedwars.defenseesp.clay");
+        enableObsidian.registerConfigKey("bedwars.defenseesp.obsidian");
+        enableGlass.registerConfigKey("bedwars.defenseesp.glass");
     }
 
     @Override

@@ -1,7 +1,7 @@
 package io.github.waqfs.module;
 
 import io.github.waqfs.Cigarette;
-import io.github.waqfs.gui.widget.RootModule;
+import io.github.waqfs.gui.widget.BaseWidget;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -9,11 +9,11 @@ import net.minecraft.client.world.ClientWorld;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class TickModule<Widget extends RootModule<Widget, StateType>, StateType> extends BaseModule<Widget, StateType> {
-    public TickModule(Widget widgetClass, String key, String displayName, @Nullable String tooltip) {
-        super(widgetClass, key, displayName, tooltip);
+public abstract class TickModule<Widget extends BaseWidget<Boolean>, Boolean> extends BaseModule<Widget, Boolean> {
+    public TickModule(WidgetGenerator<Widget, Boolean> func, String key, String displayName, @Nullable String tooltip) {
+        super(func, key, displayName, tooltip);
         ClientTickEvents.START_CLIENT_TICK.register(client -> {
-            if (this.state && client.world != null && client.player != null && this._inValidGame()) {
+            if ((this.getRawState()) && client.world != null && client.player != null && this._inValidGame()) {
                 onEnabledTick(client, client.world, client.player);
             } else {
                 onDisabledTick(client);

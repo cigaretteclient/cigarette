@@ -1,16 +1,27 @@
 package io.github.waqfs.gui.widget;
 
 import net.minecraft.client.gui.Element;
-import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class PassthroughWidget<T extends Element> extends ClickableWidget {
+public abstract class PassthroughWidget<T extends BaseWidget> extends BaseWidget {
     protected @Nullable T[] children;
     protected int childLeftOffset = 0;
 
+    public PassthroughWidget(int x, int y, int width, int height, Text message, @Nullable Text tooltip) {
+        super(x, y, width, height, message, tooltip);
+    }
+
     public PassthroughWidget(int x, int y, int width, int height, Text message) {
         super(x, y, width, height, message);
+    }
+
+    public PassthroughWidget(Text message, @Nullable Text tooltip) {
+        super(message, tooltip);
+    }
+
+    public PassthroughWidget(Text message) {
+        super(message);
     }
 
     @Override

@@ -3,12 +3,11 @@ package io.github.waqfs.gui.widget;
 import io.github.waqfs.gui.CigaretteScreen;
 import io.github.waqfs.gui.util.Scissor;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 
-public class ScrollableWidget<T extends ClickableWidget> extends PassthroughWidget<ClickableWidget> {
+public class ScrollableWidget<T extends BaseWidget> extends PassthroughWidget<BaseWidget> {
     private static final int VERTICAL_SCROLL_MULTIPLIER = 6;
     private static final int DEFAULT_WIDTH = 100;
     private static final int DEFAULT_HEIGHT = 200;
@@ -103,18 +102,18 @@ public class ScrollableWidget<T extends ClickableWidget> extends PassthroughWidg
     }
 
     @Override
-    public void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
+    public void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left, int top, int right, int bottom) {
         if (children != null) {
             boolean hasHeader = header != null;
             int hasHeaderInt = hasHeader ? 1 : 0;
             int realTop = getY() + (hasHeader ? header.getHeight() : 0);
             Scissor.pushExclusive(context, getX(), realTop, getRight(), getBottom());
             for (int index = 0; index < children.length; index++) {
-                ClickableWidget child = children[index];
+                BaseWidget child = children[index];
                 if (child == null) continue;
                 child.setX(getX());
                 child.setY(getY() - (int) scrollPosition + (index + hasHeaderInt) * rowHeight);
-                child.render(context, mouseX, mouseY, deltaTicks);
+                child.renderWidget(context, mouseX, mouseY, deltaTicks);
             }
             if (this.shouldScroll) {
                 context.fill(getRight() - DEFAULT_SCROLLBAR_WIDTH, realTop, getRight(), getBottom(), CigaretteScreen.BACKGROUND_COLOR);
@@ -131,11 +130,7 @@ public class ScrollableWidget<T extends ClickableWidget> extends PassthroughWidg
             Scissor.popExclusive();
         }
         if (header != null) {
-            header.render(context, mouseX, mouseY, deltaTicks);
+            header.renderWidget(context, mouseX, mouseY, deltaTicks);
         }
-    }
-
-    @Override
-    protected void appendClickableNarrations(NarrationMessageBuilder builder) {
     }
 }

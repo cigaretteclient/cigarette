@@ -4,12 +4,10 @@ import io.github.waqfs.gui.CigaretteScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
-import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 
-public class DraggableWidget extends ClickableWidget {
+public class DraggableWidget extends BaseWidget {
     public interface DragCallback {
         void updateParentPosition(int newX, int newY, int deltaX, int deltaY);
     }
@@ -23,6 +21,10 @@ public class DraggableWidget extends ClickableWidget {
 
     public DraggableWidget(int x, int y, int width, int height, Text message) {
         super(x, y, width, height, message);
+    }
+
+    public DraggableWidget(Text message) {
+        super(message);
     }
 
     @Override
@@ -70,15 +72,7 @@ public class DraggableWidget extends ClickableWidget {
     }
 
     @Override
-    protected void appendClickableNarrations(NarrationMessageBuilder builder) {
-    }
-
-    @Override
-    public void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
-        if (isMouseOver(mouseX, mouseY)) {
-            CigaretteScreen.isHoverable(this);
-        }
-
+    public void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left, int top, int right, int bottom) {
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
         context.fill(getX(), getY(), getRight(), getBottom(), CigaretteScreen.PRIMARY_COLOR);
         Text text = getMessage();

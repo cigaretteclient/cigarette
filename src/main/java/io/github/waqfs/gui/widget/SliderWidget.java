@@ -5,15 +5,13 @@ import io.github.waqfs.gui.CigaretteScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
 
-public class SliderWidget extends ClickableWidget {
+public class SliderWidget extends BaseWidget {
     private static final int BASE_TEXT_COLOR = 0xFFFFFFFF;
     private static final int SLIDER_PADDING = 4;
     private @Nullable Consumer<Double> sliderCallback = null;
@@ -120,13 +118,8 @@ public class SliderWidget extends ClickableWidget {
     }
 
     @Override
-    protected void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
-        int left = getX();
-        int right = getRight();
-        int top = getY();
-        int bottom = getBottom();
-
-        if (isMouseOver(mouseX, mouseY) && CigaretteScreen.isHoverable(this)) {
+    protected void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left, int top, int right, int bottom) {
+        if (hovered) {
             context.fillGradient(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR, CigaretteScreen.DARK_BACKGROUND_COLOR);
         } else {
             context.fill(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR);
@@ -143,9 +136,5 @@ public class SliderWidget extends ClickableWidget {
         context.drawVerticalLine(sliderXState - 1, bottom - 6, bottom - 2, CigaretteScreen.PRIMARY_COLOR);
         context.drawVerticalLine(sliderXState, bottom - 7, bottom - 1, CigaretteScreen.PRIMARY_COLOR);
         context.drawVerticalLine(sliderXState + 1, bottom - 6, bottom - 2, CigaretteScreen.PRIMARY_COLOR);
-    }
-
-    @Override
-    protected void appendClickableNarrations(NarrationMessageBuilder builder) {
     }
 }

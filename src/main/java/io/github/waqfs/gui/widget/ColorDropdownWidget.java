@@ -104,7 +104,7 @@ public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType
 
     public static ColorDropdownWidget<TextWidget, Stateless> buildText(Text displayName, @Nullable Text tooltip) {
         ColorDropdownWidget<TextWidget, Stateless> wrapper = new ColorDropdownWidget<>(displayName, tooltip, true);
-        TextWidget widget = new TextWidget(displayName, tooltip);
+        TextWidget widget = new TextWidget(displayName, tooltip).centered(false);
         wrapper.setHeader(widget);
         return wrapper;
     }

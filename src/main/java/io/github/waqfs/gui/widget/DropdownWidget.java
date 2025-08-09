@@ -87,7 +87,7 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType> extends Pas
         int offsetTop = 0;
         for (BaseWidget<?> child : children) {
             if (child == null) continue;
-            child.withXY(right, top + offsetTop).withWH(width, height).renderWidget(context, mouseX, mouseY, deltaTicks);
+            child.withXY(right + childLeftOffset, top + offsetTop).withWH(width, height).renderWidget(context, mouseX, mouseY, deltaTicks);
             offsetTop += child.getHeight();
         }
         Scissor.popExclusive();

@@ -108,7 +108,7 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>> extends Passthrough
             int realTop = top + (hasHeader ? header.getHeight() : 0);
             Scissor.pushExclusive(context, left, realTop, right, bottom);
             for (int index = 0; index < children.length; index++) {
-                BaseWidget child = children[index];
+                BaseWidget<?> child = children[index];
                 if (child == null) continue;
                 child.withXY(left, top - (int) scrollPosition + (index + hasHeaderInt) * rowHeight).renderWidget(context, mouseX, mouseY, deltaTicks);
             }

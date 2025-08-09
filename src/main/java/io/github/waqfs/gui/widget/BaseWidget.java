@@ -54,6 +54,7 @@ public abstract class BaseWidget<StateType> extends ClickableWidget {
 
     @SuppressWarnings("unchecked")
     public void registerConfigKey(String key) {
+        if (this.state instanceof Stateless) return;
         if (this.configKey != null) throw new IllegalStateException("Cannot configure a config key more than once.");
         this.configKey = key;
         this.stateCallback = newState -> FileSystem.updateState(key, newState);

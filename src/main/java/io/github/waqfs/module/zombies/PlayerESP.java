@@ -22,6 +22,7 @@ public class PlayerESP extends TickModule<ToggleWidget, Boolean> {
 
     public PlayerESP() {
         super(ColorDropdownWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+        ((ColorDropdownWidget<?, ?>) this.wrapper).withAlpha(false);
     }
 
     @Override

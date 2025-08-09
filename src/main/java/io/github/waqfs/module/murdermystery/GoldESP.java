@@ -21,6 +21,7 @@ public class GoldESP extends TickModule<ToggleWidget, Boolean> {
 
     public GoldESP() {
         super(ColorDropdownWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+        ((ColorDropdownWidget<?, ?>) this.wrapper).withAlpha(false);
     }
 
     @Override

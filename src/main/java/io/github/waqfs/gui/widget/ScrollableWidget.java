@@ -41,23 +41,23 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>> extends Passthrough
     @SafeVarargs
     public final ScrollableWidget<Widgets> setChildren(@Nullable Widgets... children) {
         this.children = children;
-        return updateWidths();
+        return updateChildrenSizing();
     }
 
     public ScrollableWidget<Widgets> setHeader(@Nullable Text headerText) {
         if (headerText == null) {
             this.header = null;
-            return updateWidths();
+            return updateChildrenSizing();
         }
         this.header = new DraggableWidget(getX(), getY(), width, rowHeight, headerText);
         this.header.onDrag((newX, newY, deltaX, deltaY) -> {
             setX(newX);
             setY(newY);
         });
-        return updateWidths();
+        return updateChildrenSizing();
     }
 
-    private ScrollableWidget<Widgets> updateWidths() {
+    private ScrollableWidget<Widgets> updateChildrenSizing() {
         if (this.children != null) {
             int rightMargin = this.updateShouldScroll() ? DEFAULT_SCROLLBAR_WIDTH : 0;
             for (ClickableWidget child : children) {

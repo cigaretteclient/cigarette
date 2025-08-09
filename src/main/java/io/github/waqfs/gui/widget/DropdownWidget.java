@@ -1,5 +1,6 @@
 package io.github.waqfs.gui.widget;
 
+import io.github.waqfs.gui.CigaretteScreen;
 import io.github.waqfs.gui.util.Scissor;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.Text;
@@ -8,10 +9,14 @@ import org.lwjgl.glfw.GLFW;
 
 public class DropdownWidget<Widget extends BaseWidget<?>, StateType> extends PassthroughWidget<BaseWidget<?>, BaseWidget.Stateless> {
     protected Widget header;
+    protected ScrollableWidget<BaseWidget<?>> container;
     private boolean dropdownVisible = false;
+    private boolean dropdownIndicator = true;
 
     public DropdownWidget(Text message, @Nullable Text tooltip) {
         super(message, tooltip);
+        this.container = new ScrollableWidget<>(0, 0);
+        this.children = new ScrollableWidget[]{this.container};
     }
 
     public DropdownWidget<Widget, StateType> setHeader(Widget header) {
@@ -20,7 +25,12 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType> extends Pas
     }
 
     public DropdownWidget<Widget, StateType> setChildren(@Nullable BaseWidget<?>... children) {
-        this.children = children;
+        this.container.setChildren(children);
+        return this;
+    }
+
+    public DropdownWidget<Widget, StateType> withIndicator(boolean indicator) {
+        this.dropdownIndicator = indicator;
         return this;
     }
 
@@ -74,22 +84,13 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType> extends Pas
         if (this.header == null) return;
         this.header.withXY(left, top).withWH(width, height).renderWidget(context, mouseX, mouseY, deltaTicks);
 
-        if (this.children == null || !dropdownVisible) return;
-        int maxWidth = 0;
-        int maxHeight = 0;
-        for (BaseWidget<?> child : children) {
-            if (child == null) continue;
-            child.withWH(width, height);
-            maxWidth += child.getWidth();
-            maxHeight += child.getHeight();
+        if (this.container.children == null) return;
+        if (this.container.children.length > 0 && dropdownIndicator) {
+            context.drawHorizontalLine(right - 10, right - 4, top + (height / 2), CigaretteScreen.SECONDARY_COLOR);
         }
-        Scissor.pushExclusive(context, right, top, right + maxWidth, top + maxHeight);
-        int offsetTop = 0;
-        for (BaseWidget<?> child : children) {
-            if (child == null) continue;
-            child.withXY(right + childLeftOffset, top + offsetTop).withWH(width, height).renderWidget(context, mouseX, mouseY, deltaTicks);
-            offsetTop += child.getHeight();
-        }
+        if (!dropdownVisible) return;
+        Scissor.pushExclusive(context, right, top, right + this.container.getWidth(), top + this.container.getHeight());
+        this.container.withXY(right + childLeftOffset, top).renderWidget(context, mouseX, mouseY, deltaTicks);
         Scissor.popExclusive();
     }
 }

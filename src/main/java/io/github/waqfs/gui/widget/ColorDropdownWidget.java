@@ -39,11 +39,12 @@ public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType
     }
 
     @SuppressWarnings("unchecked")
-    public ColorDropdownWidget(Text message, @Nullable Text tooltip, boolean withAlpha) {
+    public ColorDropdownWidget(Text message, @Nullable Text tooltip) {
         super(message, tooltip);
+        super.withIndicator(false);
         this.colorSquare.withDefault(0xFFFFFFFF);
         this.setHeader((Widget) new ToggleWidget(message, tooltip));
-        this.attachChildren(withAlpha).captureHover();
+        this.attachChildren().captureHover();
     }
 
     public ColorDropdownWidget<Widget, StateType> withDefaultColor(int argb) {
@@ -58,17 +59,18 @@ public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType
     }
 
     public ColorDropdownWidget<Widget, StateType> withAlpha(boolean alpha) {
-        this.sliderAlpha.visible = false;
-        this.sliderAlpha.setRawState(255d);
-        if (this.sliderAlpha.stateCallback != null) {
-            this.sliderAlpha.stateCallback.accept(255d);
+        this.sliderAlpha.visible = alpha;
+        if (!alpha) {
+            this.sliderAlpha.setRawState(255d);
+            if (this.sliderAlpha.stateCallback != null) {
+                this.sliderAlpha.stateCallback.accept(255d);
+            }
         }
         return this;
     }
 
-    private ColorDropdownWidget<Widget, StateType> attachChildren(boolean withAlpha) {
-        ScrollableWidget<BaseWidget<?>> wrapper = new ScrollableWidget<>(0, 0, this.sliderRed, this.sliderGreen, this.sliderBlue, withAlpha ? this.sliderAlpha : null);
-        this.children = new ScrollableWidget[]{wrapper};
+    private ColorDropdownWidget<Widget, StateType> attachChildren() {
+        this.container.setChildren(this.sliderRed, this.sliderGreen, this.sliderBlue, this.sliderAlpha);
         this.sliderRed.stateCallback = ((newColor -> {
             int red = (int) (double) newColor;
             this.colorSquare.setRawState((this.colorSquare.getRawState() & 0xFF00FFFF) + (red << 16));
@@ -89,21 +91,21 @@ public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType
     }
 
     public static BaseModule.GeneratedWidgets<ToggleWidget, Boolean> module(Text displayName, @Nullable Text tooltip) {
-        ColorDropdownWidget<ToggleWidget, Boolean> wrapper = new ColorDropdownWidget<>(displayName, tooltip, true);
+        ColorDropdownWidget<ToggleWidget, Boolean> wrapper = new ColorDropdownWidget<>(displayName, tooltip);
         ToggleWidget widget = new ToggleWidget(displayName, tooltip);
         wrapper.setHeader(widget);
         return new BaseModule.GeneratedWidgets<>(wrapper, widget);
     }
 
     public static ColorDropdownWidget<ToggleWidget, Boolean> buildToggle(Text displayName, @Nullable Text tooltip) {
-        ColorDropdownWidget<ToggleWidget, Boolean> wrapper = new ColorDropdownWidget<>(displayName, tooltip, true);
+        ColorDropdownWidget<ToggleWidget, Boolean> wrapper = new ColorDropdownWidget<>(displayName, tooltip);
         ToggleWidget widget = new ToggleWidget(displayName, tooltip);
         wrapper.setHeader(widget);
         return wrapper;
     }
 
     public static ColorDropdownWidget<TextWidget, Stateless> buildText(Text displayName, @Nullable Text tooltip) {
-        ColorDropdownWidget<TextWidget, Stateless> wrapper = new ColorDropdownWidget<>(displayName, tooltip, true);
+        ColorDropdownWidget<TextWidget, Stateless> wrapper = new ColorDropdownWidget<>(displayName, tooltip);
         TextWidget widget = new TextWidget(displayName, tooltip).centered(false);
         wrapper.setHeader(widget);
         return wrapper;

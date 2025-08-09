@@ -2,9 +2,7 @@ package io.github.waqfs.module.bedwars;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
 import io.github.waqfs.GameDetector;
-import io.github.waqfs.gui.widget.ColorPickerWidget;
-import io.github.waqfs.gui.widget.ColorDropdownWidget;
-import io.github.waqfs.gui.widget.ToggleWidget;
+import io.github.waqfs.gui.widget.*;
 import io.github.waqfs.lib.Glow;
 import io.github.waqfs.lib.Raycast;
 import io.github.waqfs.lib.Renderer;
@@ -39,15 +37,15 @@ public class FireballESP extends RenderModule<ToggleWidget, Boolean> {
     private final HashSet<Fireball> fireballs = new HashSet<>();
     private final Glow.Context glowContext = new Glow.Context();
     private final ColorDropdownWidget<ToggleWidget, Boolean> enableGlow = ColorDropdownWidget.buildToggle(Text.literal("Glowing"), Text.literal("Applies the glowing effect to the fireball entities")).withAlpha(false).withDefaultColor(0xFFFF0000);
-    private final ColorPickerWidget sphereColor = new ColorPickerWidget(Text.literal("Sphere Color"), true).withDefaultColor(0x4FFF0000);
-    private final ColorPickerWidget lineColor = new ColorPickerWidget(Text.literal("Projection Color"), true).withDefaultColor(0xFFFF0000);
+    private final ColorDropdownWidget<TextWidget, BaseWidget.Stateless> sphereColor = ColorDropdownWidget.buildText(Text.literal("Sphere Color"), null).withDefaultColor(0x4FFF0000);
+    private final ColorDropdownWidget<TextWidget, BaseWidget.Stateless> lineColor = ColorDropdownWidget.buildText(Text.literal("Projection Color"), null).withDefaultColor(0xFFFF0000);
 
     public FireballESP() {
         super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
         this.setChildren(enableGlow, sphereColor, lineColor);
         enableGlow.registerConfigKey("bedwars.fireballesp.glow");
-        sphereColor.registerAsOption("bedwars.fireballesp.spherecolor");
-        lineColor.registerAsOption("bedwars.fireballesp.linecolor");
+        sphereColor.registerConfigKey("bedwars.fireballesp.spherecolor");
+        lineColor.registerConfigKey("bedwars.fireballesp.linecolor");
     }
 
     @Override

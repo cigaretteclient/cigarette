@@ -1,7 +1,7 @@
 package io.github.waqfs.agent;
 
 import io.github.waqfs.GameDetector;
-import io.github.waqfs.gui.widget.ToggleOptionsWidget;
+import io.github.waqfs.gui.widget.ToggleWidget;
 import io.github.waqfs.module.bedwars.AutoClicker;
 import io.github.waqfs.module.bedwars.PerfectHit;
 import net.minecraft.block.BedBlock;
@@ -22,7 +22,7 @@ import java.util.HashSet;
 public class BedwarsAgent extends BaseAgent {
     private static final HashSet<PersistentBed> persistentBeds = new HashSet<>();
 
-    public BedwarsAgent(@Nullable ToggleOptionsWidget devToggle) {
+    public BedwarsAgent(@Nullable ToggleWidget devToggle) {
         super(devToggle);
     }
 

@@ -1,6 +1,6 @@
 package io.github.waqfs.module.keybind;
 
-import io.github.waqfs.gui.widget.ToggleOptionsWidget;
+import io.github.waqfs.gui.widget.ToggleWidget;
 import io.github.waqfs.module.TickModule;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
@@ -14,14 +14,14 @@ import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
-public class VClip extends TickModule<ToggleOptionsWidget, Boolean> implements ClientModInitializer {
+public class VClip extends TickModule<ToggleWidget, Boolean> implements ClientModInitializer {
     protected static final String MODULE_NAME = "V-Clip Down";
     protected static final String MODULE_TOOLTIP = "Vertically clips you down through floors.";
     protected static final String MODULE_ID = "keybind.vclip";
     private static KeyBinding keyBinding;
 
     public VClip() {
-        super(ToggleOptionsWidget.base, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
     }
 
     @Override

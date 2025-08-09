@@ -1,6 +1,6 @@
 package io.github.waqfs.module.keybind;
 
-import io.github.waqfs.gui.widget.ToggleOptionsWidget;
+import io.github.waqfs.gui.widget.ToggleWidget;
 import io.github.waqfs.module.TickModule;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
@@ -16,14 +16,14 @@ import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
-public class AddGlassBlock extends TickModule<ToggleOptionsWidget, Boolean> implements ClientModInitializer {
+public class AddGlassBlock extends TickModule<ToggleWidget, Boolean> implements ClientModInitializer {
     protected static final String MODULE_NAME = "Place Glass";
     protected static final String MODULE_TOOLTIP = "Places a client-side block where you are facing.";
     protected static final String MODULE_ID = "keybind.place_glass";
     private static KeyBinding keyBinding;
 
     public AddGlassBlock() {
-        super(ToggleOptionsWidget.base, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
     }
 
     @Override

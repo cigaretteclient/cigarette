@@ -2,9 +2,7 @@ package io.github.waqfs.module.bedwars;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
 import io.github.waqfs.GameDetector;
-import io.github.waqfs.gui.widget.ColorPickerWidget;
-import io.github.waqfs.gui.widget.ToggleColorWidget;
-import io.github.waqfs.gui.widget.ToggleOptionsWidget;
+import io.github.waqfs.gui.widget.*;
 import io.github.waqfs.lib.Glow;
 import io.github.waqfs.lib.Raycast;
 import io.github.waqfs.lib.Renderer;
@@ -30,7 +28,7 @@ import org.joml.Matrix4f;
 import java.util.HashSet;
 import java.util.List;
 
-public class FireballESP extends RenderModule<ToggleOptionsWidget, Boolean> {
+public class FireballESP extends RenderModule<ToggleWidget, Boolean> {
     protected static final String MODULE_NAME = "FireballESP";
     protected static final String MODULE_TOOLTIP = "Displays the trajectory and blast radius of all fireballs.";
     protected static final String MODULE_ID = "bedwars.fireballesp";
@@ -38,16 +36,16 @@ public class FireballESP extends RenderModule<ToggleOptionsWidget, Boolean> {
     private static final RenderLayer RENDER_LAYER_SPHERE = RenderLayer.of("cigarette.triespnophase", 1536, Renderer.TRI_ESP_NOPHASE, RenderLayer.MultiPhaseParameters.builder().build(false));
     private final HashSet<Fireball> fireballs = new HashSet<>();
     private final Glow.Context glowContext = new Glow.Context();
-    private final ToggleColorWidget enableGlow = new ToggleColorWidget(Text.literal("Glowing"), Text.literal("Applies the glowing effect to the fireball entities"), false).withDefaultColor(0xFFFF0000);
-    private final ColorPickerWidget sphereColor = new ColorPickerWidget(Text.literal("Sphere Color"), true).withDefaultColor(0x4FFF0000);
-    private final ColorPickerWidget lineColor = new ColorPickerWidget(Text.literal("Projection Color"), true).withDefaultColor(0xFFFF0000);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableGlow = ColorDropdownWidget.buildToggle(Text.literal("Glowing"), Text.literal("Applies the glowing effect to the fireball entities")).withAlpha(false).withDefaultColor(0xFFFF0000);
+    private final ColorDropdownWidget<TextWidget, BaseWidget.Stateless> sphereColor = ColorDropdownWidget.buildText(Text.literal("Sphere Color"), null).withDefaultColor(0x4FFF0000);
+    private final ColorDropdownWidget<TextWidget, BaseWidget.Stateless> lineColor = ColorDropdownWidget.buildText(Text.literal("Projection Color"), null).withDefaultColor(0xFFFF0000);
 
     public FireballESP() {
-        super(ToggleOptionsWidget.base, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
-        this.widget.setOptions(enableGlow, sphereColor, lineColor);
-        enableGlow.registerAsOption("bedwars.fireballesp.glow");
-        sphereColor.registerAsOption("bedwars.fireballesp.spherecolor");
-        lineColor.registerAsOption("bedwars.fireballesp.linecolor");
+        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+        this.setChildren(enableGlow, sphereColor, lineColor);
+        enableGlow.registerConfigKey("bedwars.fireballesp.glow");
+        sphereColor.registerConfigKey("bedwars.fireballesp.spherecolor");
+        lineColor.registerConfigKey("bedwars.fireballesp.linecolor");
     }
 
     @Override

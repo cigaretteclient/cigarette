@@ -3,10 +3,7 @@ package io.github.waqfs.module.bedwars;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import io.github.waqfs.GameDetector;
 import io.github.waqfs.agent.BedwarsAgent;
-import io.github.waqfs.gui.widget.SliderWidget;
-import io.github.waqfs.gui.widget.TextWidget;
-import io.github.waqfs.gui.widget.ToggleColorWidget;
-import io.github.waqfs.gui.widget.ToggleOptionsWidget;
+import io.github.waqfs.gui.widget.*;
 import io.github.waqfs.lib.Renderer;
 import io.github.waqfs.module.RenderModule;
 import io.github.waqfs.precomputed.PyramidQuadrant;
@@ -33,7 +30,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.OptionalDouble;
 
-public class DefenseViewer extends RenderModule<ToggleOptionsWidget, Boolean> implements ClientModInitializer {
+public class DefenseViewer extends RenderModule<ToggleWidget, Boolean> implements ClientModInitializer {
     protected static final String MODULE_NAME = "Defense Viewer";
     protected static final String MODULE_TOOLTIP = "ESPs bed blocks and the defensive blocks around them.";
     protected static final String MODULE_ID = "bedwars.defenseesp";
@@ -43,14 +40,14 @@ public class DefenseViewer extends RenderModule<ToggleOptionsWidget, Boolean> im
     private static KeyBinding decreaseKeyBinding;
     private static KeyBinding increaseKeyBinding;
     private int layer = 0;
-    private final ToggleColorWidget enableBeds = new ToggleColorWidget(Text.literal("Bed Color"), Text.literal("The ESP color used to highlight bed blocks once you are within a small range of the bed."), true).withDefaultColor(0xFFFF0000).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableBeds = ColorDropdownWidget.buildToggle(Text.literal("Bed Color"), Text.literal("The ESP color used to highlight bed blocks once you are within a small range of the bed.")).withDefaultColor(0xFFFF0000).withDefaultState(true);
     private final SliderWidget bedDistance = new SliderWidget(Text.literal("Distance"), Text.literal("The max distance the player must be away from the bed for this to stop highlighting blocks and to start highlighting the bed.")).withBounds(0, 10, 30).withAccuracy(1);
-    private final ToggleColorWidget enableWool = new ToggleColorWidget(Text.literal("Wool"), true).withDefaultColor(0x7FFFFFFF).withDefaultState(true);
-    private final ToggleColorWidget enableEndStone = new ToggleColorWidget(Text.literal("Endstone"), true).withDefaultColor(0x7FFFFF00).withDefaultState(true);
-    private final ToggleColorWidget enableWood = new ToggleColorWidget(Text.literal("Wood"), true).withDefaultColor(0x7FFF0000).withDefaultState(true);
-    private final ToggleColorWidget enableClay = new ToggleColorWidget(Text.literal("Clay"), true).withDefaultColor(0x7F0000FF).withDefaultState(true);
-    private final ToggleColorWidget enableObsidian = new ToggleColorWidget(Text.literal("Obsidian"), true).withDefaultColor(0x7FFF00FF).withDefaultState(true);
-    private final ToggleColorWidget enableGlass = new ToggleColorWidget(Text.literal("Glass"), true).withDefaultColor(0x7F00FF00).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableWool = ColorDropdownWidget.buildToggle(Text.literal("Wool"), null).withDefaultColor(0x7FFFFFFF).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableEndStone = ColorDropdownWidget.buildToggle(Text.literal("Endstone"), null).withDefaultColor(0x7FFFFF00).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableWood = ColorDropdownWidget.buildToggle(Text.literal("Wood"), null).withDefaultColor(0x7FFF0000).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableClay = ColorDropdownWidget.buildToggle(Text.literal("Clay"), null).withDefaultColor(0x7F0000FF).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableObsidian = ColorDropdownWidget.buildToggle(Text.literal("Obsidian"), null).withDefaultColor(0x7FFF00FF).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableGlass = ColorDropdownWidget.buildToggle(Text.literal("Glass"), null).withDefaultColor(0x7F00FF00).withDefaultState(true);
 
 
     private HashSet<BlockPos> getBlocksInLayer(BedwarsAgent.PersistentBed bed, int layer) {
@@ -83,17 +80,17 @@ public class DefenseViewer extends RenderModule<ToggleOptionsWidget, Boolean> im
     }
 
     public DefenseViewer() {
-        super(ToggleOptionsWidget.base, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
         TextWidget header = new TextWidget(Text.literal("Block Types")).withUnderline();
-        this.widget.setOptions(enableBeds, bedDistance, header, enableWool, enableEndStone, enableWood, enableClay, enableObsidian, enableGlass);
-        enableBeds.registerAsOption("bedwars.defenseesp.bed");
-        bedDistance.registerAsOption("bedwars.defenseesp.distance");
-        enableWood.registerAsOption("bedwars.defenseesp.wood");
-        enableEndStone.registerAsOption("bedwars.defenseesp.endstone");
-        enableWool.registerAsOption("bedwars.defenseesp.wool");
-        enableClay.registerAsOption("bedwars.defenseesp.clay");
-        enableObsidian.registerAsOption("bedwars.defenseesp.obsidian");
-        enableGlass.registerAsOption("bedwars.defenseesp.glass");
+        this.setChildren(enableBeds, bedDistance, header, enableWool, enableEndStone, enableWood, enableClay, enableObsidian, enableGlass);
+        enableBeds.registerConfigKey("bedwars.defenseesp.bed");
+        bedDistance.registerConfigKey("bedwars.defenseesp.distance");
+        enableWood.registerConfigKey("bedwars.defenseesp.wood");
+        enableEndStone.registerConfigKey("bedwars.defenseesp.endstone");
+        enableWool.registerConfigKey("bedwars.defenseesp.wool");
+        enableClay.registerConfigKey("bedwars.defenseesp.clay");
+        enableObsidian.registerConfigKey("bedwars.defenseesp.obsidian");
+        enableGlass.registerConfigKey("bedwars.defenseesp.glass");
     }
 
     @Override

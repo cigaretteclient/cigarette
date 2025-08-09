@@ -1,9 +1,7 @@
 package io.github.waqfs.module.zombies;
 
 import io.github.waqfs.GameDetector;
-import io.github.waqfs.gui.widget.TextWidget;
-import io.github.waqfs.gui.widget.ToggleColorWidget;
-import io.github.waqfs.gui.widget.ToggleOptionsWidget;
+import io.github.waqfs.gui.widget.*;
 import io.github.waqfs.lib.Glow;
 import io.github.waqfs.module.TickModule;
 import net.minecraft.client.MinecraftClient;
@@ -17,32 +15,31 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
-public class ZombieESP extends TickModule<ToggleOptionsWidget, Boolean> {
+public class ZombieESP extends TickModule<ToggleWidget, Boolean> {
     protected static final String MODULE_NAME = "ZombieESP";
     protected static final String MODULE_TOOLTIP = "Highlights all the zombies in ESP.";
     protected static final String MODULE_ID = "zombies.zombieesp";
     private final Glow.Context glowContext = new Glow.Context();
-    private final ToggleColorWidget enableZombies = new ToggleColorWidget(Text.literal("Zombies"), false).withDefaultColor(0xFF01A014).withDefaultState(true);
-    private final ToggleColorWidget enableSkeletons = new ToggleColorWidget(Text.literal("Skeletons"), false).withDefaultColor(0xFFE0E0E0).withDefaultState(true);
-    private final ToggleColorWidget enableBlazes = new ToggleColorWidget(Text.literal("Blazes"), false).withDefaultColor(0xFFFCA50F).withDefaultState(true);
-    private final ToggleColorWidget enableWolves = new ToggleColorWidget(Text.literal("Wolves"), false).withDefaultColor(0xFF3FE6FC).withDefaultState(true);
-    private final ToggleColorWidget enableCreepers = new ToggleColorWidget(Text.literal("Creepers"), false).withDefaultColor(0xFF6DFC5D).withDefaultState(true);
-    private final ToggleColorWidget enableMagmaCubes = new ToggleColorWidget(Text.literal("Magma Cubes"), false).withDefaultColor(0xFFFC4619).withDefaultState(true);
-    private final ToggleColorWidget enableSlimes = new ToggleColorWidget(Text.literal("Slimes"), false).withDefaultColor(0xFF6DFC5D).withDefaultState(true);
-    private final ToggleColorWidget enableWitches = new ToggleColorWidget(Text.literal("Witches"), false).withDefaultColor(0xFFA625F7).withDefaultState(true);
-
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableZombies = ColorDropdownWidget.buildToggle(Text.literal("Zombies"), null).withAlpha(false).withDefaultColor(0xFF01A014).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableSkeletons = ColorDropdownWidget.buildToggle(Text.literal("Skeletons"), null).withAlpha(false).withDefaultColor(0xFFE0E0E0).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableBlazes = ColorDropdownWidget.buildToggle(Text.literal("Blazes"), null).withAlpha(false).withDefaultColor(0xFFFCA50F).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableWolves = ColorDropdownWidget.buildToggle(Text.literal("Wolves"), null).withAlpha(false).withDefaultColor(0xFF3FE6FC).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableCreepers = ColorDropdownWidget.buildToggle(Text.literal("Creepers"), null).withAlpha(false).withDefaultColor(0xFF6DFC5D).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableMagmaCubes = ColorDropdownWidget.buildToggle(Text.literal("Magma Cubes"), null).withAlpha(false).withDefaultColor(0xFFFC4619).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableSlimes = ColorDropdownWidget.buildToggle(Text.literal("Slimes"), null).withAlpha(false).withDefaultColor(0xFF6DFC5D).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableWitches = ColorDropdownWidget.buildToggle(Text.literal("Witches"), null).withAlpha(false).withDefaultColor(0xFFA625F7).withDefaultState(true);
 
     public ZombieESP() {
-        super(ToggleOptionsWidget.base, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
         TextWidget header = new TextWidget(Text.literal("Types")).withUnderline();
-        this.widget.setOptions(header, enableZombies, enableBlazes, enableWolves, enableCreepers, enableMagmaCubes, enableSlimes, enableWitches);
-        enableZombies.registerAsOption("zombies.zombieesp.zombies");
-        enableBlazes.registerAsOption("zombies.zombieesp.blazes");
-        enableWolves.registerAsOption("zombies.zombieesp.wolves");
-        enableCreepers.registerAsOption("zombies.zombieesp.creepers");
-        enableMagmaCubes.registerAsOption("zombies.zombieesp.magmacubes");
-        enableSlimes.registerAsOption("zombies.zombieesp.slimes");
-        enableWitches.registerAsOption("zombies.zombieesp.witches");
+        this.setChildren(header, enableZombies, enableBlazes, enableWolves, enableCreepers, enableMagmaCubes, enableSlimes, enableWitches);
+        enableZombies.registerConfigKey("zombies.zombieesp.zombies");
+        enableBlazes.registerConfigKey("zombies.zombieesp.blazes");
+        enableWolves.registerConfigKey("zombies.zombieesp.wolves");
+        enableCreepers.registerConfigKey("zombies.zombieesp.creepers");
+        enableMagmaCubes.registerConfigKey("zombies.zombieesp.magmacubes");
+        enableSlimes.registerConfigKey("zombies.zombieesp.slimes");
+        enableWitches.registerConfigKey("zombies.zombieesp.witches");
     }
 
     @Override

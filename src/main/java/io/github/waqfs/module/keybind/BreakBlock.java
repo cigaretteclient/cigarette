@@ -1,6 +1,6 @@
 package io.github.waqfs.module.keybind;
 
-import io.github.waqfs.gui.widget.ToggleOptionsWidget;
+import io.github.waqfs.gui.widget.ToggleWidget;
 import io.github.waqfs.module.TickModule;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
@@ -14,14 +14,14 @@ import net.minecraft.util.hit.HitResult;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
-public class BreakBlock extends TickModule<ToggleOptionsWidget, Boolean> implements ClientModInitializer {
+public class BreakBlock extends TickModule<ToggleWidget, Boolean> implements ClientModInitializer {
     protected static final String MODULE_NAME = "Break Block";
     protected static final String MODULE_TOOLTIP = "Breaks the block you're looking at client-side.";
     protected static final String MODULE_ID = "keybind.break_block";
     private static KeyBinding keyBinding;
 
     public BreakBlock() {
-        super(ToggleOptionsWidget.base, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
     }
 
     @Override

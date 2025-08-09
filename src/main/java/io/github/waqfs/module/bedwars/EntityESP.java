@@ -2,7 +2,7 @@ package io.github.waqfs.module.bedwars;
 
 import io.github.waqfs.GameDetector;
 import io.github.waqfs.gui.widget.TextWidget;
-import io.github.waqfs.gui.widget.ToggleOptionsWidget;
+import io.github.waqfs.gui.widget.ToggleWidget;
 import io.github.waqfs.lib.Glow;
 import io.github.waqfs.module.TickModule;
 import net.minecraft.client.MinecraftClient;
@@ -21,22 +21,22 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.UUID;
 
-public class EntityESP extends TickModule<ToggleOptionsWidget, Boolean> {
+public class EntityESP extends TickModule<ToggleWidget, Boolean> {
     protected static final String MODULE_NAME = "EntityESP";
     protected static final String MODULE_TOOLTIP = "Highlights all miscellaneous entities with their team color.";
     protected static final String MODULE_ID = "bedwars.entityesp";
-    private final ToggleOptionsWidget enableEnderDragons = new ToggleOptionsWidget(Text.literal("Dragons")).withDefaultState(true);
-    private final ToggleOptionsWidget enableIronGolems = new ToggleOptionsWidget(Text.literal("Iron Golems")).withDefaultState(true);
-    private final ToggleOptionsWidget enableSilverfish = new ToggleOptionsWidget(Text.literal("Silverfish")).withDefaultState(true);
+    private final ToggleWidget enableEnderDragons = new ToggleWidget(Text.literal("Dragons"), null).withDefaultState(true);
+    private final ToggleWidget enableIronGolems = new ToggleWidget(Text.literal("Iron Golems"), null).withDefaultState(true);
+    private final ToggleWidget enableSilverfish = new ToggleWidget(Text.literal("Silverfish"), null).withDefaultState(true);
     private final Glow.Context glowContext = new Glow.Context();
 
     public EntityESP() {
-        super(ToggleOptionsWidget.base, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
         TextWidget header = new TextWidget(Text.literal("Types")).withUnderline();
-        this.widget.setOptions(header, enableEnderDragons, enableIronGolems, enableSilverfish);
-        enableEnderDragons.registerAsOption("bedwars.entityesp.enderdragons");
-        enableIronGolems.registerAsOption("bedwars.entityesp.irongolems");
-        enableSilverfish.registerAsOption("bedwars.entityesp.silverfish");
+        this.setChildren(header, enableEnderDragons, enableIronGolems, enableSilverfish);
+        enableEnderDragons.registerConfigKey("bedwars.entityesp.enderdragons");
+        enableIronGolems.registerConfigKey("bedwars.entityesp.irongolems");
+        enableSilverfish.registerConfigKey("bedwars.entityesp.silverfish");
     }
 
     private int getNameColor(Entity entity) {

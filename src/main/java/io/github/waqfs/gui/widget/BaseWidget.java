@@ -1,5 +1,6 @@
 package io.github.waqfs.gui.widget;
 
+import io.github.waqfs.config.FileSystem;
 import io.github.waqfs.gui.CigaretteScreen;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
@@ -9,25 +10,63 @@ import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.function.Consumer;
+
 public abstract class BaseWidget<StateType> extends ClickableWidget {
     private StateType defaultState;
     private StateType state;
     protected boolean captureHover = false;
     protected boolean hovered = false;
+    protected String configKey;
     private final TooltipState tooltip = new TooltipState();
+    protected @Nullable Consumer<StateType> stateCallback = null;
+    protected @Nullable Consumer<Object> fsCallback = null;
+    protected @Nullable Consumer<StateType> moduleCallback = null;
 
     public BaseWidget(Text message, @Nullable Text tooltip) {
         super(0, 0, 0, 0, message);
-        if(tooltip != null) this.setTooltip(Tooltip.of(tooltip));
+        if (tooltip != null) this.setTooltip(Tooltip.of(tooltip));
     }
 
     public final void setRawState(StateType state) {
         this.state = state;
+        if (moduleCallback != null) moduleCallback.accept(this.state);
+        if (stateCallback != null) stateCallback.accept(this.state);
+    }
+
+    @SuppressWarnings("unchecked")
+    public final void toggleRawState() {
+        if (this.state instanceof Boolean booleanState) {
+            this.setRawState((StateType) (Boolean) !booleanState);
+            return;
+        }
+        throw new IllegalStateException("Cannot toggle state from a non-boolean component.");
     }
 
     public final StateType getRawState() {
         if (this.state instanceof Stateless) throw new IllegalStateException("Cannot get state from a stateless component.");
         return this.state;
+    }
+
+    public void registerModuleCallback(Consumer<StateType> callback) {
+        this.moduleCallback = callback;
+    }
+
+    @SuppressWarnings("unchecked")
+    public void registerConfigKey(String key) {
+        if (this.state instanceof Stateless) return;
+        if (this.configKey != null) throw new IllegalStateException("Cannot configure a config key more than once.");
+        this.configKey = key;
+        this.stateCallback = newState -> FileSystem.updateState(key, newState);
+        this.fsCallback = newState -> {
+            try {
+                StateType typedState = (StateType) newState;
+                this.state = typedState;
+                if (this.moduleCallback != null) this.moduleCallback.accept(typedState);
+            } catch (ClassCastException ignored) {
+            }
+        };
+        FileSystem.registerUpdate(key, this.fsCallback);
     }
 
     protected BaseWidget<StateType> captureHover() {

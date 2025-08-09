@@ -2,7 +2,7 @@ package io.github.waqfs.module.bedwars;
 
 import io.github.waqfs.GameDetector;
 import io.github.waqfs.agent.BedwarsAgent;
-import io.github.waqfs.gui.widget.ToggleOptionsWidget;
+import io.github.waqfs.gui.widget.ToggleWidget;
 import io.github.waqfs.mixin.MinecraftClientInvoker;
 import io.github.waqfs.module.TickModule;
 import net.minecraft.client.MinecraftClient;
@@ -15,7 +15,7 @@ import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
 import org.jetbrains.annotations.NotNull;
 
-public class PerfectHit extends TickModule<ToggleOptionsWidget, Boolean> {
+public class PerfectHit extends TickModule<ToggleWidget, Boolean> {
     protected static final String MODULE_NAME = "PerfectHit";
     protected static final String MODULE_TOOLTIP = "Perfectly times hits on opponents while holding attack.";
     protected static final String MODULE_ID = "bedwars.perfecthit";
@@ -24,7 +24,7 @@ public class PerfectHit extends TickModule<ToggleOptionsWidget, Boolean> {
     private int cooldown = 0;
 
     public PerfectHit() {
-        super(ToggleOptionsWidget.base, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
         BedwarsAgent.perfectHitModule = this;
     }
 
@@ -60,6 +60,6 @@ public class PerfectHit extends TickModule<ToggleOptionsWidget, Boolean> {
 
     @Override
     protected void whenEnabled() {
-        BedwarsAgent.autoClickerModule.widget.setState(false);
+        BedwarsAgent.autoClickerModule.widget.setRawState(false);
     }
 }

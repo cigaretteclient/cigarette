@@ -1,6 +1,5 @@
 package io.github.waqfs.gui.widget;
 
-import io.github.waqfs.config.FileSystem;
 import io.github.waqfs.gui.CigaretteScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
@@ -71,21 +70,6 @@ public class SliderWidget extends BaseWidget<Double> {
     public SliderWidget withAccuracy(int decimalPlaces) {
         this.decimalPlaces = decimalPlaces;
         return this;
-    }
-
-    public void registerAsOption(String key) {
-        this.registerUpdate(newState -> {
-            this.setAccurateState(newState);
-            FileSystem.updateState(key, this.getRawState());
-        });
-        FileSystem.registerUpdate(key, newState -> {
-            if (!(newState instanceof Double doubleState)) return;
-            this.setState(doubleState);
-        });
-    }
-
-    public void registerUpdate(Consumer<Double> callback) {
-        this.sliderCallback = callback;
     }
 
     @Override

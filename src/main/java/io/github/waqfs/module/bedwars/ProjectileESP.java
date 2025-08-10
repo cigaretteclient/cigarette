@@ -76,7 +76,7 @@ public class ProjectileESP extends RenderModule<ToggleWidget, Boolean> {
 
             int collisionStep = trajectory.collisionStep != null ? trajectory.collisionStep : maxTicks.getRawState().intValue();
             Vec3d start = trajectory.steps[0];
-            for (int tick = 1; tick < maxTicks.getRawState(); tick++) {
+            for (int tick = 1; tick < trajectory.steps.length; tick++) {
                 if (tick > collisionStep) break;
                 Vec3d end = trajectory.steps[tick];
                 Renderer.drawFakeLine(buffer, matrix, projectile.color, start.toVector3f(), end.toVector3f(), 0.1f);

@@ -12,19 +12,12 @@ public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType
     private final SliderWidget sliderBlue = new SliderWidget(Text.literal("Blue")).withBounds(0, 255, 255);
     private final SliderWidget sliderAlpha = new SliderWidget(Text.literal("Alpha")).withBounds(0, 255, 255);
 
-    private void setRawSliderStates(int color) {
-        sliderAlpha.setAccurateState(color >> 24);
-        sliderRed.setAccurateState((color >> 16) & 0xFF);
-        sliderGreen.setAccurateState((color >> 8) & 0xFF);
-        sliderBlue.setAccurateState(color & 0xFF);
-    }
-
     public int getStateARGB() {
         return this.colorSquare.getRawState();
     }
 
     public int getStateRGBA() {
-        return ((this.colorSquare.getRawState() & 0xFFFFFF) << 8) + (this.colorSquare.getRawState() >> 24);
+        return ((this.colorSquare.getRawState() & 0xFFFFFF) << 8) + ((this.colorSquare.getRawState() >> 24) & 0xFF);
     }
 
     public int getStateRGB() {
@@ -42,14 +35,13 @@ public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType
     public ColorDropdownWidget(Text message, @Nullable Text tooltip) {
         super(message, tooltip);
         super.withIndicator(false);
-        this.colorSquare.withDefault(0xFFFFFFFF);
         this.setHeader((Widget) new ToggleWidget(message, tooltip));
         this.attachChildren().captureHover();
     }
 
     public ColorDropdownWidget<Widget, StateType> withDefaultColor(int argb) {
         this.colorSquare.withDefault(argb);
-        sliderAlpha.withDefault((double) (argb >> 24));
+        sliderAlpha.withDefault((double) ((argb >> 24) & 0xFF));
         sliderRed.withDefault((double) ((argb >> 16) & 0xFF));
         sliderGreen.withDefault((double) ((argb >> 8) & 0xFF));
         sliderBlue.withDefault((double) (argb & 0xFF));
@@ -112,7 +104,10 @@ public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType
     @Override
     public void registerConfigKey(String key) {
         this.header.registerConfigKey(key);
-        this.colorSquare.registerConfigKey(key + ".color");
+        this.colorSquare.registerConfigKeyAnd(key + ".color", loadedState -> {
+            if (!(loadedState instanceof Integer integerState)) return;
+            this.withDefaultColor(integerState);
+        });
     }
 
     @Override

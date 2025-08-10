@@ -6,6 +6,7 @@ import net.minecraft.text.Text;
 public class ColorSquareWidget extends BaseWidget<Integer> {
     public ColorSquareWidget() {
         super(Text.literal(""), null);
+        this.withDefault(0xFFFFFFFF);
     }
 
     @Override

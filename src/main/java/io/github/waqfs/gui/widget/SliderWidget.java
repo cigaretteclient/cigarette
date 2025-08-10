@@ -10,7 +10,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.function.Consumer;
 
 public class SliderWidget extends BaseWidget<Double> {
-    private static final int BASE_TEXT_COLOR = 0xFFFFFFFF;
     private static final int SLIDER_PADDING = 4;
     private @Nullable Consumer<Double> sliderCallback = null;
     private double maxState = 0;

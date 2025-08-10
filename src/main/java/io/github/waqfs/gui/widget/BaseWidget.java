@@ -53,18 +53,32 @@ public abstract class BaseWidget<StateType> extends ClickableWidget {
     }
 
     @SuppressWarnings("unchecked")
+    private void defaultFSCallback(Object newState) {
+        try {
+            StateType typedState = (StateType) newState;
+            this.state = typedState;
+            if (this.moduleCallback != null) this.moduleCallback.accept(typedState);
+        } catch (ClassCastException ignored) {
+        }
+    }
+
     public void registerConfigKey(String key) {
         if (this.state instanceof Stateless) return;
         if (this.configKey != null) throw new IllegalStateException("Cannot configure a config key more than once.");
         this.configKey = key;
         this.stateCallback = newState -> FileSystem.updateState(key, newState);
+        this.fsCallback = this::defaultFSCallback;
+        FileSystem.registerUpdate(key, this.fsCallback);
+    }
+
+    public void registerConfigKeyAnd(String key, Consumer<Object> loadedState) {
+        if (this.state instanceof Stateless) return;
+        if (this.configKey != null) throw new IllegalStateException("Cannot configure a config key more than once.");
+        this.configKey = key;
+        this.stateCallback = newState -> FileSystem.updateState(key, newState);
         this.fsCallback = newState -> {
-            try {
-                StateType typedState = (StateType) newState;
-                this.state = typedState;
-                if (this.moduleCallback != null) this.moduleCallback.accept(typedState);
-            } catch (ClassCastException ignored) {
-            }
+            this.defaultFSCallback(newState);
+            loadedState.accept(newState);
         };
         FileSystem.registerUpdate(key, this.fsCallback);
     }

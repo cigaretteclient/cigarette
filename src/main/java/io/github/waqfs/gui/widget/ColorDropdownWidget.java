@@ -49,7 +49,10 @@ public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType
 
     public ColorDropdownWidget<Widget, StateType> withDefaultColor(int argb) {
         this.colorSquare.withDefault(argb);
-        this.setRawSliderStates(argb);
+        sliderAlpha.withDefault((double) (argb >> 24));
+        sliderRed.withDefault((double) ((argb >> 16) & 0xFF));
+        sliderGreen.withDefault((double) ((argb >> 8) & 0xFF));
+        sliderBlue.withDefault((double) (argb & 0xFF));
         return this;
     }
 
@@ -60,12 +63,7 @@ public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType
 
     public ColorDropdownWidget<Widget, StateType> withAlpha(boolean alpha) {
         this.sliderAlpha.visible = alpha;
-        if (!alpha) {
-            this.sliderAlpha.setRawState(255d);
-            if (this.sliderAlpha.stateCallback != null) {
-                this.sliderAlpha.stateCallback.accept(255d);
-            }
-        }
+        if (!alpha) this.sliderAlpha.withDefault(255d);
         return this;
     }
 

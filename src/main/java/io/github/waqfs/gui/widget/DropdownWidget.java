@@ -36,6 +36,7 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType> extends Pas
 
     @Override
     public void registerConfigKey(String key) {
+        System.out.println("dropdown header registered as " + key);
         this.header.registerConfigKey(key);
     }
 

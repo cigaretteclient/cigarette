@@ -2,7 +2,6 @@ package io.github.waqfs.config;
 
 import io.github.waqfs.Cigarette;
 import net.fabricmc.loader.api.FabricLoader;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -78,14 +77,12 @@ public class FileSystem {
                         parsedValue = value.substring(1, value.length() - 2);
                     else if (value.matches("^-*[\\d.]+[a-z]$")) parsedValue = FileSystem.parseNumber(value);
 
-                    if (OPTION_CALLBACKS.get(key) != null) {
-                        @Nullable Object previous = OPTIONS.getOrDefault(key, null);
-                        if (previous == null || previous.equals(parsedValue)) {
-                            OPTION_CALLBACKS.get(key).accept(parsedValue);
-                        }
-                    }
                     OPTIONS.put(key, parsedValue);
                 }
+            }
+            for (Map.Entry<String, Object> entry : OPTIONS.entrySet()) {
+                if (OPTION_CALLBACKS.get(entry.getKey()) == null) continue;
+                OPTION_CALLBACKS.get(entry.getKey()).accept(entry.getValue());
             }
         } catch (Exception error) {
             Cigarette.LOGGER.error("An error occurred loading the configuration file.");

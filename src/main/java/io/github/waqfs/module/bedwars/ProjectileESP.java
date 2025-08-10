@@ -2,7 +2,10 @@ package io.github.waqfs.module.bedwars;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
 import io.github.waqfs.GameDetector;
-import io.github.waqfs.gui.widget.*;
+import io.github.waqfs.gui.widget.ColorDropdownWidget;
+import io.github.waqfs.gui.widget.SliderWidget;
+import io.github.waqfs.gui.widget.TextWidget;
+import io.github.waqfs.gui.widget.ToggleWidget;
 import io.github.waqfs.lib.Glow;
 import io.github.waqfs.lib.Raycast;
 import io.github.waqfs.lib.Renderer;
@@ -14,11 +17,14 @@ import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ArrowEntity;
 import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.entity.projectile.thrown.EggEntity;
 import net.minecraft.entity.projectile.thrown.EnderPearlEntity;
 import net.minecraft.entity.projectile.thrown.SnowballEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.text.Text;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.math.Vec3d;
@@ -35,6 +41,7 @@ public class ProjectileESP extends RenderModule<ToggleWidget, Boolean> {
     private final HashSet<Projectile> projectiles = new HashSet<>();
     private final Glow.Context glowContext = new Glow.Context();
     private final ToggleWidget enableGlow = new ToggleWidget(Text.literal("Glowing"), Text.literal("Applies the glowing effect to the entities in the same color as the trajectory.")).withDefaultState(true);
+    private final ToggleWidget enablePrefire = new ToggleWidget(Text.literal("Show Prefire"), Text.literal("Shows trajectories while players are holding projectiles before they are shot.")).withDefaultState(true);
     private final ColorDropdownWidget<ToggleWidget, Boolean> customHitColor = ColorDropdownWidget.buildToggle(Text.literal("Hit Color"), Text.literal("Overrides the glow and trajectory color if the projectile is colliding with an entity.")).withDefaultColor(0xFFFF0000).withDefaultState(true);
     private final ColorDropdownWidget<ToggleWidget, Boolean> enableArrows = ColorDropdownWidget.buildToggle(Text.literal("Shot Arrows"), Text.literal("Display the trajectory of shot Arrows.")).withDefaultColor(0xFF0000FF).withDefaultState(true);
     private final ColorDropdownWidget<ToggleWidget, Boolean> enablePearls = ColorDropdownWidget.buildToggle(Text.literal("Thrown Pearls"), Text.literal("Display the trajectory of thrown Pearls.")).withDefaultColor(0xFF00FF00).withDefaultState(true);
@@ -45,8 +52,9 @@ public class ProjectileESP extends RenderModule<ToggleWidget, Boolean> {
     public ProjectileESP() {
         super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
         TextWidget header = new TextWidget(Text.literal("Types")).withUnderline();
-        this.setChildren(enableGlow, customHitColor, header, enableArrows, enablePearls, enableSnowballs, enableEggs, maxTicks);
+        this.setChildren(enableGlow, enablePrefire, customHitColor, header, enableArrows, enablePearls, enableSnowballs, enableEggs, maxTicks);
         enableGlow.registerConfigKey("bedwars.projectileesp.glow");
+        enablePrefire.registerConfigKey("bedwars.projectileesp.prefire");
         customHitColor.registerConfigKey("bedwars.projectileesp.collision");
         enableArrows.registerConfigKey("bedwars.projectileesp.arrows");
         enablePearls.registerConfigKey("bedwars.projectileesp.pearls");
@@ -87,7 +95,28 @@ public class ProjectileESP extends RenderModule<ToggleWidget, Boolean> {
         this.projectiles.clear();
         this.glowContext.removeAll();
         for (Entity entity : world.getEntities()) {
-            if (!(entity instanceof ArrowEntity) && !(entity instanceof EggEntity) && !(entity instanceof SnowballEntity) && !(entity instanceof EnderPearlEntity)) continue;
+            if (!(entity instanceof ArrowEntity) && !(entity instanceof EggEntity) && !(entity instanceof SnowballEntity) && !(entity instanceof EnderPearlEntity)) {
+                if (!enablePrefire.getRawState()) continue;
+                if (!(entity instanceof PlayerEntity playerEntity)) continue;
+
+                ItemStack holding = playerEntity.getMainHandStack();
+                if (holding.isOf(Items.BOW) || holding.isOf(Items.SNOWBALL) || holding.isOf(Items.EGG) || holding.isOf(Items.ENDER_PEARL)) {
+                    Raycast.SteppedTrajectory trajectory = Raycast.trajectory(playerEntity, holding, maxTicks.getRawState().intValue());
+                    if (trajectory == null) continue;
+
+                    int color = 0xFFFFFFFF;
+                    if (trajectory.collision instanceof EntityHitResult && customHitColor.getToggleState()) color = customHitColor.getStateARGB();
+                    else if (holding.isOf(Items.BOW)) color = enableArrows.getStateARGB();
+                    else if (holding.isOf(Items.EGG)) color = enableEggs.getStateARGB();
+                    else if (holding.isOf(Items.ENDER_PEARL)) color = enablePearls.getStateARGB();
+                    else if (holding.isOf(Items.SNOWBALL)) color = enableSnowballs.getStateARGB();
+
+                    Projectile projectile = new Projectile(null, trajectory, color);
+                    projectiles.add(projectile);
+                }
+
+                continue;
+            }
             if (!entity.isPushedByFluids()) continue;
             if (entity instanceof ArrowEntity && !enableArrows.getToggleState()) continue;
             if (entity instanceof EnderPearlEntity && !enablePearls.getToggleState()) continue;

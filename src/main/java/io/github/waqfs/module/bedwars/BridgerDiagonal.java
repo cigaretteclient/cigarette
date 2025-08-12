@@ -12,6 +12,7 @@ import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.NotNull;
 
@@ -21,7 +22,9 @@ public class BridgerDiagonal extends TickModule<ToggleWidget, Boolean> {
     protected static final String MODULE_ID = "bedwars.bridger.diagonal";
 
     private int liftTicks = 0;
+    private int runningTicks = 0;
     private boolean autoEnabled = false;
+    private boolean godMode = false;
 //    private boolean didJump = false;
 
     private void autoEnable() {
@@ -71,7 +74,7 @@ public class BridgerDiagonal extends TickModule<ToggleWidget, Boolean> {
         }
         HitResult hitResult = client.crosshairTarget;
         if (hitResult == null) return;
-        InputOverride.sneakKey = liftTicks-- <= 0;
+        InputOverride.sneakKey = (godMode && runningTicks++ == 2) || liftTicks-- <= 0;
 
         if (!BedwarsAgent.isBlock(player.getMainHandStack())) {
             boolean hasMoreBlocks = BedwarsAgent.switchToTheNextStackOfWoolOrClayOrEndStoneOrWoodOrObsidianOrGlassOrAnyOtherPlaceableBlockThatIsNotALadderOrTNTBecauseThatIsNotARealBlockInTheHotOfTheBarImmediatelyOnTheSubsequentTick(player);
@@ -102,7 +105,12 @@ public class BridgerDiagonal extends TickModule<ToggleWidget, Boolean> {
             }
             KeyBindingAccessor useAccessor = (KeyBindingAccessor) useBinding;
             useAccessor.setTimesPressed(useAccessor.getTimesPressed() + 2);
-            liftTicks = 4;
+            if (godMode && runningTicks >= 80) {
+                InputOverride.sneakKey = true;
+                runningTicks = 0;
+            } else {
+                liftTicks = 5;
+            }
         } else if (blockHitResult.getSide() == Direction.UP && blockHitResult.getBlockPos().getY() < player.getY() - 1) {
             KeyBindingAccessor useAccessor = (KeyBindingAccessor) useBinding;
             useAccessor.setTimesPressed(useAccessor.getTimesPressed() + 1);
@@ -130,6 +138,13 @@ public class BridgerDiagonal extends TickModule<ToggleWidget, Boolean> {
         if (blockHitResult.getBlockPos().getY() >= player.getY()) return;
         if (blockHitResult.getSide() == Direction.UP || blockHitResult.getSide() == Direction.DOWN) return;
         float boundedYaw = getBoundedYaw(player);
+
+        BlockPos blockPos = blockHitResult.getBlockPos();
+        BlockPos playerPos = player.getBlockPos();
+        if (playerPos.getY() - blockPos.getY() != 1) return;
+        if (Math.abs(playerPos.getX() - blockPos.getX()) > 1 || Math.abs(playerPos.getZ() - blockPos.getZ()) > 1) return;
+        godMode = playerPos.getX() == blockPos.getX() || playerPos.getZ() == blockPos.getZ();
+
         if (boundedYaw > 0 && boundedYaw < 90) {
             InputOverride.yaw = 45;
         } else if (boundedYaw > 90 && boundedYaw < 180) {
@@ -140,6 +155,7 @@ public class BridgerDiagonal extends TickModule<ToggleWidget, Boolean> {
             InputOverride.yaw = -45;
         }
         autoEnable();
+        runningTicks = 3;
     }
 
     @Override

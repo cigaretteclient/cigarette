@@ -40,6 +40,13 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType> extends Pas
     }
 
     @Override
+    public void unfocus() {
+        if (this.header != null) this.header.unfocus();
+        this.setFocused(false);
+        super.unfocus();
+    }
+
+    @Override
     public void mouseMoved(double mouseX, double mouseY) {
         if (this.header != null) this.header.mouseMoved(mouseX, mouseY);
         if (dropdownVisible) super.mouseMoved(mouseX, mouseY);
@@ -54,10 +61,14 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType> extends Pas
             }
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT || button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
                 dropdownVisible = children != null && !dropdownVisible;
+                this.setFocused(dropdownVisible);
             }
             return true;
         }
-        return dropdownVisible && super.mouseClicked(mouseX, mouseY, button);
+        boolean captured = dropdownVisible && super.mouseClicked(mouseX, mouseY, button);
+        this.setFocused(captured);
+        this.dropdownVisible = captured;
+        return captured;
     }
 
     @Override
@@ -88,7 +99,7 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType> extends Pas
         if (this.container.children.length > 0 && dropdownIndicator) {
             context.drawHorizontalLine(right - 10, right - 4, top + (height / 2), CigaretteScreen.SECONDARY_COLOR);
         }
-        if (!dropdownVisible) return;
+        if (!dropdownVisible || !this.focused) return;
         Scissor.pushExclusive(context, right, top, right + this.container.getWidth(), top + this.container.getHeight());
         this.container.withXY(right + childLeftOffset, top).renderWidget(context, mouseX, mouseY, deltaTicks);
         Scissor.popExclusive();

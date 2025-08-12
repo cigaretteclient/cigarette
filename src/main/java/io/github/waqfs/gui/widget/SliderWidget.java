@@ -75,6 +75,7 @@ public class SliderWidget extends BaseWidget<Double> {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (!isMouseOver(mouseX, mouseY)) return false;
         this.dragging = true;
+        this.setFocused();
         return true;
     }
 

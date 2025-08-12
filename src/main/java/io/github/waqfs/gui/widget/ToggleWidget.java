@@ -38,6 +38,7 @@ public class ToggleWidget extends BaseWidget<Boolean> {
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             this.setRawState(!this.getRawState());
         }
+        this.setFocused();
         return true;
     }
 

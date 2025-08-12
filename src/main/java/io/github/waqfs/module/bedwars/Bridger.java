@@ -113,7 +113,7 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
     private void cycleIfNoBlocks(ClientPlayerEntity player) {
         if (!blockSwap.getRawState()) return;
         if (!BedwarsAgent.isBlock(player.getMainHandStack())) {
-            boolean hasMoreBlocks = BedwarsAgent.switchToTheNextStackOfWoolOrClayOrEndStoneOrWoodOrObsidianOrGlassOrAnyOtherPlaceableBlockThatIsNotALadderOrTNTBecauseThatIsNotARealBlockInTheHotOfTheBarImmediatelyOnTheSubsequentTick(player);
+            boolean hasMoreBlocks = BedwarsAgent.switchToNextStackOfBlocks(player);
             if (!hasMoreBlocks) {
                 disable();
             }

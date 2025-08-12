@@ -100,7 +100,7 @@ public class BedwarsAgent extends BaseAgent {
         return isBlock(blockItem.getBlock().getDefaultState());
     }
 
-    public static boolean switchToTheNextStackOfWoolOrClayOrEndStoneOrWoodOrObsidianOrGlassOrAnyOtherPlaceableBlockThatIsNotALadderOrTNTBecauseThatIsNotARealBlockInTheHotOfTheBarImmediatelyOnTheSubsequentTick(ClientPlayerEntity player) {
+    public static boolean switchToNextStackOfBlocks(ClientPlayerEntity player) {
         for (int i = 0; i < 9; i++) {
             if (isBlock(player.getInventory().getStack(i))) {
                 player.getInventory().setSelectedSlot(i);

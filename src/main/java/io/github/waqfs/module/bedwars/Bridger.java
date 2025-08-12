@@ -25,6 +25,7 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
     protected static final String MODULE_ID = "bedwars.bridger";
 
     private final SliderWidget speed = new SliderWidget(Text.literal("Speed"), Text.literal("The higher the speed, the less time spent shifting. To look more legit or improve consistency, lower the speed. Setting to 3 will naturally god bridge straight & diagonally inconsistently.")).withBounds(0, 2, 3);
+    private final ToggleWidget blockSwap = new ToggleWidget(Text.literal("Auto Swap Blocks"), Text.literal("Automatically swap to the next available slot with placeable blocks when current stack runs out.")).withDefaultState(true);
     private final ToggleWidget toggleStraight = new ToggleWidget(Text.literal("Straight"), Text.literal("Toggles automatic straight bridging.")).withDefaultState(true);
     private final ToggleWidget toggleDiagonal = new ToggleWidget(Text.literal("Diagonal"), Text.literal("Toggles automatic diagonal bridging.")).withDefaultState(true);
     private final ToggleWidget toggleDiagonalGod = new ToggleWidget(Text.literal("God Bridging"), Text.literal("Toggles diagonal god bridging when positioning yourself half a block from the corner.")).withDefaultState(false);
@@ -43,8 +44,9 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
     public Bridger() {
         super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
         TextWidget header = new TextWidget(Text.literal("Bridging Styles")).withUnderline();
-        this.setChildren(speed, header, toggleStraight, toggleDiagonal, toggleDiagonalGod);
+        this.setChildren(speed, blockSwap, header, toggleStraight, toggleDiagonal, toggleDiagonalGod);
         speed.registerConfigKey("bedwars.bridger.speed");
+        blockSwap.registerConfigKey("bedwars.bridger.blockswap");
         toggleStraight.registerConfigKey("bedwars.bridger.straight");
         toggleDiagonal.registerConfigKey("bedwars.bridger.diagonal");
         toggleDiagonalGod.registerConfigKey("bedwars.bridger.diagonal.god");
@@ -109,6 +111,7 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
     }
 
     private void cycleIfNoBlocks(ClientPlayerEntity player) {
+        if (!blockSwap.getRawState()) return;
         if (!BedwarsAgent.isBlock(player.getMainHandStack())) {
             boolean hasMoreBlocks = BedwarsAgent.switchToTheNextStackOfWoolOrClayOrEndStoneOrWoodOrObsidianOrGlassOrAnyOtherPlaceableBlockThatIsNotALadderOrTNTBecauseThatIsNotARealBlockInTheHotOfTheBarImmediatelyOnTheSubsequentTick(player);
             if (!hasMoreBlocks) {

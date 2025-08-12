@@ -8,6 +8,7 @@ import io.github.waqfs.module.keybind.AddGlassBlock;
 import io.github.waqfs.module.keybind.BreakBlock;
 import io.github.waqfs.module.keybind.VClip;
 import io.github.waqfs.module.murdermystery.GoldESP;
+import io.github.waqfs.module.zombies.Aimbot;
 import io.github.waqfs.module.zombies.ZombieESP;
 
 public class Config {
@@ -22,6 +23,6 @@ public class Config {
         this.keybinds.attach(new AddGlassBlock(), new BreakBlock(), new VClip());
         this.murderMystery.attach(new io.github.waqfs.module.murdermystery.PlayerESP(), new GoldESP());
         this.bedwars.attach(new io.github.waqfs.module.bedwars.PlayerESP(), new FireballESP(), new ProjectileESP(), new EntityESP(), new DefenseViewer(), new JumpReset(), new AutoClicker(), new PerfectHit(), new AutoTool(), new Bridger());
-        this.zombies.attach(new io.github.waqfs.module.zombies.PlayerESP(), new ZombieESP());
+        this.zombies.attach(new io.github.waqfs.module.zombies.PlayerESP(), new ZombieESP(), new Aimbot());
     }
 }

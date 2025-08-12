@@ -12,6 +12,7 @@ import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.NotNull;
 
@@ -97,22 +98,28 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
             if (hitResult == null || hitResult.getType() != HitResult.Type.BLOCK) return;
             BlockHitResult blockHitResult = (BlockHitResult) hitResult;
             if (blockHitResult.getBlockPos().getY() >= player.getY()) return;
-            switch (blockHitResult.getSide()) {
-                case NORTH -> {
-                    autoEnable();
-                    InputOverride.yaw = right ? 45.0f : -45.0f;
-                }
-                case SOUTH -> {
-                    autoEnable();
-                    InputOverride.yaw = right ? -135.0f : 135.0f;
-                }
-                case WEST -> {
-                    autoEnable();
-                    InputOverride.yaw = right ? -45.0f : -135.0f;
-                }
-                case EAST -> {
-                    autoEnable();
-                    InputOverride.yaw = right ? 135.0f : 45.0f;
+
+            BlockPos blockPos = blockHitResult.getBlockPos();
+            BlockPos playerPos = player.getBlockPos();
+            if (playerPos.getY() - blockPos.getY() != 1) return;
+            if ((playerPos.getX() == blockPos.getX() && Math.abs(playerPos.getZ() - blockPos.getZ()) == 1) || (playerPos.getZ() == blockPos.getZ() && Math.abs(playerPos.getX() - blockPos.getX()) == 1)) {
+                switch (blockHitResult.getSide()) {
+                    case NORTH -> {
+                        autoEnable();
+                        InputOverride.yaw = right ? 45.0f : -45.0f;
+                    }
+                    case SOUTH -> {
+                        autoEnable();
+                        InputOverride.yaw = right ? -135.0f : 135.0f;
+                    }
+                    case WEST -> {
+                        autoEnable();
+                        InputOverride.yaw = right ? -45.0f : -135.0f;
+                    }
+                    case EAST -> {
+                        autoEnable();
+                        InputOverride.yaw = right ? 135.0f : 45.0f;
+                    }
                 }
             }
         }

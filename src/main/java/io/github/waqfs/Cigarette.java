@@ -3,6 +3,7 @@ package io.github.waqfs;
 import io.github.waqfs.agent.BedwarsAgent;
 import io.github.waqfs.agent.DevWidget;
 import io.github.waqfs.agent.MurderMysteryAgent;
+import io.github.waqfs.agent.ZombiesAgent;
 import io.github.waqfs.config.Config;
 import io.github.waqfs.config.FileSystem;
 import io.github.waqfs.lib.ChatLogger;
@@ -19,6 +20,7 @@ public class Cigarette implements ModInitializer {
     public static Config CONFIG = new Config();
     public static BedwarsAgent BEDWARS_AGENT = new BedwarsAgent(DevWidget.bedwarsAgent);
     public static MurderMysteryAgent MURDER_MYSTERY_AGENT = new MurderMysteryAgent(DevWidget.murderMysteryAgent);
+    public static ZombiesAgent ZOMBIES_AGENT = new ZombiesAgent(DevWidget.zombiesAgent);
 
     @Override
     public void onInitialize() {

@@ -11,7 +11,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.mob.*;
 import net.minecraft.entity.passive.WolfEntity;
 import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -122,8 +121,8 @@ public class ZombiesAgent extends BaseAgent {
             return this.canHeadshot;
         }
 
-        public Direction getDirectionVector(ClientPlayerEntity player) {
-            return Direction.getFacing(entity.getEyePos().subtract(player.getEyePos()));
+        public Vec3d getDirectionVector(ClientPlayerEntity player) {
+            return entity.getEyePos().subtract(player.getEyePos());
         }
     }
 

@@ -41,7 +41,6 @@ public class PlayerESP extends TickModule<ToggleWidget, Boolean> {
 
     @Override
     protected boolean inValidGame() {
-        return GameDetector.rootGame == GameDetector.ParentGame.BEDWARS && GameDetector.subGame == GameDetector.ChildGame.INSTANCED_BEDWARS;
+        return GameDetector.rootGame == GameDetector.ParentGame.ZOMBIES && GameDetector.subGame == GameDetector.ChildGame.INSTANCED_ZOMBIES;
     }
-
 }

@@ -2,6 +2,8 @@ package io.github.waqfs.module.bedwars;
 
 import io.github.waqfs.GameDetector;
 import io.github.waqfs.agent.BedwarsAgent;
+import io.github.waqfs.gui.widget.SliderWidget;
+import io.github.waqfs.gui.widget.TextWidget;
 import io.github.waqfs.gui.widget.ToggleWidget;
 import io.github.waqfs.lib.InputOverride;
 import io.github.waqfs.mixin.KeyBindingAccessor;
@@ -10,6 +12,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.text.Text;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
@@ -20,6 +23,11 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
     protected static final String MODULE_NAME = "Bridger";
     protected static final String MODULE_TOOLTIP = "Automatically bridges.";
     protected static final String MODULE_ID = "bedwars.bridger";
+
+    private final SliderWidget speed = new SliderWidget(Text.literal("Speed"), Text.literal("The higher the speed, the less time spent shifting. To look more legit or improve consistency, lower the speed. Setting to 3 will naturally god bridge straight & diagonally inconsistently.")).withBounds(0, 2, 3);
+    private final ToggleWidget toggleStraight = new ToggleWidget(Text.literal("Straight"), Text.literal("Toggles automatic straight bridging.")).withDefaultState(true);
+    private final ToggleWidget toggleDiagonal = new ToggleWidget(Text.literal("Diagonal"), Text.literal("Toggles automatic diagonal bridging.")).withDefaultState(true);
+    private final ToggleWidget toggleDiagonalGod = new ToggleWidget(Text.literal("God Bridging"), Text.literal("Toggles diagonal god bridging when positioning yourself half a block from the corner.")).withDefaultState(false);
 
     private KeyBinding sneakKey = null;
     private KeyBinding backwardsKey = null;
@@ -34,6 +42,12 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
 
     public Bridger() {
         super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+        TextWidget header = new TextWidget(Text.literal("Bridging Styles")).withUnderline();
+        this.setChildren(speed, header, toggleStraight, toggleDiagonal, toggleDiagonalGod);
+        speed.registerConfigKey("bedwars.bridger.speed");
+        toggleStraight.registerConfigKey("bedwars.bridger.straight");
+        toggleDiagonal.registerConfigKey("bedwars.bridger.diagonal");
+        toggleDiagonalGod.registerConfigKey("bedwars.bridger.diagonal.god");
     }
 
     private boolean isStraightBridge() {
@@ -152,9 +166,11 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
             if (Math.abs(playerPos.getX() - blockPos.getX()) > 1 || Math.abs(playerPos.getZ() - blockPos.getZ()) > 1) return;
 
             if (isStraightBridge()) {
+                if (!toggleStraight.getRawState()) return;
                 enable(BridgeType.STRAIGHT, straightBridgeYaw(placingFace));
             } else if (isDiagonalBridge()) {
-                boolean godBridge = isDiagonalGodBridge(playerPos, blockPos);
+                if (!toggleDiagonal.getRawState()) return;
+                boolean godBridge = toggleDiagonalGod.getRawState() && isDiagonalGodBridge(playerPos, blockPos);
                 enable(godBridge ? BridgeType.DIAGONAL_GOD : BridgeType.DIAGONAL, diagonalBridgeYaw(player));
             }
         } else {
@@ -183,7 +199,7 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
                             return;
                         }
                         rightClick(1);
-                        shiftDiabledTicks = 4;
+                        shiftDiabledTicks = 2 + speed.getRawState().intValue();
                     }
                 }
                 case DIAGONAL -> {
@@ -194,7 +210,7 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
                         rightClick(1);
                     } else {
                         rightClick(2);
-                        shiftDiabledTicks = 5;
+                        shiftDiabledTicks = 3 + speed.getRawState().intValue();
                     }
                 }
                 case DIAGONAL_GOD -> {

@@ -21,7 +21,7 @@ public class Config {
     public Config() {
         this.keybinds.attach(new AddGlassBlock(), new BreakBlock(), new VClip());
         this.murderMystery.attach(new io.github.waqfs.module.murdermystery.PlayerESP(), new GoldESP());
-        this.bedwars.attach(new io.github.waqfs.module.bedwars.PlayerESP(), new FireballESP(), new ProjectileESP(), new EntityESP(), new DefenseViewer(), new JumpReset(), new AutoClicker(), new PerfectHit(), new AutoTool(), new Bridger());
+        this.bedwars.attach(new io.github.waqfs.module.bedwars.PlayerESP(), new FireballESP(), new ProjectileESP(), new EntityESP(), new DefenseViewer(), new JumpReset(), new AutoClicker(), new PerfectHit(), new AutoTool(), new Bridger(), new BridgerDiagonal());
         this.zombies.attach(new io.github.waqfs.module.zombies.PlayerESP(), new ZombieESP());
     }
 }

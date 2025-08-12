@@ -1,6 +1,7 @@
 package io.github.waqfs.module.bedwars;
 
 import io.github.waqfs.GameDetector;
+import io.github.waqfs.agent.BedwarsAgent;
 import io.github.waqfs.gui.widget.ToggleWidget;
 import io.github.waqfs.lib.InputOverride;
 import io.github.waqfs.mixin.KeyBindingAccessor;
@@ -74,6 +75,10 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
                 KeyBindingAccessor useAccessor = (KeyBindingAccessor) useBinding;
                 useAccessor.setTimesPressed(useAccessor.getTimesPressed() + 1);
             }
+            if (player.getMainHandStack().getCount() <= 1) {
+                BedwarsAgent.switchToTheNextStackOfWoolOrClayOrEndStoneOrWoodOrObsidianOrGlassOrAnyOtherPlaceableBlockThatIsNotALadderOrTNTBecauseThatIsNotARealBlockInTheHotOfTheBarImmediatelyOnTheSubsequentTick(player);
+            }
+
         } else {
             if (!sneakBinding.isPressed() || !backBinding.isPressed() || (!leftBinding.isPressed() && !rightBinding.isPressed()) || !useBinding.isPressed()) return;
             right = rightBinding.isPressed();

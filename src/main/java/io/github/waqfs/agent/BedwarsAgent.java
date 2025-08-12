@@ -4,11 +4,16 @@ import io.github.waqfs.GameDetector;
 import io.github.waqfs.gui.widget.ToggleWidget;
 import io.github.waqfs.module.bedwars.AutoClicker;
 import io.github.waqfs.module.bedwars.PerfectHit;
-import net.minecraft.block.*;
+import net.minecraft.block.BedBlock;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.HorizontalFacingBlock;
 import net.minecraft.block.enums.BedPart;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.item.BlockItem;
+import net.minecraft.item.Item;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -84,6 +89,21 @@ public class BedwarsAgent extends BaseAgent {
 
     public static boolean isGlass(BlockState state) {
         return state.isIn(BlockTags.IMPERMEABLE);
+    }
+
+    public static boolean isBlock(BlockState state) {
+        return isWool(state) || isEndStone(state) || isWood(state) || isClay(state) || isObsidian(state) || isGlass(state);
+    }
+
+    public static void switchToTheNextStackOfWoolOrClayOrEndStoneOrWoodOrObsidianOrGlassOrAnyOtherPlaceableBlockThatIsNotALadderOrTNTBecauseThatIsNotARealBlockInTheHotOfTheBarImmediatelyOnTheSubsequentTick(ClientPlayerEntity player) {
+        for (int i = 0; i < 9; i++) {
+            Item item = player.getInventory().getStack(i).getItem();
+            if (!(item instanceof BlockItem blockItem)) continue;
+            BlockState state = blockItem.getBlock().getDefaultState();
+            if (!isBlock(state)) continue;
+            player.getInventory().setSelectedSlot(i);
+            break;
+        }
     }
 
     @Override

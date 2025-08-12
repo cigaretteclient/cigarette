@@ -60,6 +60,16 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
             HitResult hitResult = client.crosshairTarget;
             if (hitResult == null) return;
             InputOverride.sneakKey = liftTicks-- <= 0;
+
+            if (!BedwarsAgent.isBlock(player.getMainHandStack())) {
+                boolean hasMoreBlocks = BedwarsAgent.switchToTheNextStackOfWoolOrClayOrEndStoneOrWoodOrObsidianOrGlassOrAnyOtherPlaceableBlockThatIsNotALadderOrTNTBecauseThatIsNotARealBlockInTheHotOfTheBarImmediatelyOnTheSubsequentTick(player);
+                if (!hasMoreBlocks) {
+                    autoEnabled = false;
+                    InputOverride.isActive = false;
+                }
+                return;
+            }
+
             if (hitResult.getType() != HitResult.Type.BLOCK) return;
             BlockHitResult blockHitResult = (BlockHitResult) hitResult;
             if (blockHitResult.getSide() != Direction.UP && blockHitResult.getSide() != Direction.DOWN) {
@@ -81,6 +91,7 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
 
         } else {
             if (!sneakBinding.isPressed() || !backBinding.isPressed() || (!leftBinding.isPressed() && !rightBinding.isPressed()) || !useBinding.isPressed()) return;
+            if (!BedwarsAgent.isBlock(player.getMainHandStack())) return;
             right = rightBinding.isPressed();
             HitResult hitResult = client.crosshairTarget;
             if (hitResult == null || hitResult.getType() != HitResult.Type.BLOCK) return;

@@ -11,6 +11,7 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType> extends Pas
     protected Widget header;
     protected ScrollableWidget<BaseWidget<?>> container;
     private boolean dropdownVisible = false;
+    private boolean dropdownWasVisible = false;
     private boolean dropdownIndicator = true;
 
     public DropdownWidget(Text message, @Nullable Text tooltip) {
@@ -43,6 +44,8 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType> extends Pas
     public void unfocus() {
         if (this.header != null) this.header.unfocus();
         this.setFocused(false);
+        dropdownWasVisible = dropdownVisible;
+        dropdownVisible = false;
         super.unfocus();
     }
 
@@ -55,19 +58,20 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType> extends Pas
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (isMouseOver(mouseX, mouseY)) {
+            this.setFocused();
             if (this.header == null) return false;
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && this.header.mouseClicked(mouseX, mouseY, button)) {
                 return true;
             }
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT || button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-                dropdownVisible = children != null && !dropdownVisible;
-                this.setFocused(dropdownVisible);
+                dropdownVisible = children != null && !dropdownWasVisible;
             }
             return true;
         }
-        boolean captured = dropdownVisible && super.mouseClicked(mouseX, mouseY, button);
+        boolean captured = dropdownWasVisible && super.mouseClicked(mouseX, mouseY, button);
         this.setFocused(captured);
         this.dropdownVisible = captured;
+        this.dropdownWasVisible = dropdownVisible;
         return captured;
     }
 

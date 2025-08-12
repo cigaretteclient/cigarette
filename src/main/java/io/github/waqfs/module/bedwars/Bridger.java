@@ -102,24 +102,23 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
             BlockPos blockPos = blockHitResult.getBlockPos();
             BlockPos playerPos = player.getBlockPos();
             if (playerPos.getY() - blockPos.getY() != 1) return;
-            if ((playerPos.getX() == blockPos.getX() && Math.abs(playerPos.getZ() - blockPos.getZ()) == 1) || (playerPos.getZ() == blockPos.getZ() && Math.abs(playerPos.getX() - blockPos.getX()) == 1)) {
-                switch (blockHitResult.getSide()) {
-                    case NORTH -> {
-                        autoEnable();
-                        InputOverride.yaw = right ? 45.0f : -45.0f;
-                    }
-                    case SOUTH -> {
-                        autoEnable();
-                        InputOverride.yaw = right ? -135.0f : 135.0f;
-                    }
-                    case WEST -> {
-                        autoEnable();
-                        InputOverride.yaw = right ? -45.0f : -135.0f;
-                    }
-                    case EAST -> {
-                        autoEnable();
-                        InputOverride.yaw = right ? 135.0f : 45.0f;
-                    }
+            if (Math.abs(playerPos.getX() - blockPos.getX()) > 1 || Math.abs(playerPos.getZ() - blockPos.getZ()) > 1) return;
+            switch (blockHitResult.getSide()) {
+                case NORTH -> {
+                    autoEnable();
+                    InputOverride.yaw = right ? 45.0f : -45.0f;
+                }
+                case SOUTH -> {
+                    autoEnable();
+                    InputOverride.yaw = right ? -135.0f : 135.0f;
+                }
+                case WEST -> {
+                    autoEnable();
+                    InputOverride.yaw = right ? -45.0f : -135.0f;
+                }
+                case EAST -> {
+                    autoEnable();
+                    InputOverride.yaw = right ? 135.0f : 45.0f;
                 }
             }
         }

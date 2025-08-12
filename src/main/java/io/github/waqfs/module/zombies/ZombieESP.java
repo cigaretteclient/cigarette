@@ -1,15 +1,15 @@
 package io.github.waqfs.module.zombies;
 
 import io.github.waqfs.GameDetector;
-import io.github.waqfs.gui.widget.*;
+import io.github.waqfs.agent.ZombiesAgent;
+import io.github.waqfs.gui.widget.ColorDropdownWidget;
+import io.github.waqfs.gui.widget.TextWidget;
+import io.github.waqfs.gui.widget.ToggleWidget;
 import io.github.waqfs.lib.Glow;
 import io.github.waqfs.module.TickModule;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.mob.*;
-import net.minecraft.entity.passive.WolfEntity;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
 
@@ -42,19 +42,26 @@ public class ZombieESP extends TickModule<ToggleWidget, Boolean> {
         enableWitches.registerConfigKey("zombies.zombieesp.witches");
     }
 
+    private void addGlow(ColorDropdownWidget<ToggleWidget, Boolean> widget, UUID uuid) {
+        if (!widget.getToggleState()) return;
+        this.glowContext.addGlow(uuid, widget.getStateRGB());
+    }
+
     @Override
     protected void onEnabledTick(MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
         this.glowContext.removeAll();
-        for (Entity entity : world.getEntities()) {
-            UUID uuid = entity.getUuid();
-            if (entity instanceof ZombieEntity && enableZombies.getToggleState()) this.glowContext.addGlow(uuid, enableZombies.getStateRGB());
-            else if (entity instanceof BlazeEntity && enableBlazes.getToggleState()) this.glowContext.addGlow(uuid, enableBlazes.getStateRGB());
-            else if (entity instanceof WolfEntity && enableWolves.getToggleState()) this.glowContext.addGlow(uuid, enableWolves.getStateRGB());
-            else if (entity instanceof SkeletonEntity && enableSkeletons.getToggleState()) this.glowContext.addGlow(uuid, enableSkeletons.getStateRGB());
-            else if (entity instanceof CreeperEntity && enableCreepers.getToggleState()) this.glowContext.addGlow(uuid, enableCreepers.getStateRGB());
-            else if (entity instanceof MagmaCubeEntity && enableMagmaCubes.getToggleState()) this.glowContext.addGlow(uuid, enableMagmaCubes.getStateRGB());
-            else if (entity instanceof SlimeEntity && enableSlimes.getToggleState()) this.glowContext.addGlow(uuid, enableSlimes.getStateRGB());
-            else if (entity instanceof WitchEntity && enableWitches.getToggleState()) this.glowContext.addGlow(uuid, enableWitches.getStateRGB());
+        for (ZombiesAgent.ZombieTarget zombie : ZombiesAgent.getZombies()) {
+            switch (zombie.type) {
+                case ZOMBIE -> addGlow(enableZombies, zombie.uuid);
+                case BLAZE -> addGlow(enableBlazes, zombie.uuid);
+                case WOLF -> addGlow(enableWolves, zombie.uuid);
+                case SKELETON -> addGlow(enableSkeletons, zombie.uuid);
+                case CREEPER -> addGlow(enableCreepers, zombie.uuid);
+                case MAGMACUBE -> addGlow(enableMagmaCubes, zombie.uuid);
+                case SLIME -> addGlow(enableSlimes, zombie.uuid);
+                case WITCH -> addGlow(enableWitches, zombie.uuid);
+
+            }
         }
     }
 

@@ -37,6 +37,7 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
             this.startingY = this.getY();
             this.startingMouseX = mouseX;
             this.startingMouseY = mouseY;
+            this.setFocused();
             return true;
         }
         return false;

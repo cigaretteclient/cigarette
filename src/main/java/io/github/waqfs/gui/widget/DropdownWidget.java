@@ -11,6 +11,7 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType> extends Pas
     protected Widget header;
     protected ScrollableWidget<BaseWidget<?>> container;
     private boolean dropdownVisible = false;
+    private boolean dropdownWasVisible = false;
     private boolean dropdownIndicator = true;
 
     public DropdownWidget(Text message, @Nullable Text tooltip) {
@@ -40,6 +41,15 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType> extends Pas
     }
 
     @Override
+    public void unfocus() {
+        if (this.header != null) this.header.unfocus();
+        this.setFocused(false);
+        dropdownWasVisible = dropdownVisible;
+        dropdownVisible = false;
+        super.unfocus();
+    }
+
+    @Override
     public void mouseMoved(double mouseX, double mouseY) {
         if (this.header != null) this.header.mouseMoved(mouseX, mouseY);
         if (dropdownVisible) super.mouseMoved(mouseX, mouseY);
@@ -48,16 +58,21 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType> extends Pas
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (isMouseOver(mouseX, mouseY)) {
+            this.setFocused();
             if (this.header == null) return false;
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && this.header.mouseClicked(mouseX, mouseY, button)) {
                 return true;
             }
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT || button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-                dropdownVisible = children != null && !dropdownVisible;
+                dropdownVisible = children != null && !dropdownWasVisible;
             }
             return true;
         }
-        return dropdownVisible && super.mouseClicked(mouseX, mouseY, button);
+        boolean captured = dropdownWasVisible && super.mouseClicked(mouseX, mouseY, button);
+        this.setFocused(captured);
+        this.dropdownVisible = captured;
+        this.dropdownWasVisible = dropdownVisible;
+        return captured;
     }
 
     @Override
@@ -88,7 +103,7 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType> extends Pas
         if (this.container.children.length > 0 && dropdownIndicator) {
             context.drawHorizontalLine(right - 10, right - 4, top + (height / 2), CigaretteScreen.SECONDARY_COLOR);
         }
-        if (!dropdownVisible) return;
+        if (!dropdownVisible || !this.focused) return;
         Scissor.pushExclusive(context, right, top, right + this.container.getWidth(), top + this.container.getHeight());
         this.container.withXY(right + childLeftOffset, top).renderWidget(context, mouseX, mouseY, deltaTicks);
         Scissor.popExclusive();

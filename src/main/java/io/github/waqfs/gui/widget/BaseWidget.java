@@ -15,6 +15,7 @@ import java.util.function.Consumer;
 public abstract class BaseWidget<StateType> extends ClickableWidget {
     private StateType defaultState;
     private StateType state;
+    protected boolean focused = false;
     protected boolean captureHover = false;
     protected boolean hovered = false;
     protected String configKey;
@@ -86,6 +87,18 @@ public abstract class BaseWidget<StateType> extends ClickableWidget {
     protected BaseWidget<StateType> captureHover() {
         this.captureHover = true;
         return this;
+    }
+
+    public void setFocused(boolean state) {
+        this.focused = state;
+    }
+
+    public void setFocused() {
+        this.focused = true;
+    }
+
+    public void unfocus() {
+        this.focused = false;
     }
 
     @Override

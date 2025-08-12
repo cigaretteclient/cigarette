@@ -186,6 +186,11 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
 
             switch (bridgeType) {
                 case STRAIGHT -> {
+                    if (!rightKey.isPressed() && !leftKey.isPressed()) {
+                        disable();
+                        return;
+                    }
+
                     InputOverride.jumpKey = jumpKey.isPressed();
                     InputOverride.sneakKey = shiftDiabledTicks-- <= 0;
 

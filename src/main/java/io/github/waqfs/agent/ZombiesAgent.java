@@ -10,6 +10,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.*;
 import net.minecraft.entity.passive.WolfEntity;
 import net.minecraft.item.ItemStack;
@@ -51,7 +52,7 @@ public class ZombiesAgent extends BaseAgent {
     public static @Nullable ZombieTarget getClosestZombie() {
         ZombieTarget closest = null;
         for (ZombieTarget zombie : zombies) {
-            if (!zombie.canShoot) continue;
+            if (!zombie.canShoot || zombie.isDead()) continue;
             if (closest == null || zombie.distance < closest.distance) {
                 closest = zombie;
             }
@@ -68,14 +69,17 @@ public class ZombiesAgent extends BaseAgent {
     protected void onValidTick(MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
         zombies.removeIf(ZombieTarget::isDead);
         for (Entity zombie : world.getEntities()) {
+            if (!(zombie instanceof LivingEntity livingEntity)) continue;
             if (ZombieType.from(zombie) == ZombieType.UNKNOWN) continue;
 
-            ZombieTarget target = ZombieTarget.create(zombie);
+            ZombieTarget target = ZombieTarget.create(livingEntity);
             target.distance = player.distanceTo(zombie);
 
 //            Headshot Detection
             Vec3d start = player.getEyePos();
-            Vec3d end = zombie.getEyePos().add(zombie.getVelocity().multiply(5));
+            Vec3d zombieVelocity = zombie.getPos().subtract(zombie.lastX, zombie.lastY, zombie.lastZ);
+            float factor = 6f * Math.min(target.distance / 30, 1);
+            Vec3d end = zombie.getEyePos().add(zombieVelocity.multiply(factor, factor / 2, factor));
             target.end = end;
             Raycast.FirstBlock result = Raycast.firstBlockCollision(start, end, this::isNoClipBlock);
             if ((result.hit() && result.whitelisted()) || result.missed()) {
@@ -99,7 +103,7 @@ public class ZombiesAgent extends BaseAgent {
     }
 
     public static class ZombieTarget {
-        public final Entity entity;
+        public final LivingEntity entity;
         public final ZombieType type;
         public final UUID uuid;
         private @Nullable Vec3d end = null;
@@ -107,17 +111,17 @@ public class ZombiesAgent extends BaseAgent {
         private boolean canShoot = false;
         private boolean canHeadshot = false;
 
-        private ZombieTarget(Entity entity) {
+        private ZombieTarget(LivingEntity entity) {
             this.entity = entity;
             this.type = ZombieType.from(entity);
             this.uuid = entity.getUuid();
         }
 
         public boolean isDead() {
-            return !this.entity.isAlive() || (this.entity.getEyeY() - this.entity.getY() < 0.1);
+            return this.entity.getHealth() <= 0.0f;
         }
 
-        private static ZombieTarget create(Entity entity) {
+        private static ZombieTarget create(LivingEntity entity) {
             for (ZombieTarget target : zombies) {
                 if (target.entity == entity) return target;
             }
@@ -167,6 +171,7 @@ public class ZombiesAgent extends BaseAgent {
             if (entity instanceof SkeletonEntity) return SKELETON;
             if (entity instanceof CreeperEntity) return CREEPER;
             if (entity instanceof MagmaCubeEntity) return MAGMACUBE;
+            if (entity instanceof SlimeEntity) return SLIME;
             if (entity instanceof WitchEntity) return WITCH;
             if (entity instanceof EndermiteEntity) return ENDERMITE;
             if (entity instanceof SilverfishEntity) return SILVERFISH;

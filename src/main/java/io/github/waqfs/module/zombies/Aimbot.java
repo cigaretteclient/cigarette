@@ -7,6 +7,7 @@ import io.github.waqfs.lib.PlayerEntityL;
 import io.github.waqfs.module.TickModule;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
@@ -16,16 +17,26 @@ public class Aimbot extends TickModule<ToggleWidget, Boolean> {
     protected static final String MODULE_TOOLTIP = "Automatically aims at zombies.";
     protected static final String MODULE_ID = "zombies.aimbot";
 
+    private KeyBinding rightClickKey = null;
+
     public Aimbot() {
         super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
     }
 
     @Override
     protected void onEnabledTick(MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
-        ZombiesAgent.ZombieTarget closest = ZombiesAgent.getClosestZombie();
-        if (closest == null) return;
-        Vec3d vector = closest.getDirectionVector(player);
-        PlayerEntityL.setRotationVector(player, vector);
+        if (rightClickKey == null) {
+            rightClickKey = KeyBinding.byId("key.use");
+            return;
+        }
+        if (rightClickKey.isPressed()) {
+            if (ZombiesAgent.isGun(player.getMainHandStack())) {
+                ZombiesAgent.ZombieTarget closest = ZombiesAgent.getClosestZombie();
+                if (closest == null) return;
+                Vec3d vector = closest.getDirectionVector(player);
+                PlayerEntityL.setRotationVector(player, vector);
+            }
+        }
     }
 
     @Override

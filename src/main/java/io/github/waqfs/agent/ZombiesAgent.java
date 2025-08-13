@@ -4,13 +4,19 @@ import io.github.waqfs.GameDetector;
 import io.github.waqfs.gui.widget.ToggleWidget;
 import io.github.waqfs.lib.Raycast;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.enums.SlabType;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.mob.*;
 import net.minecraft.entity.passive.WolfEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.registry.tag.BlockTags;
+import net.minecraft.registry.tag.ItemTags;
+import net.minecraft.state.property.Properties;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,7 +32,11 @@ public class ZombiesAgent extends BaseAgent {
     }
 
     private boolean isNoClipBlock(BlockState state) {
-        return state.isIn(BlockTags.SLABS);
+        if (state.isIn(BlockTags.SLABS)) {
+            @Nullable SlabType doubleSlab = state.getOrEmpty(Properties.SLAB_TYPE).orElse(null);
+            return doubleSlab != SlabType.DOUBLE;
+        }
+        return state.isOf(Blocks.IRON_BARS);
     }
 
     public static HashSet<ZombieTarget> getZombies() {
@@ -49,6 +59,11 @@ public class ZombiesAgent extends BaseAgent {
         return closest;
     }
 
+    public static boolean isGun(ItemStack item) {
+        if (item.isOf(Items.IRON_SWORD)) return false;
+        return item.isIn(ItemTags.WEAPON_ENCHANTABLE) || item.isIn(ItemTags.HOES) || item.isIn(ItemTags.SHOVELS) || item.isIn(ItemTags.AXES) || item.isIn(ItemTags.PICKAXES);
+    }
+
     @Override
     protected void onValidTick(MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
         zombies.removeIf(ZombieTarget::isDead);
@@ -60,7 +75,8 @@ public class ZombiesAgent extends BaseAgent {
 
 //            Headshot Detection
             Vec3d start = player.getEyePos();
-            Vec3d end = zombie.getEyePos();
+            Vec3d end = zombie.getEyePos().add(zombie.getVelocity().multiply(5));
+            target.end = end;
             Raycast.FirstBlock result = Raycast.firstBlockCollision(start, end, this::isNoClipBlock);
             if ((result.hit() && result.whitelisted()) || result.missed()) {
                 target.canShoot = true;
@@ -86,6 +102,7 @@ public class ZombiesAgent extends BaseAgent {
         public final Entity entity;
         public final ZombieType type;
         public final UUID uuid;
+        private @Nullable Vec3d end = null;
         private float distance = 0;
         private boolean canShoot = false;
         private boolean canHeadshot = false;
@@ -97,7 +114,7 @@ public class ZombiesAgent extends BaseAgent {
         }
 
         public boolean isDead() {
-            return !this.entity.isAlive();
+            return !this.entity.isAlive() || (this.entity.getEyeY() - this.entity.getY() < 0.1);
         }
 
         private static ZombieTarget create(Entity entity) {
@@ -113,6 +130,10 @@ public class ZombiesAgent extends BaseAgent {
             return this.distance;
         }
 
+        public Vec3d getEndVec() {
+            return this.end != null ? this.end : this.entity.getEyePos();
+        }
+
         public boolean canShoot() {
             return this.canShoot;
         }
@@ -122,12 +143,12 @@ public class ZombiesAgent extends BaseAgent {
         }
 
         public Vec3d getDirectionVector(ClientPlayerEntity player) {
-            return entity.getEyePos().subtract(player.getEyePos());
+            return this.getEndVec().subtract(player.getEyePos());
         }
     }
 
     public enum ZombieType {
-        UNKNOWN(0), ZOMBIE(1), BLAZE(2), WOLF(3), SKELETON(4), CREEPER(5), MAGMACUBE(6), SLIME(7), WITCH(8);
+        UNKNOWN(0), ZOMBIE(1), BLAZE(2), WOLF(3), SKELETON(4), CREEPER(5), MAGMACUBE(6), SLIME(7), WITCH(8), ENDERMITE(9), SILVERFISH(10);
 
         private final int id;
 
@@ -147,6 +168,8 @@ public class ZombiesAgent extends BaseAgent {
             if (entity instanceof CreeperEntity) return CREEPER;
             if (entity instanceof MagmaCubeEntity) return MAGMACUBE;
             if (entity instanceof WitchEntity) return WITCH;
+            if (entity instanceof EndermiteEntity) return ENDERMITE;
+            if (entity instanceof SilverfishEntity) return SILVERFISH;
             return UNKNOWN;
         }
     }

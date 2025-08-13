@@ -28,11 +28,14 @@ public class ZombieESP extends TickModule<ToggleWidget, Boolean> {
     private final ColorDropdownWidget<ToggleWidget, Boolean> enableMagmaCubes = ColorDropdownWidget.buildToggle(Text.literal("Magma Cubes"), null).withAlpha(false).withDefaultColor(0xFFFC4619).withDefaultState(true);
     private final ColorDropdownWidget<ToggleWidget, Boolean> enableSlimes = ColorDropdownWidget.buildToggle(Text.literal("Slimes"), null).withAlpha(false).withDefaultColor(0xFF6DFC5D).withDefaultState(true);
     private final ColorDropdownWidget<ToggleWidget, Boolean> enableWitches = ColorDropdownWidget.buildToggle(Text.literal("Witches"), null).withAlpha(false).withDefaultColor(0xFFA625F7).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableEndermite = ColorDropdownWidget.buildToggle(Text.literal("Endermite"), null).withAlpha(false).withDefaultColor(0xFFA625F7).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableSilverfish = ColorDropdownWidget.buildToggle(Text.literal("Silverish"), null).withAlpha(false).withDefaultColor(0xFF3F3F3F).withDefaultState(true);
+
 
     public ZombieESP() {
         super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
         TextWidget header = new TextWidget(Text.literal("Types")).withUnderline();
-        this.setChildren(header, enableZombies, enableBlazes, enableWolves, enableCreepers, enableMagmaCubes, enableSlimes, enableWitches);
+        this.setChildren(header, enableZombies, enableBlazes, enableWolves, enableCreepers, enableMagmaCubes, enableSlimes, enableWitches, enableEndermite, enableSilverfish);
         enableZombies.registerConfigKey("zombies.zombieesp.zombies");
         enableBlazes.registerConfigKey("zombies.zombieesp.blazes");
         enableWolves.registerConfigKey("zombies.zombieesp.wolves");
@@ -40,6 +43,8 @@ public class ZombieESP extends TickModule<ToggleWidget, Boolean> {
         enableMagmaCubes.registerConfigKey("zombies.zombieesp.magmacubes");
         enableSlimes.registerConfigKey("zombies.zombieesp.slimes");
         enableWitches.registerConfigKey("zombies.zombieesp.witches");
+        enableEndermite.registerConfigKey("zombies.zombieesp.endermite");
+        enableSilverfish.registerConfigKey("zombies.zombieesp.silverfish");
     }
 
     private void addGlow(ColorDropdownWidget<ToggleWidget, Boolean> widget, UUID uuid) {
@@ -60,7 +65,8 @@ public class ZombieESP extends TickModule<ToggleWidget, Boolean> {
                 case MAGMACUBE -> addGlow(enableMagmaCubes, zombie.uuid);
                 case SLIME -> addGlow(enableSlimes, zombie.uuid);
                 case WITCH -> addGlow(enableWitches, zombie.uuid);
-
+                case ENDERMITE -> addGlow(enableEndermite, zombie.uuid);
+                case SILVERFISH -> addGlow(enableSilverfish, zombie.uuid);
             }
         }
     }

@@ -80,7 +80,12 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>> extends Passthrough
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        return (this.header != null && this.header.mouseClicked(mouseX, mouseY, button)) || super.mouseClicked(mouseX, mouseY, button);
+        boolean wasHandled = this.header != null && this.header.mouseClicked(mouseX, mouseY, button);
+        if (wasHandled) {
+            super.unfocus();
+            return true;
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override

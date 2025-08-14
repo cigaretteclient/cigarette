@@ -38,7 +38,7 @@ public class ZombiesAgent extends BaseAgent {
             @Nullable SlabType doubleSlab = state.getOrEmpty(Properties.SLAB_TYPE).orElse(null);
             return doubleSlab != SlabType.DOUBLE;
         }
-        return state.isOf(Blocks.IRON_BARS);
+        return state.isOf(Blocks.IRON_BARS) || state.isOf(Blocks.BARRIER);
     }
 
     public static HashSet<ZombieTarget> getZombies() {

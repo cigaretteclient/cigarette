@@ -6,11 +6,15 @@ import io.github.waqfs.gui.widget.SliderWidget;
 import io.github.waqfs.gui.widget.ToggleWidget;
 import io.github.waqfs.lib.PlayerEntityL;
 import io.github.waqfs.module.TickModule;
+import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.text.Text;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 
@@ -38,6 +42,12 @@ public class Aimbot extends TickModule<ToggleWidget, Boolean> {
             return;
         }
         if (rightClickKey.isPressed()) {
+            HitResult hitResult = client.crosshairTarget;
+            if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK) {
+                BlockHitResult blockResult = (BlockHitResult) hitResult;
+                BlockState lookingAt = world.getBlockState(blockResult.getBlockPos());
+                if (lookingAt.isIn(BlockTags.BUTTONS)) return;
+            }
             if (ZombiesAgent.isGun(player.getMainHandStack())) {
                 ZombiesAgent.ZombieTarget closest = nearCrosshair.getRawState() ? ZombiesAgent.getClosestZombieTo(player, crosshairAngle.getRawState().floatValue()) : ZombiesAgent.getClosestZombie();
                 if (closest == null) return;

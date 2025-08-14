@@ -31,13 +31,6 @@ public class CigaretteScreen extends Screen {
         this.parent = parent;
     }
 
-    private void unfocusChildren() {
-        for (BaseWidget<?> child : priority) {
-            child.unfocus();
-            child.setFocused();
-        }
-    }
-
     @Override
     protected void init() {
         for (Category category : Cigarette.CONFIG.allCategories) {
@@ -51,7 +44,6 @@ public class CigaretteScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        unfocusChildren();
         for (BaseWidget<?> child : priority) {
             boolean handled = child.mouseClicked(mouseX, mouseY, button);
             if (handled) {
@@ -104,7 +96,6 @@ public class CigaretteScreen extends Screen {
     public void close() {
         assert client != null;
         client.setScreen(parent);
-        unfocusChildren();
     }
 
     @Override

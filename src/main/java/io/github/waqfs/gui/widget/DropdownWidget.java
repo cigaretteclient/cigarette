@@ -1,7 +1,7 @@
 package io.github.waqfs.gui.widget;
 
 import io.github.waqfs.gui.CigaretteScreen;
-import io.github.waqfs.gui.util.Scissor;
+import io.github.waqfs.gui.Scissor;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;

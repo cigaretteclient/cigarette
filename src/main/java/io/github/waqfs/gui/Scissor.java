@@ -1,4 +1,4 @@
-package io.github.waqfs.gui.util;
+package io.github.waqfs.gui;
 
 import net.minecraft.client.gui.DrawContext;
 

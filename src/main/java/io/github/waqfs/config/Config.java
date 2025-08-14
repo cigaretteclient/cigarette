@@ -2,7 +2,7 @@ package io.github.waqfs.config;
 
 import io.github.waqfs.Cigarette;
 import io.github.waqfs.agent.DevWidget;
-import io.github.waqfs.gui.instance.Category;
+import io.github.waqfs.gui.CategoryInstance;
 import io.github.waqfs.module.bedwars.*;
 import io.github.waqfs.module.keybind.AddGlassBlock;
 import io.github.waqfs.module.keybind.BreakBlock;
@@ -11,12 +11,12 @@ import io.github.waqfs.module.murdermystery.GoldESP;
 import io.github.waqfs.module.zombies.ZombieESP;
 
 public class Config {
-    public Category keybinds = new Category("Keybinds", 10, 10);
-    public Category murderMystery = new Category("Murder Mystery", 120, 10);
-    public Category bedwars = new Category("Bed Wars", 230, 10);
-    public Category zombies = new Category("Zombies", 340, 10);
+    public CategoryInstance keybinds = new CategoryInstance("Keybinds", 10, 10);
+    public CategoryInstance murderMystery = new CategoryInstance("Murder Mystery", 120, 10);
+    public CategoryInstance bedwars = new CategoryInstance("Bed Wars", 230, 10);
+    public CategoryInstance zombies = new CategoryInstance("Zombies", 340, 10);
 
-    public Category[] allCategories = new Category[]{keybinds, murderMystery, bedwars, zombies, Cigarette.IN_DEV_ENVIRONMENT ? DevWidget.category : null};
+    public CategoryInstance[] allCategories = new CategoryInstance[]{keybinds, murderMystery, bedwars, zombies, Cigarette.IN_DEV_ENVIRONMENT ? DevWidget.CATEGORY_INSTANCE : null};
 
     public Config() {
         this.keybinds.attach(new AddGlassBlock(), new BreakBlock(), new VClip());

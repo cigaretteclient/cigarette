@@ -7,6 +7,7 @@ import io.github.waqfs.gui.widget.ToggleWidget;
 import io.github.waqfs.lib.PlayerEntityL;
 import io.github.waqfs.module.TickModule;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.KeyBinding;
@@ -46,7 +47,7 @@ public class Aimbot extends TickModule<ToggleWidget, Boolean> {
             if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK) {
                 BlockHitResult blockResult = (BlockHitResult) hitResult;
                 BlockState lookingAt = world.getBlockState(blockResult.getBlockPos());
-                if (lookingAt.isIn(BlockTags.BUTTONS)) return;
+                if (lookingAt.isIn(BlockTags.BUTTONS) || lookingAt.isOf(Blocks.CHEST)) return;
             }
             if (ZombiesAgent.isGun(player.getMainHandStack())) {
                 ZombiesAgent.ZombieTarget closest = nearCrosshair.getRawState() ? ZombiesAgent.getClosestZombieTo(player, crosshairAngle.getRawState().floatValue()) : ZombiesAgent.getClosestZombie();

@@ -11,6 +11,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.*;
 import net.minecraft.entity.passive.WolfEntity;
@@ -90,10 +91,10 @@ public class ZombiesAgent extends BaseAgent {
             target.distance = player.distanceTo(zombie);
 
 //            Headshot Detection
-            Vec3d start = player.getEyePos();
+            Vec3d start = player.getPos().add(0, player.getEyeHeight(EntityPose.STANDING), 0);
             Vec3d zombieVelocity = zombie.getPos().subtract(zombie.lastX, zombie.lastY, zombie.lastZ);
             float factor = 6f * Math.min(target.distance / 30, 1);
-            Vec3d end = zombie.getEyePos().add(zombieVelocity.multiply(factor, factor / 2, factor));
+            Vec3d end = zombie.getEyePos().add(zombieVelocity.multiply(factor, 0.2, factor));
             target.end = end;
             Raycast.FirstBlock result = Raycast.firstBlockCollision(start, end, this::isNoClipBlock);
             if ((result.hit() && result.whitelisted()) || result.missed()) {
@@ -161,7 +162,7 @@ public class ZombiesAgent extends BaseAgent {
         }
 
         public Vec3d getDirectionVector(Entity player) {
-            return this.getEndVec().subtract(player.getEyePos());
+            return this.getEndVec().subtract(player.getPos().add(0, player.getEyeHeight(EntityPose.STANDING), 0));
         }
 
         public float angleTo(Entity entity) {

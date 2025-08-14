@@ -2,6 +2,7 @@ package io.github.waqfs.agent;
 
 import io.github.waqfs.GameDetector;
 import io.github.waqfs.gui.widget.ToggleWidget;
+import io.github.waqfs.lib.PlayerEntityL;
 import io.github.waqfs.lib.Raycast;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -56,6 +57,19 @@ public class ZombiesAgent extends BaseAgent {
             if (closest == null || zombie.distance < closest.distance) {
                 closest = zombie;
             }
+        }
+        return closest;
+    }
+
+    public static @Nullable ZombieTarget getClosestZombieTo(Entity entity, float maxAngle) {
+        ZombieTarget closest = null;
+        float closestAngle = Float.MAX_VALUE;
+        for (ZombieTarget zombie : zombies) {
+            if (!zombie.canShoot || zombie.isDead()) continue;
+            float angle = zombie.angleTo(entity);
+            if (angle > maxAngle || angle >= closestAngle) continue;
+            closest = zombie;
+            closestAngle = zombie.angleTo(entity);
         }
         return closest;
     }
@@ -146,8 +160,14 @@ public class ZombiesAgent extends BaseAgent {
             return this.canHeadshot;
         }
 
-        public Vec3d getDirectionVector(ClientPlayerEntity player) {
+        public Vec3d getDirectionVector(Entity player) {
             return this.getEndVec().subtract(player.getEyePos());
+        }
+
+        public float angleTo(Entity entity) {
+            if (this.end == null) return 0;
+            float[] yawPitch = PlayerEntityL.getRotationVectorInDirection(this.getDirectionVector(entity));
+            return PlayerEntityL.angleBetween(entity.getYaw(), entity.getPitch(), yawPitch[0], yawPitch[1]);
         }
     }
 

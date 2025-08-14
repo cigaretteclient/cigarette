@@ -12,7 +12,7 @@ public class PlayerEntityL {
         return stack;
     }
 
-    public static void setRotationVector(PlayerEntity player, Vec3d vector) {
+    public static float[] getRotationVectorInDirection(Vec3d vector) {
         Vec3d normalized = vector.normalize();
         double pitchRadians = Math.asin(-normalized.y);
         float pitch = (float) Math.toDegrees(pitchRadians);
@@ -20,7 +20,18 @@ public class PlayerEntityL {
         float yaw = (float) Math.toDegrees(yawRadians) - 90f;
         yaw %= 360f;
         if (yaw < 0) yaw += 360f;
-        player.setYaw(yaw);
-        player.setPitch(pitch);
+        return new float[]{yaw, pitch};
+    }
+
+    public static void setRotationVector(PlayerEntity player, Vec3d vector) {
+        float[] yawPitch = getRotationVectorInDirection(vector);
+        player.setYaw(yawPitch[0]);
+        player.setPitch(yawPitch[1]);
+    }
+
+    public static float angleBetween(float yaw, float pitch, float yaw2, float pitch2) {
+        float yawDiff = Math.abs(((yaw2 - yaw + 180) % 360) - 180);
+        float pitchDiff = Math.abs(pitch2 - pitch);
+        return (float) Math.sqrt(yawDiff * yawDiff + pitchDiff * pitchDiff) % 360;
     }
 }

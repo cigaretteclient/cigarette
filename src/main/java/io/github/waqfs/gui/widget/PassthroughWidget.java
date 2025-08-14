@@ -43,14 +43,15 @@ public abstract class PassthroughWidget<ChildType extends BaseWidget<?>, StateTy
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (children == null) return false;
         boolean wasHandled = false;
-        for (Element child : children) {
+        for (BaseWidget<?> child : children) {
             if (child == null) continue;
             if (wasHandled) {
-                child.setFocused(false);
+                child.unfocus();
                 continue;
             }
             wasHandled = child.mouseClicked(mouseX, mouseY, button);
-            this.setFocused(wasHandled);
+            if (!wasHandled) child.unfocus();
+            else child.setFocused();
         }
         return wasHandled;
     }

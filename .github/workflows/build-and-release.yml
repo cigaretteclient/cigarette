@@ -23,7 +23,7 @@ jobs:
           distribution: 'adopt'
 
       - name: Set Mod Version
-        run: sed -i "s/development_build/${GITHUB_REF##*/}" gradle.properties 
+        run: sed -i "s/development_build/${GITHUB_REF##*/}/" gradle.properties 
 
       - name: Build with Gradle
         run: ./gradlew build

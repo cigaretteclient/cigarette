@@ -28,10 +28,11 @@ public class Config {
     public final AutoClicker COMBAT_AUTOCLICKER = new AutoClicker();
     public final JumpReset COMBAT_JUMP_RESET = new JumpReset();
     public final PerfectHit COMBAT_PERFECT_HIT = new PerfectHit();
+    public final io.github.waqfs.module.murdermystery.PlayerESP MYSTERY_PLAYERESP = new io.github.waqfs.module.murdermystery.PlayerESP();
 
     public Config() {
         this.keybinds.attach(new AddGlassBlock(), new BreakBlock(), new VClip());
-        this.murderMystery.attach(new io.github.waqfs.module.murdermystery.PlayerESP(), new GoldESP());
+        this.murderMystery.attach(MYSTERY_PLAYERESP, new GoldESP());
         this.bedwars.attach(new FireballESP(), new EntityESP(), new DefenseViewer(), new AutoTool(), new Bridger());
         this.zombies.attach(new ZombieESP());
         this.combat.attach(COMBAT_AUTOCLICKER, COMBAT_JUMP_RESET, COMBAT_PERFECT_HIT);

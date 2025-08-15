@@ -1,5 +1,6 @@
 package io.github.waqfs.module.render;
 
+import io.github.waqfs.Cigarette;
 import io.github.waqfs.gui.widget.BaseWidget;
 import io.github.waqfs.gui.widget.ColorDropdownWidget;
 import io.github.waqfs.gui.widget.TextWidget;
@@ -50,5 +51,10 @@ public class PlayerESP extends TickModule<ToggleWidget, Boolean> {
     @Override
     protected void onDisabledTick(MinecraftClient client) {
         this.glowContext.removeAll();
+    }
+
+    @Override
+    public boolean inValidGame() {
+        return !Cigarette.CONFIG.MYSTERY_PLAYERESP.isRunning();
     }
 }

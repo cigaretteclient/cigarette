@@ -109,7 +109,7 @@ public class BedwarsAgent extends BaseAgent {
     }
 
     @Override
-    protected boolean inValidGame() {
+    public boolean inValidGame() {
         return GameDetector.rootGame == GameDetector.ParentGame.BEDWARS;
     }
 

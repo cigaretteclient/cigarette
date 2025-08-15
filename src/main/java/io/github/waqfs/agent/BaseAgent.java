@@ -27,7 +27,7 @@ public abstract class BaseAgent {
         return (Cigarette.IN_DEV_ENVIRONMENT && devToggle != null && devToggle.getRawState()) || this.inValidGame();
     }
 
-    protected abstract boolean inValidGame();
+    public abstract boolean inValidGame();
 
     protected abstract void onValidTick(MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player);
 

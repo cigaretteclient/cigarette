@@ -26,7 +26,7 @@ public abstract class TickModule<Widget extends BaseWidget<Boolean>, Boolean> ex
         return this.inValidGame();
     }
 
-    protected boolean inValidGame() {
+    public boolean inValidGame() {
         return true;
     }
 

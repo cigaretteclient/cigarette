@@ -1,6 +1,6 @@
 package io.github.waqfs.module.combat;
 
-import io.github.waqfs.agent.BedwarsAgent;
+import io.github.waqfs.Cigarette;
 import io.github.waqfs.gui.widget.ToggleWidget;
 import io.github.waqfs.mixin.MinecraftClientInvoker;
 import io.github.waqfs.module.TickModule;
@@ -24,7 +24,6 @@ public class PerfectHit extends TickModule<ToggleWidget, Boolean> {
 
     public PerfectHit() {
         super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
-        BedwarsAgent.perfectHitModule = this;
     }
 
     @Override
@@ -54,6 +53,6 @@ public class PerfectHit extends TickModule<ToggleWidget, Boolean> {
 
     @Override
     protected void whenEnabled() {
-        BedwarsAgent.autoClickerModule.widget.setRawState(false);
+        Cigarette.CONFIG.COMBAT_AUTOCLICKER.widget.setRawState(false);
     }
 }

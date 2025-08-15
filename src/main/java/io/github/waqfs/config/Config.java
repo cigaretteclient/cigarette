@@ -25,14 +25,16 @@ public class Config {
 
     public CategoryInstance[] allCategories = new CategoryInstance[]{keybinds, combat, render, murderMystery, bedwars, zombies, Cigarette.IN_DEV_ENVIRONMENT ? DevWidget.CATEGORY_INSTANCE : null};
 
+    public final AutoClicker COMBAT_AUTOCLICKER = new AutoClicker();
     public final JumpReset COMBAT_JUMP_RESET = new JumpReset();
+    public final PerfectHit COMBAT_PERFECT_HIT = new PerfectHit();
 
     public Config() {
         this.keybinds.attach(new AddGlassBlock(), new BreakBlock(), new VClip());
         this.murderMystery.attach(new io.github.waqfs.module.murdermystery.PlayerESP(), new GoldESP());
         this.bedwars.attach(new FireballESP(), new EntityESP(), new DefenseViewer(), new AutoTool(), new Bridger());
         this.zombies.attach(new io.github.waqfs.module.zombies.PlayerESP(), new ZombieESP());
-        this.combat.attach(new AutoClicker(), COMBAT_JUMP_RESET, new PerfectHit());
+        this.combat.attach(COMBAT_AUTOCLICKER, COMBAT_JUMP_RESET, COMBAT_PERFECT_HIT);
         this.render.attach(new PlayerESP(), new ProjectileESP());
     }
 }

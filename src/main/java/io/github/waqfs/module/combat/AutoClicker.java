@@ -1,6 +1,6 @@
 package io.github.waqfs.module.combat;
 
-import io.github.waqfs.agent.BedwarsAgent;
+import io.github.waqfs.Cigarette;
 import io.github.waqfs.gui.widget.SliderWidget;
 import io.github.waqfs.gui.widget.ToggleWidget;
 import io.github.waqfs.mixin.KeyBindingAccessor;
@@ -23,7 +23,6 @@ public class AutoClicker extends TickModule<ToggleWidget, Boolean> {
         super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
         this.setChildren(clickPercent);
         clickPercent.registerConfigKey("combat.autoclicker.clickpercent");
-        BedwarsAgent.autoClickerModule = this;
     }
 
     @Override
@@ -41,6 +40,6 @@ public class AutoClicker extends TickModule<ToggleWidget, Boolean> {
 
     @Override
     protected void whenEnabled() {
-        BedwarsAgent.perfectHitModule.widget.setRawState(false);
+        Cigarette.CONFIG.COMBAT_PERFECT_HIT.widget.setRawState(false);
     }
 }

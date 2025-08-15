@@ -1,7 +1,7 @@
 package io.github.waqfs.gui.widget;
 
 import io.github.waqfs.gui.CigaretteScreen;
-import io.github.waqfs.gui.util.Scissor;
+import io.github.waqfs.gui.Scissor;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
@@ -11,7 +11,6 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType> extends Pas
     protected Widget header;
     protected ScrollableWidget<BaseWidget<?>> container;
     private boolean dropdownVisible = false;
-    private boolean dropdownWasVisible = false;
     private boolean dropdownIndicator = true;
 
     public DropdownWidget(Text message, @Nullable Text tooltip) {
@@ -44,8 +43,7 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType> extends Pas
     public void unfocus() {
         if (this.header != null) this.header.unfocus();
         this.setFocused(false);
-        dropdownWasVisible = dropdownVisible;
-        dropdownVisible = false;
+        this.dropdownVisible = false;
         super.unfocus();
     }
 
@@ -64,14 +62,13 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType> extends Pas
                 return true;
             }
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT || button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-                dropdownVisible = children != null && !dropdownWasVisible;
+                dropdownVisible = children != null && !dropdownVisible;
             }
             return true;
         }
-        boolean captured = dropdownWasVisible && super.mouseClicked(mouseX, mouseY, button);
+        boolean captured = dropdownVisible && super.mouseClicked(mouseX, mouseY, button);
         this.setFocused(captured);
         this.dropdownVisible = captured;
-        this.dropdownWasVisible = dropdownVisible;
         return captured;
     }
 

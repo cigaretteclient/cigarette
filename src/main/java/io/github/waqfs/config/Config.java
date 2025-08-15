@@ -23,7 +23,7 @@ public class Config {
     public CategoryInstance combat = new CategoryInstance("Combat", 450, 10);
     public CategoryInstance render = new CategoryInstance("Render", 560, 10);
 
-    public CategoryInstance[] allCategories = new CategoryInstance[]{keybinds, murderMystery, bedwars, zombies, Cigarette.IN_DEV_ENVIRONMENT ? DevWidget.CATEGORY_INSTANCE : null};
+    public CategoryInstance[] allCategories = new CategoryInstance[]{keybinds, combat, render, murderMystery, bedwars, zombies, Cigarette.IN_DEV_ENVIRONMENT ? DevWidget.CATEGORY_INSTANCE : null};
 
     public final JumpReset COMBAT_JUMP_RESET = new JumpReset();
 

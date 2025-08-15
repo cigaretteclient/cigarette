@@ -1,4 +1,4 @@
-package io.github.waqfs.module.bedwars;
+package io.github.waqfs.module.render;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
 import io.github.waqfs.GameDetector;

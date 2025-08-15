@@ -1,4 +1,4 @@
-package io.github.waqfs.module.bedwars;
+package io.github.waqfs.module.render;
 
 import io.github.waqfs.GameDetector;
 import io.github.waqfs.gui.widget.ToggleWidget;

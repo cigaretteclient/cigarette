@@ -1,6 +1,5 @@
 package io.github.waqfs.module.combat;
 
-import io.github.waqfs.GameDetector;
 import io.github.waqfs.agent.BedwarsAgent;
 import io.github.waqfs.gui.widget.ToggleWidget;
 import io.github.waqfs.mixin.MinecraftClientInvoker;
@@ -18,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 public class PerfectHit extends TickModule<ToggleWidget, Boolean> {
     protected static final String MODULE_NAME = "PerfectHit";
     protected static final String MODULE_TOOLTIP = "Perfectly times hits on opponents while holding attack.";
-    protected static final String MODULE_ID = "bedwars.perfecthit";
+    protected static final String MODULE_ID = "combat.perfecthit";
 
     private static final int COOLDOWN_TICKS = 4;
     private int cooldown = 0;
@@ -51,11 +50,6 @@ public class PerfectHit extends TickModule<ToggleWidget, Boolean> {
     @Override
     protected void onDisabledTick(MinecraftClient client) {
         if (cooldown > 0) cooldown--;
-    }
-
-    @Override
-    protected boolean inValidGame() {
-        return GameDetector.rootGame == GameDetector.ParentGame.BEDWARS && GameDetector.subGame == GameDetector.ChildGame.INSTANCED_BEDWARS;
     }
 
     @Override

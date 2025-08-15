@@ -1,6 +1,5 @@
 package io.github.waqfs.module.render;
 
-import io.github.waqfs.GameDetector;
 import io.github.waqfs.gui.widget.ToggleWidget;
 import io.github.waqfs.lib.Glow;
 import io.github.waqfs.lib.WorldL;
@@ -15,8 +14,8 @@ import java.util.UUID;
 
 public class PlayerESP extends TickModule<ToggleWidget, Boolean> {
     protected static final String MODULE_NAME = "PlayerESP";
-    protected static final String MODULE_TOOLTIP = "Highlights all the players in the game.";
-    protected static final String MODULE_ID = "bedwars.playeresp";
+    protected static final String MODULE_TOOLTIP = "Highlights all the players in the world.";
+    protected static final String MODULE_ID = "render.playeresp";
     private final Glow.Context glowContext = new Glow.Context();
 
     public PlayerESP() {
@@ -36,10 +35,5 @@ public class PlayerESP extends TickModule<ToggleWidget, Boolean> {
     @Override
     protected void onDisabledTick(MinecraftClient client) {
         this.glowContext.removeAll();
-    }
-
-    @Override
-    protected boolean inValidGame() {
-        return GameDetector.rootGame == GameDetector.ParentGame.BEDWARS && GameDetector.subGame == GameDetector.ChildGame.INSTANCED_BEDWARS;
     }
 }

@@ -1,7 +1,6 @@
 package io.github.waqfs.module.render;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
-import io.github.waqfs.GameDetector;
 import io.github.waqfs.gui.widget.ColorDropdownWidget;
 import io.github.waqfs.gui.widget.SliderWidget;
 import io.github.waqfs.gui.widget.TextWidget;
@@ -36,7 +35,7 @@ import java.util.HashSet;
 public class ProjectileESP extends RenderModule<ToggleWidget, Boolean> {
     protected static final String MODULE_NAME = "ProjectileESP";
     protected static final String MODULE_TOOLTIP = "Displays the trajectory of all projectiles.";
-    protected static final String MODULE_ID = "bedwars.projectileesp";
+    protected static final String MODULE_ID = "render.projectileesp";
     private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockespnophase", 1536, Renderer.BLOCK_ESP_NOPHASE, RenderLayer.MultiPhaseParameters.builder().build(false));
     private final HashSet<Projectile> projectiles = new HashSet<>();
     private final Glow.Context glowContext = new Glow.Context();
@@ -53,14 +52,14 @@ public class ProjectileESP extends RenderModule<ToggleWidget, Boolean> {
         super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
         TextWidget header = new TextWidget(Text.literal("Types")).withUnderline();
         this.setChildren(enableGlow, enablePrefire, customHitColor, header, enableArrows, enablePearls, enableSnowballs, enableEggs, maxTicks);
-        enableGlow.registerConfigKey("bedwars.projectileesp.glow");
-        enablePrefire.registerConfigKey("bedwars.projectileesp.prefire");
-        customHitColor.registerConfigKey("bedwars.projectileesp.collision");
-        enableArrows.registerConfigKey("bedwars.projectileesp.arrows");
-        enablePearls.registerConfigKey("bedwars.projectileesp.pearls");
-        enableSnowballs.registerConfigKey("bedwars.projectileesp.snowballs");
-        enableEggs.registerConfigKey("bedwars.projectileesp.eggs");
-        maxTicks.registerConfigKey("bedwars.projectileesp.maxticks");
+        enableGlow.registerConfigKey("render.projectileesp.glow");
+        enablePrefire.registerConfigKey("render.projectileesp.prefire");
+        customHitColor.registerConfigKey("render.projectileesp.collision");
+        enableArrows.registerConfigKey("render.projectileesp.arrows");
+        enablePearls.registerConfigKey("render.projectileesp.pearls");
+        enableSnowballs.registerConfigKey("render.projectileesp.snowballs");
+        enableEggs.registerConfigKey("render.projectileesp.eggs");
+        maxTicks.registerConfigKey("render.projectileesp.maxticks");
     }
 
     @Override
@@ -141,11 +140,6 @@ public class ProjectileESP extends RenderModule<ToggleWidget, Boolean> {
     protected void onDisabledTick(MinecraftClient client) {
         this.projectiles.clear();
         this.glowContext.removeAll();
-    }
-
-    @Override
-    protected boolean inValidGame() {
-        return GameDetector.rootGame == GameDetector.ParentGame.BEDWARS && GameDetector.subGame == GameDetector.ChildGame.INSTANCED_BEDWARS;
     }
 
     private record Projectile(Entity entity, Raycast.SteppedTrajectory trajectory, int color) {

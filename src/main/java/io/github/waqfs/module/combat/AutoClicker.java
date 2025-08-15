@@ -1,6 +1,5 @@
 package io.github.waqfs.module.combat;
 
-import io.github.waqfs.GameDetector;
 import io.github.waqfs.agent.BedwarsAgent;
 import io.github.waqfs.gui.widget.SliderWidget;
 import io.github.waqfs.gui.widget.ToggleWidget;
@@ -16,14 +15,14 @@ import org.jetbrains.annotations.NotNull;
 
 public class AutoClicker extends TickModule<ToggleWidget, Boolean> {
     protected static final String MODULE_NAME = "AutoClicker";
-    protected static final String MODULE_TOOLTIP = "Automatically clicks at a rate of ~18 clicks/second when holding attack.";
-    protected static final String MODULE_ID = "bedwars.autoclicker";
+    protected static final String MODULE_TOOLTIP = "Automatically clicks each tick when holding attack.";
+    protected static final String MODULE_ID = "combat.autoclicker";
     private final SliderWidget clickPercent = new SliderWidget(Text.literal("Click Percent"), Text.literal("The percentage chance for a click to occur each tick of the game while holding left-click.")).withBounds(0, 0.9, 1).withAccuracy(2);
 
     public AutoClicker() {
         super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
         this.setChildren(clickPercent);
-        clickPercent.registerConfigKey("bedwars.autoclicker.clickpercent");
+        clickPercent.registerConfigKey("combat.autoclicker.clickpercent");
         BedwarsAgent.autoClickerModule = this;
     }
 
@@ -38,11 +37,6 @@ public class AutoClicker extends TickModule<ToggleWidget, Boolean> {
         if (hitResult.getType() != HitResult.Type.BLOCK) {
             attackKeyAccessor.setTimesPressed(attackKeyAccessor.getTimesPressed() + 1);
         }
-    }
-
-    @Override
-    protected boolean inValidGame() {
-        return GameDetector.rootGame == GameDetector.ParentGame.BEDWARS && GameDetector.subGame == GameDetector.ChildGame.INSTANCED_BEDWARS;
     }
 
     @Override

@@ -144,8 +144,6 @@ public class BedwarsAgent extends BaseAgent {
         }
     }
 
-    public static boolean jumpResetEnabled = false;
-
     public static PerfectHit perfectHitModule;
     public static AutoClicker autoClickerModule;
 }

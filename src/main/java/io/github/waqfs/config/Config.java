@@ -25,12 +25,14 @@ public class Config {
 
     public CategoryInstance[] allCategories = new CategoryInstance[]{keybinds, murderMystery, bedwars, zombies, Cigarette.IN_DEV_ENVIRONMENT ? DevWidget.CATEGORY_INSTANCE : null};
 
+    public final JumpReset COMBAT_JUMP_RESET = new JumpReset();
+
     public Config() {
         this.keybinds.attach(new AddGlassBlock(), new BreakBlock(), new VClip());
         this.murderMystery.attach(new io.github.waqfs.module.murdermystery.PlayerESP(), new GoldESP());
         this.bedwars.attach(new FireballESP(), new EntityESP(), new DefenseViewer(), new AutoTool(), new Bridger());
         this.zombies.attach(new io.github.waqfs.module.zombies.PlayerESP(), new ZombieESP());
-        this.combat.attach(new AutoClicker(), new JumpReset(), new PerfectHit());
+        this.combat.attach(new AutoClicker(), COMBAT_JUMP_RESET, new PerfectHit());
         this.render.attach(new PlayerESP(), new ProjectileESP());
     }
 }

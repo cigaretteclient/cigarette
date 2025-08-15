@@ -2,8 +2,8 @@ package io.github.waqfs.agent;
 
 import io.github.waqfs.GameDetector;
 import io.github.waqfs.gui.widget.ToggleWidget;
-import io.github.waqfs.module.bedwars.AutoClicker;
-import io.github.waqfs.module.bedwars.PerfectHit;
+import io.github.waqfs.module.combat.AutoClicker;
+import io.github.waqfs.module.combat.PerfectHit;
 import net.minecraft.block.BedBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;

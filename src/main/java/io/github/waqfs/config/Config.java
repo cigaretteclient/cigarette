@@ -33,7 +33,7 @@ public class Config {
         this.keybinds.attach(new AddGlassBlock(), new BreakBlock(), new VClip());
         this.murderMystery.attach(new io.github.waqfs.module.murdermystery.PlayerESP(), new GoldESP());
         this.bedwars.attach(new FireballESP(), new EntityESP(), new DefenseViewer(), new AutoTool(), new Bridger());
-        this.zombies.attach(new io.github.waqfs.module.zombies.PlayerESP(), new ZombieESP());
+        this.zombies.attach(new ZombieESP());
         this.combat.attach(COMBAT_AUTOCLICKER, COMBAT_JUMP_RESET, COMBAT_PERFECT_HIT);
         this.render.attach(new PlayerESP(), new ProjectileESP());
     }

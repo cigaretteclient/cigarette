@@ -1,4 +1,4 @@
-package io.github.waqfs.gui.instance;
+package io.github.waqfs.gui;
 
 import io.github.waqfs.gui.widget.BaseWidget;
 import io.github.waqfs.gui.widget.ScrollableWidget;
@@ -7,15 +7,15 @@ import net.minecraft.text.Text;
 
 import java.util.HashSet;
 
-public class Category {
+public class CategoryInstance {
     public final ScrollableWidget<BaseWidget<?>> widget;
     public final HashSet<BaseModule<?, ?>> children = new HashSet<>();
 
-    public Category(String displayName, int x, int y) {
+    public CategoryInstance(String displayName, int x, int y) {
         this.widget = new ScrollableWidget<>(x, y).setHeader(Text.literal(displayName));
     }
 
-    public Category attach(BaseModule<?, ?>... children) {
+    public CategoryInstance attach(BaseModule<?, ?>... children) {
         BaseWidget<?>[] childWidgets = new BaseWidget[children.length];
         for (int i = 0; i < children.length; i++) {
             BaseModule<?, ?> module = children[i];

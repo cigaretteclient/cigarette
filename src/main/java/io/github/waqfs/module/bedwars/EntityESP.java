@@ -84,8 +84,7 @@ public class EntityESP extends TickModule<ToggleWidget, Boolean> {
     }
 
     @Override
-    protected boolean inValidGame() {
+    public boolean inValidGame() {
         return GameDetector.rootGame == GameDetector.ParentGame.BEDWARS && GameDetector.subGame == GameDetector.ChildGame.INSTANCED_BEDWARS;
     }
-
 }

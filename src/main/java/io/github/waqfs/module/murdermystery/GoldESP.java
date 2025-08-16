@@ -39,7 +39,7 @@ public class GoldESP extends TickModule<ToggleWidget, Boolean> {
     }
 
     @Override
-    protected boolean inValidGame() {
+    public boolean inValidGame() {
         return GameDetector.rootGame == GameDetector.ParentGame.MURDER_MYSTERY && GameDetector.subGame != null;
     }
 }

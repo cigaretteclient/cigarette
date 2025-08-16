@@ -6,12 +6,6 @@ import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
 
 public class PlayerEntityL {
-    public static @Nullable ItemStack getHeldItem(PlayerEntity player) {
-        ItemStack stack = player.getInventory().getSelectedStack();
-        if (stack.isEmpty()) return null;
-        return stack;
-    }
-
     public static float[] getRotationVectorInDirection(Vec3d vector) {
         Vec3d normalized = vector.normalize();
         double pitchRadians = Math.asin(-normalized.y);

@@ -1,6 +1,6 @@
 package io.github.waqfs.mixin;
 
-import io.github.waqfs.agent.BedwarsAgent;
+import io.github.waqfs.Cigarette;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class PlayerEntityMixin {
     @Inject(method = "animateDamage", at = @At("HEAD"))
     private void onDamaged(CallbackInfo ci) {
-        if (!BedwarsAgent.jumpResetEnabled) return;
+        if (!Cigarette.CONFIG.COMBAT_JUMP_RESET.getRawState()) return;
 
         PlayerEntity thisEntity = (PlayerEntity) (Object) this;
 

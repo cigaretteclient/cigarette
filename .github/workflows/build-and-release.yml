@@ -22,13 +22,17 @@ jobs:
           java-version: '21'
           distribution: 'adopt'
 
+      - name: Set Mod Version
+        run: sed -i "s/development_build/${GITHUB_REF##*/}/" gradle.properties 
+
       - name: Build with Gradle
         run: ./gradlew build
 
       - name: Rename JAR file
         run: |
-          JAR_NAME=$(ls build/libs/*.jar | grep -v '\-sources\.jar$')  
-          NEW_JAR_NAME="cigarette-${GITHUB_REF##*/}.jar"
+          MC_VERSION=$(cat gradle.properties | grep minecraft_version | cut -d '=' -f2)
+          JAR_NAME=$(ls build/libs/*.jar | grep -v '\-sources\.jar$')
+          NEW_JAR_NAME="cigarette-${GITHUB_REF##*/}+$MC_VERSION.jar"
           mv "$JAR_NAME" "build/libs/$NEW_JAR_NAME"
           echo "Renamed JAR to $NEW_JAR_NAME"
           echo "NEW_JAR_NAME=$NEW_JAR_NAME" >> $GITHUB_ENV

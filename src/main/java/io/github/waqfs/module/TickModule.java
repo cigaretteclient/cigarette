@@ -26,8 +26,12 @@ public abstract class TickModule<Widget extends BaseWidget<Boolean>, Boolean> ex
         return this.inValidGame();
     }
 
-    protected boolean inValidGame() {
+    public boolean inValidGame() {
         return true;
+    }
+
+    public final boolean isRunning() {
+        return (boolean) this.widget.getRawState() && this._inValidGame();
     }
 
     protected abstract void onEnabledTick(MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player);

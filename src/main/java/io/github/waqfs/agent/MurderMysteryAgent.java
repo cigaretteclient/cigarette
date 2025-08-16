@@ -86,7 +86,7 @@ public class MurderMysteryAgent extends BaseAgent {
 
 
     @Override
-    protected boolean inValidGame() {
+    public boolean inValidGame() {
         return GameDetector.rootGame == GameDetector.ParentGame.MURDER_MYSTERY && GameDetector.subGame != GameDetector.ChildGame.NULL;
     }
 

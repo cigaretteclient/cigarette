@@ -37,6 +37,6 @@ public class Config {
         this.bedwars.attach(new FireballESP(), new EntityESP(), new DefenseViewer(), new AutoTool(), new Bridger());
         this.zombies.attach(new ZombieESP(), new Aimbot());
         this.combat.attach(COMBAT_AUTOCLICKER, COMBAT_JUMP_RESET, COMBAT_PERFECT_HIT);
-        this.render.attach(new PlayerESP(), new ProjectileESP(), new Aimbot());
+        this.render.attach(new PlayerESP(), new ProjectileESP());
     }
 }

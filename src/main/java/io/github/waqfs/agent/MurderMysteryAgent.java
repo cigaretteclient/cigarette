@@ -3,7 +3,6 @@ package io.github.waqfs.agent;
 import io.github.waqfs.GameDetector;
 import io.github.waqfs.Language;
 import io.github.waqfs.gui.widget.ToggleWidget;
-import io.github.waqfs.lib.PlayerEntityL;
 import io.github.waqfs.lib.TextL;
 import io.github.waqfs.lib.WorldL;
 import net.minecraft.client.MinecraftClient;
@@ -101,8 +100,8 @@ public class MurderMysteryAgent extends BaseAgent {
                 if (entityPlayer.getY() < 0) continue;
                 PersistentPlayer existingPlayer = this.getOrCreatePersistentPlayer(entityPlayer);
 
-                ItemStack item = PlayerEntityL.getHeldItem(entityPlayer);
-                if (item == null) continue;
+                ItemStack item = entityPlayer.getMainHandStack();
+                if (item == ItemStack.EMPTY) continue;
                 if (this.isDetectiveItem(item)) {
                     existingPlayer.setDetective();
                     continue;

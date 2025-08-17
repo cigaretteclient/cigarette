@@ -6,6 +6,7 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 
 public class ScrollableWidget<Widgets extends BaseWidget<?>>
         extends PassthroughWidget<BaseWidget<?>, BaseWidget.Stateless> {
@@ -18,6 +19,9 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
     private double scrollPosition = 0D;
     private @Nullable DraggableWidget header;
     private int categoryOffsetIndex = 0;
+    private boolean expanded = true;
+    private int ticksOnOpen = 0;
+    private static final int MAX_TICKS_ON_OPEN = 10;
 
     @SafeVarargs
     public ScrollableWidget(int x, int y, @Nullable Text headerText, @Nullable Widgets... children) {
@@ -39,7 +43,9 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
     }
 
     private boolean updateShouldScroll() {
-        this.shouldScroll = ((children.length + (header != null ? 1 : 0)) * rowHeight) > DEFAULT_HEIGHT;
+
+        this.shouldScroll = ((children == null ? 0 : children.length) + (header != null ? 1 : 0))
+                * rowHeight > this.height;
         return this.shouldScroll;
     }
 
@@ -60,7 +66,12 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
             setY(newY);
         });
         this.header.onClick((mouseX, mouseY, button) -> {
-
+            if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+                this.expanded = !this.expanded;
+                if (!this.expanded) {
+                    this.scrollPosition = 0;
+                }
+            }
         });
         return updateChildrenSizing();
     }
@@ -96,20 +107,57 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
         super.unfocus();
     }
 
+    private double getEasedProgress() {
+        double t = ticksOnOpen / (double) MAX_TICKS_ON_OPEN;
+        return CigaretteScreen.easeOutExpo(t);
+    }
+
+    private int getHeaderHeight() {
+        return this.header != null ? this.header.getHeight() : 0;
+    }
+
+    private int getVisibleBottom(int top, int bottom) {
+        int headerHeight = getHeaderHeight();
+        int areaHeight = Math.max(0, bottom - top - headerHeight);
+        int contentHeight = (children == null ? 0 : children.length * rowHeight);
+        int maxVisible = Math.min(areaHeight, contentHeight);
+        int visibleHeight = (int) Math.round(getEasedProgress() * maxVisible);
+        return top + headerHeight + visibleHeight;
+    }
+
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        boolean wasHandled = this.header != null && this.header.mouseClicked(mouseX, mouseY, button);
-        if (wasHandled) {
-            super.unfocus();
+
+        if (this.header != null) {
+            boolean handled = this.header.mouseClicked(mouseX, mouseY, button);
+            if (handled) {
+                return true;
+            }
+        }
+
+        int top = this.getY();
+        int bottom = top + this.height;
+        int realTop = top + getHeaderHeight();
+        int realBottomInt = getVisibleBottom(top, bottom);
+
+        if (mouseY >= realTop && mouseY < realBottomInt) {
+            return super.mouseClicked(mouseX, mouseY, button);
+        }
+
+        if (isMouseOver(mouseX, mouseY)) {
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return false;
     }
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+
         if (header != null) {
-            this.header.mouseReleased(mouseX, mouseY, button);
+            boolean handled = this.header.mouseReleased(mouseX, mouseY, button);
+            if (handled) {
+                return true;
+            }
         }
         return super.mouseReleased(mouseX, mouseY, button);
     }
@@ -123,9 +171,16 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
         if (isMouseOver(mouseX, mouseY)) {
-            int rowCount = (children == null ? 0 : children.length) + (header == null ? 0 : 1);
-            scrollPosition = Math.max(0, Math.min(scrollPosition - verticalAmount * VERTICAL_SCROLL_MULTIPLIER,
-                    rowCount * rowHeight - height));
+            int top = this.getY();
+            int bottom = top + this.height;
+            int headerHeight = getHeaderHeight();
+            int areaHeight = Math.max(0, bottom - top - headerHeight);
+            int animatedArea = (int) Math.round(getEasedProgress() * areaHeight);
+            int rowCount = (children == null ? 0 : children.length);
+            int contentHeight = rowCount * rowHeight;
+            int maxScroll = Math.max(0, contentHeight - animatedArea);
+            scrollPosition = Math.max(0,
+                    Math.min(scrollPosition - verticalAmount * VERTICAL_SCROLL_MULTIPLIER, maxScroll));
             return true;
         }
         return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
@@ -135,10 +190,23 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
     public void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left,
             int top, int right, int bottom) {
         if (children != null) {
+
+            int target = this.expanded ? MAX_TICKS_ON_OPEN : 0;
+            if (this.ticksOnOpen < target) {
+                this.ticksOnOpen = Math.min(this.ticksOnOpen + 1, MAX_TICKS_ON_OPEN);
+            } else if (this.ticksOnOpen > target) {
+                this.ticksOnOpen = Math.max(this.ticksOnOpen - 1, 0);
+            }
+
             boolean hasHeader = header != null;
             int hasHeaderInt = hasHeader ? 1 : 0;
-            int realTop = top + (hasHeader ? header.getHeight() : 0);
-            Scissor.pushExclusive(context, left, realTop, right, bottom);
+            int headerHeight = getHeaderHeight();
+            int realTop = top + headerHeight;
+
+            int realBottomInt = getVisibleBottom(top, bottom);
+            int realHeight = Math.max(0, realBottomInt - realTop);
+
+            Scissor.pushExclusive(context, left, realTop, right, realBottomInt);
             for (int index = 0; index < children.length; index++) {
                 BaseWidget<?> child = children[index];
                 if (child == null)
@@ -146,21 +214,26 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
                 child.withXY(left, top - (int) scrollPosition + (index + hasHeaderInt) * rowHeight)
                         .renderWidget(context, mouseX, mouseY, deltaTicks);
             }
-            int realHeight = height - hasHeaderInt * rowHeight;
-            if (this.shouldScroll) {
-                context.fill(right - DEFAULT_SCROLLBAR_WIDTH, realTop, right, bottom, CigaretteScreen.BACKGROUND_COLOR);
-                double overflowHeight = (children.length * rowHeight) - (double) realHeight;
-                if (overflowHeight > realHeight - rowHeight) {
-                    int topMargin = (int) ((scrollPosition / overflowHeight) * (realHeight - rowHeight));
-                    context.fill(right - DEFAULT_SCROLLBAR_WIDTH, realTop + topMargin, right,
-                            realTop + topMargin + rowHeight, CigaretteScreen.SECONDARY_COLOR);
-                } else {
-                    int scrollbarHeight = realHeight - (int) overflowHeight;
-                    context.fill(right - DEFAULT_SCROLLBAR_WIDTH, realTop + (int) scrollPosition, right,
-                            realTop + (int) scrollPosition + scrollbarHeight, CigaretteScreen.SECONDARY_COLOR);
-                }
+
+            int contentHeight = children.length * rowHeight;
+            int overflowHeight = Math.max(0, contentHeight - realHeight);
+            if (overflowHeight > 0) {
+                context.fill(right - DEFAULT_SCROLLBAR_WIDTH, realTop, right, realBottomInt,
+                        CigaretteScreen.BACKGROUND_COLOR);
+                int track = Math.max(1, realHeight);
+                int knobHeight = Math.max(10, (int) Math.round((track * (double) track) / (double) contentHeight));
+                int maxKnobTravel = track - knobHeight;
+                int knobTop = (int) Math.round((scrollPosition / (double) overflowHeight) * Math.max(0, maxKnobTravel));
+                context.fill(right - DEFAULT_SCROLLBAR_WIDTH, realTop + knobTop, right, realTop + knobTop + knobHeight,
+                        CigaretteScreen.SECONDARY_COLOR);
             }
             Scissor.popExclusive();
+
+            int bottomRectTop = realBottomInt;
+            if (this.getEasedProgress() > 0.0) {
+                DraggableWidget.roundedRect(context, left, bottomRectTop, right, bottomRectTop + 4,
+                        CigaretteScreen.BACKGROUND_COLOR, 2, false, true);
+            }
         }
         if (header != null) {
             header.renderWidget(context, mouseX, mouseY, deltaTicks);

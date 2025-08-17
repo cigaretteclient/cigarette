@@ -3,13 +3,20 @@ package io.github.waqfs.gui;
 import io.github.waqfs.Cigarette;
 import io.github.waqfs.gui.widget.BaseWidget;
 import io.github.waqfs.gui.widget.ScrollableWidget;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.render.RenderLayer;
+import net.minecraft.resource.Resource;
+import net.minecraft.resource.ResourceManager;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
+
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
+import java.security.Identity;
 import java.util.Stack;
 
 public class CigaretteScreen extends Screen {
@@ -131,10 +138,26 @@ public class CigaretteScreen extends Screen {
         return hoverHandled == obj;
     }
 
+    public void imageTileRender(DrawContext context) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        Identifier textureId = Identifier.of("cigarette", "icon.png");
+        int scrWidth = client.getWindow().getScaledWidth();
+        int scrHeight = client.getWindow().getScaledHeight();
+        for (int x = 0; x < scrWidth; x += 64) {
+            for (int y = 0; y < scrHeight; y += 64) {
+                context.drawTexture(
+                    RenderLayer::getGuiTextured,
+                    textureId, x, y, 0f, 0f, 64, 64, 64, 64
+                );
+            }
+        }
+    }
+
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
         this.renderBackground(context, mouseX, mouseY, deltaTicks);
-
+        this.imageTileRender(context);
+        context.getMatrices().push();
         CigaretteScreen.hoverHandled = null;
         boolean animActive = false;
         double elapsed = 0.0;
@@ -161,6 +184,16 @@ public class CigaretteScreen extends Screen {
             }
             widget._render(context, mouseX, mouseY, deltaTicks);
             context.getMatrices().pop();
+        }
+        context.getMatrices().pop();
+        if (begin && animActive) {
+            double totalAnim = (Math.max(0, categoryCount - 1)) * OPEN_STAGGER_S + OPEN_DURATION_S;
+            if (elapsed >= totalAnim) {
+                begin = false;
+                for (BaseWidget<?> widget : priority) {
+                    widget.setFocused();
+                }
+            }
         }
         if (begin && !animActive)
             begin = false;

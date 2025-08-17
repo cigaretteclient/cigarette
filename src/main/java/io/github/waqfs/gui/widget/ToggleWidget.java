@@ -54,11 +54,11 @@ public class ToggleWidget extends BaseWidget<Boolean> {
 
         int textColor = this.getRawState() ? CigaretteScreen.ENABLED_COLOR : CigaretteScreen.PRIMARY_TEXT_COLOR;
         int borderColor = DraggableWidget.color(left, top);
-        context.drawVerticalLine(left, bottom - height, bottom, borderColor);
         if (ticksOnHover > 0) {
             float progress = (float)CigaretteScreen.easeOutExpo((float) ticksOnHover / MAX_HOVER_TICKS);
             context.drawHorizontalLine(left, (int) (left + width * progress), top, borderColor);
             context.drawHorizontalLine((int) (right - width * progress), right, bottom - 1, borderColor);
+            context.drawVerticalLine(left, (int) (bottom - height * progress), bottom, borderColor);
             context.drawVerticalLine(right - 1, top, (int) (top + height * progress), borderColor);
         }
 

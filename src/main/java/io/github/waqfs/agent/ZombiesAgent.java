@@ -62,19 +62,6 @@ public class ZombiesAgent extends BaseAgent {
         return closest;
     }
 
-    public static @Nullable ZombieTarget getClosestZombieTo(Entity entity, float maxAngle) {
-        ZombieTarget closest = null;
-        float closestAngle = Float.MAX_VALUE;
-        for (ZombieTarget zombie : zombies) {
-            if (!zombie.canShoot || zombie.isDead()) continue;
-            float angle = zombie.angleTo(entity);
-            if (angle > maxAngle || angle >= closestAngle) continue;
-            closest = zombie;
-            closestAngle = zombie.angleTo(entity);
-        }
-        return closest;
-    }
-
     public static boolean isGun(ItemStack item) {
         if (item.isOf(Items.IRON_SWORD)) return false;
         return item.isIn(ItemTags.WEAPON_ENCHANTABLE) || item.isIn(ItemTags.HOES) || item.isIn(ItemTags.SHOVELS) || item.isIn(ItemTags.AXES) || item.isIn(ItemTags.PICKAXES) || item.isOf(Items.SHEARS);
@@ -163,12 +150,6 @@ public class ZombiesAgent extends BaseAgent {
 
         public Vec3d getDirectionVector(Entity player) {
             return this.getEndVec().subtract(player.getPos().add(0, player.getEyeHeight(EntityPose.STANDING), 0));
-        }
-
-        public float angleTo(Entity entity) {
-            if (this.end == null) return 0;
-            float[] yawPitch = PlayerEntityL.getRotationVectorInDirection(this.getDirectionVector(entity));
-            return PlayerEntityL.angleBetween(entity.getYaw(), entity.getPitch(), yawPitch[0], yawPitch[1]);
         }
     }
 

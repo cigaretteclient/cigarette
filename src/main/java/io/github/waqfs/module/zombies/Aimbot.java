@@ -145,7 +145,6 @@ public class Aimbot extends TickModule<ToggleWidget, Boolean> {
         if (rightClickKey.isPressed() || autoShoot.getRawState()) {
             if (ZombiesAgent.getZombies().isEmpty()) return;
 
-            // check if we're looking at a clickable
             HitResult hitResult = client.crosshairTarget;
             if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK) {
                 BlockHitResult blockResult = (BlockHitResult) hitResult;
@@ -160,32 +159,24 @@ public class Aimbot extends TickModule<ToggleWidget, Boolean> {
                 WeaponSelector.switchToBestWeapon(MinecraftClient.getInstance().player, closest);
             }
 
-            if (ZombiesAgent.isGun(player.getMainHandStack())) {
-                Vec3d predictedPos = calculatePredictedPosition(closest, player);
-                Vec3d vector = predictedPos.subtract(player.getEyePos()).normalize();
+            if (!ZombiesAgent.isGun(player.getMainHandStack())) return;
 
-                WeaponSelector.addCooldown(player.getInventory().getSelectedSlot());
+            Vec3d predictedPos = calculatePredictedPosition(closest, player);
+            Vec3d vector = predictedPos.subtract(player.getEyePos()).normalize();
 
-                if (silentAim.getRawState()) {
-                    float aimYaw = (float) Math.toDegrees(Math.atan2(-vector.x, vector.z));
-                    float aimPitch = (float) Math.toDegrees(Math.asin(-vector.y));
+            WeaponSelector.addCooldown(player.getInventory().getSelectedSlot());
 
-                    PlayerInteractItemC2SPacket shootPacket = new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, (int) world.getTickOrder(), aimYaw, aimPitch);
-                    player.networkHandler.sendPacket(shootPacket);
+            float aimYaw = (float) Math.toDegrees(Math.atan2(-vector.x, vector.z));
+            float aimPitch = (float) Math.toDegrees(Math.asin(-vector.y));
 
-                } else {
-                    PlayerEntityL.setRotationVector(player, vector);
-
-                    float yaw = player.getYaw();
-                    float pitch = player.getPitch();
-                    // Non-silent should also use the 4-arg constructor for consistency
-                    PlayerInteractItemC2SPacket shootPacket = new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, (int) world.getTickOrder(), yaw, pitch);
-                    player.networkHandler.sendPacket(shootPacket);
-                }
+            if (!silentAim.getRawState()) {
+                PlayerEntityL.setRotationVector(player, vector);
             }
+
+            PlayerInteractItemC2SPacket shootPacket = new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, (int) world.getTickOrder(), aimYaw, aimPitch);
+            player.networkHandler.sendPacket(shootPacket);
         }
 
-        // Clean up old tracking data for zombies that no longer exist
         cleanupTrackingData();
     }
 

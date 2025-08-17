@@ -75,7 +75,7 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         boolean handled = false;
-        if (this.startingX == this.getX() && this.startingY == this.getY()) {
+        if (this.isMouseOver(mouseX, mouseY) && this.startingX == this.getX() && this.startingY == this.getY()) {
             if (clickCallback != null) {
                 clickCallback.onClick(mouseX, mouseY, button);
                 handled = true;
@@ -178,9 +178,11 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
 
     public static void roundedRect(DrawContext context, int left, int top, int right, int bottom, int color, int r,
             boolean topCorners, boolean bottomCorners) {
+        int bandTop = top + (topCorners ? r : 0);
+        int bandBottom = bottom - (bottomCorners ? r : 0);
         context.fill(left + r, top, right - r, bottom, color);
-        context.fill(left, top + (topCorners ? r : 0), left + r, bottom - (bottomCorners ? r : 0), color);
-        context.fill(right - r, top + (topCorners ? r : 0), right, bottom - (bottomCorners ? r : 0), color);
+        context.fill(left, bandTop, left + r, bandBottom, color);
+        context.fill(right - r, bandTop, right, bandBottom, color);
 
         if (topCorners) {
             fillQuarterCircle(context, left + r, top + r, r, Corner.TOP_LEFT, color);
@@ -203,6 +205,6 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
         int horizontalMargin = (width - textWidth) / 2;
         int verticalMargin = (height - textRenderer.fontHeight) / 2;
         context.drawText(textRenderer, text, left + horizontalMargin, top + verticalMargin + 1,
-                CigaretteScreen.PRIMARY_TEXT_COLOR, true);
+                CigaretteScreen.PRIMARY_TEXT_COLOR, false);
     }
 }

@@ -19,15 +19,16 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
     private double scrollPosition = 0D;
     private @Nullable DraggableWidget header;
     private int categoryOffsetIndex = 0;
-    private boolean expanded = true;
+    public boolean expanded = true;
     private int ticksOnOpen = 0;
     private static final int MAX_TICKS_ON_OPEN = 10;
+    private @Nullable Runnable onToggleExpand;
 
     @SafeVarargs
     public ScrollableWidget(int x, int y, @Nullable Text headerText, @Nullable Widgets... children) {
         super(x, y, DEFAULT_WIDTH + DEFAULT_SCROLLBAR_WIDTH, DEFAULT_HEIGHT, null);
         this.withDefault(new BaseWidget.Stateless());
-        this.setChildren(children).setHeader(headerText);
+        this.setChildren(children).setHeader(headerText, null);
     }
 
     @SafeVarargs
@@ -56,6 +57,11 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
     }
 
     public ScrollableWidget<Widgets> setHeader(@Nullable Text headerText) {
+        return this.setHeader(headerText, null);
+    }
+
+    public ScrollableWidget<Widgets> setHeader(@Nullable Text headerText, @Nullable Runnable onToggleExpand) {
+        this.onToggleExpand = onToggleExpand;
         if (headerText == null) {
             this.header = null;
             return updateChildrenSizing();
@@ -67,9 +73,8 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
         });
         this.header.onClick((mouseX, mouseY, button) -> {
             if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-                this.expanded = !this.expanded;
-                if (!this.expanded) {
-                    this.scrollPosition = 0;
+                if (this.onToggleExpand != null) {
+                    this.onToggleExpand.run();
                 }
             }
         });
@@ -100,6 +105,10 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
         this.categoryOffsetIndex = Math.max(0, index);
     }
 
+    public void setExpanded(boolean expanded) {
+        this.expanded = expanded;
+    }
+
     @Override
     public void unfocus() {
         if (this.header != null)
@@ -127,12 +136,8 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-
-        if (this.header != null) {
-            boolean handled = this.header.mouseClicked(mouseX, mouseY, button);
-            if (handled) {
-                return true;
-            }
+        if (this.header != null && this.header.isMouseOver(mouseX, mouseY)) {
+            return this.header.mouseClicked(mouseX, mouseY, button);
         }
 
         int top = this.getY();
@@ -229,9 +234,9 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
             }
             Scissor.popExclusive();
 
-            int bottomRectTop = realBottomInt;
+            int bottomRectTop = realBottomInt + 1;
             if (this.getEasedProgress() > 0.0) {
-                DraggableWidget.roundedRect(context, left, bottomRectTop, right, bottomRectTop + 4,
+                DraggableWidget.roundedRect(context, left, bottomRectTop - 2, right, bottomRectTop + 2,
                         CigaretteScreen.BACKGROUND_COLOR, 2, false, true);
             }
         }

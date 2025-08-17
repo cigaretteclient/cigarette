@@ -1,3 +1,4 @@
+
 package io.github.waqfs.gui;
 
 import io.github.waqfs.Cigarette;
@@ -55,6 +56,7 @@ public class CigaretteScreen extends Screen {
             addDrawableChild(categoryInstance.widget);
             if (categoryInstance.widget instanceof ScrollableWidget<?> sw) {
                 sw.setCategoryOffsetIndex(idx);
+                sw.expanded = categoryInstance.expanded;
             }
             this.priority.addFirst(categoryInstance.widget);
             categoryInstance.widget.unfocus();
@@ -102,8 +104,10 @@ public class CigaretteScreen extends Screen {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        for (Element child : this.children()) {
-            child.mouseReleased(mouseX, mouseY, button);
+        for (BaseWidget<?> child : priority) {
+            if (child.mouseReleased(mouseX, mouseY, button)) {
+                return true;
+            }
         }
         return false;
     }
@@ -146,9 +150,8 @@ public class CigaretteScreen extends Screen {
         for (int x = 0; x < scrWidth; x += 64) {
             for (int y = 0; y < scrHeight; y += 64) {
                 context.drawTexture(
-                    RenderLayer::getGuiTextured,
-                    textureId, x, y, 0f, 0f, 64, 64, 64, 64
-                );
+                        RenderLayer::getGuiTextured,
+                        textureId, x, y, 0f, 0f, 64, 64, 64, 64);
             }
         }
     }
@@ -156,8 +159,7 @@ public class CigaretteScreen extends Screen {
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
         this.renderBackground(context, mouseX, mouseY, deltaTicks);
-        this.imageTileRender(context);
-        context.getMatrices().push();
+
         CigaretteScreen.hoverHandled = null;
         boolean animActive = false;
         double elapsed = 0.0;
@@ -168,6 +170,14 @@ public class CigaretteScreen extends Screen {
         }
         for (int i = 0; i < priority.size(); i++) {
             BaseWidget<?> widget = priority.get(i);
+            if (widget instanceof ScrollableWidget<?> sw) {
+                for (CategoryInstance categoryInstance : Cigarette.CONFIG.allCategories) {
+                    if (categoryInstance.widget == sw) {
+                        sw.expanded = categoryInstance.expanded;
+                        break;
+                    }
+                }
+            }
             context.getMatrices().push();
             context.getMatrices().translate(0, 0, priority.size() - i);
             if (begin && animActive) {
@@ -184,16 +194,6 @@ public class CigaretteScreen extends Screen {
             }
             widget._render(context, mouseX, mouseY, deltaTicks);
             context.getMatrices().pop();
-        }
-        context.getMatrices().pop();
-        if (begin && animActive) {
-            double totalAnim = (Math.max(0, categoryCount - 1)) * OPEN_STAGGER_S + OPEN_DURATION_S;
-            if (elapsed >= totalAnim) {
-                begin = false;
-                for (BaseWidget<?> widget : priority) {
-                    widget.setFocused();
-                }
-            }
         }
         if (begin && !animActive)
             begin = false;

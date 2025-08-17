@@ -145,6 +145,8 @@ public class Aimbot extends TickModule<ToggleWidget, Boolean> {
         if (rightClickKey.isPressed() || autoShoot.getRawState()) {
             if (ZombiesAgent.getZombies().isEmpty()) return;
 
+            System.out.println(ZombiesAgent.getZombies().size());
+
             // check if we're looking at a clickable
             HitResult hitResult = client.crosshairTarget;
             if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK) {
@@ -170,21 +172,15 @@ public class Aimbot extends TickModule<ToggleWidget, Boolean> {
                     float aimYaw = (float) Math.toDegrees(Math.atan2(-vector.x, vector.z));
                     float aimPitch = (float) Math.toDegrees(Math.asin(-vector.y));
 
-                    float realYaw = player.getYaw();
-                    float realPitch = player.getPitch();
-
-                    player.networkHandler.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(aimYaw, aimPitch, player.isOnGround(), player.horizontalCollision));
-
                     PlayerInteractItemC2SPacket shootPacket = new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, (int) world.getTickOrder(), aimYaw, aimPitch);
                     player.networkHandler.sendPacket(shootPacket);
-
-                    player.networkHandler.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(realYaw, realPitch, player.isOnGround(), player.horizontalCollision));
 
                 } else {
                     PlayerEntityL.setRotationVector(player, vector);
 
                     float yaw = player.getYaw();
                     float pitch = player.getPitch();
+                    // Non-silent should also use the 4-arg constructor for consistency
                     PlayerInteractItemC2SPacket shootPacket = new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, (int) world.getTickOrder(), yaw, pitch);
                     player.networkHandler.sendPacket(shootPacket);
                 }

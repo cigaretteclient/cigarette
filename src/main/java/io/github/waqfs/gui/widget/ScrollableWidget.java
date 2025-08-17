@@ -224,33 +224,34 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
             int realBottomInt = getVisibleBottom(top, bottom);
             int realHeight = Math.max(0, realBottomInt - realTop);
 
-            Scissor.pushExclusive(context, left, Math.max(0, realTop - 1), right + 1, realBottomInt + 2);
-            for (int index = 0; index < children.length; index++) {
-                BaseWidget<?> child = children[index];
-                if (child == null)
-                    continue;
-                child.withXY(left, top - (int) scrollPosition + (index + hasHeaderInt) * rowHeight)
-                        .renderWidget(context, mouseX, mouseY, deltaTicks);
-            }
+            if (this.expanded) {
+                Scissor.pushExclusive(context, left, Math.max(0, realTop - 1), right + 1, realBottomInt + 2);
+                for (int index = 0; index < children.length; index++) {
+                    BaseWidget<?> child = children[index];
+                    if (child == null)
+                        continue;
+                    child.withXY(left, top - (int) scrollPosition + (index + hasHeaderInt) * rowHeight)
+                            .renderWidget(context, mouseX, mouseY, deltaTicks);
+                }
 
-            int contentHeight = children.length * rowHeight;
-            int overflowHeight = Math.max(0, contentHeight - realHeight);
-            if (overflowHeight > 0) {
-                context.fill(right - DEFAULT_SCROLLBAR_WIDTH, realTop, right, realBottomInt,
-                        CigaretteScreen.BACKGROUND_COLOR);
-                int track = Math.max(1, realHeight);
-                int knobHeight = Math.max(10, (int) Math.round((track * (double) track) / (double) contentHeight));
-                int maxKnobTravel = track - knobHeight;
-                int knobTop = (int) Math.round((scrollPosition / (double) overflowHeight) * Math.max(0, maxKnobTravel));
-                context.fill(right - DEFAULT_SCROLLBAR_WIDTH, realTop + knobTop, right, realTop + knobTop + knobHeight,
-                        CigaretteScreen.SECONDARY_COLOR);
-            }
-            Scissor.popExclusive();
+                int contentHeight = children.length * rowHeight;
+                int overflowHeight = Math.max(0, contentHeight - realHeight);
+                if (overflowHeight > 0) {
+                    context.fill(right - DEFAULT_SCROLLBAR_WIDTH, realTop, right, realBottomInt,
+                            CigaretteScreen.BACKGROUND_COLOR);
+                    int track = Math.max(1, realHeight);
+                    int knobHeight = Math.max(10, (int) Math.round((track * (double) track) / (double) contentHeight));
+                    int maxKnobTravel = track - knobHeight;
+                    int knobTop = (int) Math.round((scrollPosition / (double) overflowHeight) * Math.max(0, maxKnobTravel));
+                    context.fill(right - DEFAULT_SCROLLBAR_WIDTH, realTop + knobTop, right, realTop + knobTop + knobHeight,
+                            CigaretteScreen.SECONDARY_COLOR);
+                }
+                Scissor.popExclusive();
 
-            int bottomRectTop = realBottomInt;
-            if (this.getEasedProgress() > 0.0) {
-                DraggableWidget.roundedRect(context, left, bottomRectTop - 2, right, bottomRectTop + 2,
-                        CigaretteScreen.BACKGROUND_COLOR, 2, false, true);
+                if (this.getEasedProgress() > 0.0) {
+                    DraggableWidget.roundedRect(context, left, realBottomInt - 2, right, realBottomInt + 2,
+                            CigaretteScreen.BACKGROUND_COLOR, 2, false, true);
+                }
             }
         }
         if (header != null) {

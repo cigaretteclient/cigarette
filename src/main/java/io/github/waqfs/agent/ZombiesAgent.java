@@ -133,7 +133,7 @@ public class ZombiesAgent extends BaseAgent {
         }
 
         public boolean isDead() {
-            return this.entity.getHealth() <= 0.0f;
+            return this.entity.isRemoved() || this.entity.isDead() || this.entity.getHealth() <= 0.0f;
         }
 
         private static ZombieTarget create(LivingEntity entity) {

@@ -83,7 +83,7 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
         this.clickCallback = callback;
     }
 
-    protected class ColorUtil {
+    public class ColorUtil {
         public static int lerpColor(int color1, int color2, float t) {
             if (t < 0f)
                 t = 0f;
@@ -105,10 +105,7 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
         }
     }
 
-    @Override
-    public void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left,
-            int top, int right, int bottom) {
-        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+    public static int color(int x, int y) {
         double seconds = (System.nanoTime() / 1_000_000_000.0);
         int screenW = 1920, screenH = 1080;
         MinecraftClient mc = MinecraftClient.getInstance();
@@ -116,14 +113,21 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
             screenW = mc.getWindow().getScaledWidth();
             screenH = mc.getWindow().getScaledHeight();
         }
-        float xNorm = Math.max(0f, Math.min(1f, (float) getX() / Math.max(1, screenW)));
-        float yNorm = Math.max(0f, Math.min(1f, (float) getY() / Math.max(1, screenH)));
+        float xNorm = Math.max(0f, Math.min(1f, (float) x / Math.max(1, screenW)));
+        float yNorm = Math.max(0f, Math.min(1f, (float) y / Math.max(1, screenH)));
         float s = xNorm + 0.2f * yNorm;
         double speedHz = 0.3;
         double phase = 2 * Math.PI * (speedHz * seconds - s);
         float pingpong = 0.5f * (1.0f + (float) Math.sin(phase));
         int bg = ColorUtil.lerpColor(CigaretteScreen.PRIMARY_COLOR, CigaretteScreen.SECONDARY_COLOR, (float) pingpong);
-        context.fill(left, top, right, bottom, bg);
+        return bg;
+    }
+
+    @Override
+    public void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left,
+            int top, int right, int bottom) {
+        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+        context.fill(left, top, right, bottom, color(left, top));
         Text text = getMessage();
         int textWidth = textRenderer.getWidth(text);
         int horizontalMargin = (width - textWidth) / 2;

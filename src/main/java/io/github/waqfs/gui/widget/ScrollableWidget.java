@@ -146,9 +146,9 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
                 child.withXY(left, top - (int) scrollPosition + (index + hasHeaderInt) * rowHeight)
                         .renderWidget(context, mouseX, mouseY, deltaTicks);
             }
+            int realHeight = height - hasHeaderInt * rowHeight;
             if (this.shouldScroll) {
                 context.fill(right - DEFAULT_SCROLLBAR_WIDTH, realTop, right, bottom, CigaretteScreen.BACKGROUND_COLOR);
-                int realHeight = height - hasHeaderInt * rowHeight;
                 double overflowHeight = (children.length * rowHeight) - (double) realHeight;
                 if (overflowHeight > realHeight - rowHeight) {
                     int topMargin = (int) ((scrollPosition / overflowHeight) * (realHeight - rowHeight));

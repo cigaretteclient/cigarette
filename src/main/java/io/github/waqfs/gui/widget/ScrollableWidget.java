@@ -143,23 +143,12 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (this.header != null && this.header.isMouseOver(mouseX, mouseY)) {
-            return this.header.mouseClicked(mouseX, mouseY, button);
-        }
-
-        int top = this.getY();
-        int bottom = top + this.height;
-        int realTop = top + getHeaderHeight();
-        int realBottomInt = getVisibleBottom(top, bottom);
-
-        if (mouseY >= realTop && mouseY < realBottomInt) {
-            return super.mouseClicked(mouseX, mouseY, button);
-        }
-
-        if (isMouseOver(mouseX, mouseY)) {
+        boolean wasHandled = this.header != null && this.header.mouseClicked(mouseX, mouseY, button);
+        if (wasHandled) {
+            super.unfocus();
             return true;
         }
-        return false;
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override

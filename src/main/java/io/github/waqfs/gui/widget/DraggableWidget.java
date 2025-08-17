@@ -38,13 +38,24 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (isMouseOver(mouseX, mouseY)) {
-            this.startingX = this.getX();
-            this.startingY = this.getY();
-            this.startingMouseX = mouseX;
-            this.startingMouseY = mouseY;
             this.setFocused();
-
-            this.dragging = (button == GLFW.GLFW_MOUSE_BUTTON_LEFT);
+            switch (button) {
+                case GLFW.GLFW_MOUSE_BUTTON_LEFT -> {
+                    this.startingX = this.getX();
+                    this.startingY = this.getY();
+                    this.startingMouseX = mouseX;
+                    this.startingMouseY = mouseY;
+                    this.dragging = true;
+                    return true;
+                }
+                case GLFW.GLFW_MOUSE_BUTTON_RIGHT -> {
+                    this.dragging = false;
+                    if (clickCallback != null) {
+                        clickCallback.onClick(mouseX, mouseY, button);
+                    }
+                    return true;
+                }
+            }
             return true;
         }
         return false;
@@ -74,18 +85,8 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        boolean handled = false;
-        if (this.isMouseOver(mouseX, mouseY) && this.startingX == this.getX() && this.startingY == this.getY()) {
-            if (clickCallback != null) {
-                clickCallback.onClick(mouseX, mouseY, button);
-                handled = true;
-            }
-        }
-        if (dragging) {
-            handled = true;
-        }
         dragging = false;
-        return handled;
+        return false;
     }
 
     public void onDrag(DragCallback callback) {

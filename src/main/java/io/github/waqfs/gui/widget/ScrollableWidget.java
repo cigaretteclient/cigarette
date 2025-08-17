@@ -76,6 +76,9 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
                 if (this.onToggleExpand != null) {
                     this.onToggleExpand.run();
                 }
+                if(!this.expanded) {
+                    this.unfocus();
+                }
             }
         });
         return updateChildrenSizing();

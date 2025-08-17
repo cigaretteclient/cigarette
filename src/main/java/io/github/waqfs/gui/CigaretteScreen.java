@@ -2,6 +2,7 @@ package io.github.waqfs.gui;
 
 import io.github.waqfs.Cigarette;
 import io.github.waqfs.gui.widget.BaseWidget;
+import io.github.waqfs.gui.widget.ScrollableWidget;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
@@ -21,6 +22,12 @@ public class CigaretteScreen extends Screen {
     public static @Nullable Object hoverHandled = null;
     private final Stack<BaseWidget<?>> priority = new Stack<>();
     private Screen parent = null;
+    private boolean begin = false;
+    private long openStartNanos = 0L;
+    private static final double OPEN_DURATION_S = 0.4;
+    private static final double OPEN_STAGGER_S = 0.04;
+    private static final int OPEN_DISTANCE_PX = 24;
+    private int categoryCount = 0;
 
     protected CigaretteScreen() {
         super(Text.literal("Cigarette Client"));
@@ -32,13 +39,24 @@ public class CigaretteScreen extends Screen {
 
     @Override
     protected void init() {
+        this.clearChildren();
+        this.priority.clear();
+        int idx = 0;
         for (CategoryInstance categoryInstance : Cigarette.CONFIG.allCategories) {
-            if (categoryInstance == null) continue;
+            if (categoryInstance == null)
+                continue;
             addDrawableChild(categoryInstance.widget);
+            if (categoryInstance.widget instanceof ScrollableWidget<?> sw) {
+                sw.setCategoryOffsetIndex(idx);
+            }
             this.priority.addFirst(categoryInstance.widget);
             categoryInstance.widget.unfocus();
             categoryInstance.widget.setFocused();
+            idx++;
         }
+        this.categoryCount = idx;
+        this.begin = true;
+        this.openStartNanos = System.nanoTime();
     }
 
     @Override
@@ -90,10 +108,10 @@ public class CigaretteScreen extends Screen {
         }
     }
 
-
     @Override
     public void close() {
         assert client != null;
+        this.begin = false;
         client.setScreen(parent);
     }
 
@@ -118,12 +136,41 @@ public class CigaretteScreen extends Screen {
         this.renderBackground(context, mouseX, mouseY, deltaTicks);
 
         CigaretteScreen.hoverHandled = null;
+        boolean animActive = false;
+        double elapsed = 0.0;
+        if (begin) {
+            elapsed = (System.nanoTime() - openStartNanos) / 1_000_000_000.0;
+            double totalAnim = (Math.max(0, categoryCount - 1)) * OPEN_STAGGER_S + OPEN_DURATION_S;
+            animActive = elapsed < totalAnim;
+        }
         for (int i = 0; i < priority.size(); i++) {
             BaseWidget<?> widget = priority.get(i);
             context.getMatrices().push();
             context.getMatrices().translate(0, 0, priority.size() - i);
+            if (begin && animActive) {
+                int orderIndex = (widget instanceof ScrollableWidget<?> sw)
+                        ? Math.max(0, sw.getCategoryOffsetIndex())
+                        : i;
+                double startDelay = (orderIndex) * OPEN_STAGGER_S;
+                double t = Math.max(0.0, Math.min(1.0, (elapsed - startDelay) / OPEN_DURATION_S));
+                double eased = easeOutExpo(t);
+                double dx = (1.0 - eased) * OPEN_DISTANCE_PX;
+                if (dx > 0.01)
+                    context.getMatrices().translate(dx, 0, 0);
+                context.getMatrices().scale((float) eased, (float) eased, 1.0f);
+            }
             widget._render(context, mouseX, mouseY, deltaTicks);
             context.getMatrices().pop();
         }
+        if (begin && !animActive)
+            begin = false;
+    }
+
+    public static double easeOutExpo(double t) {
+        if (t >= 1.0)
+            return 1.0;
+        if (t <= 0.0)
+            return 0.0;
+        return 1.0 - Math.pow(2.0, -10.0 * t);
     }
 }

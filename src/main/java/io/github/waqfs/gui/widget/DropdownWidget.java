@@ -15,6 +15,7 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType> extends Pas
 
     public DropdownWidget(Text message, @Nullable Text tooltip) {
         super(message, tooltip);
+        this.withDefault(new BaseWidget.Stateless());
         this.container = new ScrollableWidget<>(0, 0);
         this.children = new ScrollableWidget[]{this.container};
     }

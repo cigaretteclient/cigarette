@@ -7,7 +7,8 @@ import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 
-public class ScrollableWidget<Widgets extends BaseWidget<?>> extends PassthroughWidget<BaseWidget<?>, BaseWidget.Stateless> {
+public class ScrollableWidget<Widgets extends BaseWidget<?>>
+        extends PassthroughWidget<BaseWidget<?>, BaseWidget.Stateless> {
     private static final int VERTICAL_SCROLL_MULTIPLIER = 6;
     private static final int DEFAULT_WIDTH = 100;
     private static final int DEFAULT_HEIGHT = 200;
@@ -16,21 +17,25 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>> extends Passthrough
     private boolean shouldScroll = false;
     private double scrollPosition = 0D;
     private @Nullable DraggableWidget header;
+    private int categoryOffsetIndex = 0;
 
     @SafeVarargs
     public ScrollableWidget(int x, int y, @Nullable Text headerText, @Nullable Widgets... children) {
         super(x, y, DEFAULT_WIDTH + DEFAULT_SCROLLBAR_WIDTH, DEFAULT_HEIGHT, null);
+        this.withDefault(new BaseWidget.Stateless());
         this.setChildren(children).setHeader(headerText);
     }
 
     @SafeVarargs
     public ScrollableWidget(int x, int y, @Nullable Widgets... children) {
         super(x, y, DEFAULT_WIDTH + DEFAULT_SCROLLBAR_WIDTH, DEFAULT_HEIGHT, null);
+        this.withDefault(new BaseWidget.Stateless());
         this.setChildren(children);
     }
 
     public ScrollableWidget(int x, int y) {
         super(x, y, DEFAULT_WIDTH + DEFAULT_SCROLLBAR_WIDTH, DEFAULT_HEIGHT, null);
+        this.withDefault(new BaseWidget.Stateless());
     }
 
     private boolean updateShouldScroll() {
@@ -54,6 +59,9 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>> extends Passthrough
             setX(newX);
             setY(newY);
         });
+        this.header.onClick((mouseX, mouseY, button) -> {
+
+        });
         return updateChildrenSizing();
     }
 
@@ -61,10 +69,11 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>> extends Passthrough
         if (this.children != null) {
             int rightMargin = this.updateShouldScroll() ? DEFAULT_SCROLLBAR_WIDTH : 0;
             for (ClickableWidget child : children) {
-                if (child == null) continue;
+                if (child == null)
+                    continue;
                 child.setHeight(rowHeight);
                 child.setWidth(width - rightMargin);
-                if (this.shouldScroll && child instanceof PassthroughWidget widget) {
+                if (this.shouldScroll && child instanceof PassthroughWidget<?, ?> widget) {
                     widget.childLeftOffset = DEFAULT_SCROLLBAR_WIDTH;
                 }
             }
@@ -72,9 +81,18 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>> extends Passthrough
         return this;
     }
 
+    public int getCategoryOffsetIndex() {
+        return this.categoryOffsetIndex;
+    }
+
+    public void setCategoryOffsetIndex(int index) {
+        this.categoryOffsetIndex = Math.max(0, index);
+    }
+
     @Override
     public void unfocus() {
-        if (this.header != null) this.header.unfocus();
+        if (this.header != null)
+            this.header.unfocus();
         super.unfocus();
     }
 
@@ -98,21 +116,24 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>> extends Passthrough
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        return (this.header != null && this.header.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) || super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+        return (this.header != null && this.header.mouseDragged(mouseX, mouseY, button, deltaX, deltaY))
+                || super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
         if (isMouseOver(mouseX, mouseY)) {
             int rowCount = (children == null ? 0 : children.length) + (header == null ? 0 : 1);
-            scrollPosition = Math.max(0, Math.min(scrollPosition - verticalAmount * VERTICAL_SCROLL_MULTIPLIER, rowCount * rowHeight - height));
+            scrollPosition = Math.max(0, Math.min(scrollPosition - verticalAmount * VERTICAL_SCROLL_MULTIPLIER,
+                    rowCount * rowHeight - height));
             return true;
         }
         return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }
 
     @Override
-    public void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left, int top, int right, int bottom) {
+    public void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left,
+            int top, int right, int bottom) {
         if (children != null) {
             boolean hasHeader = header != null;
             int hasHeaderInt = hasHeader ? 1 : 0;
@@ -120,8 +141,10 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>> extends Passthrough
             Scissor.pushExclusive(context, left, realTop, right, bottom);
             for (int index = 0; index < children.length; index++) {
                 BaseWidget<?> child = children[index];
-                if (child == null) continue;
-                child.withXY(left, top - (int) scrollPosition + (index + hasHeaderInt) * rowHeight).renderWidget(context, mouseX, mouseY, deltaTicks);
+                if (child == null)
+                    continue;
+                child.withXY(left, top - (int) scrollPosition + (index + hasHeaderInt) * rowHeight)
+                        .renderWidget(context, mouseX, mouseY, deltaTicks);
             }
             if (this.shouldScroll) {
                 context.fill(right - DEFAULT_SCROLLBAR_WIDTH, realTop, right, bottom, CigaretteScreen.BACKGROUND_COLOR);
@@ -129,10 +152,12 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>> extends Passthrough
                 double overflowHeight = (children.length * rowHeight) - (double) realHeight;
                 if (overflowHeight > realHeight - rowHeight) {
                     int topMargin = (int) ((scrollPosition / overflowHeight) * (realHeight - rowHeight));
-                    context.fill(right - DEFAULT_SCROLLBAR_WIDTH, realTop + topMargin, right, realTop + topMargin + rowHeight, CigaretteScreen.SECONDARY_COLOR);
+                    context.fill(right - DEFAULT_SCROLLBAR_WIDTH, realTop + topMargin, right,
+                            realTop + topMargin + rowHeight, CigaretteScreen.SECONDARY_COLOR);
                 } else {
                     int scrollbarHeight = realHeight - (int) overflowHeight;
-                    context.fill(right - DEFAULT_SCROLLBAR_WIDTH, realTop + (int) scrollPosition, right, realTop + (int) scrollPosition + scrollbarHeight, CigaretteScreen.SECONDARY_COLOR);
+                    context.fill(right - DEFAULT_SCROLLBAR_WIDTH, realTop + (int) scrollPosition, right,
+                            realTop + (int) scrollPosition + scrollbarHeight, CigaretteScreen.SECONDARY_COLOR);
                 }
             }
             Scissor.popExclusive();

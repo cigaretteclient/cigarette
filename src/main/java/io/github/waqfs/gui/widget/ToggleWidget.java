@@ -55,7 +55,7 @@ public class ToggleWidget extends BaseWidget<Boolean> {
         int textColor = this.getRawState() ? CigaretteScreen.ENABLED_COLOR : CigaretteScreen.PRIMARY_TEXT_COLOR;
 
         if (ticksOnHover > 0) {
-            float progress = (float) ticksOnHover / MAX_HOVER_TICKS;
+            float progress = (float)CigaretteScreen.easeOutExpo((float) ticksOnHover / MAX_HOVER_TICKS);
             context.drawHorizontalLine(left, (int) (left + width * progress), top, textColor);
             context.drawHorizontalLine((int) (right - width * progress), right, bottom - 1, textColor);
             context.drawVerticalLine(left, (int) (bottom - height * progress), bottom, textColor);

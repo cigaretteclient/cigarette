@@ -120,6 +120,7 @@ public class FireballESP extends RenderModule<ToggleWidget, Boolean> {
                     Vec3d collisionEnd = result.getPos();
                     fireballs.add(new Fireball(null, -1, collisionEnd, collisionEnd, true, Renderer.calculateSphere(collisionEnd, 8.4f, player.getEyePos())));
                 }
+                default -> {}
             }
         }
     }
@@ -137,7 +138,9 @@ public class FireballESP extends RenderModule<ToggleWidget, Boolean> {
 
     private static class Fireball {
         public final @Nullable FireballEntity entity;
+
         public final double time;
+
         public final Vec3d collisionPathStart;
         public final Vec3d collisionPathEnd;
         public final boolean collisionNearPlayer;

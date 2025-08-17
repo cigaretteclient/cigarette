@@ -145,8 +145,6 @@ public class Aimbot extends TickModule<ToggleWidget, Boolean> {
         if (rightClickKey.isPressed() || autoShoot.getRawState()) {
             if (ZombiesAgent.getZombies().isEmpty()) return;
 
-            System.out.println(ZombiesAgent.getZombies().size());
-
             // check if we're looking at a clickable
             HitResult hitResult = client.crosshairTarget;
             if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK) {

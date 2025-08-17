@@ -1,23 +1,19 @@
-
 package io.github.waqfs.gui;
 
 import io.github.waqfs.Cigarette;
 import io.github.waqfs.gui.widget.BaseWidget;
+import io.github.waqfs.gui.widget.KeybindWidget;
 import io.github.waqfs.gui.widget.ScrollableWidget;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.render.RenderLayer;
-import net.minecraft.resource.Resource;
-import net.minecraft.resource.ResourceManager;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
-
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
-import java.security.Identity;
 import java.util.Stack;
 
 public class CigaretteScreen extends Screen {
@@ -36,6 +32,7 @@ public class CigaretteScreen extends Screen {
     private static final double OPEN_STAGGER_S = 0.04;
     private static final int OPEN_DISTANCE_PX = 24;
     private int categoryCount = 0;
+    public static @Nullable KeybindWidget bindingKey = null;
 
     protected CigaretteScreen() {
         super(Text.literal("Cigarette Client"));
@@ -128,6 +125,10 @@ public class CigaretteScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (CigaretteScreen.bindingKey != null) {
+            CigaretteScreen.bindingKey.keyPressed(keyCode, scanCode, modifiers);
+            return true;
+        }
         switch (keyCode) {
             case GLFW.GLFW_KEY_ESCAPE, GLFW.GLFW_KEY_RIGHT_SHIFT -> this.close();
         }

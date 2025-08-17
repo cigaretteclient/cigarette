@@ -1,46 +1,120 @@
 package io.github.waqfs.gui.widget;
 
+import io.github.waqfs.gui.CigaretteScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.util.InputUtil;
 import net.minecraft.text.Text;
+import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 
-// Placeholder... DO NOT USE (yet!)
-public class KeybindWidget extends PassthroughWidget<BaseWidget<KeyBinding>, BaseWidget.Stateless> {
-    private KeyBinding keyBinding;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.function.Consumer;
 
-    public KeybindWidget(KeyBinding keyBinding) {
-        super(keyBinding.getBoundKeyLocalizedText(), Text.of(keyBinding.getCategory()));
-        this.withDefault(new BaseWidget.Stateless());
-        this.keyBinding = keyBinding;
+public class KeybindWidget extends BaseWidget<Integer> {
+    private final KeyBinding keyBinding;
+    private InputUtil.Key utilKey;
+
+    public KeybindWidget(Text message, @Nullable Text tooltip) {
+        super(message, tooltip);
+        this.utilKey = InputUtil.UNKNOWN_KEY;
+        this.keyBinding = new KeyBinding(UUID.randomUUID().toString(), GLFW.GLFW_KEY_UNKNOWN, "cigarette.null");
+    }
+
+    public KeybindWidget withDefaultKey(int key) {
+        utilKey = InputUtil.fromKeyCode(key, 0);
+        keyBinding.setBoundKey(utilKey);
+        super.withDefault(key);
+        return this;
+    }
+
+    public void setBoundKey(@Nullable InputUtil.Key key) {
+        utilKey = key == null ? InputUtil.UNKNOWN_KEY : key;
+        keyBinding.setBoundKey(utilKey);
+        this.setRawState(utilKey.getCode());
+    }
+
+    public KeyBinding getKeybind() {
+        return this.keyBinding;
+    }
+
+    private void clearBinding() {
+        CigaretteScreen.bindingKey = null;
+    }
+
+    private void toggleBinding() {
+        CigaretteScreen.bindingKey = isBinding() ? null : this;
+    }
+
+    private boolean isBinding() {
+        return CigaretteScreen.bindingKey == this;
     }
 
     @Override
-    public void setWidth(int width) {
-        super.setWidth(width);
+    public void registerConfigKey(String key) {
+        super.registerConfigKeyAnd(key, newState -> {
+            if (!(newState instanceof Integer integerState)) return;
+            this.withDefaultKey(integerState);
+        });
     }
 
     @Override
-    public void setHeight(int height) {
-        super.setHeight(height);
+    public void registerConfigKeyAnd(String key, Consumer<Object> loadedState) {
+        super.registerConfigKeyAnd(key, newState -> {
+            if (newState instanceof Integer integerState) {
+                this.withDefault(integerState);
+            }
+            loadedState.accept(newState);
+        });
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (isMouseOver(mouseX, mouseY)) {
+            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                toggleBinding();
+            }
+            return true;
+        }
+        return false;
     }
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        return super.keyPressed(keyCode, scanCode, modifiers);
-    }
-
-    @Override
-    public boolean charTyped(char chr, int modifiers) {
-        return super.charTyped(chr, modifiers);
+        if (!isBinding()) return false;
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE || keyCode == GLFW.GLFW_KEY_RIGHT_SHIFT) {
+            this.setBoundKey(null);
+        } else {
+            InputUtil.Key key = InputUtil.fromKeyCode(keyCode, scanCode);
+            String keyName = key.getLocalizedText().getLiteralString();
+            if (keyName == null) return true;
+            this.setBoundKey(key);
+        }
+        clearBinding();
+        return true;
     }
 
     @Override
     public void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left, int top, int right, int bottom) {
-        context.fill(left, top, right, bottom, 0x111111FF);
+        context.fill(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR);
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
-        context.fill(left - 2, top - 2, right + 2, bottom + 2, 0x000000FF);
-        context.drawText(textRenderer, keyBinding.getBoundKeyLocalizedText(), left + 5, top + 2, bottom, hovered);
+
+        String keyText;
+        if (this.isBinding()) {
+            keyText = "...";
+        } else if (utilKey == InputUtil.UNKNOWN_KEY) {
+            keyText = "None";
+        } else {
+            String keyName = utilKey.getLocalizedText().getLiteralString();
+            keyText = Objects.requireNonNullElse(keyName, "???");
+        }
+
+        context.drawTextWithShadow(textRenderer, getMessage(), left + 4, top + height / 3, CigaretteScreen.PRIMARY_TEXT_COLOR);
+
+        Text value = Text.literal(keyText);
+        context.drawTextWithShadow(textRenderer, value, right - textRenderer.getWidth(value) - 4, top + height / 3, CigaretteScreen.SECONDARY_COLOR);
     }
 }

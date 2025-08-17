@@ -93,7 +93,7 @@ public class WeaponSelector {
             double reloadTime = -1;
 
             for (Text line : tooltip) {
-                String text = TextL.toColorCodedString(line).replaceAll("§r", "").replaceAll("§e", "").replaceAll("§a", "").replaceAll("§8", "").replaceAll("§6", "").replaceAll("§7", "").replaceAll("§2", "");
+                String text = TextL.toColorCodedString(line).replaceAll("§[a-zA-Z0-9]", "");
 
                 Matcher damageMatcher = DAMAGE_PATTERN.matcher(text);
                 if (damageMatcher.find()) {

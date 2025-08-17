@@ -1,21 +1,22 @@
 package io.github.waqfs.module.zombies;
 
-import io.github.waqfs.Cigarette;
 import io.github.waqfs.GameDetector;
 import io.github.waqfs.agent.ZombiesAgent;
 import io.github.waqfs.gui.widget.SliderWidget;
 import io.github.waqfs.gui.widget.ToggleWidget;
 import io.github.waqfs.lib.PlayerEntityL;
 import io.github.waqfs.lib.WeaponSelector;
+import io.github.waqfs.mixin.ClientWorldAccessor;
 import io.github.waqfs.module.TickModule;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.network.PendingUpdateManager;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.network.packet.PacketType;
-import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.registry.tag.BlockTags;
@@ -25,6 +26,7 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -43,7 +45,6 @@ public class Aimbot extends TickModule<ToggleWidget, Boolean> {
 
     private final Map<UUID, Vec3d> lastPositions = new HashMap<>();
     private final Map<UUID, Vec3d> velocities = new HashMap<>();
-    private final Map<UUID, Vec3d> pathfindingTargets = new HashMap<>();
 
     public Aimbot() {
         super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
@@ -55,84 +56,99 @@ public class Aimbot extends TickModule<ToggleWidget, Boolean> {
         predictionTicks.registerConfigKey("zombies.aimbot.predictionTicks");
     }
 
+    @Nullable
+    private ZombiesAgent.ZombieTarget getBestTarget(ClientPlayerEntity player) {
+        HashSet<ZombiesAgent.ZombieTarget> zombies = ZombiesAgent.getZombies();
+        if (zombies.isEmpty()) {
+            return null;
+        }
+
+        ZombiesAgent.ZombieTarget bestTarget = null;
+        double minTimeToPlayer = Double.MAX_VALUE;
+
+        Vec3d playerPos = player.getPos();
+
+        for (ZombiesAgent.ZombieTarget zombie : zombies) {
+            Vec3d zombiePos = zombie.entity.getPos();
+            double distance = playerPos.distanceTo(zombiePos);
+
+            Vec3d velocity = velocities.getOrDefault(zombie.uuid, Vec3d.ZERO);
+            Vec3d playerToZombie = zombiePos.subtract(playerPos).normalize();
+            double speedTowardsPlayer = -velocity.dotProduct(playerToZombie) * 20;
+
+            if (speedTowardsPlayer <= 0.1) {
+                // Use distance as a fallback metric for stationary or retreating targets
+                if (bestTarget == null || distance < playerPos.distanceTo(bestTarget.entity.getPos())) {
+                    bestTarget = zombie;
+                }
+                continue;
+            }
+
+            double timeToPlayer = distance / speedTowardsPlayer;
+
+            if (timeToPlayer < minTimeToPlayer) {
+                minTimeToPlayer = timeToPlayer;
+                bestTarget = zombie;
+            }
+        }
+
+        return bestTarget;
+    }
+
     private Vec3d calculatePredictedPosition(ZombiesAgent.ZombieTarget zombie, ClientPlayerEntity player) {
         if (!predictiveAim.getRawState()) {
             return zombie.getEndVec();
         }
 
-        UUID zombieId = zombie.uuid;
         Vec3d currentPos = zombie.entity.getPos();
-        Vec3d playerPos = player.getPos();
-
-        // Update pathfinding target (zombies always pathfind toward player)
-        pathfindingTargets.put(zombieId, playerPos);
-
-        // Update position tracking
-        Vec3d lastPos = lastPositions.get(zombieId);
-        Vec3d currentVelocity = Vec3d.ZERO;
-
-        if (lastPos != null) {
-            currentVelocity = currentPos.subtract(lastPos);
-            velocities.put(zombieId, currentVelocity);
-        }
-        lastPositions.put(zombieId, currentPos);
-
-        // Calculate pathfinding-based prediction
+        Vec3d playerPos = player.getEyePos();
+        Vec3d currentVelocity = velocities.getOrDefault(zombie.uuid, Vec3d.ZERO);
         Vec3d pathDirection = getPathfindingDirection(zombie, currentPos, playerPos, currentVelocity);
 
-        if (pathDirection.equals(Vec3d.ZERO)) {
-            return zombie.getEndVec(); // Fallback to current headshot position
+        if (pathDirection.lengthSquared() < 1.0E-7D) {
+            return zombie.getEndVec();
         }
 
-        // Calculate prediction time based on distance and projectile speed
         double distance = playerPos.distanceTo(currentPos);
         double projectileSpeed = getProjectileSpeed();
-        double timeToTarget = distance / projectileSpeed;
+        double timeToTarget = (projectileSpeed > 0) ? distance / projectileSpeed : 0;
 
-        // Limit prediction time based on slider setting
         int maxPredictionTicks = predictionTicks.getRawState().intValue();
         double maxPredictionTime = maxPredictionTicks / 20.0;
         timeToTarget = Math.min(timeToTarget, maxPredictionTime);
 
-        double zombieSpeed = estimateZombieSpeed(zombie, currentVelocity);
-        Vec3d predictedBodyPos = currentPos.add(pathDirection.normalize().multiply(zombieSpeed * timeToTarget * 20));
+        Vec3d predictedBodyPos = currentPos.add(pathDirection.multiply(timeToTarget));
 
-        Vec3d predictedHeadPos = predictedBodyPos.add(0, zombie.entity.getEyeHeight(zombie.entity.getPose()), 0);
-
-        return predictedHeadPos;
+        return predictedBodyPos.add(0, zombie.entity.getEyeHeight(zombie.entity.getPose()), 0);
     }
 
     private Vec3d getPathfindingDirection(ZombiesAgent.ZombieTarget zombie, Vec3d zombiePos, Vec3d playerPos, Vec3d currentVelocity) {
         Vec3d directPath = playerPos.subtract(zombiePos).normalize();
 
-        if (currentVelocity.length() > 0.01) {
+        if (currentVelocity.lengthSquared() > 1.0E-7D) {
             Vec3d normalizedVelocity = currentVelocity.normalize();
+            double directness = normalizedVelocity.dotProduct(directPath);
+            directness = Math.max(0, Math.min(1, directness));
 
-            return directPath.multiply(0.7).add(normalizedVelocity.multiply(0.3));
+            return directPath.multiply(1.0 - directness).add(normalizedVelocity.multiply(directness)).normalize().multiply(currentVelocity.length());
         }
 
-        return directPath;
+        return directPath.multiply(estimateZombieSpeed(zombie) / 20.0);
     }
 
-    private double estimateZombieSpeed(ZombiesAgent.ZombieTarget zombie, Vec3d currentVelocity) {
-        if (currentVelocity.length() > 0.01) {
-            return currentVelocity.length();
-        }
+    private double estimateZombieSpeed(ZombiesAgent.ZombieTarget zombie) {
         return switch (zombie.type) {
-            case ZOMBIE -> 0.25; // Normal zombie speed
-            case BLAZE -> 0.4;   // Blazes are faster
-            case WOLF -> 0.35;   // Wolves are fast
-            case SKELETON -> 0.25; // Similar to zombies
-            case CREEPER -> 0.25; // Similar to zombies
-            case MAGMACUBE, SLIME -> 0.2; // Slimes are slower
-            case WITCH -> 0.25; // Similar to zombies
-            case ENDERMITE, SILVERFISH -> 0.3; // Small but fast
-            default -> 0.25; // Default speed
+            case ZOMBIE, SKELETON, CREEPER, WITCH -> 5.0; // ~0.25 B/t * 20 t/s
+            case BLAZE -> 8.0;
+            case WOLF -> 7.0;
+            case MAGMACUBE, SLIME -> 4.0;
+            case ENDERMITE, SILVERFISH -> 6.0;
+            default -> 5.0;
         };
     }
 
     private double getProjectileSpeed() {
-        return 10.0;
+        return 20.0;
     }
 
     @Override
@@ -141,6 +157,8 @@ public class Aimbot extends TickModule<ToggleWidget, Boolean> {
             rightClickKey = KeyBinding.byId("key.use");
             return;
         }
+
+        updateAllZombieVelocities();
 
         if (rightClickKey.isPressed() || autoShoot.getRawState()) {
             if (ZombiesAgent.getZombies().isEmpty()) return;
@@ -152,16 +170,16 @@ public class Aimbot extends TickModule<ToggleWidget, Boolean> {
                 if (lookingAt.isIn(BlockTags.BUTTONS) || lookingAt.isOf(Blocks.CHEST)) return;
             }
 
-            ZombiesAgent.ZombieTarget closest = ZombiesAgent.getClosestZombie();
-            if (closest == null) return;
+            ZombiesAgent.ZombieTarget bestTarget = getBestTarget(player);
+            if (bestTarget == null) return;
 
             if (autoWeaponSwitch.getRawState()) {
-                WeaponSelector.switchToBestWeapon(MinecraftClient.getInstance().player, closest);
+                WeaponSelector.switchToBestWeapon(player, bestTarget);
             }
 
             if (!ZombiesAgent.isGun(player.getMainHandStack())) return;
 
-            Vec3d predictedPos = calculatePredictedPosition(closest, player);
+            Vec3d predictedPos = calculatePredictedPosition(bestTarget, player);
             Vec3d vector = predictedPos.subtract(player.getEyePos()).normalize();
 
             WeaponSelector.addCooldown(player.getInventory().getSelectedSlot());
@@ -173,32 +191,52 @@ public class Aimbot extends TickModule<ToggleWidget, Boolean> {
                 PlayerEntityL.setRotationVector(player, vector);
             }
 
-            PlayerInteractItemC2SPacket shootPacket = new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, (int) world.getTickOrder(), aimYaw, aimPitch);
-            player.networkHandler.sendPacket(shootPacket);
+            ClientWorldAccessor clientWorldAccessor = (ClientWorldAccessor) world;
+
+            player.networkHandler.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(aimYaw, aimPitch, player.isOnGround(), player.horizontalCollision));
+
+            try (PendingUpdateManager pendingUpdateManager = clientWorldAccessor.getPendingUpdateManager().incrementSequence()) {
+                int seq = pendingUpdateManager.getSequence();
+                player.networkHandler.sendPacket(new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, seq, aimYaw, aimPitch));
+            }
         }
 
         cleanupTrackingData();
     }
 
+    private void updateAllZombieVelocities() {
+        HashSet<ZombiesAgent.ZombieTarget> zombies = ZombiesAgent.getZombies();
+        if (zombies.isEmpty()) {
+            velocities.clear();
+            return;
+        }
+
+        for (ZombiesAgent.ZombieTarget zombie : zombies) {
+            UUID zombieId = zombie.uuid;
+            Vec3d currentPos = zombie.entity.getPos();
+            Vec3d lastPos = lastPositions.get(zombieId);
+
+            if (lastPos != null) {
+                velocities.put(zombieId, currentPos.subtract(lastPos));
+            }
+            lastPositions.put(zombieId, currentPos);
+        }
+    }
+
     private void cleanupTrackingData() {
-        // Get current zombie UUIDs
-        HashSet<UUID> currentZombies = new HashSet<>();
+        Set<UUID> currentZombies = new HashSet<>();
         for (ZombiesAgent.ZombieTarget zombie : ZombiesAgent.getZombies()) {
             currentZombies.add(zombie.uuid);
         }
 
-        // Remove tracking data for zombies that no longer exist
         lastPositions.keySet().retainAll(currentZombies);
         velocities.keySet().retainAll(currentZombies);
-        pathfindingTargets.keySet().retainAll(currentZombies);
     }
 
     @Override
     protected void onDisabledTick(MinecraftClient client) {
-        // Clear tracking data when module is disabled
         lastPositions.clear();
         velocities.clear();
-        pathfindingTargets.clear();
     }
 
     @Override

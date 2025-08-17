@@ -71,6 +71,9 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
                 if (!this.expanded) {
                     this.scrollPosition = 0;
                 }
+                if(!this.expanded) {
+                    this.unfocus();
+                }
             }
         });
         return updateChildrenSizing();

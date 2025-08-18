@@ -2,6 +2,7 @@ package io.github.waqfs.gui;
 
 import io.github.waqfs.Cigarette;
 import io.github.waqfs.gui.hud.notification.NotificationDisplay;
+import io.github.waqfs.gui.hud.notification.NotificationDisplay;
 import io.github.waqfs.gui.widget.BaseWidget;
 import io.github.waqfs.gui.widget.KeybindWidget;
 import io.github.waqfs.gui.widget.ScrollableWidget;

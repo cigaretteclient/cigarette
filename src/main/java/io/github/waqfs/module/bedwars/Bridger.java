@@ -73,8 +73,10 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
             case EAST -> {
                 return right ? 135f : 45f;
             }
+            default -> {
+                throw new IllegalStateException("The side of the block must be the north, south, west, or east when starting the bridger.");
+            }
         }
-        throw new IllegalStateException("The side of the block must be the north, south, west, or east when starting the bridger.");
     }
 
     private boolean isDiagonalBridge() {
@@ -234,6 +236,10 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
                         }
                     }
                 }
+                case NONE -> {
+                    InputOverride.jumpKey = jumpKey.isPressed();
+                    InputOverride.sneakKey = sneakKey.isPressed();
+                }
             }
 
             cycleIfNoBlocks(player);
@@ -254,8 +260,10 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
             this.id = id;
         }
 
-        public int getId() {
-            return this.id;
-        }
+        /*
+            public int getId() {
+                return this.id;
+            }
+        */
     }
 }

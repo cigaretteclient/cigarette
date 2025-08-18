@@ -1,5 +1,6 @@
 package io.github.waqfs.gui.widget;
 
+import io.github.waqfs.Cigarette;
 import io.github.waqfs.gui.CigaretteScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
@@ -45,12 +46,13 @@ public class TextWidget extends BaseWidget<BaseWidget.Stateless> {
     protected void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left, int top, int right, int bottom) {
         context.fill(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR);
 
+        TextRenderer textRenderer = Cigarette.REGULAR;
         if (this.centered) {
-            TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+            textRenderer = Cigarette.REGULAR;
             int leftMargin = (width - textRenderer.getWidth(getMessage())) / 2;
             context.drawTextWithShadow(textRenderer, getMessage(), left + leftMargin, top + height / 3, CigaretteScreen.PRIMARY_TEXT_COLOR);
         } else {
-            context.drawTextWithShadow(MinecraftClient.getInstance().textRenderer, getMessage(), left + 4, top + height / 3, CigaretteScreen.PRIMARY_TEXT_COLOR);
+            context.drawTextWithShadow(textRenderer, getMessage(), left + 4, top + height / 3, CigaretteScreen.PRIMARY_TEXT_COLOR);
         }
         if (this.underlined) context.drawHorizontalLine(left + 3, right - 3, bottom - 1, CigaretteScreen.SECONDARY_COLOR);
     }

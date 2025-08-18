@@ -82,6 +82,7 @@ public class ZombiesAgent extends BaseAgent {
     protected void onValidTick(MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
         zombies.removeIf(ZombieTarget::isDead);
         powerups.removeIf(Powerup::isDead);
+        powerups.forEach(Powerup::tick);
         for (Entity zombie : world.getEntities()) {
             if (!(zombie instanceof LivingEntity livingEntity)) continue;
             if (ZombieType.from(zombie) == ZombieType.UNKNOWN) {
@@ -127,6 +128,7 @@ public class ZombiesAgent extends BaseAgent {
     @Override
     protected void onInvalidTick(MinecraftClient client) {
         zombies.clear();
+        powerups.clear();
     }
 
     @Override
@@ -215,11 +217,13 @@ public class ZombiesAgent extends BaseAgent {
         public final ArmorStandEntity armorStand;
         public final Vec3d position;
         public final Powerup.Type type;
+        private int remainingTicks;
 
         private Powerup(ArmorStandEntity entity, Vec3d position, Powerup.Type type) {
             this.armorStand = entity;
             this.position = position;
             this.type = type;
+            this.remainingTicks = type == Type.LUCKY_CHEST ? Integer.MAX_VALUE : 600;
         }
 
         private static Powerup create(ArmorStandEntity entity, Vec3d position, Powerup.Type type) {
@@ -234,6 +238,14 @@ public class ZombiesAgent extends BaseAgent {
 
         private boolean isDead() {
             return !this.armorStand.isAlive();
+        }
+
+        private void tick() {
+            this.remainingTicks -= 1;
+        }
+
+        public int getRemainingTicks() {
+            return this.remainingTicks;
         }
 
         public enum Type {

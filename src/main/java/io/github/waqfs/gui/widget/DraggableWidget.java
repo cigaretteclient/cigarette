@@ -24,6 +24,7 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
     private double startingMouseY = 0;
     private @Nullable DragCallback dragCallback = null;
     private @Nullable ClickCallback clickCallback = null;
+    public boolean expanded = true;
 
     public DraggableWidget(int x, int y, int width, int height, Text message) {
         super(message, null);
@@ -108,6 +109,17 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
             int g = ((int) lerp((color1 >> 8) & 0xFF, (color2 >> 8) & 0xFF, t)) << 8;
             int b = (int) lerp(color1 & 0xFF, color2 & 0xFF, t);
             return a | r | g | b;
+        }
+
+        public static int colorDarken(int color, float factor) {
+            int a = (color >> 24) & 0xFF;
+            int r = (int) (((color >> 16) & 0xFF) * factor);
+            int g = (int) (((color >> 8) & 0xFF) * factor);
+            int b = (int) ((color & 0xFF) * factor);
+            r = Math.max(0, Math.min(255, r));
+            g = Math.max(0, Math.min(255, g));
+            b = Math.max(0, Math.min(255, b));
+            return (a << 24) | (r << 16) | (g << 8) | b;
         }
 
         public static int rgba2Int(int r, int g, int b, int a) {
@@ -200,7 +212,12 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
             int top, int right, int bottom) {
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
         int bgColor = color(left, top);
-        roundedRect(context, left, top, right, bottom, bgColor, 2, true, false);
+        if (!this.expanded) {
+            roundedRect(context, left, top, right, bottom, bgColor, 2, true, true);
+        } else {
+            roundedRect(context, left, top, right, bottom, bgColor, 2, true, false);
+            context.drawHorizontalLine(left, right - 1, bottom - 1, ColorUtil.colorDarken(bgColor, 0.8f));
+        }
         Text text = getMessage();
         int textWidth = textRenderer.getWidth(text);
         int horizontalMargin = (width - textWidth) / 2;

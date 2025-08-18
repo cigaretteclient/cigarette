@@ -109,13 +109,17 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
     }
 
     public void setExpanded(boolean expanded) {
+        if (this.expanded == expanded) return;
         this.expanded = expanded;
+        this.ticksOnOpen = expanded ? 0 : MAX_TICKS_ON_OPEN;
     }
 
     @Override
     public void unfocus() {
         if (this.header != null)
             this.header.unfocus();
+        this.ticksOnOpen = this.expanded ? MAX_TICKS_ON_OPEN : 0;
+        this.setFocused(false);
         super.unfocus();
     }
 
@@ -202,8 +206,14 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
             int target = this.expanded ? MAX_TICKS_ON_OPEN : 0;
             if (this.ticksOnOpen < target) {
                 this.ticksOnOpen = Math.min(this.ticksOnOpen + 1, MAX_TICKS_ON_OPEN);
+                if (this.header != null && this.expanded) {
+                    this.header.expanded = true;
+                }
             } else if (this.ticksOnOpen > target) {
                 this.ticksOnOpen = Math.max(this.ticksOnOpen - 1, 0);
+                if (this.header != null && !this.expanded && this.ticksOnOpen == target) {
+                    this.header.expanded = false;
+                }
             }
 
             boolean hasHeader = header != null;
@@ -214,7 +224,7 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
             int realBottomInt = getVisibleBottom(top, bottom);
             int realHeight = Math.max(0, realBottomInt - realTop);
 
-            Scissor.pushExclusive(context, left, realTop, right, realBottomInt);
+            Scissor.pushExclusive(context, left, Math.max(0, realTop - 1), right + 1, realBottomInt + 2);
             for (int index = 0; index < children.length; index++) {
                 BaseWidget<?> child = children[index];
                 if (child == null)
@@ -237,7 +247,7 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
             }
             Scissor.popExclusive();
 
-            int bottomRectTop = realBottomInt + 1;
+            int bottomRectTop = realBottomInt;
             if (this.getEasedProgress() > 0.0) {
                 DraggableWidget.roundedRect(context, left, bottomRectTop - 2, right, bottomRectTop + 2,
                         CigaretteScreen.BACKGROUND_COLOR, 2, false, true);

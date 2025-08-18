@@ -45,6 +45,8 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType> extends Pas
         if (this.header != null) this.header.unfocus();
         this.setFocused(false);
         this.dropdownVisible = false;
+        this.container.setFocused(false);
+        this.container.setExpanded(false);
         super.unfocus();
     }
 
@@ -94,6 +96,12 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType> extends Pas
 
     @Override
     protected void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left, int top, int right, int bottom) {
+        if (this.container == null) return;
+        if (this.container.focused || this.dropdownVisible) {
+            this.container.setExpanded(true);
+        } else {
+            this.container.setExpanded(false);
+        }
         if (this.header == null) return;
         this.header.withXY(left, top).withWH(width, height).renderWidget(context, mouseX, mouseY, deltaTicks);
 

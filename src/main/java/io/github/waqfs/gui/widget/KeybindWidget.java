@@ -2,6 +2,7 @@ package io.github.waqfs.gui.widget;
 
 import io.github.waqfs.Cigarette;
 import io.github.waqfs.gui.CigaretteScreen;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -23,6 +24,7 @@ public class KeybindWidget extends BaseWidget<Integer> {
         super(message, tooltip);
         this.utilKey = InputUtil.UNKNOWN_KEY;
         this.keyBinding = new KeyBinding(UUID.randomUUID().toString(), GLFW.GLFW_KEY_UNKNOWN, "cigarette.null");
+        KeyBindingHelper.registerKeyBinding(this.keyBinding);
     }
 
     public KeybindWidget withDefaultKey(int key) {

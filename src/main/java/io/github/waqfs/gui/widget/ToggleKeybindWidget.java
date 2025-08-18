@@ -2,6 +2,7 @@ package io.github.waqfs.gui.widget;
 
 import io.github.waqfs.module.BaseModule;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
@@ -24,6 +25,10 @@ public class ToggleKeybindWidget extends ToggleWidget {
     public ToggleKeybindWidget withDefaultKey(int keyCode) {
         this.widget.withDefaultKey(keyCode);
         return this;
+    }
+
+    public KeyBinding getKeybind() {
+        return this.widget.getKeybind();
     }
 
     public static BaseModule.GeneratedWidgets<ToggleKeybindWidget, Boolean> keybindModule(Text displayName, @Nullable Text tooltip) {

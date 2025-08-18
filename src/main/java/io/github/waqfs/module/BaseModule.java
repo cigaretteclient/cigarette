@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 
 public abstract class BaseModule<Widget extends BaseWidget<Boolean>, Boolean> {
     private final String key;
-    public final DropdownWidget<Widget, Boolean> wrapper;
+    public final @Nullable DropdownWidget<Widget, Boolean> wrapper;
     public final Widget widget;
 
     public BaseModule(WidgetGenerator<Widget, Boolean> func, String key, String displayName, @Nullable String tooltip) {
@@ -22,7 +22,11 @@ public abstract class BaseModule<Widget extends BaseWidget<Boolean>, Boolean> {
                 this.whenDisabled();
             }
         });
-        this.wrapper.registerConfigKey(key);
+        if (this.wrapper != null) {
+            this.wrapper.registerConfigKey(key);
+        } else {
+            this.widget.registerConfigKey(key);
+        }
     }
 
     public boolean getRawState() {
@@ -30,6 +34,7 @@ public abstract class BaseModule<Widget extends BaseWidget<Boolean>, Boolean> {
     }
 
     public void setChildren(BaseWidget<?>... widgets) {
+        if (this.wrapper == null) throw new IllegalStateException("Cannot define children on a non-dropdown module.");
         this.wrapper.setChildren(widgets);
     }
 
@@ -44,6 +49,6 @@ public abstract class BaseModule<Widget extends BaseWidget<Boolean>, Boolean> {
         GeneratedWidgets<HeaderType, StateType> accept(Text displayName, @Nullable Text tooltip);
     }
 
-    public record GeneratedWidgets<HeaderType extends BaseWidget<?>, StateType>(DropdownWidget<HeaderType, StateType> dropdown, HeaderType widget) {
+    public record GeneratedWidgets<HeaderType extends BaseWidget<?>, StateType>(@Nullable DropdownWidget<HeaderType, StateType> dropdown, HeaderType widget) {
     }
 }

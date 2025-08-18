@@ -15,6 +15,7 @@ import io.github.waqfs.module.zombies.Aimbot;
 import io.github.waqfs.module.render.PlayerESP;
 import io.github.waqfs.module.render.ProjectileESP;
 import io.github.waqfs.module.zombies.ReviveAura;
+import io.github.waqfs.module.zombies.PowerupESP;
 import io.github.waqfs.module.zombies.ZombieESP;
 
 public class Config {
@@ -36,7 +37,7 @@ public class Config {
         this.keybinds.attach(new AddGlassBlock(), new BreakBlock(), new VClip());
         this.murderMystery.attach(MYSTERY_PLAYERESP, new GoldESP());
         this.bedwars.attach(new FireballESP(), new EntityESP(), new DefenseViewer(), new AutoTool(), new Bridger());
-        this.zombies.attach(new ZombieESP(), new Aimbot(), new ReviveAura());
+        this.zombies.attach(new ZombieESP(), new Aimbot(), new ReviveAura(), new PowerupESP());
         this.combat.attach(COMBAT_AUTOCLICKER, COMBAT_JUMP_RESET, COMBAT_PERFECT_HIT);
         this.render.attach(new PlayerESP(), new ProjectileESP());
     }

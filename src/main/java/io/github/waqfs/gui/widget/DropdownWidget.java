@@ -184,18 +184,15 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType>
             return;
 
         context.getMatrices().push();
-
-        float scale = (float) (0.9 + 0.1 * toggleProgress);
-        // float alpha = (float) toggleProgress;
-        context.getMatrices().translate(right, top, 0);
-        context.getMatrices().scale(scale, scale, 1.0f);
-        context.getMatrices().translate(-right, -top, 0);
+        float translateY = (float) ((1.0 - toggleProgress) * 6.0);
+        context.getMatrices().translate(0, translateY, 0);
 
         Scissor.pushExclusive(context, right, top, right + this.container.getWidth(), top + this.container.getHeight());
 
         this.container.withXY(right + childLeftOffset, top)
                 .withWH(this.container.getWidth(), this.container.getHeight())
                 .renderWidget(context, mouseX, mouseY, deltaTicks);
+
         Scissor.popExclusive();
         context.getMatrices().pop();
     }

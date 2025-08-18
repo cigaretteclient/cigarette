@@ -54,7 +54,7 @@ public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType
     }
 
     public ColorDropdownWidget<Widget, StateType> withAlpha(boolean alpha) {
-        this.sliderAlpha.visible = alpha;
+        this.sliderAlpha.disabled = !alpha;
         if (!alpha) this.sliderAlpha.withDefault(255d);
         return this;
     }

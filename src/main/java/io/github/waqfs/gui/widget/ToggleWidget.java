@@ -1,19 +1,46 @@
 package io.github.waqfs.gui.widget;
 
+import io.github.waqfs.Cigarette;
 import io.github.waqfs.gui.CigaretteScreen;
+import io.github.waqfs.gui.notifications.Notification;
 import io.github.waqfs.module.BaseModule;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.Map;
 import java.util.function.Consumer;
 
 public class ToggleWidget extends BaseWidget<Boolean> {
     private static final int MAX_HOVER_TICKS = 35;
     private int ticksOnHover = 0;
     private @Nullable Consumer<Boolean> callback = null;
+
+    private static final float MAX_ENABLE_TICKS = 5f;
+    private float ticksOnEnable = 0f;
+
+    private static int lerpColor(int a, int b, float t) {
+        t = Math.max(0f, Math.min(1f, t));
+        int aA = (a >> 24) & 0xFF;
+        int aR = (a >> 16) & 0xFF;
+        int aG = (a >> 8) & 0xFF;
+        int aB = a & 0xFF;
+
+        int bA = (b >> 24) & 0xFF;
+        int bR = (b >> 16) & 0xFF;
+        int bG = (b >> 8) & 0xFF;
+        int bB = b & 0xFF;
+
+        int rA = Math.round(aA + (bA - aA) * t);
+        int rR = Math.round(aR + (bR - aR) * t);
+        int rG = Math.round(aG + (bG - aG) * t);
+        int rB = Math.round(aB + (bB - aB) * t);
+
+        return (rA & 0xFF) << 24 | (rR & 0xFF) << 16 | (rG & 0xFF) << 8 | (rB & 0xFF);
+    }
 
     public ToggleWidget(Text message, @Nullable Text tooltip) {
         super(message, tooltip);
@@ -52,16 +79,24 @@ public class ToggleWidget extends BaseWidget<Boolean> {
             context.fill(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR);
         }
 
-        int textColor = this.getRawState() ? CigaretteScreen.ENABLED_COLOR : CigaretteScreen.PRIMARY_TEXT_COLOR;
+        if (this.getRawState()) {
+            ticksOnEnable = Math.min(ticksOnEnable + deltaTicks, MAX_ENABLE_TICKS);
+        } else {
+            ticksOnEnable = Math.max(ticksOnEnable - deltaTicks, 0f);
+        }
+        float enableT = ticksOnEnable / MAX_ENABLE_TICKS;
+        float easedEnable = (float) Math.max(0.0, Math.min(1.0, enableT));
+        int textColor = lerpColor(CigaretteScreen.PRIMARY_TEXT_COLOR, CigaretteScreen.ENABLED_COLOR, easedEnable);
 
+        int borderColor = DraggableWidget.color(left, top);
         if (ticksOnHover > 0) {
             float progress = (float) ticksOnHover / MAX_HOVER_TICKS;
-            context.drawHorizontalLine(left, (int) (left + width * progress), top, textColor);
-            context.drawHorizontalLine((int) (right - width * progress), right, bottom - 1, textColor);
-            context.drawVerticalLine(left, (int) (bottom - height * progress), bottom, textColor);
-            context.drawVerticalLine(right - 1, top, (int) (top + height * progress), textColor);
+            context.drawHorizontalLine(left, ((int) ((left-1) + width * progress)), top, borderColor);
+            context.drawHorizontalLine((int) (right - width * progress), right - 1, bottom - 1, borderColor);
+            context.drawVerticalLine(left, (int) (bottom - height * progress), bottom, borderColor);
+            context.drawVerticalLine(right - 1, top - 1, (int) (top + height * progress), borderColor);
         }
-
-        context.drawTextWithShadow(MinecraftClient.getInstance().textRenderer, getMessage(), left + 4, top + height / 3, textColor);
+        TextRenderer textRenderer = Cigarette.REGULAR;
+        context.drawTextWithShadow(textRenderer, getMessage(), left + 4, top + height / 3, textColor);
     }
 }

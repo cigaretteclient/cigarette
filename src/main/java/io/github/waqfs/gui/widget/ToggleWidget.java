@@ -64,11 +64,6 @@ public class ToggleWidget extends BaseWidget<Boolean> {
         if (!isMouseOver(mouseX, mouseY)) return false;
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             this.setRawState(!this.getRawState());
-            Cigarette.EVENTS.dispatchEvent(new Notification(Map.of(
-                "type", "info",
-                "title", "Module Toggled",
-                "message", "Module " + this.getMessage().getString() + " was " + (this.getRawState() ? "enabled" : "disabled")
-            )));
         }
         this.setFocused();
         return true;

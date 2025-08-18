@@ -132,7 +132,7 @@ public class NotificationDisplay extends ClickableWidget {
 
             int winW = window.getScaledWidth();
             int winH = window.getScaledHeight();
-            int clampedLeft = Math.max(0, Math.min(left, winW));
+            int clampedLeft = Math.max(0, Math.min(left, winW)) - 3;
             int clampedRight = Math.max(0, Math.min(right, winW));
             int clampedTop = Math.max(0, Math.min(top, winH));
             int clampedBottom = Math.max(0, Math.min(bottom, winH));
@@ -199,22 +199,9 @@ public class NotificationDisplay extends ClickableWidget {
             String msgStr = n.getNotification().getMessage();
             String titleTrim = titleStr;
             String msgTrim = msgStr;
-            if (contentWidth > 0) {
-                while (boldTextRenderer.getWidth(titleTrim) > contentWidth && titleTrim.length() > 0) {
-                    titleTrim = titleTrim.substring(0, Math.max(0, titleTrim.length() - 1));
-                }
-                if (!titleTrim.equals(titleStr))
-                    titleTrim = titleTrim + "…";
-
-                while (regularTextRenderer.getWidth(msgTrim) > contentWidth && msgTrim.length() > 0) {
-                    msgTrim = msgTrim.substring(0, Math.max(0, msgTrim.length() - 1));
-                }
-                if (!msgTrim.equals(msgStr))
-                    msgTrim = msgTrim + "…";
-            }
-            context.drawText(boldTextRenderer, titleTrim, contentLeft, clampedTop + 3,
+            context.drawText(boldTextRenderer, titleTrim, contentLeft - 3, clampedTop + 3,
                     CigaretteScreen.PRIMARY_TEXT_COLOR, true);
-            context.drawText(regularTextRenderer, msgTrim, contentLeft, clampedTop + 18,
+            context.drawText(regularTextRenderer, msgTrim, contentLeft - 3, clampedTop + 18,
                     0xDDFFFFFF, true);
 
             i++;

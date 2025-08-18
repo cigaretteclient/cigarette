@@ -192,9 +192,6 @@ public class Aimbot extends TickModule<ToggleWidget, Boolean> {
             }
 
             ClientWorldAccessor clientWorldAccessor = (ClientWorldAccessor) world;
-
-            player.networkHandler.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(aimYaw, aimPitch, player.isOnGround(), player.horizontalCollision));
-
             try (PendingUpdateManager pendingUpdateManager = clientWorldAccessor.getPendingUpdateManager().incrementSequence()) {
                 int seq = pendingUpdateManager.getSequence();
                 player.networkHandler.sendPacket(new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, seq, aimYaw, aimPitch));

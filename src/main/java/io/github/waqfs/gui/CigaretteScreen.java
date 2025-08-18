@@ -2,17 +2,15 @@ package io.github.waqfs.gui;
 
 import io.github.waqfs.Cigarette;
 import io.github.waqfs.gui.hud.notification.NotificationDisplay;
-import io.github.waqfs.gui.hud.notification.NotificationDisplay;
 import io.github.waqfs.gui.widget.BaseWidget;
+import io.github.waqfs.gui.widget.DraggableWidget.ColorUtil;
 import io.github.waqfs.gui.widget.KeybindWidget;
 import io.github.waqfs.gui.widget.ScrollableWidget;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.render.RenderLayer;
 import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
@@ -40,6 +38,9 @@ public class CigaretteScreen extends Screen {
     private static final double CLOSE_STAGGER_FACTOR = 0.6;
     private int categoryCount = 0;
     public static @Nullable KeybindWidget bindingKey = null;
+
+    private static int[] bottomGradientBandColors = null;
+    private static int bottomGradientBands = 0;
 
     protected CigaretteScreen() {
         super(Text.literal("Cigarette Client"));
@@ -161,6 +162,8 @@ public class CigaretteScreen extends Screen {
         MinecraftClient mc = MinecraftClient.getInstance();
         int scrW = mc.getWindow().getScaledWidth();
         int scrH = mc.getWindow().getScaledHeight();
+
+        // drawBottomAmbientGradient(context, scrW, scrH);
         NotificationDisplay.imageRender(context, scrW - 60, scrH - 70, 0.8);
 
         CigaretteScreen.hoverHandled = null;
@@ -305,6 +308,55 @@ public class CigaretteScreen extends Screen {
         if (begin && !animActive)
             begin = false;
 
+    }
+
+    /*private static void drawBottomAmbientGradient(DrawContext context, int scrW, int scrH) {
+        if (scrW <= 0 || scrH <= 0)
+            return;
+        int height = Math.max(1, scrH / 2);
+        int top = scrH - height;
+        int bottom = scrH;
+
+        final int DARK_TINT = 0xFF020618;
+        final int maxAlpha = 150;
+
+        int width = Math.max(1, scrW);
+
+        double seconds = (System.nanoTime() / 1_000_000_000.0);
+        final double waveFreq = 1.8;
+        final double speed = 0.30;
+        final double phase = Math.PI * 0.28;
+
+        int[] colRGB = new int[width];
+        for (int x = 0; x < width; x++) {
+            double xNorm = x / (double) width;
+            double w = 0.5 + 0.5 * Math.sin(2.0 * Math.PI * (waveFreq * xNorm + speed * seconds) + phase);
+            w = Math.max(0.0, Math.min(1.0, w));
+            int tint = ColorUtil.lerpColor(PRIMARY_COLOR, DARK_TINT, (float) w);
+            colRGB[x] = tint & 0x00FFFFFF;
+        }
+
+        for (int y = top; y < bottom; y++) {
+            double ty = (y - top) / (double) height;
+            double vfade = smoothstep(ty);
+            vfade = Math.pow(vfade, 1.2);
+            int rowAlpha = (int) Math.round(maxAlpha * vfade);
+            rowAlpha = Math.max(0, Math.min(255, rowAlpha));
+            int aPart = (rowAlpha << 24);
+
+            for (int x = 0; x < width; x++) {
+                int color = aPart | colRGB[x];
+                context.fill(x, y, x + 1, y + 1, color);
+            }
+        }
+    }*/
+
+    private static double smoothstep(double t) {
+        if (t <= 0)
+            return 0;
+        if (t >= 1)
+            return 1;
+        return t * t * (3 - 2 * t);
     }
 
     public static double easeOutExpo(double t) {

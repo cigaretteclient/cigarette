@@ -216,9 +216,17 @@ public class NotificationDisplay extends ClickableWidget {
             barRight = Math.max(clampedLeft, Math.min(barRight, clampedRight));
 
             if (barLeft < barRight && barTop < barBottom) {
-                int barRadius = 2;
-                DraggableWidget.roundedRect(context, barLeft + 1, barTop, barRight, barBottom, 0xFF00FF00, barRadius,
-                        false, false, false, true);
+                int barRadius = Math.max(0, Math.min(
+                        cornerRadius,
+                        Math.min((barRight - barLeft) / 2, barHeight / 2)));
+
+                DraggableWidget.roundedRect(context,
+                        barLeft + 1, barTop, barRight, barBottom,
+                        0xFF00FF00,
+                        0,
+                        progressBarWidth > (actualBoxWidth - barRadius) ? 0 : barRadius,
+                        0,
+                        barRadius);
             }
 
             int rad = Math.max(0, Math.min(cornerRadius,
@@ -255,9 +263,9 @@ public class NotificationDisplay extends ClickableWidget {
             String msgStr = n.getNotification().getMessage();
             String titleTrim = titleStr;
             String msgTrim = msgStr;
-            context.drawText(boldTextRenderer, titleTrim, contentLeft - 3, clampedTop + 3,
+            context.drawText(boldTextRenderer, titleTrim, contentLeft - 3, clampedTop + 8,
                     CigaretteScreen.PRIMARY_TEXT_COLOR, true);
-            context.drawText(regularTextRenderer, msgTrim, contentLeft - 3, clampedTop + 18,
+            context.drawText(regularTextRenderer, msgTrim, contentLeft - 3, clampedTop + 23,
                     0xDDFFFFFF, true);
 
             i++;

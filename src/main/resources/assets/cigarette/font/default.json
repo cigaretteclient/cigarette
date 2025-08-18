@@ -1,0 +1,14 @@
+{
+    "providers": [
+        {
+            "type": "ttf",
+            "file": "cigarette:regular.ttf",
+            "shift": [
+                0,
+                0
+            ],
+            "size": 11,
+            "oversample": 11
+        }
+    ]
+}

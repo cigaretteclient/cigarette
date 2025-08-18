@@ -1,5 +1,6 @@
 package io.github.waqfs.gui.widget;
 
+import io.github.waqfs.Cigarette;
 import io.github.waqfs.gui.CigaretteScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
@@ -25,6 +26,9 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
     private @Nullable DragCallback dragCallback = null;
     private @Nullable ClickCallback clickCallback = null;
     public boolean expanded = true;
+
+    private int ticksOnCollapse = 0;
+    private static final int MAX_TICKS_ON_COLLAPSE = 10;
 
     public DraggableWidget(int x, int y, int width, int height, Text message) {
         super(message, null);
@@ -207,16 +211,55 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
         }
     }
 
+    public static void rotatedLine(DrawContext context, int x1, int y1, int x2, int y2, int color, float rotation) {
+        float pivotX = x1;
+        float pivotY = y1;
+        float dx = x2 - x1;
+        float dy = y2 - y1;
+        float length = (float) Math.hypot(dx, dy);
+        float step = Math.max(0.002f, 1.0f / Math.max(16f, length));
+        for (float t = 0; t <= 1.0f; t += step) {
+            float xt = x1 + t * dx;
+            float yt = y1 + t * dy;
+            float rx = (float) (Math.cos(rotation) * (xt - pivotX) - Math.sin(rotation) * (yt - pivotY) + pivotX);
+            float ry = (float) (Math.sin(rotation) * (xt - pivotX) + Math.cos(rotation) * (yt - pivotY) + pivotY);
+            pixelAt(context, Math.round(rx), Math.round(ry), color);
+        }
+    }
+
+    public static void rotatedLine(DrawContext context, int x1, int y1, int x2, int y2, int color, float rotation,
+            boolean rotateFromCenter) {
+        float pivotX = rotateFromCenter ? (x1 + x2) / 2.0f : x1;
+        float pivotY = rotateFromCenter ? (y1 + y2) / 2.0f : y1;
+        float dx = x2 - x1;
+        float dy = y2 - y1;
+        float length = (float) Math.hypot(dx, dy);
+        float step = Math.max(0.002f, 1.0f / Math.max(16f, length));
+        for (float t = 0; t <= 1.0f; t += step) {
+            float xt = x1 + t * dx;
+            float yt = y1 + t * dy;
+            float rx = (float) (Math.cos(rotation) * (xt - pivotX) - Math.sin(rotation) * (yt - pivotY) + pivotX);
+            float ry = (float) (Math.sin(rotation) * (xt - pivotX) + Math.cos(rotation) * (yt - pivotY) + pivotY);
+            pixelAt(context, Math.round(rx), Math.round(ry), color);
+        }
+    }
+
     @Override
     public void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left,
             int top, int right, int bottom) {
-        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+        TextRenderer textRenderer = Cigarette.REGULAR;
         int bgColor = color(left, top);
         if (!this.expanded) {
-            roundedRect(context, left, top, right, bottom, bgColor, 2, true, true);
+            ticksOnCollapse = Math.min(ticksOnCollapse + 1, MAX_TICKS_ON_COLLAPSE);
         } else {
-            roundedRect(context, left, top, right, bottom, bgColor, 2, true, false);
-            context.drawHorizontalLine(left, right - 1, bottom - 1, ColorUtil.colorDarken(bgColor, 0.8f));
+            ticksOnCollapse = Math.max(ticksOnCollapse - 1, 0);
+        }
+        double progress = ticksOnCollapse / (double) MAX_TICKS_ON_COLLAPSE;
+        progress = CigaretteScreen.easeOutExpo(progress);
+        roundedRect(context, left, top, right, bottom, bgColor, 2, true, !this.expanded);
+        if (this.expanded) {
+            int borderColor = ColorUtil.colorDarken(bgColor, 0.8f);
+            context.drawHorizontalLine(left, right - 1, bottom - 1, borderColor);
         }
         Text text = getMessage();
         int textWidth = textRenderer.getWidth(text);

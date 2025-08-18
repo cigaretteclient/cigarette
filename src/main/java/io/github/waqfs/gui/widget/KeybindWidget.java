@@ -1,5 +1,6 @@
 package io.github.waqfs.gui.widget;
 
+import io.github.waqfs.Cigarette;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -39,7 +40,7 @@ public class KeybindWidget extends PassthroughWidget<BaseWidget<KeyBinding>, Bas
     @Override
     public void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left, int top, int right, int bottom) {
         context.fill(left, top, right, bottom, 0x111111FF);
-        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+        TextRenderer textRenderer = Cigarette.REGULAR;
         context.fill(left - 2, top - 2, right + 2, bottom + 2, 0x000000FF);
         context.drawText(textRenderer, keyBinding.getBoundKeyLocalizedText(), left + 5, top + 2, bottom, hovered);
     }

@@ -1,5 +1,6 @@
 package io.github.waqfs.gui.widget;
 
+import io.github.waqfs.Cigarette;
 import io.github.waqfs.gui.CigaretteScreen;
 import io.github.waqfs.gui.widget.DraggableWidget.ColorUtil;
 import net.minecraft.client.MinecraftClient;
@@ -109,7 +110,7 @@ public class SliderWidget extends BaseWidget<Double> {
         int primaryColor = this.disabled ? ColorUtil.colorDarken(CigaretteScreen.PRIMARY_COLOR, 0.4f) : CigaretteScreen.PRIMARY_COLOR;
         int secondaryColor = this.disabled ? ColorUtil.colorDarken(CigaretteScreen.SECONDARY_COLOR, 0.4f) : CigaretteScreen.SECONDARY_COLOR;
 
-        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+        TextRenderer textRenderer = Cigarette.REGULAR;
         context.drawTextWithShadow(textRenderer, getMessage(), left + 4, top + 4, textColor);
 
         Text value = Text.literal(Double.toString(this.getRawState()));

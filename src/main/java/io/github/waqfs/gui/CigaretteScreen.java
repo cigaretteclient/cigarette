@@ -2,6 +2,7 @@
 package io.github.waqfs.gui;
 
 import io.github.waqfs.Cigarette;
+import io.github.waqfs.gui.notifications.NotificationDisplay;
 import io.github.waqfs.gui.widget.BaseWidget;
 import io.github.waqfs.gui.widget.ScrollableWidget;
 import net.minecraft.client.MinecraftClient;
@@ -9,15 +10,12 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.render.RenderLayer;
-import net.minecraft.resource.Resource;
-import net.minecraft.resource.ResourceManager;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
-import java.security.Identity;
 import java.util.Stack;
 
 public class CigaretteScreen extends Screen {
@@ -33,7 +31,7 @@ public class CigaretteScreen extends Screen {
     private boolean begin = false;
     private long openStartNanos = 0L;
     private static final double OPEN_DURATION_S = 0.4;
-    private static final double OPEN_STAGGER_S = 0.04;
+    private static final double OPEN_STAGGER_S = 0.06;
     private static final int OPEN_DISTANCE_PX = 24;
     private int categoryCount = 0;
 
@@ -142,23 +140,14 @@ public class CigaretteScreen extends Screen {
         return hoverHandled == obj;
     }
 
-    public void imageTileRender(DrawContext context) {
-        MinecraftClient client = MinecraftClient.getInstance();
-        Identifier textureId = Identifier.of("cigarette", "icon.png");
-        int scrWidth = client.getWindow().getScaledWidth();
-        int scrHeight = client.getWindow().getScaledHeight();
-        for (int x = 0; x < scrWidth; x += 64) {
-            for (int y = 0; y < scrHeight; y += 64) {
-                context.drawTexture(
-                        RenderLayer::getGuiTextured,
-                        textureId, x, y, 0f, 0f, 64, 64, 64, 64);
-            }
-        }
-    }
-
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
         this.renderBackground(context, mouseX, mouseY, deltaTicks);
+
+        MinecraftClient mc = MinecraftClient.getInstance();
+        int scrW = mc.getWindow().getScaledWidth();
+        int scrH = mc.getWindow().getScaledHeight();
+        NotificationDisplay.imageRender(context, scrW - 60, scrH - 70, 0.8);
 
         CigaretteScreen.hoverHandled = null;
         boolean animActive = false;
@@ -181,15 +170,47 @@ public class CigaretteScreen extends Screen {
             context.getMatrices().push();
             context.getMatrices().translate(0, 0, priority.size() - i);
             if (begin && animActive) {
-                int orderIndex = (widget instanceof ScrollableWidget<?> sw)
-                        ? Math.max(0, sw.getCategoryOffsetIndex())
-                        : i;
-                double startDelay = (orderIndex) * OPEN_STAGGER_S;
+                double totalStagger = Math.max(0, categoryCount - 1) * OPEN_STAGGER_S;
+
+                double normalizedPos = 0.0;
+                try {
+                    double widgetCenterX = widget.getX() + (widget.getWidth() / 2.0);
+                    double widgetCenterY = widget.getY() + (widget.getHeight() / 2.0);
+                    double nx = scrW > 0 ? widgetCenterX / (double) scrW : 0.0;
+                    double ny = scrH > 0 ? widgetCenterY / (double) scrH : 0.0;
+                    normalizedPos = Math.max(0.0, Math.min(1.0, (nx + ny) * 0.5));
+                } catch (Exception ignore) {
+                    normalizedPos = Math.max(0.0, Math.min(1.0, i / (double) Math.max(1, priority.size())));
+                }
+
+                double startDelay = normalizedPos * totalStagger;
                 double t = Math.max(0.0, Math.min(1.0, (elapsed - startDelay) / OPEN_DURATION_S));
-                double eased = easeOutExpo(t);
-                double dx = (1.0 - eased) * OPEN_DISTANCE_PX;
-                if (dx > 0.01)
-                    context.getMatrices().translate(dx, 0, 0);
+                double eased = easeOut(t);
+
+                try {
+                    double widgetCenterX = widget.getX() + (widget.getWidth() / 2.0);
+                    double widgetCenterY = widget.getY() + (widget.getHeight() / 2.0);
+                    double nx = 0.0;
+                    double ny = 0.0;
+                    if (scrW > 0)
+                        nx = (widgetCenterX - (scrW / 2.0)) / (scrW / 2.0);
+                    if (scrH > 0)
+                        ny = (widgetCenterY - (scrH / 2.0)) / (scrH / 2.0);
+                    nx = Math.max(-1.0, Math.min(1.0, nx));
+                    ny = Math.max(-1.0, Math.min(1.0, ny));
+
+                    double magnitude = (1.0 - eased) * OPEN_DISTANCE_PX;
+                    double dx = magnitude * nx;
+                    double dy = magnitude * ny;
+                    if (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01) {
+                        context.getMatrices().translate((float) dx, (float) dy, 0);
+                    }
+                } catch (Exception ignore) {
+                    double dx = (1.0 - eased) * OPEN_DISTANCE_PX;
+                    if (dx > 0.01)
+                        context.getMatrices().translate(dx, 0, 0);
+                }
+
                 context.getMatrices().scale((float) eased, (float) eased, 1.0f);
             }
             widget._render(context, mouseX, mouseY, deltaTicks);
@@ -205,5 +226,32 @@ public class CigaretteScreen extends Screen {
         if (t <= 0.0)
             return 0.0;
         return 1.0 - Math.pow(2.0, -10.0 * t);
+    }
+
+    public static double easeOutExpoBack(double t) {
+        double s = 1.20158;
+        return 1.0 + (t -= 1.0) * t * ((s + 1.0) * t + s);
+    }
+
+    public static double easeOutElastic(double t) {
+        if (t >= 1.0)
+            return 1.0;
+        if (t <= 0.0)
+            return 0.0;
+        double p = 0.3;
+        double s = p / 4.0;
+        return 1.0 - Math.pow(2.0, -10.0 * t) * Math.sin((t - s) * (2.0 * Math.PI) / p);
+    }
+
+    public static double easeOut(double t) {
+        return 1 - Math.pow(1 - t, 3);
+    }
+    
+    public static double easeInExpo(double t) {
+        if (t >= 1.0)
+            return 1.0;
+        if (t <= 0.0)
+            return 0.0;
+        return Math.pow(2.0, 10.0 * (t - 1.0));
     }
 }

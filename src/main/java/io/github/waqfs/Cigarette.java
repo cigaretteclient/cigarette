@@ -3,6 +3,7 @@ package io.github.waqfs;
 import io.github.waqfs.agent.BedwarsAgent;
 import io.github.waqfs.agent.DevWidget;
 import io.github.waqfs.agent.MurderMysteryAgent;
+import io.github.waqfs.agent.ZombiesAgent;
 import io.github.waqfs.config.Config;
 import io.github.waqfs.config.FileSystem;
 import io.github.waqfs.events.Events;
@@ -30,6 +31,8 @@ import org.joml.Vector4f;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+
 public class Cigarette implements ModInitializer {
     public static final String MOD_ID = "cigarette";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
@@ -39,6 +42,7 @@ public class Cigarette implements ModInitializer {
     public static Config CONFIG = new Config();
     public static BedwarsAgent BEDWARS_AGENT = new BedwarsAgent(DevWidget.bedwarsAgent);
     public static MurderMysteryAgent MURDER_MYSTERY_AGENT = new MurderMysteryAgent(DevWidget.murderMysteryAgent);
+    public static ZombiesAgent ZOMBIES_AGENT = new ZombiesAgent(DevWidget.zombiesAgent);
     public static Events EVENTS = new Events();
     public static NotificationDisplay NOTIFICATION_DISPLAY;
     private static boolean addedNotificationDisplay = false;

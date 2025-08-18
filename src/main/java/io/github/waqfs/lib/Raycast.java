@@ -1,5 +1,6 @@
 package io.github.waqfs.lib;
 
+import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.client.MinecraftClient;
@@ -16,12 +17,13 @@ import net.minecraft.predicate.entity.EntityPredicates;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.*;
+import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.world.BlockView;
 import net.minecraft.world.RaycastContext;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.function.Predicate;
 
 public class Raycast {
     private static final double ARROW_GRAVITY = -0.05;
@@ -65,6 +67,40 @@ public class Raycast {
 
     public static BlockHitResult raycastBlock(Vec3d start, Vec3d end, Entity entity) {
         return raycastBlock(start, end, ShapeContext.of(entity));
+    }
+
+    public static FirstBlock firstBlockCollision(Vec3d start, Vec3d end, Predicate<BlockState> whitelist) {
+        ClientWorld world = MinecraftClient.getInstance().world;
+        assert world != null;
+
+        BlockHitResult res = BlockView.raycast(start, end, new RaycastContext(start, end, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, ShapeContext.absent()), (innerContext, pos) -> {
+            BlockState blockState = world.getBlockState(pos);
+            Vec3d innerStart = innerContext.getStart();
+            Vec3d innerEnd = innerContext.getEnd();
+            VoxelShape voxelShape = innerContext.getBlockShape(blockState, world, pos);
+
+            if (whitelist.test(blockState)) {
+                Vec3d vec3d = innerContext.getStart().subtract(innerContext.getEnd());
+                return BlockHitResult.createMissed(innerContext.getEnd(), Direction.getFacing(vec3d.x, vec3d.y, vec3d.z), BlockPos.ofFloored(innerContext.getEnd()));
+            }
+
+            BlockHitResult res1 = voxelShape.raycast(innerStart, innerEnd, pos);
+            if (res1 != null) {
+                BlockHitResult res2 = blockState.getRaycastShape(world, pos).raycast(start, end, pos);
+                if (res2 != null && res2.getPos().subtract(start).lengthSquared() < res1.getPos().subtract(start).lengthSquared()) {
+                    return res1.withSide(res2.getSide());
+                }
+            }
+            return res1;
+        }, (innerContext) -> {
+            Vec3d vec3d = innerContext.getStart().subtract(innerContext.getEnd());
+            return BlockHitResult.createMissed(innerContext.getEnd(), Direction.getFacing(vec3d.x, vec3d.y, vec3d.z), BlockPos.ofFloored(innerContext.getEnd()));
+        });
+
+        boolean missed = res.getType() == HitResult.Type.MISS;
+        boolean hit = !missed;
+        boolean whitelisted = hit && whitelist.test(world.getBlockState(res.getBlockPos()));
+        return new FirstBlock(hit, whitelisted, missed);
     }
 
     public static @Nullable EntityHitResult withEntity(@Nullable Entity entity, Box entityRegion, Box region) {
@@ -194,5 +230,8 @@ public class Raycast {
         SteppedTrajectory(int ticks) {
             this.steps = new Vec3d[ticks];
         }
+    }
+
+    public record FirstBlock(boolean hit, boolean whitelisted, boolean missed) {
     }
 }

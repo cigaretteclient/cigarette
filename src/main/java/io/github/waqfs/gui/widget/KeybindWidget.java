@@ -41,15 +41,15 @@ public class KeybindWidget extends BaseWidget<Integer> {
         return this.keyBinding;
     }
 
-    private void clearBinding() {
+    protected void clearBinding() {
         CigaretteScreen.bindingKey = null;
     }
 
-    private void toggleBinding() {
+    protected void toggleBinding() {
         CigaretteScreen.bindingKey = isBinding() ? null : this;
     }
 
-    private boolean isBinding() {
+    protected boolean isBinding() {
         return CigaretteScreen.bindingKey == this;
     }
 
@@ -97,9 +97,7 @@ public class KeybindWidget extends BaseWidget<Integer> {
         return true;
     }
 
-    @Override
-    public void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left, int top, int right, int bottom) {
-        context.fill(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR);
+    public void renderKeyText(DrawContext context, int top, int right) {
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
 
         String keyText;
@@ -111,10 +109,14 @@ public class KeybindWidget extends BaseWidget<Integer> {
             String keyName = utilKey.getLocalizedText().getLiteralString();
             keyText = Objects.requireNonNullElse(keyName, "???");
         }
-
-        context.drawTextWithShadow(textRenderer, getMessage(), left + 4, top + height / 3, CigaretteScreen.PRIMARY_TEXT_COLOR);
-
         Text value = Text.literal(keyText);
         context.drawTextWithShadow(textRenderer, value, right - textRenderer.getWidth(value) - 4, top + height / 3, CigaretteScreen.SECONDARY_COLOR);
+    }
+
+    @Override
+    public void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left, int top, int right, int bottom) {
+        context.fill(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR);
+        context.drawTextWithShadow(MinecraftClient.getInstance().textRenderer, getMessage(), left + 4, top + height / 3, CigaretteScreen.PRIMARY_TEXT_COLOR);
+        this.renderKeyText(context, top, right);
     }
 }

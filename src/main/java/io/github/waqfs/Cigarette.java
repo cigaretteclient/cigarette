@@ -3,6 +3,7 @@ package io.github.waqfs;
 import io.github.waqfs.agent.BedwarsAgent;
 import io.github.waqfs.agent.DevWidget;
 import io.github.waqfs.agent.MurderMysteryAgent;
+import io.github.waqfs.agent.ZombiesAgent;
 import io.github.waqfs.config.Config;
 import io.github.waqfs.config.FileSystem;
 import io.github.waqfs.events.Events;
@@ -15,22 +16,14 @@ import net.fabricmc.fabric.api.client.rendering.v1.IdentifiedLayer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
-import net.minecraft.client.font.Font;
-import net.minecraft.client.font.FontFilterType.FilterMap;
-import net.minecraft.client.font.FontLoader;
-import net.minecraft.client.font.FontStorage;
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.font.TrueTypeFontLoader;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.util.Window;
 import net.minecraft.util.Identifier;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 
 public class Cigarette implements ModInitializer {
     public static final String MOD_ID = "cigarette";
@@ -41,6 +34,7 @@ public class Cigarette implements ModInitializer {
     public static Config CONFIG = new Config();
     public static BedwarsAgent BEDWARS_AGENT = new BedwarsAgent(DevWidget.bedwarsAgent);
     public static MurderMysteryAgent MURDER_MYSTERY_AGENT = new MurderMysteryAgent(DevWidget.murderMysteryAgent);
+    public static ZombiesAgent ZOMBIES_AGENT = new ZombiesAgent(DevWidget.zombiesAgent);
     public static Events EVENTS = new Events();
     public static NotificationDisplay NOTIFICATION_DISPLAY;
     private static boolean addedNotificationDisplay = false;

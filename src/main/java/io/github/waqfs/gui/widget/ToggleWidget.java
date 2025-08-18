@@ -90,8 +90,9 @@ public class ToggleWidget extends BaseWidget<Boolean> {
 
         int borderColor = DraggableWidget.color(left, top);
         if (ticksOnHover > 0) {
-            float progress = (float) ticksOnHover / MAX_HOVER_TICKS;
-            context.drawHorizontalLine(left, ((int) ((left-1) + width * progress)), top, borderColor);
+            float raw = (float) ticksOnHover / MAX_HOVER_TICKS;
+            float progress = (float) Math.max(0.0, Math.min(1.0, hovered ? CigaretteScreen.easeOutExpo(raw) : CigaretteScreen.easeInExpo(raw)));
+            context.drawHorizontalLine(left, ((int) ((left - 1) + width * progress)), top, borderColor);
             context.drawHorizontalLine((int) (right - width * progress), right - 1, bottom - 1, borderColor);
             context.drawVerticalLine(left, (int) (bottom - height * progress), bottom, borderColor);
             context.drawVerticalLine(right - 1, top - 1, (int) (top + height * progress), borderColor);

@@ -31,10 +31,12 @@ public class CigaretteScreen extends Screen {
     private long openStartNanos = 0L;
     private boolean closing = false;
     private long closeStartNanos = 0L;
-    private static final double CLOSE_DURATION_S = 0.35;
     private static final double OPEN_DURATION_S = 0.4;
     private static final double OPEN_STAGGER_S = 0.06;
     private static final int OPEN_DISTANCE_PX = 24;
+
+    private static final double CLOSE_DURATION_FACTOR = 0.6;
+    private static final double CLOSE_STAGGER_FACTOR = 0.6;
     private int categoryCount = 0;
     public static @Nullable KeybindWidget bindingKey = null;
 
@@ -164,26 +166,69 @@ public class CigaretteScreen extends Screen {
 
         if (closing) {
             double elapsedClose = (System.nanoTime() - closeStartNanos) / 1_000_000_000.0;
-            double t = Math.max(0.0, Math.min(1.0, elapsedClose / CLOSE_DURATION_S));
-            double eased = 1.0 - easeOut(t);
+
+            double closeDuration = OPEN_DURATION_S * CLOSE_DURATION_FACTOR;
+            double closeStagger = OPEN_STAGGER_S * CLOSE_STAGGER_FACTOR;
+            double totalAnim = (Math.max(0, categoryCount - 1)) * closeStagger + closeDuration;
+            boolean animActive = elapsedClose < totalAnim;
+            double remaining = Math.max(0.0, Math.min(totalAnim, totalAnim - elapsedClose));
 
             context.getMatrices().push();
-            float s = (float) Math.max(0.001, 1.0 - eased);
-            context.getMatrices().translate(this.width / 2f, this.height / 2f, 0);
-            context.getMatrices().scale(s, s, 1.0f);
-            context.getMatrices().translate(-this.width / 2f, -this.height / 2f, 0);
-
             for (int i = 0; i < priority.size(); i++) {
                 BaseWidget<?> widget = priority.get(i);
+
                 context.getMatrices().push();
                 context.getMatrices().translate(0, 0, priority.size() - i);
+
+                double normalizedPos = 0.0;
+                try {
+                    double widgetCenterX = widget.getX() + (widget.getWidth() / 2.0);
+                    double widgetCenterY = widget.getY() + (widget.getHeight() / 2.0);
+                    double nx = scrW > 0 ? widgetCenterX / (double) scrW : 0.0;
+                    double ny = scrH > 0 ? widgetCenterY / (double) scrH : 0.0;
+                    normalizedPos = Math.max(0.0, Math.min(1.0, (nx + ny) * 0.5));
+                } catch (Exception ignore) {
+                    normalizedPos = Math.max(0.0, Math.min(1.0, i / (double) Math.max(1, priority.size())));
+                }
+
+                double totalStagger = Math.max(0, categoryCount - 1) * closeStagger;
+                double startDelay = normalizedPos * totalStagger;
+
+                double t = Math.max(0.0, Math.min(1.0, (remaining - startDelay) / closeDuration));
+
+                double eased = easeIn(t);
+
+                try {
+                    double widgetCenterX = widget.getX() + (widget.getWidth() / 2.0);
+                    double widgetCenterY = widget.getY() + (widget.getHeight() / 2.0);
+                    double nx = 0.0;
+                    double ny = 0.0;
+                    if (scrW > 0)
+                        nx = (widgetCenterX - (scrW / 2.0)) / (scrW / 2.0);
+                    if (scrH > 0)
+                        ny = (widgetCenterY - (scrH / 2.0)) / (scrH / 2.0);
+                    nx = Math.max(-1.0, Math.min(1.0, nx));
+                    ny = Math.max(-1.0, Math.min(1.0, ny));
+
+                    double magnitude = (1.0 - eased) * OPEN_DISTANCE_PX;
+                    double dx = magnitude * nx;
+                    double dy = magnitude * ny;
+                    if (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01) {
+                        context.getMatrices().translate((float) dx, (float) dy, 0);
+                    }
+                } catch (Exception ignore) {
+                    double dx = (1.0 - eased) * OPEN_DISTANCE_PX;
+                    if (dx > 0.01)
+                        context.getMatrices().translate(dx, 0, 0);
+                }
+
+                context.getMatrices().scale((float) eased, (float) eased, 1.0f);
                 widget._render(context, mouseX, mouseY, deltaTicks);
                 context.getMatrices().pop();
             }
-
             context.getMatrices().pop();
 
-            if (t >= 1.0) {
+            if (!animActive) {
                 this.closing = false;
                 assert client != null;
                 client.setScreen(parent);
@@ -286,6 +331,10 @@ public class CigaretteScreen extends Screen {
 
     public static double easeOut(double t) {
         return 1 - Math.pow(1 - t, 3);
+    }
+
+    public static double easeIn(double t) {
+        return Math.pow(t, 3);
     }
 
     public static double easeInExpo(double t) {

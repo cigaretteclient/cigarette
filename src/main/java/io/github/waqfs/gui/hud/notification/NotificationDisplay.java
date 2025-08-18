@@ -91,8 +91,6 @@ public class NotificationDisplay extends ClickableWidget {
 
     @Override
     protected void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
-        imageRender(context, 10, 10);
-
         notifications.forEach(n -> n.updateProgress(deltaTicks));
         notifications.removeIf(NotificationWithEasingProgress::isExpired);
 
@@ -186,15 +184,6 @@ public class NotificationDisplay extends ClickableWidget {
 
             String notificationType = n.getNotification().getType();
 
-            int stripeLeft, stripeRight;
-            if (flipX) {
-                stripeLeft = clampedLeft - stripeWidth;
-                stripeRight = clampedLeft;
-            } else {
-                stripeLeft = clampedRight;
-                stripeRight = clampedRight + stripeWidth;
-            }
-
             int stripeColor = notificationType == null ? 0xFF999999
                     : (notificationType.equals("info") ? 0xFF3AA655
                             : notificationType.equals("warning") ? 0xFFFFA500
@@ -227,25 +216,40 @@ public class NotificationDisplay extends ClickableWidget {
             barRight = Math.max(clampedLeft, Math.min(barRight, clampedRight));
 
             if (barLeft < barRight && barTop < barBottom) {
-                context.fill(barLeft, barTop, barRight, barBottom, 0xFF00FF00);
+                int barRadius = 2;
+                DraggableWidget.roundedRect(context, barLeft + 1, barTop, barRight, barBottom, 0xFF00FF00, barRadius,
+                        false, false, false, true);
             }
 
-            int clampedStripeLeft = Math.max(0, Math.min(stripeLeft, winW));
-            int clampedStripeRight = Math.max(0, Math.min(stripeRight, winW));
-
-            if (clampedStripeLeft < clampedStripeRight) {
-                int stripeOffset = flipX ? 3 : 0;
-                context.fill(clampedStripeLeft + stripeOffset, clampedTop, clampedStripeRight + stripeOffset,
-                        clampedBottom,
-                        stripeColor);
+            int rad = Math.max(0, Math.min(cornerRadius,
+                    Math.min(Math.max(0, clampedRight - clampedLeft) / 2,
+                            Math.max(0, clampedBottom - clampedTop) / 2)));
+            int h = Math.max(0, clampedBottom - clampedTop);
+            for (int y = clampedTop; y < clampedBottom; y++) {
+                int yIndex = y - clampedTop;
+                int leftEdgeX = clampedLeft;
+                if (rad > 0) {
+                    if (yIndex < rad) {
+                        int dy = (rad - 1) - yIndex;
+                        int dx = (int) Math.floor(Math.sqrt((double) rad * rad - (double) dy * dy));
+                        leftEdgeX = clampedLeft + rad - dx;
+                    } else if (yIndex >= h - rad) {
+                        int dy = yIndex - (h - rad);
+                        int dx = (int) Math.floor(Math.sqrt((double) rad * rad - (double) dy * dy));
+                        leftEdgeX = clampedLeft + rad - dx;
+                    }
+                }
+                int sx0 = Math.max(clampedLeft, leftEdgeX);
+                int sx1 = Math.min(clampedRight, sx0 + stripeWidth);
+                if (sx0 < sx1) {
+                    context.fill(sx0, y, sx1, y + 1, stripeColor);
+                }
             }
 
             TextRenderer regularTextRenderer = renderer;
             TextRenderer boldTextRenderer = regularTextRenderer;
 
             int contentLeft = clampedLeft + paddingLeft;
-            int contentRight = clampedRight - paddingRight;
-            int contentWidth = Math.max(0, contentRight - contentLeft);
 
             String titleStr = n.getNotification().getTitle();
             String msgStr = n.getNotification().getMessage();

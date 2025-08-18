@@ -2,6 +2,7 @@ package io.github.waqfs.gui.widget;
 
 import io.github.waqfs.Cigarette;
 import io.github.waqfs.gui.Scissor;
+import io.github.waqfs.gui.CigaretteScreen;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.text.Text;
@@ -30,7 +31,7 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType>
     public DropdownWidget(Text message, @Nullable Text tooltip) {
         super(message, tooltip);
         this.withDefault(new BaseWidget.Stateless());
-        this.container = new ScrollableWidget<>(0, 0);
+        this.container = new ScrollableWidget<>(0, 0, false);
         this.children = new ScrollableWidget[] { this.container };
     }
 
@@ -176,25 +177,38 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType>
             int iconX = right - 12;
             int iconY = top + (height / 2) - (h / 2);
 
-            int angleDeg = (int) Math.round(Math.toDegrees(rotateAngleRad * toggleProgress));
+            int angleDeg = (int) Math.round(Math.toDegrees(rotateAngleRad));
             cigaretteOnlyAt(context, iconX, iconY, w, h, angleDeg);
         }
 
         if (toggleProgress <= 0.001 || !this.focused)
             return;
 
-        context.getMatrices().push();
-        float translateY = (float) ((1.0 - toggleProgress) * 6.0);
-        context.getMatrices().translate(0, translateY, 0);
+        double easedProgress = CigaretteScreen.easeOut(toggleProgress);
+        final float MAX_TRANSLATE_PX = 0.0f;
+        float translateY = (float) ((1.0 - easedProgress) * MAX_TRANSLATE_PX);
+        int animOffset = Math.round(translateY);
 
-        Scissor.pushExclusive(context, right, top, right + this.container.getWidth(), top + this.container.getHeight());
+        int containerW = this.container.getWidth();
+        int containerH = this.container.getHeight();
 
-        this.container.withXY(right + childLeftOffset, top)
-                .withWH(this.container.getWidth(), this.container.getHeight())
-                .renderWidget(context, mouseX, mouseY, deltaTicks);
+        int visibleHeight = Math.max(0, Math.min(containerH, (int) Math.round(containerH * easedProgress)));
+        if (visibleHeight > 0) {
+            int scissorLeft = right;
+            int scissorTop = top + animOffset;
+            int scissorRight = right + containerW;
+            int scissorBottom = scissorTop + visibleHeight;
 
-        Scissor.popExclusive();
-        context.getMatrices().pop();
+            context.getMatrices().push();
+            Scissor.pushExclusive(context, scissorLeft, scissorTop, scissorRight, scissorBottom);
+
+            this.container.withXY(right + childLeftOffset, top + animOffset)
+                    .withWH(containerW, containerH)
+                    .renderWidget(context, mouseX, mouseY, deltaTicks);
+
+            Scissor.popExclusive();
+            context.getMatrices().pop();
+        }
     }
 
     public static void cigaretteOnlyAt(DrawContext context, int x, int y, int w, int h, int angle) {

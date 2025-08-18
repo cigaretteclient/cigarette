@@ -12,8 +12,11 @@ import io.github.waqfs.module.keybind.BreakBlock;
 import io.github.waqfs.module.keybind.VClip;
 import io.github.waqfs.module.murdermystery.GoldESP;
 import io.github.waqfs.module.zombies.Aimbot;
+import io.github.waqfs.module.render.ModuleList;
+import io.github.waqfs.module.render.Notifications;
 import io.github.waqfs.module.render.PlayerESP;
 import io.github.waqfs.module.render.ProjectileESP;
+import io.github.waqfs.module.render.Watermark;
 import io.github.waqfs.module.zombies.ReviveAura;
 import io.github.waqfs.module.zombies.ZombieESP;
 
@@ -38,6 +41,6 @@ public class Config {
         this.bedwars.attach(new FireballESP(), new EntityESP(), new DefenseViewer(), new AutoTool(), new Bridger());
         this.zombies.attach(new ZombieESP(), new Aimbot(), new ReviveAura());
         this.combat.attach(COMBAT_AUTOCLICKER, COMBAT_JUMP_RESET, COMBAT_PERFECT_HIT);
-        this.render.attach(new PlayerESP(), new ProjectileESP());
+        this.render.attach(new PlayerESP(), new ProjectileESP(), new Watermark(), new Notifications(), new ModuleList());
     }
 }

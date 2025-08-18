@@ -126,8 +126,21 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
             return (a << 24) | (r << 16) | (g << 8) | b;
         }
 
-        public static int rgba2Int(int r, int g, int b, int a) {
-            return (a << 24) | (r << 16) | (g << 8) | b;
+        public static int colorTransparentize(int color, float factor) {
+            int a = (color >> 24) & 0xFF;
+            float newA;
+            if (factor <= 0f) {
+                newA = a;
+            } else if (factor <= 1f) {
+                newA = a * (1f - factor);
+            } else {
+                newA = a / factor;
+            }
+            int ai = Math.max(0, Math.min(255, Math.round(newA)));
+            int r = (color >> 16) & 0xFF;
+            int g = (color >> 8) & 0xFF;
+            int b = color & 0xFF;
+            return (ai << 24) | (r << 16) | (g << 8) | b;
         }
 
         private static float lerp(float start, float end, float t) {
@@ -136,6 +149,24 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
     }
 
     public static int color(int x, int y) {
+        double seconds = (System.nanoTime() / 1_000_000_000.0);
+        int screenW = 1920, screenH = 1080;
+        MinecraftClient mc = MinecraftClient.getInstance();
+        if (mc != null && mc.getWindow() != null) {
+            screenW = mc.getWindow().getScaledWidth();
+            screenH = mc.getWindow().getScaledHeight();
+        }
+        float xNorm = Math.max(0f, Math.min(1f, (float) x / Math.max(1, screenW)));
+        float yNorm = Math.max(0f, Math.min(1f, (float) y / Math.max(1, screenH)));
+        float s = xNorm + 0.2f * yNorm;
+        double speedHz = 0.3;
+        double phase = 2 * Math.PI * (speedHz * seconds - s);
+        float pingpong = 0.5f * (1.0f + (float) Math.sin(phase));
+        int bg = ColorUtil.lerpColor(CigaretteScreen.PRIMARY_COLOR, 0xFF020618, (float) pingpong);
+        return bg;
+    }
+
+    public static int colorVertical(int x, int y) {
         double seconds = (System.nanoTime() / 1_000_000_000.0);
         int screenW = 1920, screenH = 1080;
         MinecraftClient mc = MinecraftClient.getInstance();
@@ -167,48 +198,219 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
         }
     }
 
-    private enum Corner {
-        TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT
+    private static final java.util.concurrent.ConcurrentHashMap<Integer, int[]> RADIUS_OFFSETS = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private static int[] getRadiusOffsets(int r) {
+        int[] res = RADIUS_OFFSETS.computeIfAbsent(Math.max(0, r), radius -> {
+            int[] offs = new int[Math.max(1, radius + 1)];
+            for (int dy = 0; dy <= radius; dy++) {
+
+                offs[dy] = (int) Math.floor(Math.sqrt((double) radius * radius - (double) dy * dy));
+            }
+            return offs;
+        });
+
+        if (RADIUS_OFFSETS.size() > 128) {
+            RADIUS_OFFSETS.clear();
+            RADIUS_OFFSETS.put(Math.max(0, r), res);
+        }
+        return res;
     }
 
-    private static void fillQuarterCircle(DrawContext context, int cx, int cy, int r, Corner corner, int color) {
-        for (int dy = 0; dy <= r; dy++) {
-            int dx = (int) Math.floor(Math.sqrt(r * r - dy * dy));
-            switch (corner) {
-                case TOP_LEFT -> context.fill(cx - dx, cy - dy, cx + 1, cy - dy + 1, color);
-                case TOP_RIGHT -> context.fill(cx, cy - dy, cx + dx + 1, cy - dy + 1, color);
-                case BOTTOM_LEFT -> context.fill(cx - dx, cy + dy, cx + 1, cy + dy + 1, color);
-                case BOTTOM_RIGHT -> context.fill(cx, cy + dy, cx + dx + 1, cy + dy + 1, color);
+    public static void roundedRect(DrawContext context, int left, int top, int right, int bottom, int color, int r) {
+        int width = Math.max(0, right - left);
+        int height = Math.max(0, bottom - top);
+        if (width <= 0 || height <= 0)
+            return;
+        int rad = Math.max(0, Math.min(r, Math.min(width / 2, height / 2)));
+        if (rad == 0) {
+            context.fill(left, top, right, bottom, color);
+            return;
+        }
+        int[] offs = getRadiusOffsets(rad);
+        boolean translucent = ((color >>> 24) & 0xFF) < 255;
+        for (int y = top; y < bottom; y++) {
+            int yIndex = y - top;
+            int leftX = left;
+            int rightX = right;
+            float feather = 0f;
+            if (yIndex < rad) {
+                int dy = (rad - 1) - yIndex;
+                int dx = offs[dy];
+                leftX = left + rad - dx;
+                rightX = right - (rad - dx);
+                if (translucent) {
+                    double dxd = Math.sqrt((double) rad * rad - (double) dy * dy);
+                    feather = (float) (dxd - dx);
+                }
+            } else if (yIndex >= height - rad) {
+                int dy = yIndex - (height - rad);
+                int dx = offs[dy];
+                leftX = left + rad - dx;
+                rightX = right - (rad - dx);
+                if (translucent) {
+                    double dxd = Math.sqrt((double) rad * rad - (double) dy * dy);
+                    feather = (float) (dxd - dx);
+                }
+            }
+            if (leftX < rightX) {
+                context.fill(leftX, y, rightX, y + 1, color);
+                if (translucent && feather > 0.001f) {
+                    int leftFeatherX = leftX - 1;
+                    int rightFeatherX = rightX;
+                    int cEdge = scaleAlpha(color, Math.max(0f, Math.min(1f, feather)));
+                    if (leftFeatherX >= left && leftFeatherX < right) {
+                        context.fill(leftFeatherX, y, leftFeatherX + 1, y + 1, cEdge);
+                    }
+                    if (rightFeatherX >= left && rightFeatherX < right) {
+                        context.fill(rightFeatherX, y, rightFeatherX + 1, y + 1, cEdge);
+                    }
+                }
             }
         }
     }
 
-    public static void roundedRect(DrawContext context, int left, int top, int right, int bottom, int color, int r) {
-        context.fill(left + r, top, right - r, bottom, color);
-        context.fill(left, top + r, left + r, bottom - r, color);
-        context.fill(right - r, top + r, right, bottom - r, color);
-        fillQuarterCircle(context, left + r, top + r, r, Corner.TOP_LEFT, color);
-        fillQuarterCircle(context, right - r - 1, top + r, r, Corner.TOP_RIGHT, color);
-        fillQuarterCircle(context, left + r, bottom - r - 1, r, Corner.BOTTOM_LEFT, color);
-        fillQuarterCircle(context, right - r - 1, bottom - r - 1, r, Corner.BOTTOM_RIGHT, color);
+    public static void roundedRect(DrawContext context, int left, int top, int right, int bottom, int color, int r,
+            boolean topCorners, boolean bottomCorners) {
+        int width = Math.max(0, right - left);
+        int height = Math.max(0, bottom - top);
+        if (width <= 0 || height <= 0)
+            return;
+        int rad = Math.max(0, Math.min(r, Math.min(width / 2, height / 2)));
+        if (rad == 0 || (!topCorners && !bottomCorners)) {
+            context.fill(left, top, right, bottom, color);
+            return;
+        }
+        int[] offs = getRadiusOffsets(rad);
+        boolean translucent = ((color >>> 24) & 0xFF) < 255;
+        for (int y = top; y < bottom; y++) {
+            int yIndex = y - top;
+            int leftX = left;
+            int rightX = right;
+            boolean isTopArc = topCorners && yIndex < rad;
+            boolean isBottomArc = bottomCorners && yIndex >= height - rad;
+            float feather = 0f;
+            if (isTopArc) {
+                int dy = (rad - 1) - yIndex;
+                int dx = offs[dy];
+                leftX = left + rad - dx;
+                rightX = right - (rad - dx);
+                if (translucent) {
+                    double dxd = Math.sqrt((double) rad * rad - (double) dy * dy);
+                    feather = (float) (dxd - dx);
+                }
+            } else if (isBottomArc) {
+                int dy = yIndex - (height - rad);
+                int dx = offs[dy];
+                leftX = left + rad - dx;
+                rightX = right - (rad - dx);
+                if (translucent) {
+                    double dxd = Math.sqrt((double) rad * rad - (double) dy * dy);
+                    feather = (float) (dxd - dx);
+                }
+            }
+            if (leftX < rightX) {
+                context.fill(leftX, y, rightX, y + 1, color);
+                if (translucent && feather > 0.001f) {
+                    int leftFeatherX = leftX - 1;
+                    int rightFeatherX = rightX;
+                    int cEdge = scaleAlpha(color, Math.max(0f, Math.min(1f, feather)));
+                    if (leftFeatherX >= left && leftFeatherX < right) {
+                        context.fill(leftFeatherX, y, leftFeatherX + 1, y + 1, cEdge);
+                    }
+                    if (rightFeatherX >= left && rightFeatherX < right) {
+                        context.fill(rightFeatherX, y, rightFeatherX + 1, y + 1, cEdge);
+                    }
+                }
+            }
+        }
     }
 
     public static void roundedRect(DrawContext context, int left, int top, int right, int bottom, int color, int r,
-            boolean topCorners, boolean bottomCorners) {
-        int bandTop = top + (topCorners ? r : 0);
-        int bandBottom = bottom - (bottomCorners ? r : 0);
-        context.fill(left + r, top, right - r, bottom, color);
-        context.fill(left, bandTop, left + r, bandBottom, color);
-        context.fill(right - r, bandTop, right, bandBottom, color);
+            boolean topLeft, boolean topRight, boolean bottomLeft, boolean bottomRight) {
+        int width = Math.max(0, right - left);
+        int height = Math.max(0, bottom - top);
+        if (width <= 0 || height <= 0)
+            return;
+        int rad = Math.max(0, Math.min(r, Math.min(width / 2, height / 2)));
+        if (rad == 0 || (!topLeft && !topRight && !bottomLeft && !bottomRight)) {
+            context.fill(left, top, right, bottom, color);
+            return;
+        }
+        int[] offs = getRadiusOffsets(rad);
+        boolean translucent = ((color >>> 24) & 0xFF) < 255;
+        for (int y = top; y < bottom; y++) {
+            int yIndex = y - top;
+            int leftX = left;
+            int rightX = right;
+            float leftFeather = 0f;
+            float rightFeather = 0f;
 
-        if (topCorners) {
-            fillQuarterCircle(context, left + r, top + r, r, Corner.TOP_LEFT, color);
-            fillQuarterCircle(context, right - r - 1, top + r, r, Corner.TOP_RIGHT, color);
+            if (yIndex < rad) {
+                int dy = (rad - 1) - yIndex;
+                int dx = offs[dy];
+                if (topLeft) {
+                    leftX = Math.max(leftX, left + rad - dx);
+                    if (translucent) {
+                        double dxd = Math.sqrt((double) rad * rad - (double) dy * dy);
+                        leftFeather = (float) (dxd - dx);
+                    }
+                }
+                if (topRight) {
+                    rightX = Math.min(rightX, right - (rad - dx));
+                    if (translucent) {
+                        double dxd = Math.sqrt((double) rad * rad - (double) dy * dy);
+                        rightFeather = (float) (dxd - dx);
+                    }
+                }
+            } else if (yIndex >= height - rad) {
+                int dy = yIndex - (height - rad);
+                int dx = offs[dy];
+                if (bottomLeft) {
+                    leftX = Math.max(leftX, left + rad - dx);
+                    if (translucent) {
+                        double dxd = Math.sqrt((double) rad * rad - (double) dy * dy);
+                        leftFeather = (float) (dxd - dx);
+                    }
+                }
+                if (bottomRight) {
+                    rightX = Math.min(rightX, right - (rad - dx));
+                    if (translucent) {
+                        double dxd = Math.sqrt((double) rad * rad - (double) dy * dy);
+                        rightFeather = (float) (dxd - dx);
+                    }
+                }
+            }
+
+            if (leftX < rightX) {
+                context.fill(leftX, y, rightX, y + 1, color);
+                if (translucent) {
+                    if (leftFeather > 0.001f) {
+                        int lx = leftX - 1;
+                        int cEdge = scaleAlpha(color, Math.max(0f, Math.min(1f, leftFeather)));
+                        if (lx >= left && lx < right) {
+                            context.fill(lx, y, lx + 1, y + 1, cEdge);
+                        }
+                    }
+                    if (rightFeather > 0.001f) {
+                        int rx = rightX;
+                        int cEdge = scaleAlpha(color, Math.max(0f, Math.min(1f, rightFeather)));
+                        if (rx >= left && rx < right) {
+                            context.fill(rx, y, rx + 1, y + 1, cEdge);
+                        }
+                    }
+                }
+            }
         }
-        if (bottomCorners) {
-            fillQuarterCircle(context, left + r, bottom - r - 1, r, Corner.BOTTOM_LEFT, color);
-            fillQuarterCircle(context, right - r - 1, bottom - r - 1, r, Corner.BOTTOM_RIGHT, color);
-        }
+    }
+
+    private static int scaleAlpha(int color, float scale) {
+        int a = (color >>> 24) & 0xFF;
+        int r = (color >>> 16) & 0xFF;
+        int g = (color >>> 8) & 0xFF;
+        int b = color & 0xFF;
+        int na = Math.max(0, Math.min(255, Math.round(a * scale)));
+        return (na << 24) | (r << 16) | (g << 8) | b;
     }
 
     public static void rotatedLine(DrawContext context, int x1, int y1, int x2, int y2, int color, float rotation) {

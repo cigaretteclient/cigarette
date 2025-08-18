@@ -23,6 +23,7 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
     private int ticksOnOpen = 0;
     private static final int MAX_TICKS_ON_OPEN = 20;
     private @Nullable Runnable onToggleExpand;
+    private boolean showBottomRoundedRect = true;
 
     @SafeVarargs
     public ScrollableWidget(int x, int y, @Nullable Text headerText, @Nullable Widgets... children) {
@@ -41,6 +42,12 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
     public ScrollableWidget(int x, int y) {
         super(x, y, DEFAULT_WIDTH + DEFAULT_SCROLLBAR_WIDTH, DEFAULT_HEIGHT, null);
         this.withDefault(new BaseWidget.Stateless());
+    }
+
+    public ScrollableWidget(int x, int y, boolean showBottomRoundedRect) {
+        super(x, y, DEFAULT_WIDTH + DEFAULT_SCROLLBAR_WIDTH, DEFAULT_HEIGHT, null);
+        this.withDefault(new BaseWidget.Stateless());
+        this.showBottomRoundedRect = showBottomRoundedRect;
     }
 
     private boolean updateShouldScroll() {
@@ -264,7 +271,7 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
                 Scissor.popExclusive();
 
                 int bottomRectTop = realBottomInt;
-                if (this.getEasedProgress() > 0.0) {
+                if (this.getEasedProgress() > 0.0 && showBottomRoundedRect) {
                     DraggableWidget.roundedRect(context, left, bottomRectTop, right, bottomRectTop + 4,
                             CigaretteScreen.BACKGROUND_COLOR, 2, false, true);
                 }

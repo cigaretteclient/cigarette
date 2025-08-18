@@ -10,9 +10,13 @@ import java.util.HashSet;
 public class CategoryInstance {
     public final ScrollableWidget<BaseWidget<?>> widget;
     public final HashSet<BaseModule<?, ?>> children = new HashSet<>();
+    public boolean expanded = true;
 
     public CategoryInstance(String displayName, int x, int y) {
-        this.widget = new ScrollableWidget<>(x, y).setHeader(Text.literal(displayName));
+        this.widget = new ScrollableWidget<>(x, y);
+        this.widget.setHeader(Text.literal(displayName), () -> {
+            this.expanded = !this.expanded;
+        });
     }
 
     public CategoryInstance attach(BaseModule<?, ?>... children) {

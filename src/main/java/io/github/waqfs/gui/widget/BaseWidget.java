@@ -29,6 +29,10 @@ public abstract class BaseWidget<StateType> extends ClickableWidget {
         if (tooltip != null) this.setTooltip(Tooltip.of(tooltip));
     }
 
+    public boolean isStateless() {
+        return this.state instanceof Stateless;
+    }
+
     public final void setRawState(StateType state) {
         this.state = state;
         if (moduleCallback != null) moduleCallback.accept(this.state);

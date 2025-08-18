@@ -9,7 +9,9 @@ import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
 
 public class KeyBinding implements ClientModInitializer {
+    @SuppressWarnings("unused")
     private static final Identifier HUD_KEYBINDING_ID = Identifier.of(Cigarette.MOD_ID, "hud-keybinding");
+
     private static net.minecraft.client.option.KeyBinding keyBinding;
 
     private static final CigaretteScreen screen = new CigaretteScreen();

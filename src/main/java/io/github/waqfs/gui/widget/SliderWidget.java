@@ -1,6 +1,8 @@
 package io.github.waqfs.gui.widget;
 
+import io.github.waqfs.Cigarette;
 import io.github.waqfs.gui.CigaretteScreen;
+import io.github.waqfs.gui.widget.DraggableWidget.ColorUtil;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -16,6 +18,7 @@ public class SliderWidget extends BaseWidget<Double> {
     private double minState = 0;
     private int decimalPlaces = 0;
     private boolean dragging = false;
+    public boolean disabled = false;
 
     public void setState(double state) {
         if (state > maxState) return;
@@ -73,6 +76,7 @@ public class SliderWidget extends BaseWidget<Double> {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (this.disabled) return false;
         if (!isMouseOver(mouseX, mouseY)) return false;
         this.dragging = true;
         this.setFocused();
@@ -81,6 +85,7 @@ public class SliderWidget extends BaseWidget<Double> {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double ignored, double ignored_) {
+        if (this.disabled) return false;
         if (!dragging) return false;
         this.setStateFromDrag(mouseX);
         return true;
@@ -88,6 +93,7 @@ public class SliderWidget extends BaseWidget<Double> {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (this.disabled) return false;
         dragging = false;
         return false;
     }
@@ -100,16 +106,20 @@ public class SliderWidget extends BaseWidget<Double> {
             context.fill(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR);
         }
 
-        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
-        context.drawTextWithShadow(textRenderer, getMessage(), left + 4, top + 4, CigaretteScreen.PRIMARY_TEXT_COLOR);
+        int textColor = this.disabled ? ColorUtil.colorDarken(CigaretteScreen.PRIMARY_TEXT_COLOR, 0.4f) : CigaretteScreen.PRIMARY_TEXT_COLOR;
+        int primaryColor = this.disabled ? ColorUtil.colorDarken(CigaretteScreen.PRIMARY_COLOR, 0.4f) : CigaretteScreen.PRIMARY_COLOR;
+        int secondaryColor = this.disabled ? ColorUtil.colorDarken(CigaretteScreen.SECONDARY_COLOR, 0.4f) : CigaretteScreen.SECONDARY_COLOR;
+
+        TextRenderer textRenderer = Cigarette.REGULAR;
+        context.drawTextWithShadow(textRenderer, getMessage(), left + 4, top + 4, textColor);
 
         Text value = Text.literal(Double.toString(this.getRawState()));
-        context.drawTextWithShadow(textRenderer, value, right - textRenderer.getWidth(value) - 4, top + 4, CigaretteScreen.PRIMARY_COLOR);
+        context.drawTextWithShadow(textRenderer, value, right - textRenderer.getWidth(value) - 4, top + 4, primaryColor);
 
         int sliderXState = (int) ((this.getRawState() - minState) / (maxState - minState) * (width - 2 * SLIDER_PADDING)) + (left + SLIDER_PADDING);
-        context.drawHorizontalLine(left + SLIDER_PADDING, left + width - SLIDER_PADDING, bottom - 4, CigaretteScreen.SECONDARY_COLOR);
-        context.drawVerticalLine(sliderXState - 1, bottom - 6, bottom - 2, CigaretteScreen.PRIMARY_COLOR);
-        context.drawVerticalLine(sliderXState, bottom - 7, bottom - 1, CigaretteScreen.PRIMARY_COLOR);
-        context.drawVerticalLine(sliderXState + 1, bottom - 6, bottom - 2, CigaretteScreen.PRIMARY_COLOR);
+        context.drawHorizontalLine(left + SLIDER_PADDING, left + width - SLIDER_PADDING, bottom - 4, secondaryColor);
+        context.drawVerticalLine(sliderXState - 1, bottom - 6, bottom - 2, primaryColor);
+        context.drawVerticalLine(sliderXState, bottom - 7, bottom - 1, primaryColor);
+        context.drawVerticalLine(sliderXState + 1, bottom - 6, bottom - 2, primaryColor);
     }
 }

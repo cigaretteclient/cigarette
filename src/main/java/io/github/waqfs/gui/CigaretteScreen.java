@@ -1,7 +1,7 @@
 package io.github.waqfs.gui;
 
 import io.github.waqfs.Cigarette;
-import io.github.waqfs.gui.notifications.NotificationDisplay;
+import io.github.waqfs.gui.hud.notification.NotificationDisplay;
 import io.github.waqfs.gui.widget.BaseWidget;
 import io.github.waqfs.gui.widget.KeybindWidget;
 import io.github.waqfs.gui.widget.ScrollableWidget;
@@ -29,6 +29,9 @@ public class CigaretteScreen extends Screen {
     private Screen parent = null;
     private boolean begin = false;
     private long openStartNanos = 0L;
+    private boolean closing = false;
+    private long closeStartNanos = 0L;
+    private static final double CLOSE_DURATION_S = 0.35;
     private static final double OPEN_DURATION_S = 0.4;
     private static final double OPEN_STAGGER_S = 0.06;
     private static final int OPEN_DISTANCE_PX = 24;
@@ -120,8 +123,12 @@ public class CigaretteScreen extends Screen {
     @Override
     public void close() {
         assert client != null;
-        this.begin = false;
-        client.setScreen(parent);
+
+        if (!closing) {
+            this.begin = false;
+            this.closing = true;
+            this.closeStartNanos = System.nanoTime();
+        }
     }
 
     @Override
@@ -154,6 +161,35 @@ public class CigaretteScreen extends Screen {
         NotificationDisplay.imageRender(context, scrW - 60, scrH - 70, 0.8);
 
         CigaretteScreen.hoverHandled = null;
+
+        if (closing) {
+            double elapsedClose = (System.nanoTime() - closeStartNanos) / 1_000_000_000.0;
+            double t = Math.max(0.0, Math.min(1.0, elapsedClose / CLOSE_DURATION_S));
+            double eased = 1.0 - easeOut(t);
+
+            context.getMatrices().push();
+            float s = (float) Math.max(0.001, 1.0 - eased);
+            context.getMatrices().translate(this.width / 2f, this.height / 2f, 0);
+            context.getMatrices().scale(s, s, 1.0f);
+            context.getMatrices().translate(-this.width / 2f, -this.height / 2f, 0);
+
+            for (int i = 0; i < priority.size(); i++) {
+                BaseWidget<?> widget = priority.get(i);
+                context.getMatrices().push();
+                context.getMatrices().translate(0, 0, priority.size() - i);
+                widget._render(context, mouseX, mouseY, deltaTicks);
+                context.getMatrices().pop();
+            }
+
+            context.getMatrices().pop();
+
+            if (t >= 1.0) {
+                this.closing = false;
+                assert client != null;
+                client.setScreen(parent);
+            }
+            return;
+        }
         boolean animActive = false;
         double elapsed = 0.0;
         if (begin) {
@@ -222,6 +258,7 @@ public class CigaretteScreen extends Screen {
         }
         if (begin && !animActive)
             begin = false;
+
     }
 
     public static double easeOutExpo(double t) {
@@ -250,7 +287,7 @@ public class CigaretteScreen extends Screen {
     public static double easeOut(double t) {
         return 1 - Math.pow(1 - t, 3);
     }
-    
+
     public static double easeInExpo(double t) {
         if (t >= 1.0)
             return 1.0;

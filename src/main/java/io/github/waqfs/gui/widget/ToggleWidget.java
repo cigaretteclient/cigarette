@@ -2,7 +2,7 @@ package io.github.waqfs.gui.widget;
 
 import io.github.waqfs.Cigarette;
 import io.github.waqfs.gui.CigaretteScreen;
-import io.github.waqfs.gui.notifications.Notification;
+import io.github.waqfs.gui.hud.notification.Notification;
 import io.github.waqfs.module.BaseModule;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;

@@ -1,6 +1,6 @@
-package io.github.waqfs.gui.notifications.internal;
+package io.github.waqfs.gui.hud.notification.internal;
 
-import io.github.waqfs.gui.notifications.Notification;
+import io.github.waqfs.gui.hud.notification.Notification;
 
 public class NotificationWithEasingProgress {
     private final Notification notification;

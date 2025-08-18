@@ -22,6 +22,11 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType>
     private double rotateOffsetRad = 0.0;
     private static final int ROTATION_PERIOD_MS = 2000;
 
+    private boolean animating = false;
+    private boolean opening = false;
+    private long animStartMillis = 0L;
+    private static final int TOGGLE_ANIM_MS = 220;
+
     public DropdownWidget(Text message, @Nullable Text tooltip) {
         super(message, tooltip);
         this.withDefault(new BaseWidget.Stateless());
@@ -78,7 +83,14 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType>
                 return true;
             }
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT || button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-                dropdownVisible = children != null && !dropdownVisible;
+                boolean target = children != null && !dropdownVisible;
+
+                if (target != dropdownVisible) {
+                    this.animating = true;
+                    this.opening = target;
+                    this.animStartMillis = System.currentTimeMillis();
+                }
+                dropdownVisible = target;
             }
             return true;
         }
@@ -143,6 +155,19 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType>
             rotateAngleRad = rotateOffsetRad;
         }
 
+        double toggleProgress = dropdownVisible ? 1.0 : 0.0;
+        if (animating) {
+            long now = System.currentTimeMillis();
+            double elapsed = (now - animStartMillis) / (double) TOGGLE_ANIM_MS;
+            double t = Math.max(0.0, Math.min(1.0, elapsed));
+
+            double eased = 1 - Math.pow(1 - t, 3);
+            toggleProgress = opening ? eased : (1.0 - eased);
+            if (t >= 1.0) {
+                animating = false;
+            }
+        }
+
         if (this.container.children == null)
             return;
         if (this.container.children.length > 0 && dropdownIndicator) {
@@ -150,14 +175,29 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType>
             int h = 10;
             int iconX = right - 12;
             int iconY = top + (height / 2) - (h / 2);
-            int angleDeg = (int) Math.round(Math.toDegrees(rotateAngleRad));
+
+            int angleDeg = (int) Math.round(Math.toDegrees(rotateAngleRad * toggleProgress));
             cigaretteOnlyAt(context, iconX, iconY, w, h, angleDeg);
         }
-        if (!dropdownVisible || !this.focused)
+
+        if (toggleProgress <= 0.001 || !this.focused)
             return;
+
+        context.getMatrices().push();
+
+        float scale = (float) (0.9 + 0.1 * toggleProgress);
+        // float alpha = (float) toggleProgress;
+        context.getMatrices().translate(right, top, 0);
+        context.getMatrices().scale(scale, scale, 1.0f);
+        context.getMatrices().translate(-right, -top, 0);
+
         Scissor.pushExclusive(context, right, top, right + this.container.getWidth(), top + this.container.getHeight());
-        this.container.withXY(right + childLeftOffset, top).renderWidget(context, mouseX, mouseY, deltaTicks);
+
+        this.container.withXY(right + childLeftOffset, top)
+                .withWH(this.container.getWidth(), this.container.getHeight())
+                .renderWidget(context, mouseX, mouseY, deltaTicks);
         Scissor.popExclusive();
+        context.getMatrices().pop();
     }
 
     public static void cigaretteOnlyAt(DrawContext context, int x, int y, int w, int h, int angle) {

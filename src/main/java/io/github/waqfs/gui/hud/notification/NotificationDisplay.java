@@ -1,12 +1,12 @@
-package io.github.waqfs.gui.notifications;
+package io.github.waqfs.gui.hud.notification;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import io.github.waqfs.Cigarette;
 import io.github.waqfs.gui.CigaretteScreen;
+import io.github.waqfs.gui.hud.notification.internal.NotificationWithEasingProgress;
 import io.github.waqfs.gui.widget.DraggableWidget;
-import io.github.waqfs.gui.notifications.internal.NotificationWithEasingProgress;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 
@@ -21,18 +21,33 @@ public class NotificationDisplay extends ClickableWidget {
     public List<NotificationWithEasingProgress> notifications = new ArrayList<>();
 
     public NotificationDisplay() {
-        super(MinecraftClient.getInstance().getWindow().getScaledWidth() - 200, 0,
-                200, MinecraftClient.getInstance().getWindow().getScaledHeight(), Text.of("Notifications"));
+        super(0, 0, 200, 20, Text.of("Notifications"));
+
+        Window w = MinecraftClient.getInstance().getWindow();
+        this.setX(w.getScaledWidth() - 200);
+        this.setY(0);
+        this.setDimensions(200, w.getScaledHeight());
+
         Cigarette.EVENTS.registerListener(Notification.class, (event) -> {
             handleNotification(event);
             return null;
         });
     }
 
+    @Override
+    public void setX(int x) {
+        Window w = MinecraftClient.getInstance().getWindow();
+        if (x + this.getWidth() > w.getScaledWidth()) {
+            x = w.getScaledWidth() - this.getWidth();
+        }
+        super.setX(x);
+    }
+
     private <T> void handleNotification(T event) {
         if (event instanceof Notification) {
             Notification notification = (Notification) event;
-            notifications.addFirst(new NotificationWithEasingProgress(notification));
+
+            notifications.add(0, new NotificationWithEasingProgress(notification));
         }
     }
 
@@ -40,12 +55,11 @@ public class NotificationDisplay extends ClickableWidget {
     protected void appendClickableNarrations(NarrationMessageBuilder builder) {
     }
 
-    
     public static void imageRender(DrawContext context, int x, int y) {
         context.drawTexture(
                 RenderLayer::getGuiTextured,
                 Cigarette.LOGO_IDENTIFIER, x + 7, y, 0f, 0f, 30, 30, 30, 30);
-        // context.drawText(Cigarette.REGULAR, "cigarette", x, y + 40, DraggableWidget.color(x, y + 40), true);
+
         List<Integer> colors = new ArrayList<>();
         for (int i = 0; i < "cigarette".length(); i++) {
             colors.add(DraggableWidget.color(x + i * 10, y + 40));
@@ -59,7 +73,8 @@ public class NotificationDisplay extends ClickableWidget {
                 Cigarette.LOGO_IDENTIFIER, x + 7, y, 0f, 0f, 30, 30, 30, 30);
         List<Integer> colors = new ArrayList<>();
         for (int i = 0; i < "cigarette".length(); i++) {
-            colors.add(DraggableWidget.color((int)(x + i * 10 * gradientStaggerModifier), (int)(y + 40 * gradientStaggerModifier)));
+            colors.add(DraggableWidget.color((int) (x + i * 10 * gradientStaggerModifier),
+                    (int) (y + 40 * gradientStaggerModifier)));
         }
         drawTextGradient(context, "cigarette", x, y + 40, colors.stream().mapToInt(i -> i).toArray());
     }
@@ -93,6 +108,14 @@ public class NotificationDisplay extends ClickableWidget {
         final int paddingRight = 10;
         final int cornerRadius = 2;
 
+        boolean flipX = this.getX() + (this.getWidth() / 2) >= window.getScaledWidth() / 2;
+        boolean flipY = this.getY() + (this.getHeight() / 2) >= window.getScaledHeight() / 2;
+
+        int anchorLeft = this.getX();
+        int anchorRight = this.getX() + this.getWidth();
+        int anchorTop = this.getY();
+        int anchorBottom = this.getY() + this.getHeight();
+
         for (NotificationWithEasingProgress n : notifications) {
             TextRenderer renderer = Cigarette.REGULAR != null ? Cigarette.REGULAR
                     : MinecraftClient.getInstance().textRenderer;
@@ -121,14 +144,33 @@ public class NotificationDisplay extends ClickableWidget {
                 slide = 0f;
             }
 
-            int baseRight = window.getScaledWidth() - rightMargin;
-            int offsetX = Math.round((1f - slide) * (boxWidth + rightMargin + stripeWidth));
-            int right = baseRight + offsetX;
-            int left = right - boxWidth;
+            int baseRight = anchorRight - rightMargin;
+            int baseLeft = anchorLeft + rightMargin;
 
-            int baseBottom = window.getScaledHeight() - bottomMargin - i * verticalSpacing;
-            int bottom = baseBottom;
-            int top = bottom - boxHeight;
+            int offsetX = Math.round((1f - slide) * (boxWidth + rightMargin + stripeWidth));
+            int left, right;
+            if (flipX) {
+
+                right = baseRight + offsetX;
+                left = right - boxWidth;
+            } else {
+
+                left = baseLeft - offsetX;
+                right = left + boxWidth;
+            }
+
+            int top, bottom;
+            if (flipY) {
+
+                int baseBottom = anchorBottom - bottomMargin - i * verticalSpacing;
+                bottom = baseBottom;
+                top = bottom - boxHeight;
+            } else {
+
+                int baseTop = anchorTop + bottomMargin + i * verticalSpacing;
+                top = baseTop;
+                bottom = top + boxHeight;
+            }
 
             int winW = window.getScaledWidth();
             int winH = window.getScaledHeight();
@@ -143,8 +185,16 @@ public class NotificationDisplay extends ClickableWidget {
             }
 
             String notificationType = n.getNotification().getType();
-            int stripeLeft = clampedLeft - stripeWidth;
-            int stripeRight = clampedLeft;
+
+            int stripeLeft, stripeRight;
+            if (flipX) {
+                stripeLeft = clampedLeft - stripeWidth;
+                stripeRight = clampedLeft;
+            } else {
+                stripeLeft = clampedRight;
+                stripeRight = clampedRight + stripeWidth;
+            }
+
             int stripeColor = notificationType == null ? 0xFF999999
                     : (notificationType.equals("info") ? 0xFF3AA655
                             : notificationType.equals("warning") ? 0xFFFFA500
@@ -161,7 +211,7 @@ public class NotificationDisplay extends ClickableWidget {
 
             float lifeElapsed = Math.max(0f, Math.min(1f, (n.getTicksElapsed() - visibleStart) / visibleLength));
 
-            float eased = (float)CigaretteScreen.easeOutExpo(lifeElapsed);
+            float eased = (float) CigaretteScreen.easeOutExpo(lifeElapsed);
 
             int actualBoxWidth = Math.max(0, clampedRight - clampedLeft);
             int progressBarWidth = Math.round(eased * actualBoxWidth);
@@ -184,7 +234,9 @@ public class NotificationDisplay extends ClickableWidget {
             int clampedStripeRight = Math.max(0, Math.min(stripeRight, winW));
 
             if (clampedStripeLeft < clampedStripeRight) {
-                context.fill(clampedStripeLeft + 3, clampedTop, clampedStripeRight + 3, clampedBottom,
+                int stripeOffset = flipX ? 3 : 0;
+                context.fill(clampedStripeLeft + stripeOffset, clampedTop, clampedStripeRight + stripeOffset,
+                        clampedBottom,
                         stripeColor);
             }
 

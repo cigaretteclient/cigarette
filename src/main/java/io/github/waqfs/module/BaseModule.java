@@ -1,7 +1,7 @@
 package io.github.waqfs.module;
 
 import io.github.waqfs.Cigarette;
-import io.github.waqfs.gui.notifications.Notification;
+import io.github.waqfs.gui.hud.notification.Notification;
 import io.github.waqfs.gui.widget.BaseWidget;
 import io.github.waqfs.gui.widget.DropdownWidget;
 import net.minecraft.text.Text;

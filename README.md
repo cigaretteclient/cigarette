@@ -1,10 +1,10 @@
 <div align="center">
   <a href="https://cigarette.dev">
-    <img src="https://i.imgur.com/tGQhPsC.png" alt="Logo" width="128">
+    <img src="./assets/cigarette-logo.png" alt="Logo" width="256">
   </a>
 </div>
 
 <div align="center">
-  <h3>Cigarette Client</h3>
+  <h1>Cigarette Client</h1>
   <sub>Next-gen Hypixel Fuckery.</sub>
 </div>

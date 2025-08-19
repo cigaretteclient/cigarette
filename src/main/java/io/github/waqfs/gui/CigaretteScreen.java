@@ -3,6 +3,7 @@ package io.github.waqfs.gui;
 import io.github.waqfs.Cigarette;
 import io.github.waqfs.gui.hud.notification.NotificationDisplay;
 import io.github.waqfs.gui.widget.BaseWidget;
+import io.github.waqfs.module.ui.GUI;
 import io.github.waqfs.gui.widget.KeybindWidget;
 import io.github.waqfs.gui.widget.ScrollableWidget;
 import net.minecraft.client.MinecraftClient;
@@ -159,7 +160,6 @@ public class CigaretteScreen extends Screen {
         int scrW = mc.getWindow().getScaledWidth();
         int scrH = mc.getWindow().getScaledHeight();
 
-        // drawBottomAmbientGradient(context, scrW, scrH);
         NotificationDisplay.imageRender(context, scrW - 60, scrH - 70, 0.8);
 
         CigaretteScreen.hoverHandled = null;
@@ -305,55 +305,6 @@ public class CigaretteScreen extends Screen {
             begin = false;
 
     }
-
-    /*private static void drawBottomAmbientGradient(DrawContext context, int scrW, int scrH) {
-        if (scrW <= 0 || scrH <= 0)
-            return;
-        int height = Math.max(1, scrH / 2);
-        int top = scrH - height;
-        int bottom = scrH;
-
-        final int DARK_TINT = 0xFF020618;
-        final int maxAlpha = 150;
-
-        int width = Math.max(1, scrW);
-
-        double seconds = (System.nanoTime() / 1_000_000_000.0);
-        final double waveFreq = 1.8;
-        final double speed = 0.30;
-        final double phase = Math.PI * 0.28;
-
-        int[] colRGB = new int[width];
-        for (int x = 0; x < width; x++) {
-            double xNorm = x / (double) width;
-            double w = 0.5 + 0.5 * Math.sin(2.0 * Math.PI * (waveFreq * xNorm + speed * seconds) + phase);
-            w = Math.max(0.0, Math.min(1.0, w));
-            int tint = ColorUtil.lerpColor(PRIMARY_COLOR, DARK_TINT, (float) w);
-            colRGB[x] = tint & 0x00FFFFFF;
-        }
-
-        for (int y = top; y < bottom; y++) {
-            double ty = (y - top) / (double) height;
-            double vfade = smoothstep(ty);
-            vfade = Math.pow(vfade, 1.2);
-            int rowAlpha = (int) Math.round(maxAlpha * vfade);
-            rowAlpha = Math.max(0, Math.min(255, rowAlpha));
-            int aPart = (rowAlpha << 24);
-
-            for (int x = 0; x < width; x++) {
-                int color = aPart | colRGB[x];
-                context.fill(x, y, x + 1, y + 1, color);
-            }
-        }
-    }
-
-    private static double smoothstep(double t) {
-        if (t <= 0)
-            return 0;
-        if (t >= 1)
-            return 1;
-        return t * t * (3 - 2 * t);
-    }*/
 
     public static double easeOutExpo(double t) {
         if (t >= 1.0)

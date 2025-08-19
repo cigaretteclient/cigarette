@@ -1,7 +1,9 @@
-package io.github.waqfs.module.render;
+package io.github.waqfs.module.ui;
+
+import org.jetbrains.annotations.NotNull;
 
 import io.github.waqfs.Cigarette;
-import io.github.waqfs.gui.hud.notification.NotificationDisplay;
+import io.github.waqfs.gui.hud.modules.ModuleListDisplay;
 import io.github.waqfs.gui.widget.ToggleWidget;
 import io.github.waqfs.module.RenderModule;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
@@ -9,26 +11,26 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
-import org.jetbrains.annotations.NotNull;
 
-public class Notifications extends RenderModule<ToggleWidget, Boolean> {
-    protected static final String MODULE_NAME = "Notifications";
-    protected static final String MODULE_TOOLTIP = "Displays notifications.";
-    protected static final String MODULE_ID = "render.notifications";
+public class ModuleList extends RenderModule<ToggleWidget, Boolean> {
+    protected static final String MODULE_NAME = "Module List";
+    protected static final String MODULE_TOOLTIP = "Displays a list of modules.";
+    protected static final String MODULE_ID = "render.module_list";
 
-    private NotificationDisplay display;
+    private ModuleListDisplay display;
 
-    public Notifications() {
+    public ModuleList() {
         super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+        this.setChildren();
         this.widget.withDefaultState(true);
     }
 
     @Override
     protected void onWorldRender(WorldRenderContext ctx, @NotNull MatrixStack matrixStack) {
         if (display == null) {
-            display = new NotificationDisplay();
+            display = new ModuleListDisplay();
+            Cigarette.registerHudElement(display);
         }
-        Cigarette.NOTIFICATION_DISPLAY = display;
     }
 
     @Override
@@ -38,9 +40,10 @@ public class Notifications extends RenderModule<ToggleWidget, Boolean> {
 
     @Override
     protected void onDisabledTick(MinecraftClient client) {
-        if (Cigarette.NOTIFICATION_DISPLAY == display) {
-            Cigarette.NOTIFICATION_DISPLAY = null;
+
+        if (display != null) {
+            Cigarette.unregisterHudElement(display);
+            display = null;
         }
-        display = null;
     }
 }

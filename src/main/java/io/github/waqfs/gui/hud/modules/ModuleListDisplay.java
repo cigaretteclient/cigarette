@@ -4,6 +4,7 @@ import io.github.waqfs.Cigarette;
 import io.github.waqfs.gui.CategoryInstance;
 import io.github.waqfs.gui.CigaretteScreen;
 import io.github.waqfs.gui.widget.DraggableWidget;
+import io.github.waqfs.lib.Color;
 import io.github.waqfs.module.BaseModule;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
@@ -174,7 +175,7 @@ public class ModuleListDisplay extends ClickableWidget {
             }
 
             // int borderColor = scaleAlpha(0xFF000000 | (CigaretteScreen.PRIMARY_COLOR & 0x00FFFFFF), vis);
-            int borderColor = DraggableWidget.colorVertical(bgTop, bgLeft);
+            int borderColor = Color.colorVertical(bgTop, bgLeft);
             int borderW = 2;
             int borderLeft = bgLeft;
             int borderRight = Math.min(bgRight, borderLeft + borderW);

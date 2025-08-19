@@ -3,6 +3,8 @@ package io.github.waqfs.gui.hud.wmark;
 import io.github.waqfs.Cigarette;
 import io.github.waqfs.gui.CigaretteScreen;
 import io.github.waqfs.gui.widget.DraggableWidget;
+import io.github.waqfs.lib.Color;
+import io.github.waqfs.lib.Shape;
 import io.github.waqfs.gui.hud.notification.NotificationDisplay;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
@@ -25,7 +27,7 @@ public class WatermarkDisplay extends ClickableWidget {
     public static void watermarkFullRender(DrawContext context, int x, int y, boolean textEnabled,
             boolean simpleDisplay) {
         if (simpleDisplay) {
-            int c = DraggableWidget.ColorUtil.colorTransparentize(CigaretteScreen.PRIMARY_COLOR, 0.4f);
+            int c = Color.colorTransparentize(CigaretteScreen.PRIMARY_COLOR, 0.4f);
             final int radius = 6;
             if (textEnabled) {
                 final int logoSize = 24;
@@ -39,7 +41,7 @@ public class WatermarkDisplay extends ClickableWidget {
                 int textWidth = tr.getWidth("cigarette");
                 int boxWidth = padLeft + logoSize + spacing + textWidth + padRight;
 
-                DraggableWidget.roundedRect(context, x, y, x + boxWidth, y + boxHeight, c, radius);
+                Shape.roundedRect(context, x, y, x + boxWidth, y + boxHeight, c, radius);
 
                 int logoY = y + Math.max(0, (boxHeight - logoSize) / 2);
                 int logoX = x + padLeft;
@@ -58,7 +60,7 @@ public class WatermarkDisplay extends ClickableWidget {
             } else {
                 final int logoSize = 24;
                 final int boxSize = 28;
-                DraggableWidget.roundedRect(context, x, y, x + boxSize, y + boxSize, c, radius);
+                Shape.roundedRect(context, x, y, x + boxSize, y + boxSize, c, radius);
                 int logoY = y + Math.max(0, (boxSize - logoSize) / 2);
                 int logoX = x + Math.max(0, (boxSize - logoSize) / 2);
 

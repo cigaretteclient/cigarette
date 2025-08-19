@@ -1,4 +1,4 @@
-package io.github.waqfs.module.render;
+package io.github.waqfs.module.ui;
 
 import io.github.waqfs.Cigarette;
 import io.github.waqfs.gui.hud.wmark.WatermarkDisplay;

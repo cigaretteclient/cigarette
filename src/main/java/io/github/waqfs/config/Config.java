@@ -32,6 +32,7 @@ public class Config {
 
     public CategoryInstance[] allCategories = new CategoryInstance[]{keybinds, combat, render, murderMystery, bedwars, zombies, ui, Cigarette.IN_DEV_ENVIRONMENT ? DevWidget.CATEGORY_INSTANCE : null};
 
+    public final Watermark RENDER_WATERMARK = new Watermark();
     public final AutoClicker COMBAT_AUTOCLICKER = new AutoClicker();
     public final JumpReset COMBAT_JUMP_RESET = new JumpReset();
     public final PerfectHit COMBAT_PERFECT_HIT = new PerfectHit();
@@ -44,6 +45,6 @@ public class Config {
         this.zombies.attach(new ZombieESP(), new Aimbot(), new ReviveAura());
         this.combat.attach(COMBAT_AUTOCLICKER, COMBAT_JUMP_RESET, COMBAT_PERFECT_HIT);
         this.render.attach(new PlayerESP(), new ProjectileESP());
-        this.ui.attach(new GUI(), new Notifications(), new ModuleList(), new Watermark());
+        this.ui.attach(new GUI(), new Notifications(), new ModuleList(), RENDER_WATERMARK);
     }
 }

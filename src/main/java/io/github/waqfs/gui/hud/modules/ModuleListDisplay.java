@@ -1,11 +1,12 @@
 package io.github.waqfs.gui.hud.modules;
 
 import io.github.waqfs.Cigarette;
+import io.github.waqfs.config.Config;
 import io.github.waqfs.gui.CategoryInstance;
 import io.github.waqfs.gui.CigaretteScreen;
-import io.github.waqfs.gui.widget.DraggableWidget;
 import io.github.waqfs.lib.Color;
 import io.github.waqfs.module.BaseModule;
+import io.github.waqfs.module.ui.Watermark;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -22,6 +23,12 @@ import java.util.Map;
 import java.util.Set;
 
 public class ModuleListDisplay extends ClickableWidget {
+    public enum Alignment {
+        TOPRIGHT,
+        TOPLEFT
+    }
+
+    public Alignment alignment = Alignment.TOPRIGHT;
 
     private static class Entry {
         final BaseModule<?, ?> module;
@@ -66,6 +73,15 @@ public class ModuleListDisplay extends ClickableWidget {
 
     @Override
     protected void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
+        int scrW = MinecraftClient.getInstance().getWindow().getScaledWidth();
+        int scrH = MinecraftClient.getInstance().getWindow().getScaledHeight();
+        if (alignment == Alignment.TOPRIGHT) {
+            this.setY(10);
+            this.setX(scrW - this.getWidth() - 10);
+        } else if (alignment == Alignment.TOPLEFT) {
+            this.setY(scrH - this.getHeight() - 10 + (Cigarette.CONFIG.RENDER_WATERMARK.getRawState() ? 60 : 0));
+            this.setX(10);
+        }
         TextRenderer tr = Cigarette.REGULAR != null ? Cigarette.REGULAR : MinecraftClient.getInstance().textRenderer;
         if (Cigarette.CONFIG == null)
             return;
@@ -98,7 +114,11 @@ public class ModuleListDisplay extends ClickableWidget {
         }
 
         List<Entry> workingSorted = new ArrayList<>(working);
-        workingSorted.sort((a, b) -> Integer.compare(b.width, a.width));
+        if (this.alignment == Alignment.TOPRIGHT) {
+            workingSorted.sort((a, b) -> Integer.compare(b.width, a.width));
+        } else {
+            workingSorted.sort((a, b) -> Integer.compare(a.width, b.width));
+        }
         int ord = 0;
         for (Entry e : workingSorted) {
             e.lastIndex = ord++;

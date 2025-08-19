@@ -78,7 +78,7 @@ public class NotificationDisplay extends ClickableWidget {
             colors.add(Color.color((int) (x + i * 10 * gradientStaggerModifier),
                     (int) (y + 40 * gradientStaggerModifier)));
         }
-        drawTextGradient(context, "cigarette", x, y + 40, colors.stream().mapToInt(i -> i).toArray());
+        drawTextGradient(context, "cigarette", x, y + 30, colors.stream().mapToInt(i -> i).toArray());
     }
 
     public static void drawTextGradient(DrawContext context, String text, int x, int y, int[] colors) {
@@ -98,6 +98,10 @@ public class NotificationDisplay extends ClickableWidget {
 
         int i = 0;
         Window window = MinecraftClient.getInstance().getWindow();
+
+        this.setX(window.getScaledWidth() - Math.min(this.getWidth(), 200));
+        this.setY(window.getScaledHeight() - this.getHeight());
+
         final int boxIWidth = 190;
         final int boxHeight = 40;
         final int rightMargin = 10;

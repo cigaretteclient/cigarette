@@ -16,3 +16,4 @@ replay_*.log
 *.hprof
 *.jfr
 cigarette*.code-workspace
+copilot-debug/

@@ -14,6 +14,10 @@ import io.github.waqfs.module.murdermystery.GoldESP;
 import io.github.waqfs.module.zombies.Aimbot;
 import io.github.waqfs.module.render.PlayerESP;
 import io.github.waqfs.module.render.ProjectileESP;
+import io.github.waqfs.module.ui.GUI;
+import io.github.waqfs.module.ui.ModuleList;
+import io.github.waqfs.module.ui.Notifications;
+import io.github.waqfs.module.ui.Watermark;
 import io.github.waqfs.module.zombies.ReviveAura;
 import io.github.waqfs.module.zombies.ZombieESP;
 
@@ -24,9 +28,11 @@ public class Config {
     public CategoryInstance zombies = new CategoryInstance("Zombies", 340, 10);
     public CategoryInstance combat = new CategoryInstance("Combat", 450, 10);
     public CategoryInstance render = new CategoryInstance("Render", 560, 10);
+    public CategoryInstance ui = new CategoryInstance("UI", 670, 10);
 
-    public CategoryInstance[] allCategories = new CategoryInstance[]{keybinds, combat, render, murderMystery, bedwars, zombies, Cigarette.IN_DEV_ENVIRONMENT ? DevWidget.CATEGORY_INSTANCE : null};
+    public CategoryInstance[] allCategories = new CategoryInstance[]{keybinds, combat, render, murderMystery, bedwars, zombies, ui, Cigarette.IN_DEV_ENVIRONMENT ? DevWidget.CATEGORY_INSTANCE : null};
 
+    public final Watermark RENDER_WATERMARK = new Watermark();
     public final AutoClicker COMBAT_AUTOCLICKER = new AutoClicker();
     public final JumpReset COMBAT_JUMP_RESET = new JumpReset();
     public final PerfectHit COMBAT_PERFECT_HIT = new PerfectHit();
@@ -39,5 +45,6 @@ public class Config {
         this.zombies.attach(new ZombieESP(), new Aimbot(), new ReviveAura());
         this.combat.attach(COMBAT_AUTOCLICKER, COMBAT_JUMP_RESET, COMBAT_PERFECT_HIT);
         this.render.attach(new PlayerESP(), new ProjectileESP());
+        this.ui.attach(new GUI(), new Notifications(), new ModuleList(), RENDER_WATERMARK);
     }
 }

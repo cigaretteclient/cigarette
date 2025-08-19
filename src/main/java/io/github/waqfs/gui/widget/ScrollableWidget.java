@@ -2,6 +2,7 @@ package io.github.waqfs.gui.widget;
 
 import io.github.waqfs.gui.CigaretteScreen;
 import io.github.waqfs.gui.Scissor;
+import io.github.waqfs.lib.Shape;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.Text;
@@ -14,6 +15,7 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
     private static final int DEFAULT_WIDTH = 100;
     private static final int DEFAULT_HEIGHT = 200;
     private static final int DEFAULT_SCROLLBAR_WIDTH = 3;
+    private static final int BOTTOM_ROUNDED_RECT_HEIGHT = 6;
     private final int rowHeight = 20;
     private boolean shouldScroll = false;
     private double scrollPosition = 0D;
@@ -23,6 +25,7 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
     private int ticksOnOpen = 0;
     private static final int MAX_TICKS_ON_OPEN = 20;
     private @Nullable Runnable onToggleExpand;
+    private boolean showBottomRoundedRect = true;
 
     @SafeVarargs
     public ScrollableWidget(int x, int y, @Nullable Text headerText, @Nullable Widgets... children) {
@@ -41,6 +44,12 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
     public ScrollableWidget(int x, int y) {
         super(x, y, DEFAULT_WIDTH + DEFAULT_SCROLLBAR_WIDTH, DEFAULT_HEIGHT, null);
         this.withDefault(new BaseWidget.Stateless());
+    }
+
+    public ScrollableWidget(int x, int y, boolean showBottomRoundedRect) {
+        super(x, y, DEFAULT_WIDTH + DEFAULT_SCROLLBAR_WIDTH, DEFAULT_HEIGHT, null);
+        this.withDefault(new BaseWidget.Stateless());
+        this.showBottomRoundedRect = showBottomRoundedRect;
     }
 
     private boolean updateShouldScroll() {
@@ -138,29 +147,20 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
         int areaHeight = Math.max(0, bottom - top - headerHeight);
         int contentHeight = (children == null ? 0 : children.length * rowHeight);
         int maxVisible = Math.min(areaHeight, contentHeight);
-        int visibleHeight = (int) Math.round(getEasedProgress() * maxVisible);
+
+        double eased = getEasedProgress();
+        int visibleHeight = this.expanded
+                ? (int) Math.ceil(eased * maxVisible)
+                : (int) Math.floor(eased * maxVisible);
+
+        if (showBottomRoundedRect && !this.expanded && visibleHeight > 0) {
+            visibleHeight = Math.max(0, visibleHeight - BOTTOM_ROUNDED_RECT_HEIGHT);
+        }
         return top + headerHeight + visibleHeight;
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        // if (this.header != null && this.header.isMouseOver(mouseX, mouseY)) {
-        // return this.header.mouseClicked(mouseX, mouseY, button);
-        // }
-
-        // int top = this.getY();
-        // int bottom = top + this.height;
-        // int realTop = top + getHeaderHeight();
-        // int realBottomInt = getVisibleBottom(top, bottom);
-
-        // if (mouseY >= realTop && mouseY < realBottomInt) {
-        // return super.mouseClicked(mouseX, mouseY, button);
-        // }
-
-        // if (isMouseOver(mouseX, mouseY)) {
-        // return true;
-        // }
-        // return false;
 
         boolean wasHandled = this.header != null && this.header.mouseClicked(mouseX, mouseY, button);
         if (wasHandled) {
@@ -195,7 +195,10 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
             int bottom = top + this.height;
             int headerHeight = getHeaderHeight();
             int areaHeight = Math.max(0, bottom - top - headerHeight);
-            int animatedArea = (int) Math.round(getEasedProgress() * areaHeight);
+            double eased = getEasedProgress();
+            int animatedArea = this.expanded
+                    ? (int) Math.ceil(eased * areaHeight)
+                    : (int) Math.floor(eased * areaHeight);
             int rowCount = (children == null ? 0 : children.length);
             int contentHeight = rowCount * rowHeight;
             int maxScroll = Math.max(0, contentHeight - animatedArea);
@@ -215,7 +218,10 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
             int top, int right, int bottom) {
         context.getMatrices().push();
 
-        if (children != null) {
+        BaseWidget<?>[] localChildren = this.children;
+        int childCount = localChildren == null ? 0 : localChildren.length;
+
+        if (childCount > 0) {
             int target = this.expanded ? MAX_TICKS_ON_OPEN : 0;
             if (this.ticksOnOpen < target) {
                 this.ticksOnOpen = Math.min(++this.ticksOnOpen, MAX_TICKS_ON_OPEN);
@@ -238,16 +244,21 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
             int realHeight = Math.max(0, realBottomInt - realTop);
 
             if (!(!this.expanded && this.ticksOnOpen == 0)) {
-                Scissor.pushExclusive(context, left, Math.max(0, realTop - 1), right + 1, realBottomInt + 2);
-                for (int index = 0; index < children.length; index++) {
-                    BaseWidget<?> child = children[index];
+                int scissorRight = right + 3;
+                int scissorTop = Math.max(0, realTop);
+                int scissorBottom = this.expanded
+                        ? realBottomInt + (showBottomRoundedRect ? BOTTOM_ROUNDED_RECT_HEIGHT : 0) + 3
+                        : realBottomInt;
+                Scissor.pushExclusive(context, left, scissorTop, scissorRight, scissorBottom);
+                for (int index = 0; index < childCount; index++) {
+                    BaseWidget<?> child = localChildren[index];
                     if (child == null)
                         continue;
                     child.withXY(left, top - (int) scrollPosition + (index + hasHeaderInt) * rowHeight)
                             .renderWidget(context, mouseX, mouseY, deltaTicks);
                 }
 
-                int contentHeight = children.length * rowHeight;
+                int contentHeight = childCount * rowHeight;
                 int overflowHeight = Math.max(0, contentHeight - realHeight);
                 if (overflowHeight > 0 && this.expanded && this.ticksOnOpen == MAX_TICKS_ON_OPEN) {
                     context.fill(right - DEFAULT_SCROLLBAR_WIDTH, realTop, right, realBottomInt,
@@ -261,13 +272,13 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
                             realTop + knobTop + knobHeight,
                             CigaretteScreen.SECONDARY_COLOR);
                 }
-                Scissor.popExclusive();
-
                 int bottomRectTop = realBottomInt;
-                if (this.getEasedProgress() > 0.0) {
-                    DraggableWidget.roundedRect(context, left, bottomRectTop, right, bottomRectTop + 4,
-                            CigaretteScreen.BACKGROUND_COLOR, 2, false, true);
+                if (this.getEasedProgress() > 0.0 && showBottomRoundedRect) {
+                    Shape.roundedRect(context, left, bottomRectTop, right,
+                            bottomRectTop + BOTTOM_ROUNDED_RECT_HEIGHT,
+                            CigaretteScreen.BACKGROUND_COLOR, 5, false, true);
                 }
+                Scissor.popExclusive();
             }
         }
         if (header != null) {

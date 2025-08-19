@@ -2,16 +2,14 @@ package io.github.waqfs.gui.widget;
 
 import io.github.waqfs.Cigarette;
 import io.github.waqfs.gui.CigaretteScreen;
-import io.github.waqfs.gui.notifications.Notification;
+import io.github.waqfs.lib.Color;
 import io.github.waqfs.module.BaseModule;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.Map;
 import java.util.function.Consumer;
 
 public class ToggleWidget extends BaseWidget<Boolean> {
@@ -88,15 +86,41 @@ public class ToggleWidget extends BaseWidget<Boolean> {
         float easedEnable = (float) Math.max(0.0, Math.min(1.0, enableT));
         int textColor = lerpColor(CigaretteScreen.PRIMARY_TEXT_COLOR, CigaretteScreen.ENABLED_COLOR, easedEnable);
 
-        int borderColor = DraggableWidget.color(left, top);
+        int borderColor = Color.color(left, top);
         if (ticksOnHover > 0) {
-            float progress = (float) ticksOnHover / MAX_HOVER_TICKS;
-            context.drawHorizontalLine(left, ((int) ((left-1) + width * progress)), top, borderColor);
+            float raw = (float) ticksOnHover / MAX_HOVER_TICKS;
+            float progress = (float) Math.max(0.0, Math.min(1.0, hovered ? CigaretteScreen.easeOutExpo(raw) : CigaretteScreen.easeInExpo(raw)));
+            context.drawHorizontalLine(left, ((int) ((left - 1) + width * progress)), top, borderColor);
             context.drawHorizontalLine((int) (right - width * progress), right - 1, bottom - 1, borderColor);
             context.drawVerticalLine(left, (int) (bottom - height * progress), bottom, borderColor);
             context.drawVerticalLine(right - 1, top - 1, (int) (top + height * progress), borderColor);
         }
         TextRenderer textRenderer = Cigarette.REGULAR;
         context.drawTextWithShadow(textRenderer, getMessage(), left + 4, top + height / 3, textColor);
+    }
+
+    public class ToggleWidgetDisabled extends ToggleWidget {
+        public ToggleWidgetDisabled(Text message, @Nullable Text tooltip) {
+            super(message, tooltip);
+        }
+
+        @Override
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT && isMouseOver(mouseX, mouseY)) {
+                this.setFocused();
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        protected void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left, int top, int right, int bottom) {
+            this.hovered = false;
+            TextRenderer textRenderer = Cigarette.REGULAR;
+            context.fill(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR);
+            io.github.waqfs.gui.RenderUtil.pushOpacity(0.5f);
+            context.drawTextWithShadow(textRenderer, getMessage(), left + 4, top + height / 3, CigaretteScreen.PRIMARY_TEXT_COLOR);
+            io.github.waqfs.gui.RenderUtil.popOpacity();
+        }
     }
 }

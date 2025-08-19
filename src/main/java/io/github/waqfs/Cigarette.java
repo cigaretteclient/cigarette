@@ -7,7 +7,7 @@ import io.github.waqfs.agent.ZombiesAgent;
 import io.github.waqfs.config.Config;
 import io.github.waqfs.config.FileSystem;
 import io.github.waqfs.events.Events;
-import io.github.waqfs.gui.notifications.NotificationDisplay;
+import io.github.waqfs.gui.hud.notification.NotificationDisplay;
 import io.github.waqfs.lib.ChatLogger;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -18,12 +18,19 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.TitleScreen;
+import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.util.Window;
 import net.minecraft.util.Identifier;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.joml.Vector4f;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import net.minecraft.util.Pair;
 
 public class Cigarette implements ModInitializer {
     public static final String MOD_ID = "cigarette";
@@ -38,8 +45,17 @@ public class Cigarette implements ModInitializer {
     public static Events EVENTS = new Events();
     public static NotificationDisplay NOTIFICATION_DISPLAY;
     private static boolean addedNotificationDisplay = false;
+    public static List<Pair<Vector4f, ClickableWidget>> HUD_ELEMENTS = new ArrayList<>();
 
     public static TextRenderer REGULAR;
+
+    public static void registerHudElement(ClickableWidget widget) {
+        HUD_ELEMENTS.add(new Pair<Vector4f, ClickableWidget>(new Vector4f(widget.getX(), widget.getY(), widget.getWidth(), widget.getHeight()), widget));
+    }
+
+    public static void unregisterHudElement(ClickableWidget widget) {
+        HUD_ELEMENTS.removeIf(pair -> pair.getRight().equals(widget));
+    }
 
     @Override
     public void onInitialize() {
@@ -50,20 +66,32 @@ public class Cigarette implements ModInitializer {
                 if (addedNotificationDisplay)
                     return;
                 REGULAR = Cigarette.tryGetTr(false);
-                NOTIFICATION_DISPLAY = new NotificationDisplay();
+                addedNotificationDisplay = true;
             }
         });
 
-        HudLayerRegistrationCallback.EVENT
-                .register(layeredDrawer -> layeredDrawer.attachLayerAfter(IdentifiedLayer.MISC_OVERLAYS,
-                        Identifier.of("cigarette", "notifications_after_misc_overlays"), (drawContext, tickDelta) -> {
-                            if (NOTIFICATION_DISPLAY != null) {
-                                Mouse m = MinecraftClient.getInstance().mouse;
-                                Window w = MinecraftClient.getInstance().getWindow();
-                                NOTIFICATION_DISPLAY.render(drawContext, (int) m.getScaledX(w), (int) m.getScaledY(w),
-                                        tickDelta.getDynamicDeltaTicks());
-                            }
-                        }));
+    HudLayerRegistrationCallback.EVENT
+        .register(layeredDrawer -> layeredDrawer.attachLayerAfter(IdentifiedLayer.MISC_OVERLAYS,
+            Identifier.of("cigarette", "hud_after_misc_overlays"), (drawContext, tickDelta) -> {
+                Mouse m = MinecraftClient.getInstance().mouse;
+                Window w = MinecraftClient.getInstance().getWindow();
+                for (Pair<Vector4f, ClickableWidget> pair : HUD_ELEMENTS) {
+                Vector4f dimensions = pair.getLeft();
+                ClickableWidget widget = pair.getRight();
+                int x = (int) dimensions.x;
+                int y = (int) dimensions.y;
+                int width = (int) dimensions.z;
+                int height = (int) dimensions.w;
+                widget.setDimensions(width, height);
+                widget.setPosition(x, y);
+                widget.render(drawContext, (int) m.getScaledX(w), (int) m.getScaledY(w),
+                    tickDelta.getDynamicDeltaTicks());
+                }
+                if (NOTIFICATION_DISPLAY != null) {
+                NOTIFICATION_DISPLAY.render(drawContext, (int) m.getScaledX(w), (int) m.getScaledY(w),
+                    tickDelta.getDynamicDeltaTicks());
+                }
+            }));
     }
 
     public static TextRenderer getTr(boolean bold) throws IOException {

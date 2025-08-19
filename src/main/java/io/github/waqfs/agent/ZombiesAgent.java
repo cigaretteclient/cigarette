@@ -2,8 +2,8 @@ package io.github.waqfs.agent;
 
 import io.github.waqfs.GameDetector;
 import io.github.waqfs.gui.widget.ToggleWidget;
-import io.github.waqfs.lib.PlayerEntityL;
 import io.github.waqfs.lib.Raycast;
+import io.github.waqfs.lib.TextL;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.enums.SlabType;
@@ -13,6 +13,7 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.entity.mob.*;
 import net.minecraft.entity.passive.WolfEntity;
 import net.minecraft.item.ItemStack;
@@ -29,6 +30,7 @@ import java.util.UUID;
 
 public class ZombiesAgent extends BaseAgent {
     private static final HashSet<ZombieTarget> zombies = new HashSet<>();
+    private static final HashSet<Powerup> powerups = new HashSet<>();
 
     public ZombiesAgent(@Nullable ToggleWidget devToggle) {
         super(devToggle);
@@ -62,6 +64,15 @@ public class ZombiesAgent extends BaseAgent {
         return closest;
     }
 
+    public static HashSet<Powerup> getPowerups() {
+        HashSet<Powerup> alive = new HashSet<>();
+        for (Powerup powerup : powerups) {
+            if (powerup.isDead()) continue;
+            alive.add(powerup);
+        }
+        return alive;
+    }
+
     public static boolean isGun(ItemStack item) {
         if (item.isOf(Items.IRON_SWORD)) return false;
         return item.isIn(ItemTags.WEAPON_ENCHANTABLE) || item.isIn(ItemTags.HOES) || item.isIn(ItemTags.SHOVELS) || item.isIn(ItemTags.AXES) || item.isIn(ItemTags.PICKAXES) || item.isOf(Items.SHEARS);
@@ -70,9 +81,29 @@ public class ZombiesAgent extends BaseAgent {
     @Override
     protected void onValidTick(MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
         zombies.removeIf(ZombieTarget::isDead);
+        powerups.removeIf(Powerup::isDead);
+        powerups.forEach(Powerup::tick);
         for (Entity zombie : world.getEntities()) {
             if (!(zombie instanceof LivingEntity livingEntity)) continue;
-            if (ZombieType.from(zombie) == ZombieType.UNKNOWN) continue;
+            if (ZombieType.from(zombie) == ZombieType.UNKNOWN) {
+                if (zombie instanceof ArmorStandEntity armorStandEntity) {
+                    if (armorStandEntity.getCustomName() == null) continue;
+                    String name = TextL.toColorCodedString(armorStandEntity.getCustomName());
+
+                    Powerup.Type type;
+                    switch (name) {
+                        case "§r§9§lMAX AMMO" -> type = Powerup.Type.MAX_AMMO;
+                        case "§r§6§lDOUBLE GOLD" -> type = Powerup.Type.DOUBLE_GOLD;
+                        case "§r§c§lINSTA KILL" -> type = Powerup.Type.INSTANT_KILL;
+                        case "§r§5Lucky Chest" -> type = Powerup.Type.LUCKY_CHEST;
+                        default -> {
+                            continue;
+                        }
+                    }
+                    Powerup.create(armorStandEntity, armorStandEntity.getPos(), type);
+                }
+                continue;
+            }
 
             ZombieTarget target = ZombieTarget.create(livingEntity);
             target.distance = player.distanceTo(zombie);
@@ -97,6 +128,7 @@ public class ZombiesAgent extends BaseAgent {
     @Override
     protected void onInvalidTick(MinecraftClient client) {
         zombies.clear();
+        powerups.clear();
     }
 
     @Override
@@ -178,6 +210,56 @@ public class ZombiesAgent extends BaseAgent {
             if (entity instanceof EndermiteEntity) return ENDERMITE;
             if (entity instanceof SilverfishEntity) return SILVERFISH;
             return UNKNOWN;
+        }
+    }
+
+    public static class Powerup {
+        public final ArmorStandEntity armorStand;
+        public final Vec3d position;
+        public final Powerup.Type type;
+        private int remainingTicks;
+
+        private Powerup(ArmorStandEntity entity, Vec3d position, Powerup.Type type) {
+            this.armorStand = entity;
+            this.position = position;
+            this.type = type;
+            this.remainingTicks = type == Type.LUCKY_CHEST ? Integer.MAX_VALUE : 600;
+        }
+
+        private static Powerup create(ArmorStandEntity entity, Vec3d position, Powerup.Type type) {
+            for (Powerup powerup : powerups) {
+                if (powerup.armorStand == entity) return powerup;
+            }
+            Powerup powerup = new Powerup(entity, position, type);
+            powerups.add(powerup);
+            return powerup;
+        }
+
+
+        private boolean isDead() {
+            return !this.armorStand.isAlive();
+        }
+
+        private void tick() {
+            this.remainingTicks -= 1;
+        }
+
+        public int getRemainingTicks() {
+            return this.remainingTicks;
+        }
+
+        public enum Type {
+            INSTANT_KILL(0xFF0000), MAX_AMMO(0x0000FF), DOUBLE_GOLD(0xFFF800), LUCKY_CHEST(0xFC50C0);
+
+            private final int color;
+
+            Type(int rgb) {
+                this.color = rgb;
+            }
+
+            public int getColor() {
+                return this.color;
+            }
         }
     }
 }

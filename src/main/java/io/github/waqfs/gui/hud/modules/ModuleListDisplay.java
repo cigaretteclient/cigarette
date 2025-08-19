@@ -1,12 +1,10 @@
 package io.github.waqfs.gui.hud.modules;
 
 import io.github.waqfs.Cigarette;
-import io.github.waqfs.config.Config;
 import io.github.waqfs.gui.CategoryInstance;
 import io.github.waqfs.gui.CigaretteScreen;
 import io.github.waqfs.lib.Color;
 import io.github.waqfs.module.BaseModule;
-import io.github.waqfs.module.ui.Watermark;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -73,13 +71,13 @@ public class ModuleListDisplay extends ClickableWidget {
 
     @Override
     protected void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
-        int scrW = MinecraftClient.getInstance().getWindow().getScaledWidth();
-        int scrH = MinecraftClient.getInstance().getWindow().getScaledHeight();
+    int scrW = MinecraftClient.getInstance().getWindow().getScaledWidth();
         if (alignment == Alignment.TOPRIGHT) {
             this.setY(10);
             this.setX(scrW - this.getWidth() - 10);
         } else if (alignment == Alignment.TOPLEFT) {
-            this.setY(scrH - this.getHeight() - 10 + (Cigarette.CONFIG.RENDER_WATERMARK.getRawState() ? 60 : 0));
+            int watermarkOffset = (Cigarette.CONFIG != null && Cigarette.CONFIG.RENDER_WATERMARK.getRawState()) ? 60 : 0;
+            this.setY(10 + watermarkOffset);
             this.setX(10);
         }
         TextRenderer tr = Cigarette.REGULAR != null ? Cigarette.REGULAR : MinecraftClient.getInstance().textRenderer;

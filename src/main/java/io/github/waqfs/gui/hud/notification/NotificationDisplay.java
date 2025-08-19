@@ -6,7 +6,6 @@ import java.util.List;
 import io.github.waqfs.Cigarette;
 import io.github.waqfs.gui.CigaretteScreen;
 import io.github.waqfs.gui.hud.notification.internal.NotificationWithEasingProgress;
-import io.github.waqfs.gui.widget.DraggableWidget;
 import io.github.waqfs.lib.Color;
 import io.github.waqfs.lib.Shape;
 import net.minecraft.client.MinecraftClient;

@@ -26,10 +26,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.javatuples.Pair;
 import org.joml.Vector4f;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import net.minecraft.util.Pair;
 
 public class Cigarette implements ModInitializer {
     public static final String MOD_ID = "cigarette";
@@ -53,7 +54,7 @@ public class Cigarette implements ModInitializer {
     }
 
     public static void unregisterHudElement(ClickableWidget widget) {
-        HUD_ELEMENTS.removeIf(pair -> pair.getValue1().equals(widget));
+        HUD_ELEMENTS.removeIf(pair -> pair.getRight().equals(widget));
     }
 
     @Override
@@ -75,8 +76,8 @@ public class Cigarette implements ModInitializer {
                 Mouse m = MinecraftClient.getInstance().mouse;
                 Window w = MinecraftClient.getInstance().getWindow();
                 for (Pair<Vector4f, ClickableWidget> pair : HUD_ELEMENTS) {
-                Vector4f dimensions = pair.getValue0();
-                ClickableWidget widget = pair.getValue1();
+                Vector4f dimensions = pair.getLeft();
+                ClickableWidget widget = pair.getRight();
                 int x = (int) dimensions.x;
                 int y = (int) dimensions.y;
                 int width = (int) dimensions.z;

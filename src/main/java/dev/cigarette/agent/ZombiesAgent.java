@@ -107,12 +107,24 @@ public class ZombiesAgent extends BaseAgent {
 
             ZombieTarget target = ZombieTarget.create(livingEntity);
             target.distance = player.distanceTo(zombie);
+            if (livingEntity.bodyYaw != livingEntity.lastYaw) {
+                target.ticksSinceRotation = 0;
+            } else {
+                target.ticksSinceRotation++;
+            }
 
 //            Headshot Detection
             Vec3d start = player.getPos().add(0, player.getEyeHeight(EntityPose.STANDING), 0);
-            Vec3d zombieVelocity = zombie.getPos().subtract(zombie.lastX, zombie.lastY, zombie.lastZ);
-            float factor = 6f * Math.min(target.distance / 30, 1);
-            Vec3d end = zombie.getEyePos().add(zombieVelocity.multiply(factor, 0.2, factor));
+
+            Vec3d instantVelocity = zombie.getPos().subtract(zombie.lastX, zombie.lastY, zombie.lastZ);
+
+            double xVelocity = target.ticksSinceRotation < 3 ? instantVelocity.x * 4 : 0;
+            double yVelocity = instantVelocity.y > LivingEntity.GRAVITY ? 0 : instantVelocity.y;
+            double zVelocity = target.ticksSinceRotation < 3 ? instantVelocity.z * 4 : 0;
+            Vec3d realVelocity = new Vec3d(xVelocity, yVelocity, zVelocity);
+
+            Vec3d end = zombie.getEyePos().add(realVelocity);
+
             target.end = end;
             Raycast.FirstBlock result = Raycast.firstBlockCollision(start, end, this::isNoClipBlock);
             if ((result.hit() && result.whitelisted()) || result.missed()) {
@@ -144,6 +156,7 @@ public class ZombiesAgent extends BaseAgent {
         private float distance = 0;
         private boolean canShoot = false;
         private boolean canHeadshot = false;
+        private int ticksSinceRotation = 0;
 
         private ZombieTarget(LivingEntity entity) {
             this.entity = entity;

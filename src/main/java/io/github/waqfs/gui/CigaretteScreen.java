@@ -3,7 +3,6 @@ package io.github.waqfs.gui;
 import io.github.waqfs.Cigarette;
 import io.github.waqfs.gui.hud.notification.NotificationDisplay;
 import io.github.waqfs.gui.widget.BaseWidget;
-import io.github.waqfs.gui.widget.DraggableWidget.ColorUtil;
 import io.github.waqfs.gui.widget.KeybindWidget;
 import io.github.waqfs.gui.widget.ScrollableWidget;
 import net.minecraft.client.MinecraftClient;
@@ -38,9 +37,6 @@ public class CigaretteScreen extends Screen {
     private static final double CLOSE_STAGGER_FACTOR = 0.6;
     private int categoryCount = 0;
     public static @Nullable KeybindWidget bindingKey = null;
-
-    private static int[] bottomGradientBandColors = null;
-    private static int bottomGradientBands = 0;
 
     protected CigaretteScreen() {
         super(Text.literal("Cigarette Client"));
@@ -349,7 +345,7 @@ public class CigaretteScreen extends Screen {
                 context.fill(x, y, x + 1, y + 1, color);
             }
         }
-    }*/
+    }
 
     private static double smoothstep(double t) {
         if (t <= 0)
@@ -357,7 +353,7 @@ public class CigaretteScreen extends Screen {
         if (t >= 1)
             return 1;
         return t * t * (3 - 2 * t);
-    }
+    }*/
 
     public static double easeOutExpo(double t) {
         if (t >= 1.0)

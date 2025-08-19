@@ -8,7 +8,6 @@ import io.github.waqfs.config.Config;
 import io.github.waqfs.config.FileSystem;
 import io.github.waqfs.events.Events;
 import io.github.waqfs.gui.hud.notification.NotificationDisplay;
-import io.github.waqfs.gui.hud.notification.NotificationDisplay;
 import io.github.waqfs.lib.ChatLogger;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -20,10 +19,8 @@ import net.minecraft.client.Mouse;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.util.Window;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Vec2f;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,12 +28,8 @@ import java.util.List;
 
 import org.javatuples.Pair;
 import org.joml.Vector4f;
-import org.javatuples.Pair;
-import org.joml.Vector4f;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 public class Cigarette implements ModInitializer {
     public static final String MOD_ID = "cigarette";

@@ -1,7 +1,0 @@
-{
-  "name": "cigarette-client",
-  "private": true,
-  "scripts": {
-    "install": "./gradlew build && ./gradlew vscode"
-  }
-}

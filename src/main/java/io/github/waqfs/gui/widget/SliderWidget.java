@@ -2,7 +2,7 @@ package io.github.waqfs.gui.widget;
 
 import io.github.waqfs.Cigarette;
 import io.github.waqfs.gui.CigaretteScreen;
-import io.github.waqfs.gui.widget.DraggableWidget.ColorUtil;
+import io.github.waqfs.lib.Color;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -106,9 +106,9 @@ public class SliderWidget extends BaseWidget<Double> {
             context.fill(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR);
         }
 
-        int textColor = this.disabled ? ColorUtil.colorDarken(CigaretteScreen.PRIMARY_TEXT_COLOR, 0.4f) : CigaretteScreen.PRIMARY_TEXT_COLOR;
-        int primaryColor = this.disabled ? ColorUtil.colorDarken(CigaretteScreen.PRIMARY_COLOR, 0.4f) : CigaretteScreen.PRIMARY_COLOR;
-        int secondaryColor = this.disabled ? ColorUtil.colorDarken(CigaretteScreen.SECONDARY_COLOR, 0.4f) : CigaretteScreen.SECONDARY_COLOR;
+        int textColor = this.disabled ? Color.colorDarken(CigaretteScreen.PRIMARY_TEXT_COLOR, 0.4f) : CigaretteScreen.PRIMARY_TEXT_COLOR;
+        int primaryColor = this.disabled ? Color.colorDarken(CigaretteScreen.PRIMARY_COLOR, 0.4f) : CigaretteScreen.PRIMARY_COLOR;
+        int secondaryColor = this.disabled ? Color.colorDarken(CigaretteScreen.SECONDARY_COLOR, 0.4f) : CigaretteScreen.SECONDARY_COLOR;
 
         TextRenderer textRenderer = Cigarette.REGULAR;
         context.drawTextWithShadow(textRenderer, getMessage(), left + 4, top + 4, textColor);

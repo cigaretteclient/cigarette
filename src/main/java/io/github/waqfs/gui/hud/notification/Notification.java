@@ -1,4 +1,4 @@
-package io.github.waqfs.gui.notifications;
+package io.github.waqfs.gui.hud.notification;
 
 import java.lang.reflect.Type;
 import java.util.Map;

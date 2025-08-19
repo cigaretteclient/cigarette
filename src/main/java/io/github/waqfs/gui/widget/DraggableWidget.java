@@ -2,6 +2,8 @@ package io.github.waqfs.gui.widget;
 
 import io.github.waqfs.Cigarette;
 import io.github.waqfs.gui.CigaretteScreen;
+import io.github.waqfs.lib.Color;
+import io.github.waqfs.lib.Shape;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -102,153 +104,14 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
         this.clickCallback = callback;
     }
 
-    public static class ColorUtil {
-        public static int lerpColor(int color1, int color2, float t) {
-            if (t < 0f)
-                t = 0f;
-            else if (t > 1f)
-                t = 1f;
-            int a = ((int) lerp((color1 >> 24) & 0xFF, (color2 >> 24) & 0xFF, t)) << 24;
-            int r = ((int) lerp((color1 >> 16) & 0xFF, (color2 >> 16) & 0xFF, t)) << 16;
-            int g = ((int) lerp((color1 >> 8) & 0xFF, (color2 >> 8) & 0xFF, t)) << 8;
-            int b = (int) lerp(color1 & 0xFF, color2 & 0xFF, t);
-            return a | r | g | b;
-        }
 
-        public static int colorDarken(int color, float factor) {
-            int a = (color >> 24) & 0xFF;
-            int r = (int) (((color >> 16) & 0xFF) * factor);
-            int g = (int) (((color >> 8) & 0xFF) * factor);
-            int b = (int) ((color & 0xFF) * factor);
-            r = Math.max(0, Math.min(255, r));
-            g = Math.max(0, Math.min(255, g));
-            b = Math.max(0, Math.min(255, b));
-            return (a << 24) | (r << 16) | (g << 8) | b;
-        }
 
-        public static int rgba2Int(int r, int g, int b, int a) {
-            return (a << 24) | (r << 16) | (g << 8) | b;
-        }
-
-        private static float lerp(float start, float end, float t) {
-            return start + (end - start) * t;
-        }
-    }
-
-    public static int color(int x, int y) {
-        double seconds = (System.nanoTime() / 1_000_000_000.0);
-        int screenW = 1920, screenH = 1080;
-        MinecraftClient mc = MinecraftClient.getInstance();
-        if (mc != null && mc.getWindow() != null) {
-            screenW = mc.getWindow().getScaledWidth();
-            screenH = mc.getWindow().getScaledHeight();
-        }
-        float xNorm = Math.max(0f, Math.min(1f, (float) x / Math.max(1, screenW)));
-        float yNorm = Math.max(0f, Math.min(1f, (float) y / Math.max(1, screenH)));
-        float s = xNorm + 0.2f * yNorm;
-        double speedHz = 0.3;
-        double phase = 2 * Math.PI * (speedHz * seconds - s);
-        float pingpong = 0.5f * (1.0f + (float) Math.sin(phase));
-        int bg = ColorUtil.lerpColor(CigaretteScreen.PRIMARY_COLOR, 0xFF020618, (float) pingpong);
-        return bg;
-    }
-
-    public static void pixelAt(DrawContext context, int x, int y, int color) {
-        context.fill(x, y, x + 1, y + 1, color);
-    }
-
-    public static void arc(DrawContext context, int centerX, int centerY, int radius, int startAngle, int endAngle,
-            int color) {
-        double angleStep = 1.0 / radius;
-        for (double angle = Math.toRadians(startAngle); angle <= Math.toRadians(endAngle); angle += angleStep) {
-            int x = centerX + (int) (radius * Math.cos(angle));
-            int y = centerY + (int) (radius * Math.sin(angle));
-            pixelAt(context, x, y, color);
-        }
-    }
-
-    private enum Corner {
-        TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT
-    }
-
-    private static void fillQuarterCircle(DrawContext context, int cx, int cy, int r, Corner corner, int color) {
-        for (int dy = 0; dy <= r; dy++) {
-            int dx = (int) Math.floor(Math.sqrt(r * r - dy * dy));
-            switch (corner) {
-                case TOP_LEFT -> context.fill(cx - dx, cy - dy, cx + 1, cy - dy + 1, color);
-                case TOP_RIGHT -> context.fill(cx, cy - dy, cx + dx + 1, cy - dy + 1, color);
-                case BOTTOM_LEFT -> context.fill(cx - dx, cy + dy, cx + 1, cy + dy + 1, color);
-                case BOTTOM_RIGHT -> context.fill(cx, cy + dy, cx + dx + 1, cy + dy + 1, color);
-            }
-        }
-    }
-
-    public static void roundedRect(DrawContext context, int left, int top, int right, int bottom, int color, int r) {
-        context.fill(left + r, top, right - r, bottom, color);
-        context.fill(left, top + r, left + r, bottom - r, color);
-        context.fill(right - r, top + r, right, bottom - r, color);
-        fillQuarterCircle(context, left + r, top + r, r, Corner.TOP_LEFT, color);
-        fillQuarterCircle(context, right - r - 1, top + r, r, Corner.TOP_RIGHT, color);
-        fillQuarterCircle(context, left + r, bottom - r - 1, r, Corner.BOTTOM_LEFT, color);
-        fillQuarterCircle(context, right - r - 1, bottom - r - 1, r, Corner.BOTTOM_RIGHT, color);
-    }
-
-    public static void roundedRect(DrawContext context, int left, int top, int right, int bottom, int color, int r,
-            boolean topCorners, boolean bottomCorners) {
-        int bandTop = top + (topCorners ? r : 0);
-        int bandBottom = bottom - (bottomCorners ? r : 0);
-        context.fill(left + r, top, right - r, bottom, color);
-        context.fill(left, bandTop, left + r, bandBottom, color);
-        context.fill(right - r, bandTop, right, bandBottom, color);
-
-        if (topCorners) {
-            fillQuarterCircle(context, left + r, top + r, r, Corner.TOP_LEFT, color);
-            fillQuarterCircle(context, right - r - 1, top + r, r, Corner.TOP_RIGHT, color);
-        }
-        if (bottomCorners) {
-            fillQuarterCircle(context, left + r, bottom - r - 1, r, Corner.BOTTOM_LEFT, color);
-            fillQuarterCircle(context, right - r - 1, bottom - r - 1, r, Corner.BOTTOM_RIGHT, color);
-        }
-    }
-
-    public static void rotatedLine(DrawContext context, int x1, int y1, int x2, int y2, int color, float rotation) {
-        float pivotX = x1;
-        float pivotY = y1;
-        float dx = x2 - x1;
-        float dy = y2 - y1;
-        float length = (float) Math.hypot(dx, dy);
-        float step = Math.max(0.002f, 1.0f / Math.max(16f, length));
-        for (float t = 0; t <= 1.0f; t += step) {
-            float xt = x1 + t * dx;
-            float yt = y1 + t * dy;
-            float rx = (float) (Math.cos(rotation) * (xt - pivotX) - Math.sin(rotation) * (yt - pivotY) + pivotX);
-            float ry = (float) (Math.sin(rotation) * (xt - pivotX) + Math.cos(rotation) * (yt - pivotY) + pivotY);
-            pixelAt(context, Math.round(rx), Math.round(ry), color);
-        }
-    }
-
-    public static void rotatedLine(DrawContext context, int x1, int y1, int x2, int y2, int color, float rotation,
-            boolean rotateFromCenter) {
-        float pivotX = rotateFromCenter ? (x1 + x2) / 2.0f : x1;
-        float pivotY = rotateFromCenter ? (y1 + y2) / 2.0f : y1;
-        float dx = x2 - x1;
-        float dy = y2 - y1;
-        float length = (float) Math.hypot(dx, dy);
-        float step = Math.max(0.002f, 1.0f / Math.max(16f, length));
-        for (float t = 0; t <= 1.0f; t += step) {
-            float xt = x1 + t * dx;
-            float yt = y1 + t * dy;
-            float rx = (float) (Math.cos(rotation) * (xt - pivotX) - Math.sin(rotation) * (yt - pivotY) + pivotX);
-            float ry = (float) (Math.sin(rotation) * (xt - pivotX) + Math.cos(rotation) * (yt - pivotY) + pivotY);
-            pixelAt(context, Math.round(rx), Math.round(ry), color);
-        }
-    }
 
     @Override
     public void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left,
             int top, int right, int bottom) {
         TextRenderer textRenderer = Cigarette.REGULAR;
-        int bgColor = color(left, top);
+        int bgColor = Color.color(left, top);
         if (!this.expanded) {
             ticksOnCollapse = Math.min(ticksOnCollapse + 1, MAX_TICKS_ON_COLLAPSE);
         } else {
@@ -256,9 +119,9 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
         }
         double progress = ticksOnCollapse / (double) MAX_TICKS_ON_COLLAPSE;
         progress = CigaretteScreen.easeOutExpo(progress);
-        roundedRect(context, left, top, right, bottom, bgColor, 2, true, !this.expanded);
+        Shape.roundedRect(context, left, top, right, bottom, bgColor, 2, true, !this.expanded);
         if (this.expanded) {
-            int borderColor = ColorUtil.colorDarken(bgColor, 0.8f);
+            int borderColor = Color.colorDarken(bgColor, 0.8f);
             context.drawHorizontalLine(left, right - 1, bottom - 1, borderColor);
         }
         Text text = getMessage();

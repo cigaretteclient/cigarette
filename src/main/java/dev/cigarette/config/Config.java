@@ -38,12 +38,13 @@ public class Config {
     public final JumpReset COMBAT_JUMP_RESET = new JumpReset();
     public final PerfectHit COMBAT_PERFECT_HIT = new PerfectHit();
     public final PlayerESP MYSTERY_PLAYERESP = new PlayerESP();
+    public final Aimbot ZOMBIES_AIMBOT = new Aimbot();
 
     public Config() {
         this.keybinds.attach(new AddGlassBlock(), new BreakBlock(), new VClip());
         this.murderMystery.attach(MYSTERY_PLAYERESP, new GoldESP());
         this.bedwars.attach(new FireballESP(), new EntityESP(), new DefenseViewer(), new AutoTool(), new Bridger(), new AutoBlockIn());
-        this.zombies.attach(new ZombieESP(), new Aimbot(), new ReviveAura(), new PowerupESP());
+        this.zombies.attach(new ZombieESP(), ZOMBIES_AIMBOT, new ReviveAura(), new PowerupESP());
         this.combat.attach(COMBAT_AUTOCLICKER, COMBAT_JUMP_RESET, COMBAT_PERFECT_HIT);
         this.render.attach(new dev.cigarette.module.render.PlayerESP(), new ProjectileESP());
         this.ui.attach(new GUI(), new Notifications(), new ModuleList(), RENDER_WATERMARK);

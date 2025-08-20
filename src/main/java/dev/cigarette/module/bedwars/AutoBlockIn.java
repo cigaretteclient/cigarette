@@ -32,6 +32,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
     private final SliderWidget proximityToBeds = new SliderWidget(Text.literal("Max Proximity"), Text.literal("How many blocks close you need to be to any beds for the module to be allowed to activate.")).withBounds(1, 5, 9);
     private final ToggleWidget switchToBlocks = new ToggleWidget(Text.literal("Switch to Blocks"), Text.literal("Automatically switches to blocks once activated.")).withDefaultState(true);
     private final ToggleWidget switchToTool = new ToggleWidget(Text.literal("Switch to Tools"), Text.literal("Automatically switches to a tool once finished.")).withDefaultState(true);
+    private final SliderWidget variation = new SliderWidget(Text.literal("Variation"), Text.literal("Applies randomness to the delay between block places.")).withBounds(0, 1, 4);
 
     private KeyBinding rightClickKey = null;
     private boolean running = false;
@@ -43,12 +44,13 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
 
     public AutoBlockIn() {
         super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
-        this.setChildren(keybind, speed, proximityToBeds, switchToBlocks, switchToTool);
+        this.setChildren(keybind, speed, proximityToBeds, switchToBlocks, switchToTool, variation);
         keybind.registerConfigKey("bedwars.autoblockin.key");
         speed.registerConfigKey("bedwars.autoblockin.speed");
         proximityToBeds.registerConfigKey("bedwars.autoblockin.proximity");
         switchToBlocks.registerConfigKey("bedwars.autoblockin.switchblocks");
         switchToTool.registerConfigKey("bedwars.autoblockin.switchtool");
+        variation.registerConfigKey("bedwars.autoblockin.variation");
     }
 
     private void enable(@NotNull ClientPlayerEntity player) {
@@ -158,7 +160,9 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
 
         PlayerEntityL.setRotationVector(player, nextLookVector);
         rightClick();
-        cooldownTicks = 16 - speed.getRawState().intValue();
+
+        int rand = variation.getRawState().intValue() > 0 ? (int) (Math.random() * variation.getRawState().intValue()) : 0;
+        cooldownTicks = 16 - speed.getRawState().intValue() + rand;
     }
 
     @Override

@@ -23,9 +23,6 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.*;
 
 public class Aimbot extends TickModule<ToggleWidget, Boolean> {
     protected static final String MODULE_NAME = "Aimbot";
@@ -67,7 +64,7 @@ public class Aimbot extends TickModule<ToggleWidget, Boolean> {
                 if (lookingAt.isIn(BlockTags.BUTTONS) || lookingAt.isOf(Blocks.CHEST)) return;
             }
 
-            ZombiesAgent.ZombieTarget bestTarget = getBestTarget(player);
+            ZombiesAgent.ZombieTarget bestTarget = ZombiesAgent.getBestTarget(player);
             if (bestTarget == null) return;
 
             if (autoWeaponSwitch.getRawState()) {

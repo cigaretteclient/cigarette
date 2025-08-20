@@ -47,11 +47,11 @@ public class ZombiesAgent extends BaseAgent {
 //    ==============================
 //    Syfe Aimbot
 
-    private final Map<UUID, Vec3d> lastPositions = new HashMap<>();
-    private final Map<UUID, Vec3d> velocities = new HashMap<>();
+    private static final Map<UUID, Vec3d> lastPositions = new HashMap<>();
+    private static final Map<UUID, Vec3d> velocities = new HashMap<>();
 
     @Nullable
-    private ZombiesAgent.ZombieTarget getBestTarget(ClientPlayerEntity player) {
+    public static ZombiesAgent.ZombieTarget getBestTarget(ClientPlayerEntity player) {
         HashSet<ZombiesAgent.ZombieTarget> zombies = ZombiesAgent.getZombies();
         if (zombies.isEmpty()) {
             return null;
@@ -63,6 +63,8 @@ public class ZombiesAgent extends BaseAgent {
         Vec3d playerPos = player.getPos();
 
         for (ZombiesAgent.ZombieTarget zombie : zombies) {
+            if (!zombie.canShoot) continue;
+
             Vec3d zombiePos = zombie.entity.getPos();
             double distance = playerPos.distanceTo(zombiePos);
 

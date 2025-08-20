@@ -217,6 +217,8 @@ public class ZombiesAgent extends BaseAgent {
         zombies.removeIf(ZombieTarget::isDead);
         powerups.removeIf(Powerup::isDead);
         powerups.forEach(Powerup::tick);
+
+        updateAllZombieVelocities();
         for (Entity zombie : world.getEntities()) {
             if (!(zombie instanceof LivingEntity livingEntity)) continue;
             if (ZombieType.from(zombie) == ZombieType.UNKNOWN) {
@@ -242,13 +244,13 @@ public class ZombiesAgent extends BaseAgent {
             ZombieTarget target = ZombieTarget.create(livingEntity);
             target.distance = player.distanceTo(zombie);
 
-//            Headshot Detection
             Vec3d start = player.getPos().add(0, player.getEyeHeight(EntityPose.STANDING), 0);
-            Vec3d zombieVelocity = zombie.getPos().subtract(zombie.lastX, zombie.lastY, zombie.lastZ);
-            float factor = 6f * Math.min(target.distance / 30, 1);
-            Vec3d end = zombie.getEyePos().add(zombieVelocity.multiply(factor, 0.2, factor));
-            target.end = end;
-            Raycast.FirstBlock result = Raycast.firstBlockCollision(start, end, this::isNoClipBlock);
+
+            Vec3d predictedPos = calculatePredictedPosition(target, player);
+            Vec3d vector = predictedPos.subtract(player.getEyePos());
+            target.end = vector;
+
+            Raycast.FirstBlock result = Raycast.firstBlockCollision(start, vector, this::isNoClipBlock);
             if ((result.hit() && result.whitelisted()) || result.missed()) {
                 target.canShoot = true;
                 target.canHeadshot = true;
@@ -257,6 +259,7 @@ public class ZombiesAgent extends BaseAgent {
                 target.canHeadshot = false;
             }
         }
+        cleanupTrackingData();
     }
 
     @Override

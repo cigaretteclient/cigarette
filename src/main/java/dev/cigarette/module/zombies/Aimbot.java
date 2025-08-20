@@ -57,8 +57,6 @@ public class Aimbot extends TickModule<ToggleWidget, Boolean> {
             return;
         }
 
-        updateAllZombieVelocities();
-
         if (rightClickKey.isPressed() || autoShoot.getRawState()) {
             if (ZombiesAgent.getZombies().isEmpty()) return;
 
@@ -78,8 +76,7 @@ public class Aimbot extends TickModule<ToggleWidget, Boolean> {
 
             if (!ZombiesAgent.isGun(player.getMainHandStack())) return;
 
-            Vec3d predictedPos = calculatePredictedPosition(bestTarget, player);
-            Vec3d vector = predictedPos.subtract(player.getEyePos()).normalize();
+            Vec3d vector = bestTarget.getEndVec().normalize();
 
             WeaponSelector.addCooldown(player.getInventory().getSelectedSlot());
 
@@ -96,8 +93,6 @@ public class Aimbot extends TickModule<ToggleWidget, Boolean> {
                 player.networkHandler.sendPacket(new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, seq, aimYaw, aimPitch));
             }
         }
-
-        cleanupTrackingData();
     }
 
 

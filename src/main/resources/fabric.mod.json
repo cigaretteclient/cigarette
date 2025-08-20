@@ -15,15 +15,15 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "io.github.waqfs.Cigarette"
+      "dev.cigarette.Cigarette"
     ],
     "client": [
-      "io.github.waqfs.Language",
-      "io.github.waqfs.gui.KeyBinding",
-      "io.github.waqfs.module.bedwars.DefenseViewer",
-      "io.github.waqfs.module.keybind.BreakBlock",
-      "io.github.waqfs.module.keybind.AddGlassBlock",
-      "io.github.waqfs.module.keybind.VClip"
+      "dev.cigarette.Language",
+      "dev.cigarette.gui.KeyBinding",
+      "dev.cigarette.module.bedwars.DefenseViewer",
+      "dev.cigarette.module.keybind.BreakBlock",
+      "dev.cigarette.module.keybind.AddGlassBlock",
+      "dev.cigarette.module.keybind.VClip"
     ]
   },
   "mixins": [

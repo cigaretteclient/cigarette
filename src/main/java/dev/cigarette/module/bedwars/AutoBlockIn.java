@@ -37,6 +37,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
 
     public AutoBlockIn() {
         super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+        this.setChildren(keybind, speed);
         keybind.registerConfigKey("bedwars.autoblockin.key");
         speed.registerConfigKey("bedwars.autoblockin.speed");
     }

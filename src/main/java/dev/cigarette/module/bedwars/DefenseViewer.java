@@ -7,7 +7,7 @@ import dev.cigarette.gui.widget.ColorDropdownWidget;
 import dev.cigarette.gui.widget.SliderWidget;
 import dev.cigarette.gui.widget.TextWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
-import io.github.waqfs.gui.widget.*;
+import dev.cigarette.gui.widget.*;
 import dev.cigarette.lib.Renderer;
 import dev.cigarette.module.RenderModule;
 import dev.cigarette.precomputed.PyramidQuadrant;

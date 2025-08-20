@@ -1,21 +1,23 @@
 {
   "required": true,
-  "package": "io.github.waqfs.mixin",
+  "package": "dev.cigarette.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "dev.cigarette.mixin.BedBlockEntityMixin",
-    "dev.cigarette.mixin.EntityMixin",
-    "dev.cigarette.mixin.KeyBindingAccessor",
-    "dev.cigarette.mixin.MinecraftClientInvoker",
-    "dev.cigarette.mixin.PlayerEntityMixin",
-    "dev.cigarette.mixin.PropertyMixin",
-    "dev.cigarette.mixin.ScoreboardMixin"
+    "BedBlockEntityMixin",
+    "ClientWorldAccessor",
+    "EntityMixin",
+    "KeyBindingAccessor",
+    "MinecraftClientInvoker",
+    "PlayerEntityMixin",
+    "PropertyMixin",
+    "ScoreboardMixin",
+    "ClientWorldAccessor"
   ],
   "injectors": {
     "defaultRequire": 1
   },
   "client": [
-    "dev.cigarette.mixin.KeyboardInputMixin",
-    "dev.cigarette.mixin.MouseMixin"
+    "KeyboardInputMixin",
+    "MouseMixin"
   ]
 }

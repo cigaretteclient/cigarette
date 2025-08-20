@@ -64,7 +64,7 @@ public class SliderWidget extends BaseWidget<Double> {
     public SliderWidget withBounds(double min, double def, double max) {
         this.minState = min;
         this.maxState = max;
-        this.setState(def);
+        this.setRawState(def);
         return this;
     }
 

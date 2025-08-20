@@ -6,7 +6,7 @@ import dev.cigarette.gui.widget.BaseWidget;
 import dev.cigarette.gui.widget.ColorDropdownWidget;
 import dev.cigarette.gui.widget.TextWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
-import io.github.waqfs.gui.widget.*;
+import dev.cigarette.gui.widget.*;
 import dev.cigarette.lib.Glow;
 import dev.cigarette.lib.Raycast;
 import dev.cigarette.lib.Renderer;

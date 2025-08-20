@@ -80,6 +80,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
 
             return neighbor.faceCenter().subtract(player.getEyePos()).normalize();
         }
+        return null;
     }
 
     private void rightClick() {
@@ -97,6 +98,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
             if (!keybind.getKeybind().isPressed()) return;
             enable(player);
         }
+
         int ticksPerBlock = 16 - speed.getRawState().intValue();
         Vec3d nextLookVector = getNextBlockPlaceVector(world, player);
         if (nextLookVector == null) {

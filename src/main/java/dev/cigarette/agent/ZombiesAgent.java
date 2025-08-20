@@ -92,8 +92,8 @@ public class ZombiesAgent extends BaseAgent {
     }
 
     private Vec3d calculatePredictedPosition(ZombiesAgent.ZombieTarget zombie, ClientPlayerEntity player) {
-        if (!Cigarette.CONFIG.ZOMBIES_AIMBOT.getRawState()) {
-            return zombie.getEndVec();
+        if (!Cigarette.CONFIG.ZOMBIES_AIMBOT.predictiveAim.getRawState()) {
+            return zombie.entity.getPos().subtract(player.getPos().add(0, player.getEyeHeight(EntityPose.STANDING), 0));
         }
 
         Vec3d currentPos = zombie.entity.getPos();
@@ -249,10 +249,9 @@ public class ZombiesAgent extends BaseAgent {
             Vec3d start = player.getPos().add(0, player.getEyeHeight(EntityPose.STANDING), 0);
 
             Vec3d predictedPos = calculatePredictedPosition(target, player);
-            Vec3d vector = predictedPos.subtract(player.getEyePos());
-            target.end = vector;
+            target.end = predictedPos;
 
-            Raycast.FirstBlock result = Raycast.firstBlockCollision(start, vector, this::isNoClipBlock);
+            Raycast.FirstBlock result = Raycast.firstBlockCollision(start, predictedPos, this::isNoClipBlock);
             if ((result.hit() && result.whitelisted()) || result.missed()) {
                 target.canShoot = true;
                 target.canHeadshot = true;
@@ -260,6 +259,8 @@ public class ZombiesAgent extends BaseAgent {
                 target.canShoot = false;
                 target.canHeadshot = false;
             }
+
+            System.out.println("zombie canShoot=" + target.canShoot);
         }
         cleanupTrackingData();
     }

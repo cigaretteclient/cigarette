@@ -15,6 +15,7 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.PendingUpdateManager;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.entity.EntityPose;
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.text.Text;
@@ -73,7 +74,9 @@ public class Aimbot extends TickModule<ToggleWidget, Boolean> {
 
             if (!ZombiesAgent.isGun(player.getMainHandStack())) return;
 
-            Vec3d vector = bestTarget.getEndVec().normalize();
+            Vec3d start = player.getPos().add(0, player.getEyeHeight(EntityPose.STANDING), 0);
+            Vec3d end = bestTarget.getEndVec();
+            Vec3d vector = end.subtract(start).normalize();
 
             WeaponSelector.addCooldown(player.getInventory().getSelectedSlot());
 

@@ -75,7 +75,7 @@ public class ZombiesAgent extends BaseAgent {
 
     public static boolean isGun(ItemStack item) {
         if (item.isOf(Items.IRON_SWORD)) return false;
-        return item.isIn(ItemTags.WEAPON_ENCHANTABLE) || item.isIn(ItemTags.HOES) || item.isIn(ItemTags.SHOVELS) || item.isIn(ItemTags.AXES) || item.isIn(ItemTags.PICKAXES) || item.isOf(Items.SHEARS);
+        return item.isIn(ItemTags.WEAPON_ENCHANTABLE) || item.isIn(ItemTags.HOES) || item.isIn(ItemTags.SHOVELS) || item.isIn(ItemTags.AXES) || item.isIn(ItemTags.PICKAXES) || item.isOf(Items.SHEARS) || item.isOf(Items.FLINT_AND_STEEL);
     }
 
     @Override

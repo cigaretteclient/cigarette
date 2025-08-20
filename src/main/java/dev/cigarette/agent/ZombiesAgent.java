@@ -344,7 +344,10 @@ public class ZombiesAgent extends BaseAgent {
         public static ZombieType from(Entity entity) {
             if (entity instanceof ZombieEntity) return ZOMBIE;
             if (entity instanceof BlazeEntity) return BLAZE;
-            if (entity instanceof WolfEntity) return WOLF;
+            if (entity instanceof WolfEntity wolfEntity) {
+                if (wolfEntity.isBaby()) return UNKNOWN;
+                return WOLF;
+            }
             if (entity instanceof SkeletonEntity) return SKELETON;
             if (entity instanceof CreeperEntity) return CREEPER;
             if (entity instanceof MagmaCubeEntity) return MAGMACUBE;

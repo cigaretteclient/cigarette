@@ -4,7 +4,6 @@ import dev.cigarette.Cigarette;
 import dev.cigarette.gui.widget.SliderWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
 import dev.cigarette.mixin.KeyBindingAccessor;
-import dev.cigarette.mixin.MinecraftClientInvoker;
 import dev.cigarette.module.TickModule;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;

@@ -1,6 +1,7 @@
 package dev.cigarette.module.bedwars;
 
 import dev.cigarette.GameDetector;
+import dev.cigarette.agent.BedwarsAgent;
 import dev.cigarette.gui.widget.KeybindWidget;
 import dev.cigarette.gui.widget.SliderWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
@@ -12,6 +13,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -27,6 +29,8 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
 
     private final KeybindWidget keybind = new KeybindWidget(Text.literal("Keybind"), Text.literal("A key to trigger the block in module."));
     private final SliderWidget speed = new SliderWidget(Text.literal("Speed"), Text.literal("The higher the speed, the less time spent between adjusting the camera and placing blocks.")).withBounds(0, 12, 15);
+    private final ToggleWidget switchToBlocks = new ToggleWidget(Text.literal("Switch to Blocks"), Text.literal("Automatically switches to blocks once activated.")).withDefaultState(true);
+    private final ToggleWidget switchToTool = new ToggleWidget(Text.literal("Switch to Tools"), Text.literal("Automatically switches to a tool once finished.")).withDefaultState(true);
 
     private KeyBinding rightClickKey = null;
     private boolean running = false;
@@ -37,9 +41,11 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
 
     public AutoBlockIn() {
         super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
-        this.setChildren(keybind, speed);
+        this.setChildren(keybind, speed, switchToBlocks, switchToTool);
         keybind.registerConfigKey("bedwars.autoblockin.key");
         speed.registerConfigKey("bedwars.autoblockin.speed");
+        switchToBlocks.registerConfigKey("bedwars.autoblockin.switchblocks");
+        switchToTool.registerConfigKey("bedwars.autoblockin.switchtool");
     }
 
     private void enable(@NotNull ClientPlayerEntity player) {
@@ -53,6 +59,19 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
         running = false;
         player.setYaw(originalYaw);
         player.setPitch(originalPitch);
+    }
+
+    private void disableAndSwitch(@NotNull ClientPlayerEntity player) {
+        disable(player);
+        if (switchToTool.getRawState()) {
+            for (int i = 0; i < 9; i++) {
+                ItemStack stack = player.getInventory().getStack(i);
+                if (BedwarsAgent.isTool(stack)) {
+                    player.getInventory().setSelectedSlot(i);
+                    break;
+                }
+            }
+        }
     }
 
     private @Nullable ReachableNeighbor getReachableNeighbor(@NotNull ClientWorld world, @NotNull ClientPlayerEntity player, BlockPos pos) {
@@ -114,9 +133,14 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
         }
         if (--cooldownTicks > 0) return;
 
+        if (!BedwarsAgent.isBlock(player.getMainHandStack()) && (!switchToBlocks.getRawState() || !BedwarsAgent.switchToNextStackOfBlocks(player))) {
+            disable(player);
+            return;
+        }
+
         Vec3d nextLookVector = getNextBlockPlaceVector(world, player);
         if (nextLookVector == null) {
-            disable(player);
+            disableAndSwitch(player);
             return;
         }
 

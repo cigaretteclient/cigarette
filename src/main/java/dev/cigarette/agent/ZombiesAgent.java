@@ -16,6 +16,7 @@ import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.entity.mob.*;
+import net.minecraft.entity.passive.IronGolemEntity;
 import net.minecraft.entity.passive.WolfEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -136,9 +137,10 @@ public class ZombiesAgent extends BaseAgent {
         return switch (zombie.type) {
             case ZOMBIE, SKELETON, CREEPER, WITCH -> 5.0; // ~0.25 B/t * 20 t/s
             case BLAZE -> 8.0;
-            case WOLF -> 7.0;
+            case WOLF, IRON_GOLEM -> 7.0;
             case MAGMACUBE, SLIME -> 4.0;
             case ENDERMITE, SILVERFISH -> 6.0;
+            case GHAST -> 0.0;
             default -> 5.0;
         };
     }
@@ -327,7 +329,7 @@ public class ZombiesAgent extends BaseAgent {
     }
 
     public enum ZombieType {
-        UNKNOWN(0), ZOMBIE(1), BLAZE(2), WOLF(3), SKELETON(4), CREEPER(5), MAGMACUBE(6), SLIME(7), WITCH(8), ENDERMITE(9), SILVERFISH(10);
+        UNKNOWN(0), ZOMBIE(1), BLAZE(2), WOLF(3), SKELETON(4), CREEPER(5), MAGMACUBE(6), SLIME(7), WITCH(8), ENDERMITE(9), SILVERFISH(10), IRON_GOLEM(11), GHAST(12);
 
         private final int id;
 
@@ -350,6 +352,8 @@ public class ZombiesAgent extends BaseAgent {
             if (entity instanceof WitchEntity) return WITCH;
             if (entity instanceof EndermiteEntity) return ENDERMITE;
             if (entity instanceof SilverfishEntity) return SILVERFISH;
+            if (entity instanceof IronGolemEntity) return IRON_GOLEM;
+            if (entity instanceof GhastEntity) return GHAST;
             return UNKNOWN;
         }
     }

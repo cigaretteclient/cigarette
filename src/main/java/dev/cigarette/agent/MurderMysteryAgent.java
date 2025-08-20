@@ -96,7 +96,7 @@ public class MurderMysteryAgent extends BaseAgent {
 
         for (Entity entity : world.getEntities()) {
             if (entity instanceof PlayerEntity entityPlayer) {
-                if (!WorldL.isRealPlayer(entityPlayer)) continue;
+                if (!WorldL.isRealPlayerByUsername(entityPlayer)) continue;
                 if (entityPlayer.getY() < 0) continue;
                 PersistentPlayer existingPlayer = this.getOrCreatePersistentPlayer(entityPlayer);
 

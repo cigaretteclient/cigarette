@@ -29,6 +29,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
 
     private final KeybindWidget keybind = new KeybindWidget(Text.literal("Keybind"), Text.literal("A key to trigger the block in module."));
     private final SliderWidget speed = new SliderWidget(Text.literal("Speed"), Text.literal("The higher the speed, the less time spent between adjusting the camera and placing blocks.")).withBounds(0, 12, 15);
+    private final SliderWidget proximityToBeds = new SliderWidget(Text.literal("Max Proximity"), Text.literal("How many blocks close you need to be to any beds for the module to be allowed to activate.")).withBounds(1, 5, 9);
     private final ToggleWidget switchToBlocks = new ToggleWidget(Text.literal("Switch to Blocks"), Text.literal("Automatically switches to blocks once activated.")).withDefaultState(true);
     private final ToggleWidget switchToTool = new ToggleWidget(Text.literal("Switch to Tools"), Text.literal("Automatically switches to a tool once finished.")).withDefaultState(true);
 
@@ -42,9 +43,10 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
 
     public AutoBlockIn() {
         super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
-        this.setChildren(keybind, speed, switchToBlocks, switchToTool);
+        this.setChildren(keybind, speed, proximityToBeds, switchToBlocks, switchToTool);
         keybind.registerConfigKey("bedwars.autoblockin.key");
         speed.registerConfigKey("bedwars.autoblockin.speed");
+        proximityToBeds.registerConfigKey("bedwars.autoblockin.proximity");
         switchToBlocks.registerConfigKey("bedwars.autoblockin.switchblocks");
         switchToTool.registerConfigKey("bedwars.autoblockin.switchtool");
     }
@@ -131,7 +133,14 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
         }
         if (!running) {
             if (!keybind.getKeybind().isPressed()) return;
-            enable(player);
+            BlockPos pos = player.getBlockPos();
+            for (BedwarsAgent.PersistentBed bed : BedwarsAgent.getVisibleBeds()) {
+                if (bed.head().isWithinDistance(pos, proximityToBeds.getRawState()) || bed.foot().isWithinDistance(pos, proximityToBeds.getRawState())) {
+                    enable(player);
+                    return;
+                }
+            }
+            return;
         }
         if (--cooldownTicks > 0) return;
 

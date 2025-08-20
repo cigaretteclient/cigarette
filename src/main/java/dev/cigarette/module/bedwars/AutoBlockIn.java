@@ -37,6 +37,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
     private BlockPos originalPos = null;
     private float originalYaw = 0;
     private float originalPitch = 0;
+    private Vec3d previousVector = null;
     private int cooldownTicks = 0;
 
     public AutoBlockIn() {
@@ -59,6 +60,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
         running = false;
         player.setYaw(originalYaw);
         player.setPitch(originalPitch);
+        previousVector = null;
     }
 
     private void disableAndSwitch(@NotNull ClientPlayerEntity player) {
@@ -139,10 +141,11 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
         }
 
         Vec3d nextLookVector = getNextBlockPlaceVector(world, player);
-        if (nextLookVector == null) {
+        if (nextLookVector == null || (previousVector != null && previousVector.equals(nextLookVector))) {
             disableAndSwitch(player);
             return;
         }
+        previousVector = nextLookVector;
 
         PlayerEntityL.setRotationVector(player, nextLookVector);
         rightClick();

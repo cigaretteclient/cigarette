@@ -11,13 +11,10 @@ import io.github.waqfs.module.keybind.AddGlassBlock;
 import io.github.waqfs.module.keybind.BreakBlock;
 import io.github.waqfs.module.keybind.VClip;
 import io.github.waqfs.module.murdermystery.GoldESP;
+import io.github.waqfs.module.ui.*;
 import io.github.waqfs.module.zombies.Aimbot;
 import io.github.waqfs.module.render.PlayerESP;
 import io.github.waqfs.module.render.ProjectileESP;
-import io.github.waqfs.module.ui.GUI;
-import io.github.waqfs.module.ui.ModuleList;
-import io.github.waqfs.module.ui.Notifications;
-import io.github.waqfs.module.ui.Watermark;
 import io.github.waqfs.module.zombies.ReviveAura;
 import io.github.waqfs.module.zombies.ZombieESP;
 
@@ -45,6 +42,6 @@ public class Config {
         this.zombies.attach(new ZombieESP(), new Aimbot(), new ReviveAura());
         this.combat.attach(COMBAT_AUTOCLICKER, COMBAT_JUMP_RESET, COMBAT_PERFECT_HIT);
         this.render.attach(new PlayerESP(), new ProjectileESP());
-        this.ui.attach(new GUI(), new Notifications(), new ModuleList(), RENDER_WATERMARK);
+        this.ui.attach(new GUI(), new Notifications(), new ModuleList(), new TargetHUD(), RENDER_WATERMARK);
     }
 }

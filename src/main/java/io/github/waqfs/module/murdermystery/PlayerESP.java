@@ -10,10 +10,13 @@ import io.github.waqfs.module.TickModule;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;
+import net.minecraft.util.Pair;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
+import java.util.Map;
 
 public class PlayerESP extends TickModule<ToggleWidget, Boolean> {
     protected static final String MODULE_NAME = "PlayerESP";
@@ -56,6 +59,25 @@ public class PlayerESP extends TickModule<ToggleWidget, Boolean> {
                 }
             }
         }
+    }
+
+    public static float calculateRelativeYaw(PlayerEntity target) {
+        MinecraftClient mc = MinecraftClient.getInstance();
+        assert mc.player != null;
+
+        double dx = target.getX() - mc.player.getX();
+        double dz = target.getZ() - mc.player.getZ();
+
+        double angleToTarget = Math.toDegrees(Math.atan2(dx, dz));
+
+        float playerYaw = mc.player.getYaw();
+
+        float relativeYaw = (float)(angleToTarget - playerYaw);
+
+        while (relativeYaw < -180) relativeYaw += 360;
+        while (relativeYaw >= 180) relativeYaw -= 360;
+
+        return relativeYaw;
     }
 
     @Override

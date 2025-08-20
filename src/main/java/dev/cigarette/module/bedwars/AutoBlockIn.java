@@ -52,7 +52,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
     private void disable(@NotNull ClientPlayerEntity player) {
         running = false;
         player.setYaw(originalYaw);
-        player.getPitch(originalPitch);
+        player.setPitch(originalPitch);
     }
 
     private @Nullable ReachableNeighbor getReachableNeighbor(@NotNull ClientWorld world, @NotNull ClientPlayerEntity player, BlockPos pos) {

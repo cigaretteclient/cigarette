@@ -33,6 +33,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
     private BlockPos originalPos = null;
     private float originalYaw = 0;
     private float originalPitch = 0;
+    private int cooldownTicks = 0;
 
     public AutoBlockIn() {
         super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
@@ -98,8 +99,8 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
             if (!keybind.getKeybind().isPressed()) return;
             enable(player);
         }
+        if (--cooldownTicks > 0) return;
 
-        int ticksPerBlock = 16 - speed.getRawState().intValue();
         Vec3d nextLookVector = getNextBlockPlaceVector(world, player);
         if (nextLookVector == null) {
             disable(player);
@@ -108,6 +109,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
 
         PlayerEntityL.setRotationVector(player, nextLookVector);
         rightClick();
+        cooldownTicks = 16 - speed.getRawState().intValue();
     }
 
     @Override

@@ -5,10 +5,12 @@ import dev.cigarette.gui.widget.KeybindWidget;
 import dev.cigarette.gui.widget.SliderWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
 import dev.cigarette.lib.PlayerEntityL;
+import dev.cigarette.mixin.KeyBindingAccessor;
 import dev.cigarette.module.TickModule;
 import dev.cigarette.precomputed.BlockIn;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
@@ -26,6 +28,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
     private final KeybindWidget keybind = new KeybindWidget(Text.literal("Keybind"), Text.literal("A key to trigger the block in module."));
     private final SliderWidget speed = new SliderWidget(Text.literal("Speed"), Text.literal("The higher the speed, the less time spent between adjusting the camera and placing blocks.")).withBounds(0, 12, 15);
 
+    private KeyBinding rightClickKey = null;
     private boolean running = false;
     private BlockPos originalPos = null;
     private float originalYaw = 0;
@@ -79,8 +82,17 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
         }
     }
 
+    private void rightClick() {
+        KeyBindingAccessor useAccessor = (KeyBindingAccessor) rightClickKey;
+        useAccessor.setTimesPressed(useAccessor.getTimesPressed() + 1);
+    }
+
     @Override
     protected void onEnabledTick(MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
+        if (rightClickKey == null) {
+            rightClickKey = KeyBinding.byId("key.use");
+            return;
+        }
         if (!running) {
             if (!keybind.getKeybind().isPressed()) return;
             enable(player);
@@ -93,6 +105,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
         }
 
         PlayerEntityL.setRotationVector(player, nextLookVector);
+        rightClick();
     }
 
     @Override

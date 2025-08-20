@@ -235,6 +235,8 @@ public class ZombiesAgent extends BaseAgent {
                         case "§r§9§lMAX AMMO" -> type = Powerup.Type.MAX_AMMO;
                         case "§r§6§lDOUBLE GOLD" -> type = Powerup.Type.DOUBLE_GOLD;
                         case "§r§c§lINSTA KILL" -> type = Powerup.Type.INSTANT_KILL;
+                        case "§r§5§lSHOPPING SPREE" -> type = Powerup.Type.SHOPPING_SPREE;
+                        case "§r§9§lCARPENTER" -> type = Powerup.Type.CARPENTER;
                         case "§r§5Lucky Chest" -> type = Powerup.Type.LUCKY_CHEST;
                         default -> {
                             continue;
@@ -395,7 +397,7 @@ public class ZombiesAgent extends BaseAgent {
         }
 
         public enum Type {
-            INSTANT_KILL(0xFF0000), MAX_AMMO(0x0000FF), DOUBLE_GOLD(0xFFF800), LUCKY_CHEST(0xFC50C0);
+            INSTANT_KILL(0xFF0000), MAX_AMMO(0x0000FF), DOUBLE_GOLD(0xFFF800), SHOPPING_SPREE(0xB700A6), CARPENTER(0x9B6233), LUCKY_CHEST(0xFC50C0);
 
             private final int color;
 

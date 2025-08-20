@@ -303,7 +303,7 @@ public class ZombiesAgent extends BaseAgent {
                 if (target.entity == entity) return target;
             }
             ZombieTarget target = new ZombieTarget(entity);
-            zombies.add(target);
+            if (target.type != ZombieType.UNKNOWN) zombies.add(target);
             return target;
         }
 

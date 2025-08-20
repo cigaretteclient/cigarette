@@ -261,8 +261,6 @@ public class ZombiesAgent extends BaseAgent {
                 target.canShoot = false;
                 target.canHeadshot = false;
             }
-
-            System.out.println("zombie canShoot=" + target.canShoot);
         }
         cleanupTrackingData();
     }

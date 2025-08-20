@@ -329,7 +329,7 @@ public class ZombiesAgent extends BaseAgent {
     }
 
     public enum ZombieType {
-        UNKNOWN(0), ZOMBIE(1), BLAZE(2), WOLF(3), SKELETON(4), CREEPER(5), MAGMACUBE(6), SLIME(7), WITCH(8), ENDERMITE(9), SILVERFISH(10), IRON_GOLEM(11), GHAST(12);
+        UNKNOWN(0), ZOMBIE(1), BLAZE(2), WOLF(3), SKELETON(4), CREEPER(5), MAGMACUBE(6), SLIME(7), WITCH(8), ENDERMITE(9), SILVERFISH(10), IRON_GOLEM(11), GHAST(12), GIANT_ZOMBIE(13);
 
         private final int id;
 
@@ -357,6 +357,7 @@ public class ZombiesAgent extends BaseAgent {
             if (entity instanceof SilverfishEntity) return SILVERFISH;
             if (entity instanceof IronGolemEntity) return IRON_GOLEM;
             if (entity instanceof GhastEntity) return GHAST;
+            if (entity instanceof GiantEntity) return GIANT_ZOMBIE;
             return UNKNOWN;
         }
     }

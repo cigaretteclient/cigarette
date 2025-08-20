@@ -62,9 +62,21 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
             BlockPos neighborPos = pos.add(offset);
             if (world.getBlockState(neighborPos).isAir()) continue;
             Vec3d faceCenter = neighborPos.toCenterPos().subtract(new Vec3d(offset).multiply(0.5f));
-            double distance = faceCenter.distanceTo(player.getEyePos());
-            if (distance < 3 && (closest == null || distance < closestDistance)) {
-                closest = new ReachableNeighbor(neighborPos, Direction.fromVector(offset, null), faceCenter);
+            Vec3d eye = player.getEyePos();
+
+            double distance = faceCenter.distanceTo(eye);
+            if (distance > 3) continue;
+
+            Direction face = Direction.fromVector(offset, Direction.UP).getOpposite();
+            if (face == Direction.UP && eye.getY() <= faceCenter.getY()) continue;
+            if (face == Direction.DOWN && eye.getY() >= faceCenter.getY()) continue;
+            if (face == Direction.NORTH && eye.getZ() >= faceCenter.getZ()) continue;
+            if (face == Direction.SOUTH && eye.getZ() <= faceCenter.getZ()) continue;
+            if (face == Direction.EAST && eye.getX() <= faceCenter.getX()) continue;
+            if (face == Direction.WEST && eye.getX() >= faceCenter.getX()) continue;
+
+            if (closest == null || distance < closestDistance) {
+                closest = new ReachableNeighbor(neighborPos, face, faceCenter);
                 closestDistance = distance;
             }
         }

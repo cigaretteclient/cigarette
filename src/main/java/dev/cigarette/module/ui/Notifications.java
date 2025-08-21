@@ -25,13 +25,15 @@ public class Notifications extends RenderModule<ToggleWidget, Boolean> {
 
     @Override
     protected void onWorldRender(WorldRenderContext ctx, @NotNull MatrixStack matrixStack) {
-        Cigarette.NOTIFICATION_DISPLAY = display;
     }
 
     @Override
     protected void onEnabledTick(MinecraftClient client, @NotNull ClientWorld world,
             @NotNull ClientPlayerEntity player) {
-        display = new NotificationDisplay();
+        if (display == null) {
+            display = new NotificationDisplay();
+            Cigarette.NOTIFICATION_DISPLAY = display;
+        }
     }
 
     @Override

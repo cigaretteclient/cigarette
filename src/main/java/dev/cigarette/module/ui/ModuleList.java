@@ -34,14 +34,16 @@ public class ModuleList extends RenderModule<ToggleWidget, Boolean> {
 
     @Override
     protected void onWorldRender(WorldRenderContext ctx, @NotNull MatrixStack matrixStack) {
-        display.alignment = enableFlip.getRawState() ? ModuleListDisplay.Alignment.TOPLEFT : ModuleListDisplay.Alignment.TOPRIGHT;
     }
 
     @Override
     protected void onEnabledTick(MinecraftClient client, @NotNull ClientWorld world,
             @NotNull ClientPlayerEntity player) {
-        display = new ModuleListDisplay();
-        Cigarette.registerHudElement(display);
+        if (display == null) {
+            display = new ModuleListDisplay();
+            Cigarette.registerHudElement(display);
+        }
+        display.alignment = enableFlip.getRawState() ? ModuleListDisplay.Alignment.TOPLEFT : ModuleListDisplay.Alignment.TOPRIGHT;
     }
 
     @Override

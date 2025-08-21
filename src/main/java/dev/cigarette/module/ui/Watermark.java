@@ -39,17 +39,18 @@ public class Watermark extends RenderModule<ToggleWidget, Boolean> {
     }
 
     @Override
-    protected void onWorldRender(WorldRenderContext ctx, @NotNull MatrixStack matrixStack) {
-        WatermarkDisplay.TEXT_ENABLED = enableText.getRawState();
-        WatermarkDisplay.SIMPLE_DISPLAY = simplistic.getRawState();
-        WatermarkDisplay.BG_COLOR = simpleBgColor.getToggleState() ? simpleBgColor.getStateARGB() : Color.colorTransparentize(CigaretteScreen.PRIMARY_COLOR, 0.4f);
-    }
+    protected void onWorldRender(WorldRenderContext ctx, @NotNull MatrixStack matrixStack) {}
 
     @Override
     protected void onEnabledTick(MinecraftClient client, @NotNull ClientWorld world,
             @NotNull ClientPlayerEntity player) {
-        display = new WatermarkDisplay();
-        Cigarette.registerHudElement(display);
+        if (display == null) {
+            display = new WatermarkDisplay();
+            Cigarette.registerHudElement(display);
+        }
+        WatermarkDisplay.TEXT_ENABLED = enableText.getRawState();
+        WatermarkDisplay.SIMPLE_DISPLAY = simplistic.getRawState();
+        WatermarkDisplay.BG_COLOR = simpleBgColor.getToggleState() ? simpleBgColor.getStateARGB() : Color.colorTransparentize(CigaretteScreen.PRIMARY_COLOR, 0.4f);
     }
 
     @Override

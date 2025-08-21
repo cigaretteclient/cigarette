@@ -41,17 +41,19 @@ public class TargetHUD extends RenderModule<ToggleWidget, Boolean> {
 
     @Override
     protected void onWorldRender(WorldRenderContext ctx, @NotNull MatrixStack matrixStack) {
-        BarDisplay.BG_COLOR = bgColor.getToggleState() ? bgColor.getStateARGB() : Color.colorTransparentize(CigaretteScreen.PRIMARY_COLOR, 0.4f);
-        BarDisplay.TARGET_ROW_HEIGHT = rowHeight.getRawState().intValue();
-        BarDisplay.GLOBAL_PADDING = globalPadding.getRawState().intValue();
-        BarDisplay.MAX_ROWS = maxRows.getRawState().intValue();
     }
 
     @Override
     protected void onEnabledTick(MinecraftClient client, @NotNull ClientWorld world,
                                  @NotNull ClientPlayerEntity player) {
-        display = new BarDisplay();
-        Cigarette.registerHudElement(display);
+        if (display == null) {
+            display = new BarDisplay();
+            Cigarette.registerHudElement(display);
+        }
+        BarDisplay.BG_COLOR = bgColor.getToggleState() ? bgColor.getStateARGB() : Color.colorTransparentize(CigaretteScreen.PRIMARY_COLOR, 0.4f);
+        BarDisplay.TARGET_ROW_HEIGHT = rowHeight.getRawState().intValue();
+        BarDisplay.GLOBAL_PADDING = globalPadding.getRawState().intValue();
+        BarDisplay.MAX_ROWS = maxRows.getRawState().intValue();
     }
 
     @Override

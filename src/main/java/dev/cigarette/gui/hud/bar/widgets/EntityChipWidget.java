@@ -101,7 +101,7 @@ public class EntityChipWidget implements BarWidget {
         int x1 = Math.round(tx), y1 = Math.round(ty);
         int x2 = Math.round(bx + perpX * baseHalf), y2 = Math.round(by + perpY * baseHalf);
         int x3 = Math.round(bx - perpX * baseHalf), y3 = Math.round(by - perpY * baseHalf);
-        fillTriangle(ctx, x1, y1, x2, y2, x3, y3, color);
+        fillTriangle(ctx, (int) (cx - (x1 - cx)), y1, (int) (cx - (x2 - cx)), y2, (int) (cx - (x3 - cx)), y3, color);
     }
 
     @Override

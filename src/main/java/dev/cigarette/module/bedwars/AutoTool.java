@@ -11,7 +11,6 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
@@ -24,22 +23,6 @@ public class AutoTool extends TickModule<ToggleWidget, Boolean> {
 
     public AutoTool() {
         super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
-    }
-
-    private boolean isTool(ItemStack item) {
-        return this.isPickaxe(item) || this.isAxe(item) || this.isShears(item);
-    }
-
-    private boolean isPickaxe(ItemStack item) {
-        return item.isOf(Items.WOODEN_PICKAXE) || item.isOf(Items.STONE_PICKAXE) || item.isOf(Items.IRON_PICKAXE) || item.isOf(Items.GOLDEN_PICKAXE) || item.isOf(Items.DIAMOND_PICKAXE);
-    }
-
-    private boolean isAxe(ItemStack item) {
-        return item.isOf(Items.WOODEN_AXE) || item.isOf(Items.STONE_AXE) || item.isOf(Items.IRON_AXE) || item.isOf(Items.GOLDEN_AXE) || item.isOf(Items.DIAMOND_AXE);
-    }
-
-    private boolean isShears(ItemStack item) {
-        return item.isOf(Items.SHEARS);
     }
 
     private boolean shouldPickaxe(BlockState state) {
@@ -63,7 +46,7 @@ public class AutoTool extends TickModule<ToggleWidget, Boolean> {
     @Override
     protected void onEnabledTick(MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
         ItemStack heldItem = player.getMainHandStack();
-        if (!isTool(heldItem)) return;
+        if (!BedwarsAgent.isTool(heldItem)) return;
 
         HitResult hitResult = client.crosshairTarget;
         if (hitResult == null || hitResult.getType() != HitResult.Type.BLOCK) return;
@@ -72,24 +55,24 @@ public class AutoTool extends TickModule<ToggleWidget, Boolean> {
         BlockState state = world.getBlockState(pos);
 
         PlayerInventory inventory = player.getInventory();
-        if (shouldPickaxe(state) && !isPickaxe(heldItem)) {
+        if (shouldPickaxe(state) && !BedwarsAgent.isPickaxe(heldItem)) {
             for (int i = 0; i < 9; i++) {
                 ItemStack item = inventory.getStack(i);
-                if (!isPickaxe(item)) continue;
+                if (!BedwarsAgent.isPickaxe(item)) continue;
                 switchToSlot(client, player, i);
                 return;
             }
-        } else if (shouldAxe(state) && !isAxe(heldItem)) {
+        } else if (shouldAxe(state) && !BedwarsAgent.isAxe(heldItem)) {
             for (int i = 0; i < 9; i++) {
                 ItemStack item = inventory.getStack(i);
-                if (!isAxe(item)) continue;
+                if (!BedwarsAgent.isAxe(item)) continue;
                 switchToSlot(client, player, i);
                 return;
             }
-        } else if (shouldShears(state) && !isShears(heldItem)) {
+        } else if (shouldShears(state) && !BedwarsAgent.isShears(heldItem)) {
             for (int i = 0; i < 9; i++) {
                 ItemStack item = inventory.getStack(i);
-                if (!isShears(item)) continue;
+                if (!BedwarsAgent.isShears(item)) continue;
                 switchToSlot(client, player, i);
                 return;
             }

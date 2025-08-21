@@ -1,6 +1,12 @@
 package dev.cigarette.lib;
 
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.texture.AbstractTexture;
+import net.minecraft.client.util.SkinTextures;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.Identifier;
 
 public class Shape {
     public static void pixelAt(DrawContext context, int x, int y, int color) {
@@ -327,8 +333,17 @@ public class Shape {
     }
 
     public static void rotatedLine(DrawContext context, int x1, int y1, int x2, int y2, int color, float rotation) {
-        float pivotX = x1;
-        float pivotY = y1;
+        dxCalc(context, x1, y1, x2, y2, color, rotation, (float) x1, (float) y1);
+    }
+
+    public static void rotatedLine(DrawContext context, int x1, int y1, int x2, int y2, int color, float rotation,
+            boolean rotateFromCenter) {
+        float pivotX = rotateFromCenter ? (x1 + x2) / 2.0f : x1;
+        float pivotY = rotateFromCenter ? (y1 + y2) / 2.0f : y1;
+        dxCalc(context, x1, y1, x2, y2, color, rotation, pivotX, pivotY);
+    }
+
+    private static void dxCalc(DrawContext context, int x1, int y1, int x2, int y2, int color, float rotation, float pivotX, float pivotY) {
         float dx = x2 - x1;
         float dy = y2 - y1;
         float length = (float) Math.hypot(dx, dy);
@@ -342,20 +357,22 @@ public class Shape {
         }
     }
 
-    public static void rotatedLine(DrawContext context, int x1, int y1, int x2, int y2, int color, float rotation,
-            boolean rotateFromCenter) {
-        float pivotX = rotateFromCenter ? (x1 + x2) / 2.0f : x1;
-        float pivotY = rotateFromCenter ? (y1 + y2) / 2.0f : y1;
-        float dx = x2 - x1;
-        float dy = y2 - y1;
-        float length = (float) Math.hypot(dx, dy);
-        float step = Math.max(0.002f, 1.0f / Math.max(16f, length));
-        for (float t = 0; t <= 1.0f; t += step) {
-            float xt = x1 + t * dx;
-            float yt = y1 + t * dy;
-            float rx = (float) (Math.cos(rotation) * (xt - pivotX) - Math.sin(rotation) * (yt - pivotY) + pivotX);
-            float ry = (float) (Math.sin(rotation) * (xt - pivotX) + Math.cos(rotation) * (yt - pivotY) + pivotY);
-            pixelAt(context, Math.round(rx), Math.round(ry), color);
+    public static void userFaceTexture(DrawContext context, int x, int y, int w, int h, PlayerEntity player) {
+        SkinTextures t = MinecraftClient.getInstance().getSkinProvider().getSkinTextures(player.getGameProfile());
+        Identifier text = t.texture();
+        if (text != null) {
+            AbstractTexture texture = MinecraftClient.getInstance().getTextureManager().getTexture(text);
+            int minU = 8 / 64;
+            int minV = 8 / 64;
+
+            context.drawTexture(
+                    RenderLayer::getGuiTextured,
+                    text,
+                    x, y,
+                    minU, minV,
+                    w, h,
+                    8, 8
+            );
         }
     }
 }

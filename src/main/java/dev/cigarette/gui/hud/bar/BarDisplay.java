@@ -1,48 +1,49 @@
 package dev.cigarette.gui.hud.bar;
 
 import dev.cigarette.agent.MurderMysteryAgent;
+import dev.cigarette.agent.ZombiesAgent;
 import dev.cigarette.gui.CigaretteScreen;
 import dev.cigarette.gui.RenderUtil;
 import dev.cigarette.gui.Scissor;
+import dev.cigarette.gui.hud.bar.api.BarWidget;
+import dev.cigarette.gui.hud.bar.api.BarWidgetRegistry;
 import dev.cigarette.lib.Color;
 import dev.cigarette.lib.Shape;
+import dev.cigarette.lib.WorldL;
 import dev.cigarette.module.murdermystery.PlayerESP;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ClickableWidget;
+import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.world.ClientWorld;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.boss.dragon.EnderDragonEntity;
+import net.minecraft.entity.decoration.ArmorStandEntity;
+import net.minecraft.entity.mob.SilverfishEntity;
+import net.minecraft.entity.passive.IronGolemEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;
+import net.minecraft.text.TextColor;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Vec3d;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
 public class BarDisplay extends ClickableWidget {
-    private static class Entry {
-        final UUID uuid;
-        MurderMysteryAgent.PersistentPlayer player;
-        String name;
-        int width;
-        float progress;
-        float target;
-        int lastIndex;
-        float degrees;
-
-        Entry(UUID uuid, MurderMysteryAgent.PersistentPlayer player, String name, int width, float degrees) {
-            this.uuid = uuid;
-            this.player = player;
-            this.name = name;
-            this.width = width;
-            this.progress = 0f;
-            this.target = 1f;
-            this.lastIndex = 0;
-            this.degrees = degrees;
-        }
+    private static class AnimState {
+        float progress = 0f;
+        float target = 0f;
     }
 
-    private final Map<UUID, Entry> entries = new HashMap<>();
+    private final Map<String, AnimState> anim = new HashMap<>();
 
-    private static final int TARGET_HEIGHT = 24; // chip height inside bar
+    private static final int TARGET_ROW_HEIGHT = 24;
     private static final int MIN_BAR_HEIGHT = 40;
 
     private int lastHeight = MIN_BAR_HEIGHT;
@@ -55,7 +56,7 @@ public class BarDisplay extends ClickableWidget {
     public BarDisplay() {
         super(5, 5, 200, MIN_BAR_HEIGHT, Text.of("Bar Display"));
         this.setMessage(Text.literal("Bar Display"));
-        this.setTooltip(Tooltip.of(Text.literal("Displays detected murderers with smooth transitions.")));
+        this.setTooltip(Tooltip.of(Text.literal("Displays detected targets with smooth transitions.")));
         this.setFocused(true);
     }
 
@@ -64,82 +65,114 @@ public class BarDisplay extends ClickableWidget {
         int width = this.getWidth();
         int height = this.getHeight();
 
-        TextRenderer tr = MinecraftClient.getInstance().textRenderer;
+        MinecraftClient mc = MinecraftClient.getInstance();
+        TextRenderer tr = mc.textRenderer;
+        ClientWorld world = mc.world;
 
-        // Only consider visible players that are detected as murderers
-        Set<MurderMysteryAgent.PersistentPlayer> persistentPlayers = MurderMysteryAgent.getVisiblePlayers();
-
-        Set<UUID> visibleNow = new HashSet<>();
-        List<Entry> working = new ArrayList<>();
-        for (MurderMysteryAgent.PersistentPlayer pp : persistentPlayers) {
-            if (pp == null || pp.playerEntity == null) continue;
-            if (pp.role != MurderMysteryAgent.PersistentPlayer.Role.MURDERER) continue;
-            UUID uuid = pp.playerEntity.getUuid();
-            visibleNow.add(uuid);
-            String name = pp.playerEntity.getName().getString();
-            int w = tr.getWidth(name);
-            float deg = 0f;
-            try {
-                deg = PlayerESP.calculateRelativeYaw(pp.playerEntity);
-            } catch (Throwable ignored) {}
-
-            Entry e = entries.get(uuid);
-            if (e == null) {
-                e = new Entry(uuid, pp, name, w, deg);
-                entries.put(uuid, e);
-            } else {
-                e.player = pp;
-                e.name = name;
-                e.width = w;
-                e.degrees = deg;
-            }
-            e.target = 1f;
-            working.add(e);
-        }
-
-        List<Entry> workingSorted = new ArrayList<>(working);
-        workingSorted.sort(Comparator.comparingDouble(a -> a.degrees));
-        int ord = 0;
-        for (Entry e : workingSorted) {
-            e.lastIndex = ord++;
-        }
-
-        for (Entry e : entries.values()) {
-            if (!visibleNow.contains(e.uuid)) {
-                e.target = 0f;
-            }
-        }
-
-        List<Entry> toRender = new ArrayList<>();
-        final float speed = 0.12f;
-        for (Entry e : entries.values()) {
-            float diff = e.target - e.progress;
-            if (Math.abs(diff) > 0.0001f) {
-                float step = Math.signum(diff) * Math.min(Math.abs(diff), speed);
-                e.progress += step;
-            }
-            if (e.progress < 0f) e.progress = 0f;
-            if (e.progress > 1f) e.progress = 1f;
-            if (!(e.progress < 0.01f && e.target <= 0f)) {
-                toRender.add(e);
-            }
-        }
-
-        entries.values().removeIf(e -> e.progress < 0.01f && e.target <= 0f);
-
-        toRender.sort(Comparator.comparingInt(a -> a.lastIndex));
-
-        if (toRender.isEmpty()) {
+        if (world == null) {
+            anim.clear();
             return;
         }
 
-        int desiredHeight = MIN_BAR_HEIGHT;
-        int desiredWidth = Math.max(200, computeRequiredWidth(toRender));
+        BarWidgetRegistry.ensureDefaultsRegistered();
+
+        List<BarWidget> widgets = new ArrayList<>();
+        for (var provider : BarWidgetRegistry.providers()) {
+            try { provider.collect(mc, world, tr, widgets); } catch (Throwable ignored) {}
+        }
+
+        Map<String, BarWidget> dedup = new LinkedHashMap<>();
+        for (BarWidget w : widgets) {
+            if (w == null) continue;
+            String id = w.id();
+            if (id == null || id.isEmpty()) continue;
+            dedup.putIfAbsent(id, w);
+        }
+        List<BarWidget> collected = new ArrayList<>(dedup.values());
+
+        collected.sort(Comparator.comparingDouble(BarWidget::sortKey));
+
+        Set<String> visibleNow = new HashSet<>();
+        for (BarWidget w : collected) {
+            String id = w.id();
+            visibleNow.add(id);
+            AnimState st = anim.computeIfAbsent(id, k -> new AnimState());
+            st.target = 1f;
+        }
+        for (Map.Entry<String, AnimState> e : anim.entrySet()) {
+            if (!visibleNow.contains(e.getKey())) {
+                e.getValue().target = 0f;
+            }
+        }
+
+        final float speed = 0.12f;
+        List<BarWidget> toRender = new ArrayList<>();
+        Map<String, Float> visibility = new HashMap<>();
+        for (BarWidget w : collected) {
+            AnimState st = anim.get(w.id());
+            if (st == null) continue;
+            float diff = st.target - st.progress;
+            if (Math.abs(diff) > 0.0001f) {
+                float step = Math.signum(diff) * Math.min(Math.abs(diff), speed);
+                st.progress = Math.max(0f, Math.min(1f, st.progress + step));
+            }
+            if (!(st.progress < 0.01f && st.target <= 0f)) {
+                toRender.add(w);
+                visibility.put(w.id(), st.progress);
+            }
+        }
+
+        anim.entrySet().removeIf(e -> e.getValue().progress < 0.01f && e.getValue().target <= 0f);
+
+        if (toRender.isEmpty()) return;
+
+        int padX = 6;
+        int vPad = 8;
+        int rowGap = 4;
+        int rowH = Math.max(TARGET_ROW_HEIGHT, tr.fontHeight + 6);
+        int maxW = Math.max(200, mc.getWindow().getScaledWidth() - 20);
+
+        List<Integer> widths = new ArrayList<>(toRender.size());
+        for (BarWidget w : toRender) widths.add(Math.max(24, w.measureWidth(tr, rowH, padX)));
+
+        List<List<Integer>> rowsIdx = new ArrayList<>();
+        List<Integer> rowWidths = new ArrayList<>();
+        int curRow = -1;
+        int curWidth = 0;
+        for (int i = 0; i < toRender.size(); i++) {
+            int w = widths.get(i);
+            int needed = (curRow < 0 ? 0 : 6) + w;
+            if (curRow < 0 || curWidth + needed > maxW - 12) {
+                rowsIdx.add(new ArrayList<>());
+                rowWidths.add(0);
+                curRow++;
+                curWidth = 0;
+                needed = w;
+            }
+            rowsIdx.get(curRow).add(i);
+            curWidth += (curWidth == 0 ? w : (6 + w));
+            rowWidths.set(curRow, curWidth);
+        }
+
+        int rows = rowsIdx.size();
+        int rawHeight = vPad * 2 + rows * rowH + (rows - 1) * rowGap;
+        int capH = mc.getWindow().getScaledHeight() / 3;
+        int maxRows = Math.max(1, Math.min(rows, (capH - vPad * 2 + rowGap) / (rowH + rowGap)));
+        if (maxRows < rows) {
+            rowsIdx = rowsIdx.subList(0, maxRows);
+            rowWidths = rowWidths.subList(0, maxRows);
+            rows = maxRows;
+            rawHeight = vPad * 2 + rows * rowH + (rows - 1) * rowGap;
+        }
+        List<Integer> finalRowWidths = rowWidths;
+        List<List<Integer>> finalRowsIdx = rowsIdx;
+        int desiredWidth = Math.max(200, Math.min(maxW, 12 + rowsIdx.stream().mapToInt(iList -> finalRowWidths.get(finalRowsIdx.indexOf(iList))).max().orElse(200)));
+        int desiredHeight = Math.max(MIN_BAR_HEIGHT, rawHeight);
+
         if (height != lastHeight || width != lastWidth || desiredWidth != width || desiredHeight != height) {
             barExpansionTicks = 0;
             doBarExpansion = true;
         }
-
         if (doBarExpansion) {
             barExpansionTicks = Math.min(barExpansionTicks + 1, MAX_BAR_EXPANSION_TICKS);
             if (barExpansionTicks == MAX_BAR_EXPANSION_TICKS) {
@@ -148,16 +181,14 @@ public class BarDisplay extends ClickableWidget {
                 lastWidth = desiredWidth;
             }
         }
-
-        float eased = (float) barExpansionTicks / MAX_BAR_EXPANSION_TICKS;
-        eased = (float) CigaretteScreen.easeOutExpo(eased);
+        float eased = (float) CigaretteScreen.easeOutExpo((float) barExpansionTicks / MAX_BAR_EXPANSION_TICKS);
         int animWidth = doBarExpansion ? (int) (width + (desiredWidth - width) * eased) : desiredWidth;
         int animHeight = doBarExpansion ? (int) (height + (desiredHeight - height) * eased) : desiredHeight;
 
         this.setWidth(animWidth);
         this.setHeight(animHeight);
 
-        int scrW = MinecraftClient.getInstance().getWindow().getScaledWidth();
+        int scrW = mc.getWindow().getScaledWidth();
         this.setX((scrW / 2) - (animWidth / 2));
         this.setY(10);
 
@@ -172,72 +203,25 @@ public class BarDisplay extends ClickableWidget {
 
         if (doBarExpansion) RenderUtil.pushOpacity(eased);
 
-        int padX = 6;
-        int padY = 2;
-        int chipH = Math.min(TARGET_HEIGHT, height - 8);
-        chipH = Math.max(chipH, tr.fontHeight + padY * 2);
-
-        int spacing = 6;
-        int totalWidth = 0;
-        for (Entry e : toRender) {
-            totalWidth += (e.width + padX * 2) + spacing;
-        }
-        if (totalWidth > 0) totalWidth -= spacing;
-        int startX = x + Math.max(6, (width - totalWidth) / 2);
-        int centerY = y + (height - chipH) / 2;
-
-        int cx = startX;
-        final int textColor = (CigaretteScreen.PRIMARY_TEXT_COLOR & 0x00FFFFFF) | 0xFF000000;
-        for (Entry e : toRender) {
-            float vis = Math.max(0f, Math.min(1f, e.progress));
-            int slideY = Math.round((1f - vis) * 10f);
-            int chipW = e.width + padX * 2;
-
-            int left = cx;
-            int right = Math.min(x + width - 6, left + chipW);
-            int top = centerY + slideY;
-            int bottom = top + chipH;
-            if (right <= left) break;
-
-            int bga = scaleAlpha(0x90000000, vis);
-            context.fill(left, top, right, bottom, bga);
-
-            // Match ModuleListDisplay's parameter order (y, x)
-            int borderColor = Color.colorVertical(top, left);
-            int borderW = 2;
-            int bRight = Math.min(right, left + borderW);
-            if (left < bRight) context.fill(left, top, bRight, bottom, borderColor);
-
-            int triSize = Math.min(6, chipH / 3);
-            if (triSize >= 3) {
-                int tx = right - triSize - 2;
-                int ty = top + (chipH - triSize) / 2;
-                int triCol = scaleAlpha((CigaretteScreen.SECONDARY_COLOR & 0x00FFFFFF) | 0xFF000000, vis);
-                context.fill(tx, ty, tx + triSize, ty + triSize, triCol);
+        int startY = y + vPad;
+        for (int r = 0; r < rowsIdx.size(); r++) {
+            List<Integer> row = rowsIdx.get(r);
+            int rowW = rowWidths.get(r);
+            int startX = x + Math.max(6, (width - rowW) / 2);
+            int cx = startX;
+            for (int idx : row) {
+                BarWidget w = toRender.get(idx);
+                int wWidth = widths.get(idx);
+                float vis = visibility.getOrDefault(w.id(), 1f);
+                int top = startY + r * (rowH + rowGap);
+                w.render(context, cx, top, wWidth, rowH, vis, tr);
+                cx += wWidth + 6;
+                if (cx >= x + width - 6) break;
             }
-
-            int textX = left + padX;
-            int textY = top + (chipH - tr.fontHeight) / 2;
-            context.drawText(tr, e.name, textX, textY, textColor, true);
-
-            cx = right + spacing;
-            if (cx >= x + width - 6) break;
         }
 
         if (doBarExpansion) RenderUtil.popOpacity();
         Scissor.popExclusive();
-    }
-
-    private static int computeRequiredWidth(List<Entry> toRender) {
-        int padX = 6;
-        int spacing = 6;
-        int totalWidth = 0;
-        for (Entry e : toRender) {
-            totalWidth += (e.width + padX * 2) + spacing;
-        }
-        if (totalWidth > 0) totalWidth -= spacing;
-        // Ensure a minimum width
-        return Math.max(200, totalWidth + 12);
     }
 
     private static int scaleAlpha(int argb, float scale01) {
@@ -253,7 +237,101 @@ public class BarDisplay extends ClickableWidget {
         return (na << 24) | (r << 16) | (g << 8) | b;
     }
 
-    @Override
-    protected void appendClickableNarrations(NarrationMessageBuilder builder) {
+    private static String prettyZombieName(ZombiesAgent.ZombieType type) {
+        if (type == null) return "Zombie";
+        return switch (type) {
+            case ZOMBIE -> "Zombie";
+            case BLAZE -> "Blaze";
+            case WOLF -> "Wolf";
+            case SKELETON -> "Skeleton";
+            case CREEPER -> "Creeper";
+            case MAGMACUBE -> "Magma Cube";
+            case SLIME -> "Slime";
+            case WITCH -> "Witch";
+            case ENDERMITE -> "Endermite";
+            case SILVERFISH -> "Silverfish";
+            case UNKNOWN -> "Unknown";
+        };
     }
+
+    private static int defaultZombieColor(ZombiesAgent.ZombieType type) {
+        if (type == null) return 0xFFFFFFFF;
+        return switch (type) {
+            case ZOMBIE -> 0xFF2C936C;
+            case BLAZE -> 0xFFFCA50F;
+            case WOLF -> 0xFF3FE6FC;
+            case SKELETON -> 0xFFE0E0E0;
+            case CREEPER, SLIME -> 0xFF155B0D;
+            case MAGMACUBE -> 0xFFFC4619;
+            case WITCH, ENDERMITE -> 0xFFA625F7;
+            case SILVERFISH -> 0xFF3F3F3F;
+            case UNKNOWN -> 0xFFFFFFFF;
+        };
+    }
+
+    private static float calculateRelativeYawToPos(Vec3d targetPos) {
+        MinecraftClient mc = MinecraftClient.getInstance();
+        if (mc.player == null) return 0f;
+        Vec3d playerPos = mc.player.getPos();
+        double dx = targetPos.x - playerPos.x;
+        double dz = targetPos.z - playerPos.z;
+        return angle(mc.player.getYaw(), dx, dz);
+    }
+
+    public static float angle(float playerYaw, double dx, double dz) {
+        double angleToTarget = Math.toDegrees(Math.atan2(dx, dz));
+        float relativeYaw = (float) (angleToTarget - playerYaw);
+        while (relativeYaw < -180) relativeYaw += 360;
+        while (relativeYaw >= 180) relativeYaw -= 360;
+        return relativeYaw;
+    }
+
+    public static float angle(MinecraftClient mc, double dx, double dz) {
+        if (mc == null || mc.player == null) return 0f;
+        return angle(mc.player.getYaw(), dx, dz);
+    }
+
+    @Nullable
+    private static Entity findEntityByUuid(ClientWorld world, UUID uuid) {
+        if (world == null || uuid == null) return null;
+        for (Entity e : world.getEntities()) {
+            if (uuid.equals(e.getUuid())) return e;
+        }
+        return null;
+    }
+
+    private static int getEntityNameColor(Entity entity) {
+        if (entity == null) return 0;
+        Text displayName = entity.getDisplayName();
+        if (entity instanceof IronGolemEntity) {
+            ClientWorld world = MinecraftClient.getInstance().world;
+            if (world != null) {
+                displayName = nc(entity, displayName, world);
+            }
+        }
+        if (displayName == null) return 0;
+        List<Text> siblings = displayName.getSiblings();
+        for (Text sibling : siblings) {
+            TextColor color = sibling.getStyle().getColor();
+            if (color == null) continue;
+            if ("dark_gray".equals(color.getName())) continue;
+            if ("gray".equals(color.getName())) continue;
+            return color.getRgb();
+        }
+        return 0;
+    }
+
+    public static Text nc(Entity entity, Text displayName, ClientWorld world) {
+        Box box = Box.of(entity.getPos(), 0, 2.2, 0);
+        for (Entity target : world.getOtherEntities(entity, box)) {
+            if (!(target instanceof ArmorStandEntity)) continue;
+            Text standDisplayName = target.getDisplayName();
+            if (standDisplayName == null) continue;
+            displayName = standDisplayName;
+        }
+        return displayName;
+    }
+
+    @Override
+    protected void appendClickableNarrations(NarrationMessageBuilder builder) { }
 }

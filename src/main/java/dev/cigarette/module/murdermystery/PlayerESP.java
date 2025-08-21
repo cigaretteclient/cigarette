@@ -16,6 +16,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
 
+import static dev.cigarette.gui.hud.bar.BarDisplay.angle;
+
 public class PlayerESP extends TickModule<ToggleWidget, Boolean> {
     protected static final String MODULE_NAME = "PlayerESP";
     protected static final String MODULE_TOOLTIP = "Highlights all the players in ESP.";
@@ -66,16 +68,7 @@ public class PlayerESP extends TickModule<ToggleWidget, Boolean> {
         double dx = target.getX() - mc.player.getX();
         double dz = target.getZ() - mc.player.getZ();
 
-        double angleToTarget = Math.toDegrees(Math.atan2(dx, dz));
-
-        float playerYaw = mc.player.getYaw();
-
-        float relativeYaw = (float)(angleToTarget - playerYaw);
-
-        while (relativeYaw < -180) relativeYaw += 360;
-        while (relativeYaw >= 180) relativeYaw -= 360;
-
-        return relativeYaw;
+        return angle(mc, dx, dz);
     }
 
     @Override

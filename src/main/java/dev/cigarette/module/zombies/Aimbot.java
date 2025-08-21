@@ -15,6 +15,7 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.PendingUpdateManager;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.entity.EntityPose;
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.text.Text;
@@ -34,8 +35,8 @@ public class Aimbot extends TickModule<ToggleWidget, Boolean> {
     private final ToggleWidget silentAim = new ToggleWidget(Text.literal("Silent Aim"), Text.literal("Doesn't snap your camera client-side.")).withDefaultState(true);
     private final ToggleWidget autoShoot = new ToggleWidget(Text.literal("Auto Shoot"), Text.literal("Automatically shoots zombies")).withDefaultState(true);
     private final ToggleWidget autoWeaponSwitch = new ToggleWidget(Text.literal("Auto Weapon Switch"), Text.literal("Automatically switch weapons")).withDefaultState(true);
-    private final ToggleWidget predictiveAim = new ToggleWidget(Text.literal("Predictive Aim"), Text.literal("Predict zombie movement for better accuracy")).withDefaultState(true);
-    private final SliderWidget predictionTicks = new SliderWidget(Text.literal("Prediction Ticks"), Text.literal("How many ticks ahead to predict zombie movement")).withBounds(1, 10, 20).withAccuracy(0);
+    public final ToggleWidget predictiveAim = new ToggleWidget(Text.literal("Predictive Aim"), Text.literal("Predict zombie movement for better accuracy")).withDefaultState(true);
+    public final SliderWidget predictionTicks = new SliderWidget(Text.literal("Prediction Ticks"), Text.literal("How many ticks ahead to predict zombie movement")).withBounds(1, 10, 20).withAccuracy(0);
 
     private KeyBinding rightClickKey = null;
 
@@ -55,6 +56,7 @@ public class Aimbot extends TickModule<ToggleWidget, Boolean> {
             rightClickKey = KeyBinding.byId("key.use");
             return;
         }
+
         if (rightClickKey.isPressed() || autoShoot.getRawState()) {
             if (ZombiesAgent.getZombies().isEmpty()) return;
 

@@ -1,5 +1,6 @@
 package dev.cigarette.agent;
 
+import dev.cigarette.Cigarette;
 import dev.cigarette.GameDetector;
 import dev.cigarette.gui.widget.ToggleWidget;
 import dev.cigarette.lib.Raycast;
@@ -25,8 +26,7 @@ import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashSet;
-import java.util.UUID;
+import java.util.*;
 
 public class ZombiesAgent extends BaseAgent {
     private static final HashSet<ZombieTarget> zombies = new HashSet<>();
@@ -43,6 +43,142 @@ public class ZombiesAgent extends BaseAgent {
         }
         return state.isOf(Blocks.IRON_BARS) || state.isOf(Blocks.BARRIER) || state.isOf(Blocks.CHEST) || state.isIn(BlockTags.SIGNS);
     }
+
+//    ==============================
+//    Syfe Aimbot
+
+    private static final Map<UUID, Vec3d> lastPositions = new HashMap<>();
+    private static final Map<UUID, Vec3d> velocities = new HashMap<>();
+
+    @Nullable
+    public static ZombiesAgent.ZombieTarget getBestTarget(ClientPlayerEntity player) {
+        HashSet<ZombiesAgent.ZombieTarget> zombies = ZombiesAgent.getZombies();
+        if (zombies.isEmpty()) {
+            return null;
+        }
+
+        ZombiesAgent.ZombieTarget bestTarget = null;
+        double minTimeToPlayer = Double.MAX_VALUE;
+
+        Vec3d playerPos = player.getPos();
+
+        for (ZombiesAgent.ZombieTarget zombie : zombies) {
+            if (!zombie.canShoot) continue;
+
+            Vec3d zombiePos = zombie.entity.getPos();
+            double distance = playerPos.distanceTo(zombiePos);
+
+            Vec3d velocity = velocities.getOrDefault(zombie.uuid, Vec3d.ZERO);
+            Vec3d playerToZombie = zombiePos.subtract(playerPos).normalize();
+            double speedTowardsPlayer = -velocity.dotProduct(playerToZombie) * 20;
+
+            if (speedTowardsPlayer <= 0.1) {
+                // Use distance as a fallback metric for stationary or retreating targets
+                if (bestTarget == null || distance < playerPos.distanceTo(bestTarget.entity.getPos())) {
+                    bestTarget = zombie;
+                }
+                continue;
+            }
+
+            double timeToPlayer = distance / speedTowardsPlayer;
+
+            if (timeToPlayer < minTimeToPlayer) {
+                minTimeToPlayer = timeToPlayer;
+                bestTarget = zombie;
+            }
+        }
+
+        return bestTarget;
+    }
+
+    private Vec3d calculatePredictedPosition(ZombiesAgent.ZombieTarget zombie, ClientPlayerEntity player) {
+        if (!Cigarette.CONFIG.ZOMBIES_AIMBOT.predictiveAim.getRawState()) {
+            return zombie.entity.getPos().subtract(player.getPos().add(0, player.getEyeHeight(EntityPose.STANDING), 0));
+        }
+
+        Vec3d currentPos = zombie.entity.getPos();
+        Vec3d playerPos = player.getEyePos();
+        Vec3d currentVelocity = velocities.getOrDefault(zombie.uuid, Vec3d.ZERO);
+        Vec3d pathDirection = getPathfindingDirection(zombie, currentPos, playerPos, currentVelocity);
+
+        if (pathDirection.lengthSquared() < 1.0E-7D) {
+            return zombie.getEndVec();
+        }
+
+        double distance = playerPos.distanceTo(currentPos);
+        double projectileSpeed = 20.0;
+        double timeToTarget = (projectileSpeed > 0) ? distance / projectileSpeed : 0;
+
+        int maxPredictionTicks = Cigarette.CONFIG.ZOMBIES_AIMBOT.predictionTicks.getRawState().intValue();
+        double maxPredictionTime = maxPredictionTicks / 20.0;
+        timeToTarget = Math.min(timeToTarget, maxPredictionTime);
+
+        Vec3d predictedBodyPos = currentPos.add(pathDirection.multiply(timeToTarget));
+
+        return predictedBodyPos.add(0, zombie.entity.getEyeHeight(zombie.entity.getPose()), 0);
+    }
+
+    private Vec3d getPathfindingDirection(ZombiesAgent.ZombieTarget zombie, Vec3d zombiePos, Vec3d playerPos, Vec3d currentVelocity) {
+        Vec3d directPath = playerPos.subtract(zombiePos).normalize();
+
+        if (currentVelocity.lengthSquared() > 1.0E-7D) {
+            Vec3d normalizedVelocity = currentVelocity.normalize();
+            double directness = normalizedVelocity.dotProduct(directPath);
+            directness = Math.max(0, Math.min(1, directness));
+
+            return directPath.multiply(1.0 - directness).add(normalizedVelocity.multiply(directness)).normalize().multiply(currentVelocity.length());
+        }
+
+        return directPath.multiply(estimateZombieSpeed(zombie) / 20.0);
+    }
+
+    private double estimateZombieSpeed(ZombiesAgent.ZombieTarget zombie) {
+        return switch (zombie.type) {
+            case ZOMBIE, SKELETON, CREEPER, WITCH -> 5.0; // ~0.25 B/t * 20 t/s
+            case BLAZE -> 8.0;
+            case WOLF -> 7.0;
+            case MAGMACUBE, SLIME -> 4.0;
+            case ENDERMITE, SILVERFISH -> 6.0;
+            default -> 5.0;
+        };
+    }
+
+    private void updateAllZombieVelocities() {
+        HashSet<ZombiesAgent.ZombieTarget> zombies = ZombiesAgent.getZombies();
+        if (zombies.isEmpty()) {
+            velocities.clear();
+            return;
+        }
+
+        for (ZombiesAgent.ZombieTarget zombie : zombies) {
+            UUID zombieId = zombie.uuid;
+            Vec3d currentPos = zombie.entity.getPos();
+            Vec3d lastPos = lastPositions.get(zombieId);
+
+            if (lastPos != null) {
+                velocities.put(zombieId, currentPos.subtract(lastPos));
+            }
+            lastPositions.put(zombieId, currentPos);
+        }
+    }
+
+    private void cleanupTrackingData() {
+        Set<UUID> currentZombies = new HashSet<>();
+        for (ZombiesAgent.ZombieTarget zombie : ZombiesAgent.getZombies()) {
+            currentZombies.add(zombie.uuid);
+        }
+
+        lastPositions.keySet().retainAll(currentZombies);
+        velocities.keySet().retainAll(currentZombies);
+    }
+
+
+    private void onDisabledTick() {
+        lastPositions.clear();
+        velocities.clear();
+    }
+
+//    ==============================
 
     public static HashSet<ZombieTarget> getZombies() {
         HashSet<ZombieTarget> alive = new HashSet<>();
@@ -75,7 +211,7 @@ public class ZombiesAgent extends BaseAgent {
 
     public static boolean isGun(ItemStack item) {
         if (item.isOf(Items.IRON_SWORD)) return false;
-        return item.isIn(ItemTags.WEAPON_ENCHANTABLE) || item.isIn(ItemTags.HOES) || item.isIn(ItemTags.SHOVELS) || item.isIn(ItemTags.AXES) || item.isIn(ItemTags.PICKAXES) || item.isOf(Items.SHEARS);
+        return item.isIn(ItemTags.WEAPON_ENCHANTABLE) || item.isIn(ItemTags.HOES) || item.isIn(ItemTags.SHOVELS) || item.isIn(ItemTags.AXES) || item.isIn(ItemTags.PICKAXES) || item.isOf(Items.SHEARS) || item.isOf(Items.FLINT_AND_STEEL);
     }
 
     @Override
@@ -83,6 +219,8 @@ public class ZombiesAgent extends BaseAgent {
         zombies.removeIf(ZombieTarget::isDead);
         powerups.removeIf(Powerup::isDead);
         powerups.forEach(Powerup::tick);
+
+        updateAllZombieVelocities();
         for (Entity zombie : world.getEntities()) {
             if (!(zombie instanceof LivingEntity livingEntity)) continue;
             if (ZombieType.from(zombie) == ZombieType.UNKNOWN) {
@@ -113,7 +251,6 @@ public class ZombiesAgent extends BaseAgent {
                 target.ticksSinceRotation++;
             }
 
-//            Headshot Detection
             Vec3d start = player.getPos().add(0, player.getEyeHeight(EntityPose.STANDING), 0);
 
             Vec3d instantVelocity = zombie.getPos().subtract(zombie.lastX, zombie.lastY, zombie.lastZ);
@@ -127,6 +264,7 @@ public class ZombiesAgent extends BaseAgent {
 
             target.end = end;
             Raycast.FirstBlock result = Raycast.firstBlockCollision(start, end, this::isNoClipBlock);
+
             if ((result.hit() && result.whitelisted()) || result.missed()) {
                 target.canShoot = true;
                 target.canHeadshot = true;
@@ -134,13 +272,17 @@ public class ZombiesAgent extends BaseAgent {
                 target.canShoot = false;
                 target.canHeadshot = false;
             }
+
+            System.out.println("zombie canShoot=" + target.canShoot);
         }
+        cleanupTrackingData();
     }
 
     @Override
     protected void onInvalidTick(MinecraftClient client) {
         zombies.clear();
         powerups.clear();
+        onDisabledTick(); // Syfe Aimbot
     }
 
     @Override

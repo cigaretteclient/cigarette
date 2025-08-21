@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 public class GUI extends RenderModule<ToggleWidget, Boolean> {
     protected static final String MODULE_NAME = "GUI";
     protected static final String MODULE_TOOLTIP = "ClickGUI settings.";
-    protected static final String MODULE_ID = "render.gui";
+    protected static final String MODULE_ID = "ui.gui";
 
     public GUI() {
         super(ToggleWidget.ToggleWidgetDisabled::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);

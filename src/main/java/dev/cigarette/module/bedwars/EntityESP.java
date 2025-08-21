@@ -1,6 +1,7 @@
 package dev.cigarette.module.bedwars;
 
 import dev.cigarette.GameDetector;
+import dev.cigarette.gui.hud.bar.BarDisplay;
 import dev.cigarette.gui.widget.TextWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
 import dev.cigarette.lib.Glow;
@@ -10,12 +11,10 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.boss.dragon.EnderDragonEntity;
-import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.entity.mob.SilverfishEntity;
 import net.minecraft.entity.passive.IronGolemEntity;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
-import net.minecraft.util.math.Box;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -44,13 +43,7 @@ public class EntityESP extends TickModule<ToggleWidget, Boolean> {
         if (entity instanceof IronGolemEntity) {
             ClientWorld world = MinecraftClient.getInstance().world;
             assert world != null;
-            Box box = Box.of(entity.getPos(), 0, 2.2, 0);
-            for (Entity target : world.getOtherEntities(entity, box)) {
-                if (!(target instanceof ArmorStandEntity)) continue;
-                Text standDisplayName = target.getDisplayName();
-                if (standDisplayName == null) continue;
-                displayName = standDisplayName;
-            }
+            displayName = BarDisplay.nc(entity, displayName, world);
         }
         if (displayName == null) return 0;
         List<Text> siblings = displayName.getSiblings();

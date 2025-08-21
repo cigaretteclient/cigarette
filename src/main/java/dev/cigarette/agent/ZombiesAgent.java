@@ -16,6 +16,7 @@ import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.entity.mob.*;
+import net.minecraft.entity.passive.IronGolemEntity;
 import net.minecraft.entity.passive.WolfEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -136,9 +137,10 @@ public class ZombiesAgent extends BaseAgent {
         return switch (zombie.type) {
             case ZOMBIE, SKELETON, CREEPER, WITCH -> 5.0; // ~0.25 B/t * 20 t/s
             case BLAZE -> 8.0;
-            case WOLF -> 7.0;
+            case WOLF, IRON_GOLEM -> 7.0;
             case MAGMACUBE, SLIME -> 4.0;
             case ENDERMITE, SILVERFISH -> 6.0;
+            case GHAST -> 0.0;
             default -> 5.0;
         };
     }
@@ -233,6 +235,8 @@ public class ZombiesAgent extends BaseAgent {
                         case "§r§9§lMAX AMMO" -> type = Powerup.Type.MAX_AMMO;
                         case "§r§6§lDOUBLE GOLD" -> type = Powerup.Type.DOUBLE_GOLD;
                         case "§r§c§lINSTA KILL" -> type = Powerup.Type.INSTANT_KILL;
+                        case "§r§5§lSHOPPING SPREE" -> type = Powerup.Type.SHOPPING_SPREE;
+                        case "§r§9§lCARPENTER" -> type = Powerup.Type.CARPENTER;
                         case "§r§5Lucky Chest" -> type = Powerup.Type.LUCKY_CHEST;
                         default -> {
                             continue;
@@ -259,8 +263,6 @@ public class ZombiesAgent extends BaseAgent {
                 target.canShoot = false;
                 target.canHeadshot = false;
             }
-
-            System.out.println("zombie canShoot=" + target.canShoot);
         }
         cleanupTrackingData();
     }
@@ -301,7 +303,7 @@ public class ZombiesAgent extends BaseAgent {
                 if (target.entity == entity) return target;
             }
             ZombieTarget target = new ZombieTarget(entity);
-            zombies.add(target);
+            if (target.type != ZombieType.UNKNOWN) zombies.add(target);
             return target;
         }
 
@@ -327,7 +329,7 @@ public class ZombiesAgent extends BaseAgent {
     }
 
     public enum ZombieType {
-        UNKNOWN("Unknown", 0xFFFFFFFF), ZOMBIE("Zombie", 0xFF2C936C), BLAZE("Blaze", 0xFFFCA50F), WOLF("Wolf", 0xFF3FE6FC), SKELETON("Skeleton", 0xFFE0E0E0), CREEPER("Creeper", 0xFF155B0D), MAGMACUBE("Magma Cube", 0xFFFC4619), SLIME("Slime", 0xFF155B0D), WITCH("Witch", 0xFFA625F7), ENDERMITE("Endermite", 0xFFA625F7), SILVERFISH("Silverfish", 0xFF3F3F3F);
+        UNKNOWN("Unknown", 0xFFFFFFFF), ZOMBIE("Zombie", 0xFF2C936C), BLAZE("Blaze", 0xFFFCA50F), WOLF("Wolf", 0xFF3FE6FC), SKELETON("Skeleton", 0xFFE0E0E0), CREEPER("Creeper", 0xFF155B0D), MAGMACUBE("Magma Cube", 0xFFFC4619), SLIME("Slime", 0xFF155B0D), WITCH("Witch", 0xFFA625F7), ENDERMITE("Endermite", 0xFFA625F7), SILVERFISH("Silverfish", 0xFF3F3F3F), IRON_GOLEM("Iron Golem", 0xFFE0E0E0), GHAST("Ghast", 0xFFE0E0E0), GIANT_ZOMBIE("Giant Zombie", 0xFF2C936C);
 
         private final String name;
         private final int color;
@@ -348,7 +350,10 @@ public class ZombiesAgent extends BaseAgent {
         public static ZombieType from(Entity entity) {
             if (entity instanceof ZombieEntity) return ZOMBIE;
             if (entity instanceof BlazeEntity) return BLAZE;
-            if (entity instanceof WolfEntity) return WOLF;
+            if (entity instanceof WolfEntity wolfEntity) {
+                if (wolfEntity.isBaby()) return UNKNOWN;
+                return WOLF;
+            }
             if (entity instanceof SkeletonEntity) return SKELETON;
             if (entity instanceof CreeperEntity) return CREEPER;
             if (entity instanceof MagmaCubeEntity) return MAGMACUBE;
@@ -356,6 +361,9 @@ public class ZombiesAgent extends BaseAgent {
             if (entity instanceof WitchEntity) return WITCH;
             if (entity instanceof EndermiteEntity) return ENDERMITE;
             if (entity instanceof SilverfishEntity) return SILVERFISH;
+            if (entity instanceof IronGolemEntity) return IRON_GOLEM;
+            if (entity instanceof GhastEntity) return GHAST;
+            if (entity instanceof GiantEntity) return GIANT_ZOMBIE;
             return UNKNOWN;
         }
     }
@@ -396,7 +404,7 @@ public class ZombiesAgent extends BaseAgent {
         }
 
         public enum Type {
-            INSTANT_KILL(0xFF0000), MAX_AMMO(0x0000FF), DOUBLE_GOLD(0xFFF800), LUCKY_CHEST(0xFC50C0);
+            INSTANT_KILL(0xFF0000), MAX_AMMO(0x0000FF), DOUBLE_GOLD(0xFFF800), SHOPPING_SPREE(0xB700A6), CARPENTER(0x9B6233), LUCKY_CHEST(0xFC50C0);
 
             private final int color;
 

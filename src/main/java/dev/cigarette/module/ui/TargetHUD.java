@@ -21,7 +21,7 @@ public class TargetHUD extends RenderModule<ToggleWidget, Boolean> {
     protected static final String MODULE_TOOLTIP = "Displays the current target & kill logs.";
     protected static final String MODULE_ID = "ui.targethud";
 
-    private final ColorDropdownWidget<ToggleWidget, Boolean> bgColor = ColorDropdownWidget.buildToggle(Text.of("BG Color"), Text.of("The background color of the bar.")).withAlpha(true).withDefaultColor(Color.colorTransparentize(CigaretteScreen.PRIMARY_COLOR, 0.4f));
+    private final ColorDropdownWidget<ToggleWidget, Boolean> bgColor = ColorDropdownWidget.buildToggle(Text.of("BG Color"), Text.of("The background color of the bar.")).withAlpha(true).withDefaultColor(Color.colorTransparentize(CigaretteScreen.PRIMARY_COLOR, 0.4f)).withDefaultState(true);
     private final SliderWidget rowHeight = (SliderWidget) new SliderWidget(Text.literal("Row Height"), Text.literal("The height of each row of the bar.")).withBounds(20, 1, 30).withDefault(24D);
     private final SliderWidget globalPadding = (SliderWidget) new SliderWidget(Text.literal("Global Padding"), Text.literal("The padding between each row of the bar.")).withBounds(0, 1, 10).withDefault(4D);
     private final SliderWidget maxRows = (SliderWidget) new SliderWidget(Text.literal("Max Rows"), Text.literal("The maximum number of rows to display.")).withBounds(1, 1, 5).withDefault(3D);

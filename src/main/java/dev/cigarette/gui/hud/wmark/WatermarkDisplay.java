@@ -18,6 +18,8 @@ public class WatermarkDisplay extends ClickableWidget {
     public static boolean TEXT_ENABLED = true;
     public static boolean SIMPLE_DISPLAY = false;
 
+    public static int BG_COLOR = Color.colorTransparentize(CigaretteScreen.PRIMARY_COLOR, 0.4f);
+
     public WatermarkDisplay() {
 
         super(5, 5, 200, 40, Text.of("Watermark"));
@@ -26,7 +28,7 @@ public class WatermarkDisplay extends ClickableWidget {
     public static void watermarkFullRender(DrawContext context, int x, int y, boolean textEnabled,
             boolean simpleDisplay) {
         if (simpleDisplay) {
-            int c = Color.colorTransparentize(CigaretteScreen.PRIMARY_COLOR, 0.4f);
+            int c = BG_COLOR;
             final int radius = 6;
             if (textEnabled) {
                 final int logoSize = 24;

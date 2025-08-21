@@ -21,15 +21,14 @@ import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.util.Window;
 import net.minecraft.util.Identifier;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
+import net.minecraft.util.Pair;
 import org.joml.Vector4f;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.minecraft.util.Pair;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Cigarette implements ModInitializer {
     public static final String MOD_ID = "cigarette";

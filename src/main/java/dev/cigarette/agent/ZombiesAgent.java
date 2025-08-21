@@ -329,16 +329,22 @@ public class ZombiesAgent extends BaseAgent {
     }
 
     public enum ZombieType {
-        UNKNOWN(0), ZOMBIE(1), BLAZE(2), WOLF(3), SKELETON(4), CREEPER(5), MAGMACUBE(6), SLIME(7), WITCH(8), ENDERMITE(9), SILVERFISH(10), IRON_GOLEM(11), GHAST(12), GIANT_ZOMBIE(13);
+        UNKNOWN("Unknown", 0xFFFFFFFF), ZOMBIE("Zombie", 0xFF2C936C), BLAZE("Blaze", 0xFFFCA50F), WOLF("Wolf", 0xFF3FE6FC), SKELETON("Skeleton", 0xFFE0E0E0), CREEPER("Creeper", 0xFF155B0D), MAGMACUBE("Magma Cube", 0xFFFC4619), SLIME("Slime", 0xFF155B0D), WITCH("Witch", 0xFFA625F7), ENDERMITE("Endermite", 0xFFA625F7), SILVERFISH("Silverfish", 0xFF3F3F3F), IRON_GOLEM("Iron Golem", 0xFFE0E0E0), GHAST("Ghast", 0xFFE0E0E0), GIANT_ZOMBIE("Giant Zombie", 0xFF2C936C);
 
-        private final int id;
+        private final String name;
+        private final int color;
 
-        ZombieType(int id) {
-            this.id = id;
+        ZombieType(String name, int color) {
+            this.name = name;
+            this.color = color;
         }
 
-        public int getId() {
-            return this.id;
+        public String getName() {
+            return this.name;
+        }
+
+        public int getColor() {
+            return this.color;
         }
 
         public static ZombieType from(Entity entity) {

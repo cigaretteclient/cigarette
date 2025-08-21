@@ -25,6 +25,8 @@ import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.*;
+
 public class Aimbot extends TickModule<ToggleWidget, Boolean> {
     protected static final String MODULE_NAME = "Aimbot";
     protected static final String MODULE_TOOLTIP = "Automatically aims at zombies.";

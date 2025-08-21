@@ -1,9 +1,10 @@
 package dev.cigarette.config;
 
+import dev.cigarette.module.bedwars.*;
+import dev.cigarette.module.murdermystery.PlayerESP;
 import dev.cigarette.Cigarette;
 import dev.cigarette.agent.DevWidget;
 import dev.cigarette.gui.CategoryInstance;
-import dev.cigarette.module.bedwars.*;
 import dev.cigarette.module.combat.AutoClicker;
 import dev.cigarette.module.combat.JumpReset;
 import dev.cigarette.module.combat.PerfectHit;
@@ -11,12 +12,8 @@ import dev.cigarette.module.keybind.AddGlassBlock;
 import dev.cigarette.module.keybind.BreakBlock;
 import dev.cigarette.module.keybind.VClip;
 import dev.cigarette.module.murdermystery.GoldESP;
-import dev.cigarette.module.murdermystery.PlayerESP;
 import dev.cigarette.module.render.ProjectileESP;
-import dev.cigarette.module.ui.GUI;
-import dev.cigarette.module.ui.ModuleList;
-import dev.cigarette.module.ui.Notifications;
-import dev.cigarette.module.ui.Watermark;
+import dev.cigarette.module.ui.*;
 import dev.cigarette.module.zombies.Aimbot;
 import dev.cigarette.module.zombies.PowerupESP;
 import dev.cigarette.module.zombies.ReviveAura;
@@ -43,10 +40,10 @@ public class Config {
     public Config() {
         this.keybinds.attach(new AddGlassBlock(), new BreakBlock(), new VClip());
         this.murderMystery.attach(MYSTERY_PLAYERESP, new GoldESP());
-        this.bedwars.attach(new FireballESP(), new EntityESP(), new DefenseViewer(), new AutoTool(), new Bridger());
+        this.bedwars.attach(new FireballESP(), new EntityESP(), new DefenseViewer(), new AutoTool(), new Bridger(), new AutoBlockIn());
         this.zombies.attach(new ZombieESP(), ZOMBIES_AIMBOT, new ReviveAura(), new PowerupESP());
         this.combat.attach(COMBAT_AUTOCLICKER, COMBAT_JUMP_RESET, COMBAT_PERFECT_HIT);
         this.render.attach(new dev.cigarette.module.render.PlayerESP(), new ProjectileESP());
-        this.ui.attach(new GUI(), new Notifications(), new ModuleList(), RENDER_WATERMARK);
+        this.ui.attach(new GUI(), new Notifications(), new ModuleList(), new TargetHUD(), RENDER_WATERMARK);
     }
 }

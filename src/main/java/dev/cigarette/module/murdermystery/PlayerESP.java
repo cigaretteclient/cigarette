@@ -2,8 +2,9 @@ package dev.cigarette.module.murdermystery;
 
 import dev.cigarette.GameDetector;
 import dev.cigarette.agent.MurderMysteryAgent;
-import dev.cigarette.gui.widget.TextWidget;
+import dev.cigarette.gui.hud.bar.providers.MurderMysteryProvider;
 import dev.cigarette.gui.widget.ColorDropdownWidget;
+import dev.cigarette.gui.widget.TextWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
 import dev.cigarette.lib.Glow;
 import dev.cigarette.module.TickModule;
@@ -37,6 +38,8 @@ public class PlayerESP extends TickModule<ToggleWidget, Boolean> {
     protected void onEnabledTick(MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
         this.glowContext.removeAll();
         HashSet<MurderMysteryAgent.PersistentPlayer> persistentPlayers = MurderMysteryAgent.getVisiblePlayers();
+        MurderMysteryProvider.COLOR_MURDERER = murderer.getToggleState() ? murderer.getStateARGB() : 0xFFFF0000;
+        MurderMysteryProvider.COLOR_DETECTIVE = detective.getToggleState() ? detective.getStateARGB() : 0xFF00FF00;
         for (MurderMysteryAgent.PersistentPlayer persistentPlayer : persistentPlayers) {
             switch (persistentPlayer.role) {
                 case INNOCENT -> {

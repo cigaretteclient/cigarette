@@ -11,12 +11,10 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.boss.dragon.EnderDragonEntity;
-import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.entity.mob.SilverfishEntity;
 import net.minecraft.entity.passive.IronGolemEntity;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
-import net.minecraft.util.math.Box;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;

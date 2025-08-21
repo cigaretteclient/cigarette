@@ -20,7 +20,7 @@ public class ZombiesProvider implements BarWidgetProvider {
         for (ZombiesAgent.ZombieTarget zt : ZombiesAgent.getZombies()) {
             if (zt == null || zt.uuid == null) continue;
             UUID uuid = zt.uuid;
-            String label = ZombiesAgent.PrettyMobs.labelOf(zt.type);
+            String label = zt.type.getName();
             double sortKey = 0d;
             try {
                 if (zt.getEndVec() != null && mc.player != null) {
@@ -30,7 +30,6 @@ public class ZombiesProvider implements BarWidgetProvider {
                 }
             } catch (Throwable ignored) {}
             Entity ent = findEntityByUuid(world, uuid);
-            int color = ZombiesAgent.PrettyMobs.colorOf(zt.type);
             if (ent == null) {
                 label = label + " [?]";
                 sortKey = 180.0;
@@ -39,7 +38,7 @@ public class ZombiesProvider implements BarWidgetProvider {
                 label = label + " (" + Math.round(dist) + "m)";
                 sortKey += dist;
             }
-            out.add(new EntityChipWidget("uuid:" + uuid, ent, label, sortKey, color));
+            out.add(new EntityChipWidget("uuid:" + uuid, ent, label, sortKey, zt.type.getColor()));
         }
     }
 

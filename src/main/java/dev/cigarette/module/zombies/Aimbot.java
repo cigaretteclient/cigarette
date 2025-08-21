@@ -78,6 +78,7 @@ public class Aimbot extends TickModule<ToggleWidget, Boolean> {
             Vec3d end = bestTarget.getEndVec();
             Vec3d vector = end.subtract(start).normalize();
 
+            // TODO: move this to after we shoot and check ammo left in gun, how many zombies are left on the map and other conditions then impl auto reload
             WeaponSelector.addCooldown(player.getInventory().getSelectedSlot());
 
             float aimYaw = (float) Math.toDegrees(Math.atan2(-vector.x, vector.z));
@@ -87,6 +88,9 @@ public class Aimbot extends TickModule<ToggleWidget, Boolean> {
                 PlayerEntityL.setRotationVector(player, vector);
             }
 
+            // TODO: check if the player is running and if they are don't shoot as the server takes our aim vector
+            // from whatever other movement look update position packets are sent in the same tick (possibly cancel
+            // packet for that tick so we can shoot?)
             ClientWorldAccessor clientWorldAccessor = (ClientWorldAccessor) world;
             try (PendingUpdateManager pendingUpdateManager = clientWorldAccessor.getPendingUpdateManager().incrementSequence()) {
                 int seq = pendingUpdateManager.getSequence();

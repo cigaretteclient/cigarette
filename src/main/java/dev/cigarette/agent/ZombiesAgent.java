@@ -91,56 +91,24 @@ public class ZombiesAgent extends BaseAgent {
         return bestTarget;
     }
 
-    private Vec3d calculatePredictedPosition(ZombiesAgent.ZombieTarget zombie, ClientPlayerEntity player) {
+    private Vec3d calculatePredictedPosition(ZombieTarget zombie, ClientPlayerEntity player) {
         if (!Cigarette.CONFIG.ZOMBIES_AIMBOT.predictiveAim.getRawState()) {
-            return zombie.entity.getPos().subtract(player.getPos().add(0, player.getEyeHeight(EntityPose.STANDING), 0));
+            return zombie.entity.getEyePos();
         }
 
         Vec3d currentPos = zombie.entity.getPos();
-        Vec3d playerPos = player.getEyePos();
         Vec3d currentVelocity = velocities.getOrDefault(zombie.uuid, Vec3d.ZERO);
-        Vec3d pathDirection = getPathfindingDirection(zombie, currentPos, playerPos, currentVelocity);
 
-        if (pathDirection.lengthSquared() < 1.0E-7D) {
-            return zombie.getEndVec();
+        if (currentVelocity.lengthSquared() < 1.0E-7D) {
+            return zombie.entity.getEyePos();
         }
 
-        double distance = playerPos.distanceTo(currentPos);
-        double projectileSpeed = 20.0;
-        double timeToTarget = (projectileSpeed > 0) ? distance / projectileSpeed : 0;
+        int predictionTicks = Cigarette.CONFIG.ZOMBIES_AIMBOT.predictionTicks.getRawState().intValue();
 
-        int maxPredictionTicks = Cigarette.CONFIG.ZOMBIES_AIMBOT.predictionTicks.getRawState().intValue();
-        double maxPredictionTime = maxPredictionTicks / 20.0;
-        timeToTarget = Math.min(timeToTarget, maxPredictionTime);
-
-        Vec3d predictedBodyPos = currentPos.add(pathDirection.multiply(timeToTarget));
+        Vec3d predictedDisplacement = currentVelocity.multiply(predictionTicks);
+        Vec3d predictedBodyPos = currentPos.add(predictedDisplacement);
 
         return predictedBodyPos.add(0, zombie.entity.getEyeHeight(zombie.entity.getPose()), 0);
-    }
-
-    private Vec3d getPathfindingDirection(ZombiesAgent.ZombieTarget zombie, Vec3d zombiePos, Vec3d playerPos, Vec3d currentVelocity) {
-        Vec3d directPath = playerPos.subtract(zombiePos).normalize();
-
-        if (currentVelocity.lengthSquared() > 1.0E-7D) {
-            Vec3d normalizedVelocity = currentVelocity.normalize();
-            double directness = normalizedVelocity.dotProduct(directPath);
-            directness = Math.max(0, Math.min(1, directness));
-
-            return directPath.multiply(1.0 - directness).add(normalizedVelocity.multiply(directness)).normalize().multiply(currentVelocity.length());
-        }
-
-        return directPath.multiply(estimateZombieSpeed(zombie) / 20.0);
-    }
-
-    private double estimateZombieSpeed(ZombiesAgent.ZombieTarget zombie) {
-        return switch (zombie.type) {
-            case ZOMBIE, SKELETON, CREEPER, WITCH -> 5.0; // ~0.25 B/t * 20 t/s
-            case BLAZE -> 8.0;
-            case WOLF -> 7.0;
-            case MAGMACUBE, SLIME -> 4.0;
-            case ENDERMITE, SILVERFISH -> 6.0;
-            default -> 5.0;
-        };
     }
 
     private void updateAllZombieVelocities() {
@@ -259,8 +227,6 @@ public class ZombiesAgent extends BaseAgent {
                 target.canShoot = false;
                 target.canHeadshot = false;
             }
-
-            System.out.println("zombie canShoot=" + target.canShoot);
         }
         cleanupTrackingData();
     }

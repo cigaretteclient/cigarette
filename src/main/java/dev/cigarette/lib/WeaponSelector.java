@@ -143,7 +143,6 @@ public class WeaponSelector {
         if (target == null) {
             return weapons.stream()
                     .max(Comparator.comparingDouble(a -> a.DPS))
-
                     .orElse(null);
         }
 
@@ -220,18 +219,16 @@ public class WeaponSelector {
 
     public static void addCooldown(int slotIndex) {
         WeaponStats weaponStats = parseWeaponStats(MinecraftClient.getInstance().player.getInventory().getStack(slotIndex), slotIndex);
-
-        // if weaponStats is null, return
         if (weaponStats == null) return;
 
         long firerateMs = (long) (weaponStats.fireRate * 1000);
         long expirationTime = System.currentTimeMillis() + firerateMs;
         weaponCooldown.put(slotIndex, expirationTime);
 
-        // remove expired cooldowns - this is now safe
+        // remove expired cooldowns
         long currentTime = System.currentTimeMillis();
         for (Map.Entry<Integer, Long> entry : weaponCooldown.entrySet()) {
-            if (currentTime > entry.getValue()) { // Corrected logic: check if current time is past the expiration time
+            if (currentTime > entry.getValue()) {
                 weaponCooldown.remove(entry.getKey());
             }
         }

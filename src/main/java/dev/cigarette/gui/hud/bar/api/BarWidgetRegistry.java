@@ -10,7 +10,7 @@ public final class BarWidgetRegistry {
     private static final List<BarWidgetProvider> PROVIDERS = new ArrayList<>();
     private static boolean defaultsRegistered = false;
 
-    private BarWidgetRegistry() {}
+    public BarWidgetRegistry() {}
 
     public static void register(BarWidgetProvider provider) {
         if (provider != null) PROVIDERS.add(provider);

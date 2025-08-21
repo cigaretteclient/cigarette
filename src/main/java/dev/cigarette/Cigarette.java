@@ -7,6 +7,7 @@ import dev.cigarette.agent.ZombiesAgent;
 import dev.cigarette.config.Config;
 import dev.cigarette.config.FileSystem;
 import dev.cigarette.events.Events;
+import dev.cigarette.gui.hud.bar.api.BarWidgetRegistry;
 import dev.cigarette.gui.hud.notification.NotificationDisplay;
 import dev.cigarette.lib.ChatLogger;
 import net.fabricmc.api.ModInitializer;

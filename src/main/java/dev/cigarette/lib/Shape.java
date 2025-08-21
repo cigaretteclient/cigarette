@@ -361,17 +361,14 @@ public class Shape {
         SkinTextures t = MinecraftClient.getInstance().getSkinProvider().getSkinTextures(player.getGameProfile());
         Identifier text = t.texture();
         if (text != null) {
-            AbstractTexture texture = MinecraftClient.getInstance().getTextureManager().getTexture(text);
-            int minU = 8 / 64;
-            int minV = 8 / 64;
-
+            // Correct UVs: face is at (8,8) size 8x8 on a 64x64 skin
+            int texW = 64, texH = 64;
+            int u = 8, v = 8, faceW = 8, faceH = 8;
             context.drawTexture(
-                    RenderLayer::getGuiTextured,
-                    text,
-                    x, y,
-                    minU, minV,
-                    w, h,
-                    8, 8
+                RenderLayer::getGuiTextured,
+                text,
+                x, y, u, v, w, h, faceW, faceH,
+                texW, texH
             );
         }
     }

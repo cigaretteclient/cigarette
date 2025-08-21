@@ -12,6 +12,7 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -97,6 +98,23 @@ public class BedwarsAgent extends BaseAgent {
         if (!(item.getItem() instanceof BlockItem blockItem)) return false;
         return isBlock(blockItem.getBlock().getDefaultState());
     }
+
+    public static boolean isTool(ItemStack item) {
+        return isPickaxe(item) || isAxe(item) || isShears(item);
+    }
+
+    public static boolean isPickaxe(ItemStack item) {
+        return item.isOf(Items.WOODEN_PICKAXE) || item.isOf(Items.STONE_PICKAXE) || item.isOf(Items.IRON_PICKAXE) || item.isOf(Items.GOLDEN_PICKAXE) || item.isOf(Items.DIAMOND_PICKAXE);
+    }
+
+    public static boolean isAxe(ItemStack item) {
+        return item.isOf(Items.WOODEN_AXE) || item.isOf(Items.STONE_AXE) || item.isOf(Items.IRON_AXE) || item.isOf(Items.GOLDEN_AXE) || item.isOf(Items.DIAMOND_AXE);
+    }
+
+    public static boolean isShears(ItemStack item) {
+        return item.isOf(Items.SHEARS);
+    }
+
 
     public static boolean switchToNextStackOfBlocks(ClientPlayerEntity player) {
         for (int i = 0; i < 9; i++) {

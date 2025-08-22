@@ -27,7 +27,11 @@ public class BarDisplay extends ClickableWidget {
 
     private final Map<String, AnimState> anim = new HashMap<>();
 
-    private static final int TARGET_ROW_HEIGHT = 24;
+    public static int BG_COLOR = Color.colorTransparentize(CigaretteScreen.PRIMARY_COLOR, 0.4f);
+    public static int TARGET_ROW_HEIGHT = 24;
+    public static int GLOBAL_PADDING = 6;
+    public static int MAX_ROWS = 3;
+
     private static final int MIN_BAR_HEIGHT = 0;
 
     private int animStartWidth;
@@ -100,8 +104,8 @@ public class BarDisplay extends ClickableWidget {
 
         collected.sort(Comparator.comparingDouble(BarWidget::sortKey));
 
-        if (collected.size() > 3) {
-            collected = new ArrayList<>(collected.subList(0, 3));
+        if (collected.size() > MAX_ROWS) {
+            collected = new ArrayList<>(collected.subList(0, Math.max(0, MAX_ROWS)));
         }
 
         Set<String> visibleNow = new HashSet<>();
@@ -138,21 +142,25 @@ public class BarDisplay extends ClickableWidget {
 
         if (toRender.isEmpty()) return;
 
-        int padX = 6;
-        int vPad = 8;
-        int rowGap = 4;
+        int padX = Math.max(0, GLOBAL_PADDING);
+        int vPad = Math.max(0, GLOBAL_PADDING);
+        int rowGap = Math.max(0, GLOBAL_PADDING);
         int rowH = Math.max(TARGET_ROW_HEIGHT, tr.fontHeight + 6);
         int n = toRender.size();
-        int rawHeight = vPad * 2 + n * rowH + (n - 1) * rowGap;
+        int rawHeight = vPad * 2 + n * rowH + Math.max(0, (n - 1)) * rowGap;
         int contentMax = toRender.stream().mapToInt(w -> w.measureWidth(tr, rowH, padX)).max().orElse(200);
         int desiredWidth = Math.max(200, contentMax + padX * 2);
         int desiredHeight = Math.max(MIN_BAR_HEIGHT, rawHeight);
 
-        if (desiredWidth != animTargetWidth || desiredHeight != animTargetHeight) {
+        int scrH = mc.getWindow().getScaledHeight();
+        int maxBarHeight = Math.max(1, scrH / 3);
+        int clampedDesiredHeight = Math.min(desiredHeight, maxBarHeight);
+
+        if (desiredWidth != animTargetWidth || clampedDesiredHeight != animTargetHeight) {
             animStartWidth = this.getWidth();
             animStartHeight = this.getHeight();
             animTargetWidth = desiredWidth;
-            animTargetHeight = desiredHeight;
+            animTargetHeight = clampedDesiredHeight;
             barExpansionTicks = 0;
             animatingSize = true;
         }
@@ -184,17 +192,18 @@ public class BarDisplay extends ClickableWidget {
         height = this.getHeight();
 
         Scissor.pushExclusive(context, x, y, x + width, y + height);
-        int bgCol = Color.colorTransparentize(CigaretteScreen.PRIMARY_COLOR, 0.4f);
+        int bgCol = BG_COLOR;
         Shape.roundedRect(context, x, y, x + width, y + height, bgCol, 6);
 
-        int innerLeft = x + 6;
-        int innerRight = x + width - 6;
+        int innerLeft = x + padX;
+        int innerRight = x + width - padX;
         int fullRowWidth = Math.max(0, innerRight - innerLeft);
         int startY = y + vPad;
         for (int i = 0; i < n; i++) {
             BarWidget w = toRender.get(i);
             float vis = visibility.getOrDefault(w.id(), 1f);
             int top = startY + i * (rowH + rowGap);
+            if (top >= y + height) break;
             w.render(context, innerLeft, top, fullRowWidth, rowH, vis, tr);
         }
 

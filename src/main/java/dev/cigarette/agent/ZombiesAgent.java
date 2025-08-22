@@ -403,4 +403,52 @@ public class ZombiesAgent extends BaseAgent {
             }
         }
     }
+
+    public enum PrettyMobs {
+        ZOMBIE("Zombie", 0xFF2C936C),
+        BLAZE("Blaze", 0xFFFCA50F),
+        WOLF("Wolf", 0xFF3FE6FC),
+        SKELETON("Skeleton", 0xFFE0E0E0),
+        CREEPER("Creeper", 0xFF155B0D),
+        MAGMACUBE("Magma Cube", 0xFFFC4619),
+        SLIME("Slime", 0xFF155B0D),
+        WITCH("Witch", 0xFFA625F7),
+        ENDERMITE("Endermite", 0xFFA625F7),
+        SILVERFISH("Silverfish", 0xFF3F3F3F),
+        UNKNOWN("Unknown", 0xFFFFFFFF);
+
+        private final String name;
+        private final int color;
+
+        PrettyMobs(String name, int color) {
+            this.name = name;
+            this.color = color;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public int getColor() {
+            return color;
+        }
+
+        public static int colorOf(ZombieType type) {
+            for (PrettyMobs pm : PrettyMobs.values()) {
+                if (pm.name().equals(type.name())) {
+                    return pm.getColor();
+                }
+            }
+            return UNKNOWN.getColor();
+        }
+
+        public static String labelOf(ZombieType type) {
+            for (PrettyMobs pm : PrettyMobs.values()) {
+                if (pm.name().equals(type.name())) {
+                    return pm.getName();
+                }
+            }
+            return UNKNOWN.getName();
+        }
+    }
 }

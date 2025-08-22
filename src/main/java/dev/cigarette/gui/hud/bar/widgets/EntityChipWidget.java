@@ -1,6 +1,7 @@
 package dev.cigarette.gui.hud.bar.widgets;
 
 import dev.cigarette.gui.CigaretteScreen;
+import dev.cigarette.gui.hud.bar.BarDisplay;
 import dev.cigarette.lib.Color;
 import dev.cigarette.lib.Shape;
 import dev.cigarette.gui.hud.bar.api.BarWidget;
@@ -20,9 +21,10 @@ public class EntityChipWidget implements BarWidget {
     private final int iconColor;
 
     public EntityChipWidget(String id, Entity entity, String label, double sortKey, int iconColor) {
-        this.id = id;
+        if (label == null) label = "";
+        this.id = (id == null ? "entitychip" : id);
         this.entity = entity;
-        this.label = label != null ? label : "";
+        this.label = label;
         this.sortKey = sortKey;
         this.iconColor = iconColor;
     }
@@ -104,7 +106,7 @@ public class EntityChipWidget implements BarWidget {
 
     @Override
     public void render(DrawContext ctx, int left, int top, int width, int height, float visibility, TextRenderer tr) {
-        int padX = 6;
+        int padX = Math.max(0, BarDisplay.GLOBAL_PADDING);
         int iconSize = Math.max(8, height - 4);
         int right = left + width;
         int bottom = top + height;
@@ -162,5 +164,45 @@ public class EntityChipWidget implements BarWidget {
         int textY = top + (height - tr.fontHeight) / 2;
         int textColor = Color.scaleAlpha((CigaretteScreen.PRIMARY_TEXT_COLOR & 0x00FFFFFF) | 0xFF000000, visibility);
         ctx.drawText(tr, label, textX, textY, textColor, true);
+
+        float fade = 1f - Math.max(0f, Math.min(1f, visibility));
+        if (fade > 0.01f) {
+            int a = Math.round(fade * 180);
+            int overlay = (a << 24);
+            ctx.fill(left, top, right, bottom, overlay);
+        }
+    }
+
+    public static final class Progress extends EntityChipWidget {
+        private final float progress; // 0..1
+        private final int barColor;
+        private final int barBgColor;
+
+        public Progress(String id, Entity entity, String label, double sortKey, int iconColor, float progress, int barColor, int barBgColor) {
+            super(id, entity, label, sortKey, iconColor);
+            this.progress = Math.max(0f, Math.min(1f, progress));
+            this.barColor = barColor;
+            this.barBgColor = barBgColor;
+        }
+
+        @Override
+        public void render(DrawContext ctx, int left, int top, int width, int height, float visibility, TextRenderer tr) {
+            super.render(ctx, left, top, width, height, visibility, tr);
+            int padX = Math.max(0, BarDisplay.GLOBAL_PADDING);
+            int iconSize = Math.max(8, height - 4);
+            int textLeft = left + padX + iconSize + padX;
+            int textRight = left + width - padX;
+            int barTop = top + height - Math.max(2, height / 6) - 2;
+            int barHeight = Math.max(2, height / 6);
+            if (textRight > textLeft) {
+                int bg = Color.scaleAlpha((barBgColor & 0x00FFFFFF) | 0xFF000000, visibility);
+                int fg = Color.scaleAlpha((barColor & 0x00FFFFFF) | 0xFF000000, visibility);
+                Shape.roundedRect(ctx, textLeft, barTop, textRight, barTop + barHeight, bg, 2);
+                int fillRight = textLeft + Math.round((textRight - textLeft) * progress);
+                if (fillRight > textLeft) {
+                    Shape.roundedRect(ctx, textLeft, barTop, fillRight, barTop + barHeight, fg, 2);
+                }
+            }
+        }
     }
 }

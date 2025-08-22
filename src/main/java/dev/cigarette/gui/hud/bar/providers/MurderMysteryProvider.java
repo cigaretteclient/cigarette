@@ -7,13 +7,16 @@ import dev.cigarette.gui.hud.bar.widgets.EntityChipWidget;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.entity.player.PlayerEntity;
 
 import java.util.List;
 import java.util.UUID;
 
+import static dev.cigarette.gui.hud.bar.BarDisplay.angle;
+
 public class MurderMysteryProvider implements BarWidgetProvider {
-    private static final int COLOR_MURDERER = 0xFFDC3545;
-    private static final int COLOR_DETECTIVE = 0xFF28A745;
+    public static int COLOR_MURDERER = 0xFFDC3545;
+    public static int COLOR_DETECTIVE = 0xFF28A745;
 
     @Override
     public void collect(MinecraftClient mc, ClientWorld world, TextRenderer tr, List<BarWidget> out) {
@@ -51,5 +54,15 @@ public class MurderMysteryProvider implements BarWidgetProvider {
                 out.add(new EntityChipWidget("uuid:" + uuid, nearestDetective.playerEntity, label, sortKey, COLOR_DETECTIVE));
             }
         }
+    }
+
+    public static float calculateRelativeYaw(PlayerEntity target) {
+        MinecraftClient mc = MinecraftClient.getInstance();
+        assert mc.player != null;
+
+        double dx = target.getX() - mc.player.getX();
+        double dz = target.getZ() - mc.player.getZ();
+
+        return angle(mc, dx, dz);
     }
 }

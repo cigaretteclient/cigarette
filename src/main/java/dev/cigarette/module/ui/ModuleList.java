@@ -16,7 +16,7 @@ import net.minecraft.text.Text;
 public class ModuleList extends RenderModule<ToggleWidget, Boolean> {
     protected static final String MODULE_NAME = "Module List";
     protected static final String MODULE_TOOLTIP = "Displays a list of modules.";
-    protected static final String MODULE_ID = "render.module_list";
+    protected static final String MODULE_ID = "ui.module_list";
     
     private final ToggleWidget enableFlip = new ToggleWidget(Text.literal("Flip"), Text.literal("Flip to top left.")).withDefaultState(false);
 
@@ -29,21 +29,19 @@ public class ModuleList extends RenderModule<ToggleWidget, Boolean> {
             enableFlip
         );
         this.widget.withDefaultState(true);
-        this.enableFlip.registerConfigKey("render.module_list.flip");
+        this.enableFlip.registerConfigKey("ui.module_list.flip");
     }
 
     @Override
     protected void onWorldRender(WorldRenderContext ctx, @NotNull MatrixStack matrixStack) {
-        if (display == null) {
-            display = new ModuleListDisplay();
-            Cigarette.registerHudElement(display);
-        }
         display.alignment = enableFlip.getRawState() ? ModuleListDisplay.Alignment.TOPLEFT : ModuleListDisplay.Alignment.TOPRIGHT;
     }
 
     @Override
     protected void onEnabledTick(MinecraftClient client, @NotNull ClientWorld world,
             @NotNull ClientPlayerEntity player) {
+        display = new ModuleListDisplay();
+        Cigarette.registerHudElement(display);
     }
 
     @Override

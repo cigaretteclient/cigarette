@@ -1,8 +1,8 @@
 package dev.cigarette.gui.widget;
 
 import dev.cigarette.Cigarette;
-import dev.cigarette.gui.Scissor;
 import dev.cigarette.gui.CigaretteScreen;
+import dev.cigarette.gui.Scissor;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.text.Text;
@@ -64,6 +64,11 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType>
         this.container.setFocused(false);
         this.container.setExpanded(false);
         super.unfocus();
+    }
+
+    @Override
+    public void alphabetic() {
+        this.container.alphabetic();
     }
 
     @Override

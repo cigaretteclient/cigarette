@@ -4,10 +4,12 @@ import net.minecraft.client.gui.Element;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.TreeMap;
 
 public abstract class PassthroughWidget<ChildType extends BaseWidget<?>, StateType> extends BaseWidget<StateType> {
-    protected TreeMap<String, ChildType> children = new TreeMap<>();
+    protected Map<String, ChildType> children = new LinkedHashMap<>();
     protected int childLeftOffset = 0;
 
     public PassthroughWidget(int x, int y, int width, int height, Text message) {
@@ -21,6 +23,10 @@ public abstract class PassthroughWidget<ChildType extends BaseWidget<?>, StateTy
 
     public PassthroughWidget(Text message) {
         super(message, null);
+    }
+
+    public void alphabetic() {
+        this.children = new TreeMap<>(this.children);
     }
 
     @Override

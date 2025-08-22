@@ -22,12 +22,12 @@ public abstract class BaseModule<Widget extends BaseWidget<Boolean>, Boolean> {
         this.widget = widgets.widget;
         this.prevEnabled = this.getRawState();
         this.widget.registerModuleCallback(newState -> {
-            if ((boolean)newState == this.prevEnabled) return;
+            if ((boolean) newState == this.prevEnabled) return;
             if (Cigarette.EVENTS != null) {
                 Cigarette.EVENTS.dispatchEvent(new Notification(Map.of(
-                    "type", "info",
-                    "title", "Module Toggled",
-                    "message", "Module " + displayName + " was " + ((boolean)newState ? "enabled" : "disabled")
+                        "type", "info",
+                        "title", "Module Toggled",
+                        "message", "Module " + displayName + " was " + ((boolean) newState ? "enabled" : "disabled")
                 )));
             }
             if ((boolean) newState) {
@@ -48,9 +48,16 @@ public abstract class BaseModule<Widget extends BaseWidget<Boolean>, Boolean> {
         return (boolean) this.widget.getRawState();
     }
 
-    public void setChildren(BaseWidget<?>... widgets) {
+    public BaseModule<Widget, Boolean> setChildren(BaseWidget<?>... widgets) {
         if (this.wrapper == null) throw new IllegalStateException("Cannot define children on a non-dropdown module.");
         this.wrapper.setChildren(widgets);
+        return this;
+    }
+
+    public BaseModule<Widget, Boolean> alphabetic() {
+        if (this.wrapper == null) throw new IllegalStateException("Cannot modify children order on a non-dropdown module.");
+        this.wrapper.alphabetic();
+        return this;
     }
 
     protected void whenEnabled() {

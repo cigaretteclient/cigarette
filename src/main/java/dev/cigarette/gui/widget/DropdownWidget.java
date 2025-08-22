@@ -32,7 +32,7 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType>
         super(message, tooltip);
         this.withDefault(new BaseWidget.Stateless());
         this.container = new ScrollableWidget<>(0, 0, false);
-        this.children = new ScrollableWidget[] { this.container };
+        this.setChildren(this.container);
     }
 
     public DropdownWidget<Widget, StateType> setHeader(Widget header) {
@@ -171,7 +171,7 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType>
 
         if (this.container.children == null)
             return;
-        if (this.container.children.length > 0 && dropdownIndicator) {
+        if (!this.container.children.isEmpty() && dropdownIndicator) {
             int w = 10;
             int h = 10;
             int iconX = right - 12;

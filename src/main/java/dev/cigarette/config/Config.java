@@ -30,7 +30,7 @@ public class Config {
 
         int x = 10, y = 10;
         int maxX = MinecraftClient.getInstance().getWindow().getScaledWidth() - 10;
-        for (CategoryInstance category : CATEGORIES.sequencedValues()) {
+        for (CategoryInstance category : CATEGORIES.values()) {
             category.widget.withXY(x, y);
             x += category.widget.getWidth() + 10;
             if (x > maxX) {

@@ -1,6 +1,5 @@
 package dev.cigarette.module.zombies;
 
-import dev.cigarette.Cigarette;
 import dev.cigarette.GameDetector;
 import dev.cigarette.gui.widget.ToggleWidget;
 import dev.cigarette.module.RenderModule;
@@ -21,7 +20,7 @@ import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 
 public class ReviveAura extends RenderModule<ToggleWidget, Boolean> {
-    public static final ReviveAura INSTANCE = Cigarette.CONFIG.constructModule(new ReviveAura("zombies.revive_aura", "Revive Aura", "Automatically revives downed teammates."), "Zombies");
+    public static final ReviveAura INSTANCE = new ReviveAura("zombies.revive_aura", "Revive Aura", "Automatically revives downed teammates.");
 
     private int tickCount = 0;
 

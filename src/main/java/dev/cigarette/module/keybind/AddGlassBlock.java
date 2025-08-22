@@ -1,6 +1,5 @@
 package dev.cigarette.module.keybind;
 
-import dev.cigarette.Cigarette;
 import dev.cigarette.gui.widget.KeybindWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
 import dev.cigarette.module.TickModule;
@@ -15,7 +14,7 @@ import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.NotNull;
 
 public class AddGlassBlock extends TickModule<ToggleWidget, Boolean> {
-    public static final AddGlassBlock INSTANCE = Cigarette.CONFIG.constructModule(new AddGlassBlock("keybind.place_glass", "Place Glass", "Places a client-side block where you are facing."), "Keybinds");
+    public static final AddGlassBlock INSTANCE = new AddGlassBlock("keybind.place_glass", "Place Glass", "Places a client-side block where you are facing.");
 
     private final KeybindWidget keybind = new KeybindWidget(Text.literal("Keybind"), Text.literal("Key to trigger the placing of a glass block."));
 

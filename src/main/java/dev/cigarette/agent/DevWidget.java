@@ -1,6 +1,5 @@
 package dev.cigarette.agent;
 
-import dev.cigarette.Cigarette;
 import dev.cigarette.gui.CategoryInstance;
 import dev.cigarette.gui.widget.ToggleWidget;
 import net.minecraft.text.Text;
@@ -12,9 +11,6 @@ public class DevWidget {
     public static final ToggleWidget zombiesAgent = new ToggleWidget(Text.literal("Zombies"), null).withDefaultState(false);
 
     static {
-        if (Cigarette.IN_DEV_ENVIRONMENT) {
-            Cigarette.CONFIG.putCategory("Agents", CATEGORY_INSTANCE);
-        }
         CATEGORY_INSTANCE.widget.setChildren(bedwarsAgent, murderMysteryAgent, zombiesAgent);
     }
 }

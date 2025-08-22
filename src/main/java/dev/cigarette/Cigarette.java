@@ -36,7 +36,7 @@ public class Cigarette implements ModInitializer {
     public static final ChatLogger CHAT_LOGGER = new ChatLogger();
     public static final Identifier LOGO_IDENTIFIER = Identifier.of("cigarette", "icon.png");
     public static final boolean IN_DEV_ENVIRONMENT = FabricLoader.getInstance().isDevelopmentEnvironment();
-    public static Config CONFIG = new Config();
+    public static Config CONFIG = Config.construct();
     public static BedwarsAgent BEDWARS_AGENT = new BedwarsAgent(DevWidget.bedwarsAgent);
     public static MurderMysteryAgent MURDER_MYSTERY_AGENT = new MurderMysteryAgent(DevWidget.murderMysteryAgent);
     public static ZombiesAgent ZOMBIES_AGENT = new ZombiesAgent(DevWidget.zombiesAgent);

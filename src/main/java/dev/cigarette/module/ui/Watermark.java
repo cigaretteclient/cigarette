@@ -16,7 +16,7 @@ import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
 
 public class Watermark extends RenderModule<ToggleWidget, Boolean> {
-    public static final Watermark INSTANCE = Cigarette.CONFIG.constructModule(new Watermark("ui.watermark", "Watermark", "Displays a watermark."), "UI");
+    public static final Watermark INSTANCE = new Watermark("ui.watermark", "Watermark", "Displays a watermark.");
     
     private final ToggleWidget enableText = new ToggleWidget(Text.literal("Text"), Text.literal("Display text.")).withDefaultState(true);
     private final ToggleWidget simplistic = new ToggleWidget(Text.literal("Simplistic"), Text.literal("A very simple watermark.")).withDefaultState(false);

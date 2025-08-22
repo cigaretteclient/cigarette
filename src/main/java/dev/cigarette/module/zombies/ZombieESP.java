@@ -1,6 +1,5 @@
 package dev.cigarette.module.zombies;
 
-import dev.cigarette.Cigarette;
 import dev.cigarette.GameDetector;
 import dev.cigarette.agent.ZombiesAgent;
 import dev.cigarette.gui.widget.ColorDropdownWidget;
@@ -17,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.UUID;
 
 public class ZombieESP extends TickModule<ToggleWidget, Boolean> {
-    public static final ZombieESP INSTANCE = Cigarette.CONFIG.constructModule(new ZombieESP("zombies.zombieesp", "ZombieESP", "Highlights all the zombies in ESP."), "Zombies");
+    public static final ZombieESP INSTANCE = new ZombieESP("zombies.zombieesp", "ZombieESP", "Highlights all the zombies in ESP.");
 
     private final Glow.Context glowContext = new Glow.Context();
 

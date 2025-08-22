@@ -1,6 +1,5 @@
 package dev.cigarette.module.ui;
 
-import dev.cigarette.Cigarette;
 import dev.cigarette.gui.widget.ToggleWidget;
 import dev.cigarette.module.RenderModule;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
@@ -11,7 +10,7 @@ import net.minecraft.client.world.ClientWorld;
 import org.jetbrains.annotations.NotNull;
 
 public class GUI extends RenderModule<ToggleWidget, Boolean> {
-    public static final GUI INSTANCE = Cigarette.CONFIG.constructModule(new GUI("ui.gui", "GUI", "ClickGUI settings."), "UI");
+    public static final GUI INSTANCE = new GUI("ui.gui", "GUI", "ClickGUI settings.");
 
     public GUI(String id, String name, String tooltip) {
         super(ToggleWidget.ToggleWidgetDisabled::module, id, name, tooltip);

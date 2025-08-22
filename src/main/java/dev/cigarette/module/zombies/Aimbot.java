@@ -1,6 +1,5 @@
 package dev.cigarette.module.zombies;
 
-import dev.cigarette.Cigarette;
 import dev.cigarette.GameDetector;
 import dev.cigarette.agent.ZombiesAgent;
 import dev.cigarette.gui.widget.SliderWidget;
@@ -27,7 +26,7 @@ import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 
 public class Aimbot extends TickModule<ToggleWidget, Boolean> {
-    public static final Aimbot INSTANCE = Cigarette.CONFIG.constructModule(new Aimbot("zombies.aimbot", "Aimbot", "Automatically aims at zombies."), "Zombies");
+    public static final Aimbot INSTANCE = new Aimbot("zombies.aimbot", "Aimbot", "Automatically aims at zombies.");
 
     private final ToggleWidget silentAim = new ToggleWidget(Text.literal("Silent Aim"), Text.literal("Doesn't snap your camera client-side.")).withDefaultState(true);
     private final ToggleWidget autoShoot = new ToggleWidget(Text.literal("Auto Shoot"), Text.literal("Automatically shoots zombies")).withDefaultState(true);

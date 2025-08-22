@@ -1,7 +1,6 @@
 package dev.cigarette.module.render;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
-import dev.cigarette.Cigarette;
 import dev.cigarette.gui.widget.ColorDropdownWidget;
 import dev.cigarette.gui.widget.SliderWidget;
 import dev.cigarette.gui.widget.TextWidget;
@@ -34,7 +33,7 @@ import org.joml.Matrix4f;
 import java.util.HashSet;
 
 public class ProjectileESP extends RenderModule<ToggleWidget, Boolean> {
-    public static final ProjectileESP INSTANCE = Cigarette.CONFIG.constructModule(new ProjectileESP("render.projectileesp", "ProjectileESP", "Displays the trajectory of all projectiles."), "Render");
+    public static final ProjectileESP INSTANCE = new ProjectileESP("render.projectileesp", "ProjectileESP", "Displays the trajectory of all projectiles.");
 
     private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockespnophase", 1536, Renderer.BLOCK_ESP_NOPHASE, RenderLayer.MultiPhaseParameters.builder().build(false));
     private final HashSet<Projectile> projectiles = new HashSet<>();

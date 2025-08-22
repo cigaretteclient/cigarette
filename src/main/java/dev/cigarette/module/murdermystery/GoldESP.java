@@ -1,6 +1,5 @@
 package dev.cigarette.module.murdermystery;
 
-import dev.cigarette.Cigarette;
 import dev.cigarette.GameDetector;
 import dev.cigarette.agent.MurderMysteryAgent;
 import dev.cigarette.gui.widget.ColorDropdownWidget;
@@ -15,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.HashSet;
 
 public class GoldESP extends TickModule<ToggleWidget, Boolean> {
-    public static final GoldESP INSTANCE = Cigarette.CONFIG.constructModule(new GoldESP("murdermystery.goldesp", "GoldESP", "Highlights all the gold ingots on the ground."), "Murder Mystery");
+    public static final GoldESP INSTANCE = new GoldESP("murdermystery.goldesp", "GoldESP", "Highlights all the gold ingots on the ground.");
 
     private final Glow.Context glowContext = new Glow.Context();
 

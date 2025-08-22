@@ -1,6 +1,5 @@
 package dev.cigarette.module.combat;
 
-import dev.cigarette.Cigarette;
 import dev.cigarette.gui.widget.SliderWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
 import dev.cigarette.mixin.KeyBindingAccessor;
@@ -14,7 +13,7 @@ import net.minecraft.util.hit.HitResult;
 import org.jetbrains.annotations.NotNull;
 
 public class AutoClicker extends TickModule<ToggleWidget, Boolean> {
-    public static final AutoClicker INSTANCE = Cigarette.CONFIG.constructModule(new AutoClicker("combat.autoclicker", "AutoClicker", "Automatically clicks each tick when holding attack."), "Combat");
+    public static final AutoClicker INSTANCE = new AutoClicker("combat.autoclicker", "AutoClicker", "Automatically clicks each tick when holding attack.");
 
     private final SliderWidget clickPercent = new SliderWidget(Text.literal("Click Percent"), Text.literal("The percentage chance for a click to occur each tick of the game while holding left-click.")).withBounds(0, 0.9, 1).withAccuracy(2);
 

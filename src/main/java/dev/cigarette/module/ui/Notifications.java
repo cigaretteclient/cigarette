@@ -12,7 +12,7 @@ import net.minecraft.client.world.ClientWorld;
 import org.jetbrains.annotations.NotNull;
 
 public class Notifications extends RenderModule<ToggleWidget, Boolean> {
-    public static final Notifications INSTANCE = Cigarette.CONFIG.constructModule(new Notifications("ui.notifications", "Notifications", "Displays notifications."), "UI");
+    public static final Notifications INSTANCE = new Notifications("ui.notifications", "Notifications", "Displays notifications.");
 
     private NotificationDisplay display;
 

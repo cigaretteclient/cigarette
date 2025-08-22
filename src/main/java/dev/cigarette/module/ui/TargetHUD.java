@@ -17,7 +17,7 @@ import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
 
 public class TargetHUD extends RenderModule<ToggleWidget, Boolean> {
-    public static final TargetHUD INSTANCE = Cigarette.CONFIG.constructModule(new TargetHUD("ui.targethud", "TargetHUD", "Displays the current target & kill logs."), "UI");
+    public static final TargetHUD INSTANCE = new TargetHUD("ui.targethud", "TargetHUD", "Displays the current target & kill logs.");
 
     private final ColorDropdownWidget<ToggleWidget, Boolean> bgColor = ColorDropdownWidget.buildToggle(Text.of("BG Color"), Text.of("The background color of the bar.")).withAlpha(true).withDefaultColor(Color.colorTransparentize(CigaretteScreen.PRIMARY_COLOR, 0.4f)).withDefaultState(true);
     private final SliderWidget rowHeight = (SliderWidget) new SliderWidget(Text.literal("Row Height"), Text.literal("The height of each row of the bar.")).withBounds(20, 1, 30).withDefault(24D);

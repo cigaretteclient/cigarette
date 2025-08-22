@@ -14,7 +14,7 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.text.Text;
 
 public class ModuleList extends RenderModule<ToggleWidget, Boolean> {
-    public static final ModuleList INSTANCE = Cigarette.CONFIG.constructModule(new ModuleList("ui.module_list", "Module List", "Displays a list of modules."), "UI");
+    public static final ModuleList INSTANCE = new ModuleList("ui.module_list", "Module List", "Displays a list of modules.");
     
     private final ToggleWidget enableFlip = new ToggleWidget(Text.literal("Flip"), Text.literal("Flip to top left.")).withDefaultState(false);
 

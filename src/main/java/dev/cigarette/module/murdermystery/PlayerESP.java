@@ -1,6 +1,5 @@
 package dev.cigarette.module.murdermystery;
 
-import dev.cigarette.Cigarette;
 import dev.cigarette.GameDetector;
 import dev.cigarette.agent.MurderMysteryAgent;
 import dev.cigarette.gui.hud.bar.providers.MurderMysteryProvider;
@@ -18,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.HashSet;
 
 public class PlayerESP extends TickModule<ToggleWidget, Boolean> {
-    public static final PlayerESP INSTANCE = Cigarette.CONFIG.constructModule(new PlayerESP("murdermystery.playeresp", "PlayerESP", "Highlights all the players in ESP."), "Murder Mystery");
+    public static final PlayerESP INSTANCE = new PlayerESP("murdermystery.playeresp", "PlayerESP", "Highlights all the players in ESP.");
 
     private final Glow.Context glowContext = new Glow.Context();
 

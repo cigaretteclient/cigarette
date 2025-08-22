@@ -1,13 +1,11 @@
 package dev.cigarette.module.bedwars;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
-import dev.cigarette.Cigarette;
 import dev.cigarette.GameDetector;
 import dev.cigarette.gui.widget.BaseWidget;
 import dev.cigarette.gui.widget.ColorDropdownWidget;
 import dev.cigarette.gui.widget.TextWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
-import dev.cigarette.gui.widget.*;
 import dev.cigarette.lib.Glow;
 import dev.cigarette.lib.Raycast;
 import dev.cigarette.lib.Renderer;
@@ -34,7 +32,7 @@ import java.util.HashSet;
 import java.util.List;
 
 public class FireballESP extends RenderModule<ToggleWidget, Boolean> {
-    public static final FireballESP INSTANCE = Cigarette.CONFIG.constructModule(new FireballESP("bedwars.fireballesp", "FireballESP", "Displays the trajectory and blast radius of all fireballs."), "Bedwars");
+    public static final FireballESP INSTANCE = new FireballESP("bedwars.fireballesp", "FireballESP", "Displays the trajectory and blast radius of all fireballs.");
 
     private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockespnophase", 1536, Renderer.BLOCK_ESP_NOPHASE, RenderLayer.MultiPhaseParameters.builder().build(false));
     private static final RenderLayer RENDER_LAYER_SPHERE = RenderLayer.of("cigarette.triespnophase", 1536, Renderer.TRI_ESP_NOPHASE, RenderLayer.MultiPhaseParameters.builder().build(false));

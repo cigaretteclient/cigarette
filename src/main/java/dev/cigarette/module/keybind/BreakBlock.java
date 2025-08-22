@@ -1,6 +1,5 @@
 package dev.cigarette.module.keybind;
 
-import dev.cigarette.Cigarette;
 import dev.cigarette.gui.widget.KeybindWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
 import dev.cigarette.module.TickModule;
@@ -13,7 +12,7 @@ import net.minecraft.util.hit.HitResult;
 import org.jetbrains.annotations.NotNull;
 
 public class BreakBlock extends TickModule<ToggleWidget, Boolean> {
-    public static final BreakBlock INSTANCE = Cigarette.CONFIG.constructModule(new BreakBlock("keybind.break_block", "Break Block", "Breaks the block you're looking at client-side."), "Keybinds");
+    public static final BreakBlock INSTANCE = new BreakBlock("keybind.break_block", "Break Block", "Breaks the block you're looking at client-side.");
 
     private final KeybindWidget keybind = new KeybindWidget(Text.literal("Keybind"), Text.literal("Key to trigger the breaking of a block."));
 

@@ -1,6 +1,5 @@
 package dev.cigarette.module.bedwars;
 
-import dev.cigarette.Cigarette;
 import dev.cigarette.GameDetector;
 import dev.cigarette.agent.BedwarsAgent;
 import dev.cigarette.gui.widget.KeybindWidget;
@@ -24,7 +23,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
-    public static final AutoBlockIn INSTANCE = Cigarette.CONFIG.constructModule(new AutoBlockIn("bedwars.autoblockin", "Auto Block-In", "Automatically surrounds you in blocks to help break beds."), "Bedwars");
+    public static final AutoBlockIn INSTANCE = new AutoBlockIn("bedwars.autoblockin", "Auto Block-In", "Automatically surrounds you in blocks to help break beds.");
 
     private final KeybindWidget keybind = new KeybindWidget(Text.literal("Keybind"), Text.literal("A key to trigger the block in module."));
     private final SliderWidget speed = new SliderWidget(Text.literal("Speed"), Text.literal("The higher the speed, the less time spent between adjusting the camera and placing blocks.")).withBounds(0, 12, 15);

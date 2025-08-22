@@ -1,6 +1,5 @@
 package dev.cigarette.module.bedwars;
 
-import dev.cigarette.Cigarette;
 import dev.cigarette.GameDetector;
 import dev.cigarette.agent.BedwarsAgent;
 import dev.cigarette.gui.widget.SliderWidget;
@@ -21,7 +20,7 @@ import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.NotNull;
 
 public class Bridger extends TickModule<ToggleWidget, Boolean> {
-    public static final Bridger INSTANCE = Cigarette.CONFIG.constructModule(new Bridger("bedwars.bridger", "Bridger", "Automatically bridges."), "Bedwars");
+    public static final Bridger INSTANCE = new Bridger("bedwars.bridger", "Bridger", "Automatically bridges.");
 
     private final SliderWidget speed = new SliderWidget(Text.literal("Speed"), Text.literal("The higher the speed, the less time spent shifting. To look more legit or improve consistency, lower the speed. Setting to 3 will naturally god bridge straight & diagonally inconsistently.")).withBounds(0, 2, 3);
     private final ToggleWidget blockSwap = new ToggleWidget(Text.literal("Auto Swap Blocks"), Text.literal("Automatically swap to the next available slot with placeable blocks when current stack runs out.")).withDefaultState(true);

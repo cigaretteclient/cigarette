@@ -1,7 +1,24 @@
 package dev.cigarette.config;
 
+import dev.cigarette.Cigarette;
+import dev.cigarette.agent.DevWidget;
 import dev.cigarette.gui.CategoryInstance;
 import dev.cigarette.module.BaseModule;
+import dev.cigarette.module.bedwars.*;
+import dev.cigarette.module.combat.AutoClicker;
+import dev.cigarette.module.combat.JumpReset;
+import dev.cigarette.module.combat.PerfectHit;
+import dev.cigarette.module.keybind.AddGlassBlock;
+import dev.cigarette.module.keybind.BreakBlock;
+import dev.cigarette.module.keybind.VClip;
+import dev.cigarette.module.murdermystery.GoldESP;
+import dev.cigarette.module.murdermystery.PlayerESP;
+import dev.cigarette.module.render.ProjectileESP;
+import dev.cigarette.module.ui.*;
+import dev.cigarette.module.zombies.Aimbot;
+import dev.cigarette.module.zombies.PowerupESP;
+import dev.cigarette.module.zombies.ReviveAura;
+import dev.cigarette.module.zombies.ZombieESP;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.Window;
 
@@ -19,6 +36,17 @@ public class Config {
     public void putCategory(String name, CategoryInstance category) {
         CATEGORIES.put(name, category);
         positionCategories();
+    }
+
+    public void putModules(String categoryName, BaseModule<?, ?>... modules) {
+        this.constructCategory(categoryName);
+
+        CategoryInstance category = CATEGORIES.get(categoryName);
+        assert category != null;
+
+        for (BaseModule<?, ?> module : modules) {
+            category.attach(module);
+        }
     }
 
     public void positionCategories() {
@@ -46,5 +74,20 @@ public class Config {
         category.attach(moduleRef);
 
         return moduleRef;
+    }
+
+    public static Config construct() {
+        Config cfg = new Config();
+        cfg.putModules("Bedwars", AutoBlockIn.INSTANCE, AutoTool.INSTANCE, Bridger.INSTANCE, DefenseViewer.INSTANCE, EntityESP.INSTANCE, FireballESP.INSTANCE);
+        cfg.putModules("Combat", AutoClicker.INSTANCE, JumpReset.INSTANCE, PerfectHit.INSTANCE);
+        cfg.putModules("Keybind", AddGlassBlock.INSTANCE, BreakBlock.INSTANCE, VClip.INSTANCE);
+        cfg.putModules("Murder Mystery", GoldESP.INSTANCE, PlayerESP.INSTANCE);
+        cfg.putModules("Render", dev.cigarette.module.render.PlayerESP.INSTANCE, ProjectileESP.INSTANCE);
+        cfg.putModules("UI", GUI.INSTANCE, ModuleList.INSTANCE, Notifications.INSTANCE, TargetHUD.INSTANCE, Watermark.INSTANCE);
+        cfg.putModules("Zombies", Aimbot.INSTANCE, PowerupESP.INSTANCE, ReviveAura.INSTANCE, ZombieESP.INSTANCE);
+        if (Cigarette.IN_DEV_ENVIRONMENT) {
+            cfg.putCategory("Agents", DevWidget.CATEGORY_INSTANCE);
+        }
+        return cfg;
     }
 }

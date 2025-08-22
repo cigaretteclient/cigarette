@@ -1,6 +1,5 @@
 package dev.cigarette.module.render;
 
-import dev.cigarette.Cigarette;
 import dev.cigarette.gui.widget.BaseWidget;
 import dev.cigarette.gui.widget.ColorDropdownWidget;
 import dev.cigarette.gui.widget.TextWidget;
@@ -18,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.UUID;
 
 public class PlayerESP extends TickModule<ToggleWidget, Boolean> {
-    public static final PlayerESP INSTANCE = Cigarette.CONFIG.constructModule(new PlayerESP("render.playeresp", "PlayerESP", "Highlights all the players in the world."), "Render");
+    public static final PlayerESP INSTANCE = new PlayerESP("render.playeresp", "PlayerESP", "Highlights all the players in the world.");
 
     private final ToggleWidget byTeamColor = new ToggleWidget(Text.literal("By Team Color"), Text.literal("ESP players in the color of their team.")).withDefaultState(true);
     private final TextWidget nonTeamColorText = new TextWidget(Text.literal("Static Color"), Text.literal("The color of all players if coloring by team is disabled.")).centered(false);

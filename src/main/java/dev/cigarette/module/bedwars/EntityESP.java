@@ -1,6 +1,5 @@
 package dev.cigarette.module.bedwars;
 
-import dev.cigarette.Cigarette;
 import dev.cigarette.GameDetector;
 import dev.cigarette.gui.hud.bar.BarDisplay;
 import dev.cigarette.gui.widget.TextWidget;
@@ -22,7 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 public class EntityESP extends TickModule<ToggleWidget, Boolean> {
-    public static final EntityESP INSTANCE = Cigarette.CONFIG.constructModule(new EntityESP("bedwars.entityesp", "EntityESP", "Highlights all miscellaneous entities with their team color."), "Bedwars");
+    public static final EntityESP INSTANCE = new EntityESP("bedwars.entityesp", "EntityESP", "Highlights all miscellaneous entities with their team color.");
 
     private final ToggleWidget enableEnderDragons = new ToggleWidget(Text.literal("Dragons"), null).withDefaultState(true);
     private final ToggleWidget enableIronGolems = new ToggleWidget(Text.literal("Iron Golems"), null).withDefaultState(true);

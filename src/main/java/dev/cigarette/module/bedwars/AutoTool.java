@@ -1,6 +1,5 @@
 package dev.cigarette.module.bedwars;
 
-import dev.cigarette.Cigarette;
 import dev.cigarette.GameDetector;
 import dev.cigarette.agent.BedwarsAgent;
 import dev.cigarette.gui.widget.ToggleWidget;
@@ -18,7 +17,7 @@ import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.NotNull;
 
 public class AutoTool extends TickModule<ToggleWidget, Boolean> {
-    public static final AutoTool INSTANCE = Cigarette.CONFIG.constructModule(new AutoTool("bedwars.autotool", "Auto Tool", "Automatically swaps your tool to the correct one when breaking blocks."), "Bedwars");
+    public static final AutoTool INSTANCE = new AutoTool("bedwars.autotool", "Auto Tool", "Automatically swaps your tool to the correct one when breaking blocks.");
 
     public AutoTool(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);

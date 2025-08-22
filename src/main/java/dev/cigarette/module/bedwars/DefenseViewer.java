@@ -1,7 +1,6 @@
 package dev.cigarette.module.bedwars;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
-import dev.cigarette.Cigarette;
 import dev.cigarette.GameDetector;
 import dev.cigarette.agent.BedwarsAgent;
 import dev.cigarette.gui.widget.*;
@@ -27,7 +26,7 @@ import java.util.Map;
 import java.util.OptionalDouble;
 
 public class DefenseViewer extends RenderModule<ToggleWidget, Boolean> {
-    public static final DefenseViewer INSTANCE = Cigarette.CONFIG.constructModule(new DefenseViewer("bedwars.defenseesp", "Defense Viewer", "ESPs bed blocks and the defensive blocks around them."), "Bedwars");
+    public static final DefenseViewer INSTANCE = new DefenseViewer("bedwars.defenseesp", "Defense Viewer", "ESPs bed blocks and the defensive blocks around them.");
 
     private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockesp", 1536, Renderer.BLOCK_ESP_PHASE, RenderLayer.MultiPhaseParameters.builder().lineWidth(new RenderPhase.LineWidth(OptionalDouble.of(1))).build(false));
     private final HashSet<BlockPos> bedBlocks = new HashSet<>();

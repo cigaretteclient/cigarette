@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Collection;
+import java.util.Objects;
 
 public class ScrollableWidget<Widgets extends BaseWidget<?>>
         extends PassthroughWidget<BaseWidget<?>, BaseWidget.Stateless> {
@@ -64,7 +65,8 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
     public final ScrollableWidget<Widgets> setChildren(@Nullable Widgets... children) {
         for (Widgets widget : children) {
             if (widget == null) continue;
-            this.children.put(widget.getMessage().toString(), widget);
+            String name = Objects.requireNonNullElse(widget.getMessage(), widget.hashCode()).toString();
+            this.children.put(name, widget);
         }
         return updateChildrenSizing();
     }
@@ -255,9 +257,9 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
                         : realBottomInt;
                 Scissor.pushExclusive(context, left, scissorTop, scissorRight, scissorBottom);
                 int index = -1;
-                for(BaseWidget<?> child : localChildren) {
+                for (BaseWidget<?> child : localChildren) {
                     index++;
-                    if(child == null)
+                    if (child == null)
                         continue;
                     child.withXY(left, top - (int) scrollPosition + (index + hasHeaderInt) * rowHeight)
                             .renderWidget(context, mouseX, mouseY, deltaTicks);

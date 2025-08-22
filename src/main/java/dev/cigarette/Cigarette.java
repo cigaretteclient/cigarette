@@ -64,6 +64,7 @@ public class Cigarette implements ModInitializer {
                 if (addedNotificationDisplay)
                     return;
                 REGULAR = Cigarette.tryGetTr(false);
+                CONFIG.positionCategories();
                 addedNotificationDisplay = true;
             }
         });

@@ -3,6 +3,7 @@ package dev.cigarette.config;
 import dev.cigarette.gui.CategoryInstance;
 import dev.cigarette.module.BaseModule;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.util.Window;
 
 import java.util.TreeMap;
 
@@ -20,9 +21,12 @@ public class Config {
         positionCategories();
     }
 
-    private void positionCategories() {
+    public void positionCategories() {
+        Window window = MinecraftClient.getInstance().getWindow();
+        if (window == null) return;
+
         int x = 10, y = 10;
-        int maxX = MinecraftClient.getInstance().getWindow().getScaledWidth() - 10;
+        int maxX = window.getScaledWidth() - 10;
         for (CategoryInstance category : CATEGORIES.values()) {
             category.widget.withXY(x, y);
             x += category.widget.getWidth() + 10;

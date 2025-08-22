@@ -32,7 +32,7 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType>
         super(message, tooltip);
         this.withDefault(new BaseWidget.Stateless());
         this.container = new ScrollableWidget<>(0, 0, false);
-        this.setChildren(this.container);
+        super.children.put("0", this.container);
     }
 
     public DropdownWidget<Widget, StateType> setHeader(Widget header) {
@@ -84,7 +84,7 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType>
                 return true;
             }
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT || button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-                boolean target = children != null && !dropdownVisible;
+                boolean target = !children.isEmpty() && !dropdownVisible;
 
                 if (target != dropdownVisible) {
                     this.animating = true;
@@ -124,7 +124,7 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType>
 
     @Override
     protected void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left,
-            int top, int right, int bottom) {
+                          int top, int right, int bottom) {
         if (this.container == null)
             return;
         if (this.container.focused || this.dropdownVisible) {
@@ -169,9 +169,9 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType>
             }
         }
 
-        if (this.container.children == null)
+        if (this.container.children.isEmpty())
             return;
-        if (!this.container.children.isEmpty() && dropdownIndicator) {
+        if (dropdownIndicator) {
             int w = 10;
             int h = 10;
             int iconX = right - 12;

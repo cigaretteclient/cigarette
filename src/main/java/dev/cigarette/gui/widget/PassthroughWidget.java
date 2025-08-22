@@ -33,7 +33,7 @@ public abstract class PassthroughWidget<ChildType extends BaseWidget<?>, StateTy
 
     @Override
     public void mouseMoved(double mouseX, double mouseY) {
-        if (children == null) return;
+        if (children.isEmpty()) return;
         for (Element child : children.values()) {
             if (child == null) continue;
             child.mouseMoved(mouseX, mouseY);
@@ -42,7 +42,7 @@ public abstract class PassthroughWidget<ChildType extends BaseWidget<?>, StateTy
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (children == null) return false;
+        if (children.isEmpty()) return false;
         boolean wasHandled = false;
         for (BaseWidget<?> child : children.values()) {
             if (child == null) continue;
@@ -59,7 +59,7 @@ public abstract class PassthroughWidget<ChildType extends BaseWidget<?>, StateTy
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (children == null) return false;
+        if (children.isEmpty()) return false;
         for (Element child : children.values()) {
             if (child == null) continue;
             child.mouseReleased(mouseX, mouseY, button);
@@ -69,7 +69,7 @@ public abstract class PassthroughWidget<ChildType extends BaseWidget<?>, StateTy
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        if (children == null) return false;
+        if (children.isEmpty()) return false;
         for (Element child : children.values()) {
             if (child == null) continue;
             child.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
@@ -79,7 +79,7 @@ public abstract class PassthroughWidget<ChildType extends BaseWidget<?>, StateTy
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
-        if (children == null) return false;
+        if (children.isEmpty()) return false;
         for (Element child : children.values()) {
             if (child == null) continue;
             boolean handled = child.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
@@ -90,7 +90,7 @@ public abstract class PassthroughWidget<ChildType extends BaseWidget<?>, StateTy
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (children == null) return false;
+        if (children.isEmpty()) return false;
         for (Element child : children.values()) {
             if (child == null) continue;
             boolean handled = child.keyPressed(keyCode, scanCode, modifiers);
@@ -101,7 +101,7 @@ public abstract class PassthroughWidget<ChildType extends BaseWidget<?>, StateTy
 
     @Override
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
-        if (children == null) return false;
+        if (children.isEmpty()) return false;
         for (Element child : children.values()) {
             if (child == null) continue;
             boolean handled = child.keyReleased(keyCode, scanCode, modifiers);
@@ -112,7 +112,7 @@ public abstract class PassthroughWidget<ChildType extends BaseWidget<?>, StateTy
 
     @Override
     public boolean charTyped(char chr, int modifiers) {
-        if (children == null) return false;
+        if (children.isEmpty()) return false;
         for (Element child : children.values()) {
             if (child == null) continue;
             boolean handled = child.charTyped(chr, modifiers);

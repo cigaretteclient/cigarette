@@ -20,9 +20,9 @@ public class TargetHUD extends RenderModule<ToggleWidget, Boolean> {
     public static final TargetHUD INSTANCE = new TargetHUD("ui.targethud", "TargetHUD", "Displays the current target & kill logs.");
 
     private final ColorDropdownWidget<ToggleWidget, Boolean> bgColor = ColorDropdownWidget.buildToggle(Text.of("BG Color"), Text.of("The background color of the bar.")).withAlpha(true).withDefaultColor(Color.colorTransparentize(CigaretteScreen.PRIMARY_COLOR, 0.4f)).withDefaultState(true);
-    private final SliderWidget rowHeight = (SliderWidget) new SliderWidget(Text.literal("Row Height"), Text.literal("The height of each row of the bar.")).withBounds(20, 1, 30).withDefault(24D);
-    private final SliderWidget globalPadding = (SliderWidget) new SliderWidget(Text.literal("Global Padding"), Text.literal("The padding between each row of the bar.")).withBounds(0, 1, 10).withDefault(4D);
-    private final SliderWidget maxRows = (SliderWidget) new SliderWidget(Text.literal("Max Rows"), Text.literal("The maximum number of rows to display.")).withBounds(1, 1, 5).withDefault(3D);
+    private final SliderWidget rowHeight = new SliderWidget(Text.literal("Row Height"), Text.literal("The height of each row of the bar.")).withBounds(20, 24, 30);
+    private final SliderWidget globalPadding = new SliderWidget(Text.literal("Global Padding"), Text.literal("The padding between each row of the bar.")).withBounds(0, 4, 10);
+    private final SliderWidget maxRows = new SliderWidget(Text.literal("Max Rows"), Text.literal("The maximum number of rows to display.")).withBounds(1, 3, 5);
 
     private BarDisplay display;
 
@@ -35,6 +35,9 @@ public class TargetHUD extends RenderModule<ToggleWidget, Boolean> {
                 globalPadding,
                 maxRows
         );
+        rowHeight.registerConfigKey(id + "rowheight");
+        globalPadding.registerConfigKey(id + "padding");
+        maxRows.registerConfigKey(id + "maxrows");
     }
 
     @Override

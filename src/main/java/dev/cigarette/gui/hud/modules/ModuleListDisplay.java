@@ -5,6 +5,7 @@ import dev.cigarette.gui.CategoryInstance;
 import dev.cigarette.gui.CigaretteScreen;
 import dev.cigarette.lib.Color;
 import dev.cigarette.module.BaseModule;
+import dev.cigarette.module.ui.Watermark;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -76,7 +77,7 @@ public class ModuleListDisplay extends ClickableWidget {
             this.setY(10);
             this.setX(scrW - this.getWidth() - 10);
         } else if (alignment == Alignment.TOPLEFT) {
-            int watermarkOffset = (Cigarette.CONFIG != null && Cigarette.CONFIG.RENDER_WATERMARK.getRawState()) ? 60 : 0;
+            int watermarkOffset = (Cigarette.CONFIG != null && Watermark.INSTANCE.getRawState()) ? 60 : 0;
             this.setY(10 + watermarkOffset);
             this.setX(10);
         }

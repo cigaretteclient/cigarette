@@ -39,6 +39,6 @@ public class AutoClicker extends TickModule<ToggleWidget, Boolean> {
 
     @Override
     protected void whenEnabled() {
-        Cigarette.CONFIG.COMBAT_PERFECT_HIT.widget.setRawState(false);
+        PerfectHit.INSTANCE.widget.setRawState(false);
     }
 }

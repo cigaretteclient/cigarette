@@ -1,10 +1,10 @@
 package dev.cigarette.agent;
 
-import dev.cigarette.Cigarette;
 import dev.cigarette.GameDetector;
 import dev.cigarette.gui.widget.ToggleWidget;
 import dev.cigarette.lib.Raycast;
 import dev.cigarette.lib.TextL;
+import dev.cigarette.module.zombies.Aimbot;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.enums.SlabType;
@@ -93,7 +93,7 @@ public class ZombiesAgent extends BaseAgent {
     }
 
     private Vec3d calculatePredictedPosition(ZombiesAgent.ZombieTarget zombie, ClientPlayerEntity player) {
-        if (!Cigarette.CONFIG.ZOMBIES_AIMBOT.predictiveAim.getRawState()) {
+        if (!Aimbot.INSTANCE.predictiveAim.getRawState()) {
             return zombie.entity.getPos().subtract(player.getPos().add(0, player.getEyeHeight(EntityPose.STANDING), 0));
         }
 
@@ -110,7 +110,7 @@ public class ZombiesAgent extends BaseAgent {
         double projectileSpeed = 20.0;
         double timeToTarget = (projectileSpeed > 0) ? distance / projectileSpeed : 0;
 
-        int maxPredictionTicks = Cigarette.CONFIG.ZOMBIES_AIMBOT.predictionTicks.getRawState().intValue();
+        int maxPredictionTicks = Aimbot.INSTANCE.predictionTicks.getRawState().intValue();
         double maxPredictionTime = maxPredictionTicks / 20.0;
         timeToTarget = Math.min(timeToTarget, maxPredictionTime);
 

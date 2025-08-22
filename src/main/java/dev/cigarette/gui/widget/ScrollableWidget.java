@@ -55,6 +55,13 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
         this.showBottomRoundedRect = showBottomRoundedRect;
     }
 
+    @Override
+    public BaseWidget<BaseWidget.Stateless> withXY(int x, int y) {
+        if(this.header != null) this.header.withXY(x, y);
+        super.withXY(x, y);
+        return this;
+    }
+
     private boolean updateShouldScroll() {
         this.shouldScroll = ((children == null ? 0 : children.size()) + (header != null ? 1 : 0))
                 * rowHeight > this.height;

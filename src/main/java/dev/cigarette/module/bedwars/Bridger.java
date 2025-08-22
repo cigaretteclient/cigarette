@@ -202,7 +202,9 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
                     cycleIfNoBlocks(player);
 
                     if (blockHitResult.getSide() == Direction.UP) {
-                        rightClick(1);
+                        if (blockHitResult.getBlockPos().getY() < player.getY() - 1) {
+                            rightClick(1);
+                        }
                     } else {
                         if (blockPos.getY() >= player.getY()) {
                             disable();
@@ -217,7 +219,9 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
                     InputOverride.sneakKey = shiftDiabledTicks-- <= 0;
 
                     if (blockHitResult.getSide() == Direction.UP) {
-                        rightClick(1);
+                        if (blockHitResult.getBlockPos().getY() < player.getY() - 1) {
+                            rightClick(1);
+                        }
                     } else {
                         rightClick(2);
                         shiftDiabledTicks = 3 + speed.getRawState().intValue();

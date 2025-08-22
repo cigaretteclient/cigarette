@@ -4,22 +4,15 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import dev.cigarette.Cigarette;
 import dev.cigarette.GameDetector;
 import dev.cigarette.agent.BedwarsAgent;
-import dev.cigarette.gui.widget.ColorDropdownWidget;
-import dev.cigarette.gui.widget.SliderWidget;
-import dev.cigarette.gui.widget.TextWidget;
-import dev.cigarette.gui.widget.ToggleWidget;
+import dev.cigarette.gui.widget.*;
 import dev.cigarette.lib.Renderer;
 import dev.cigarette.module.RenderModule;
 import dev.cigarette.precomputed.PyramidQuadrant;
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.render.*;
-import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.text.Text;
@@ -27,23 +20,22 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.OptionalDouble;
 
-public class DefenseViewer extends RenderModule<ToggleWidget, Boolean> implements ClientModInitializer {
+public class DefenseViewer extends RenderModule<ToggleWidget, Boolean> {
     public static final DefenseViewer INSTANCE = Cigarette.CONFIG.constructModule(new DefenseViewer("bedwars.defenseesp", "Defense Viewer", "ESPs bed blocks and the defensive blocks around them."), "Bedwars");
 
     private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockesp", 1536, Renderer.BLOCK_ESP_PHASE, RenderLayer.MultiPhaseParameters.builder().lineWidth(new RenderPhase.LineWidth(OptionalDouble.of(1))).build(false));
     private final HashSet<BlockPos> bedBlocks = new HashSet<>();
     private final HashMap<BlockPos, Integer> defensiveBlocks = new HashMap<>();
-    private static KeyBinding decreaseKeyBinding;
-    private static KeyBinding increaseKeyBinding;
     private int layer = 0;
 
+    private final KeybindWidget increaseKey = new KeybindWidget(Text.literal("Increase Layer"), Text.literal("Increases the layer shown by 1."));
+    private final KeybindWidget decreaseKey = new KeybindWidget(Text.literal("Decrease Layer"), Text.literal("Decreases the layer shown by 1."));
     private final ColorDropdownWidget<ToggleWidget, Boolean> enableBeds = ColorDropdownWidget.buildToggle(Text.literal("Bed Color"), Text.literal("The ESP color used to highlight bed blocks once you are within a small range of the bed.")).withDefaultColor(0xFFFF0000).withDefaultState(true);
     private final SliderWidget bedDistance = new SliderWidget(Text.literal("Distance"), Text.literal("The max distance the player must be away from the bed for this to stop highlighting blocks and to start highlighting the bed.")).withBounds(0, 10, 30).withAccuracy(1);
     private final ColorDropdownWidget<ToggleWidget, Boolean> enableWool = ColorDropdownWidget.buildToggle(Text.literal("Wool"), null).withDefaultColor(0x7FFFFFFF).withDefaultState(true);
@@ -86,7 +78,9 @@ public class DefenseViewer extends RenderModule<ToggleWidget, Boolean> implement
     public DefenseViewer(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
         TextWidget header = new TextWidget(Text.literal("Block Types")).withUnderline();
-        this.setChildren(enableBeds, bedDistance, header, enableWool, enableEndStone, enableWood, enableClay, enableObsidian, enableGlass);
+        this.setChildren(increaseKey, decreaseKey, enableBeds, bedDistance, header, enableWool, enableEndStone, enableWood, enableClay, enableObsidian, enableGlass);
+        increaseKey.registerConfigKey(id + ".increase");
+        decreaseKey.registerConfigKey(id + ".decrease");
         enableBeds.registerConfigKey(id + ".bed");
         bedDistance.registerConfigKey(id + ".distance");
         enableWood.registerConfigKey(id + ".wood");
@@ -95,12 +89,6 @@ public class DefenseViewer extends RenderModule<ToggleWidget, Boolean> implement
         enableClay.registerConfigKey(id + ".clay");
         enableObsidian.registerConfigKey(id + ".obsidian");
         enableGlass.registerConfigKey(id + ".glass");
-    }
-
-    @Override
-    public void onInitializeClient() {
-        increaseKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding("Increase Defense Viewer Layer", InputUtil.Type.KEYSYM, GLFW.GLFW_NOT_INITIALIZED, "Cigarette | Bedwars"));
-        decreaseKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding("Decrease Defense Viewer Layer", InputUtil.Type.KEYSYM, GLFW.GLFW_NOT_INITIALIZED, "Cigarette | Bedwars"));
     }
 
     @Override
@@ -150,10 +138,10 @@ public class DefenseViewer extends RenderModule<ToggleWidget, Boolean> implement
                 if (color != 0) defensiveBlocks.put(pos, color);
             }
         }
-        while (increaseKeyBinding.wasPressed()) {
+        while (increaseKey.getKeybind().wasPressed()) {
             this.layer = Math.min(this.layer + 1, PyramidQuadrant.MAX_LAYER);
         }
-        while (decreaseKeyBinding.wasPressed()) {
+        while (decreaseKey.getKeybind().wasPressed()) {
             this.layer = Math.max(this.layer - 1, 0);
         }
     }

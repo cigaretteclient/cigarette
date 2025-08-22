@@ -87,7 +87,7 @@ public class ModuleListDisplay extends ClickableWidget {
 
         Set<BaseModule<?, ?>> enabledNow = new HashSet<>();
         List<Entry> working = new ArrayList<>();
-        for (CategoryInstance cat : Cigarette.CONFIG.allCategories) {
+        for (CategoryInstance cat : Cigarette.CONFIG.CATEGORIES.values()) {
             if (cat == null)
                 continue;
             for (BaseModule<?, ?> mod : cat.children) {

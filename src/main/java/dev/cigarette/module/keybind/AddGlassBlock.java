@@ -1,5 +1,6 @@
 package dev.cigarette.module.keybind;
 
+import dev.cigarette.Cigarette;
 import dev.cigarette.gui.widget.ToggleWidget;
 import dev.cigarette.module.TickModule;
 import net.fabricmc.api.ClientModInitializer;
@@ -17,13 +18,12 @@ import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
 public class AddGlassBlock extends TickModule<ToggleWidget, Boolean> implements ClientModInitializer {
-    protected static final String MODULE_NAME = "Place Glass";
-    protected static final String MODULE_TOOLTIP = "Places a client-side block where you are facing.";
-    protected static final String MODULE_ID = "keybind.place_glass";
+    public static final AddGlassBlock INSTANCE = Cigarette.CONFIG.constructModule(new AddGlassBlock("keybind.place_glass", "Place Glass", "Places a client-side block where you are facing."), "Keybinds");
+
     private static KeyBinding keyBinding;
 
-    public AddGlassBlock() {
-        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+    public AddGlassBlock(String id, String name, String tooltip) {
+        super(ToggleWidget::module, id, name, tooltip);
     }
 
     @Override

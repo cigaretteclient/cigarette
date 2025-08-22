@@ -1,5 +1,6 @@
 package dev.cigarette.module.bedwars;
 
+import dev.cigarette.Cigarette;
 import dev.cigarette.GameDetector;
 import dev.cigarette.agent.BedwarsAgent;
 import dev.cigarette.gui.widget.SliderWidget;
@@ -20,9 +21,7 @@ import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.NotNull;
 
 public class Bridger extends TickModule<ToggleWidget, Boolean> {
-    protected static final String MODULE_NAME = "Bridger";
-    protected static final String MODULE_TOOLTIP = "Automatically bridges.";
-    protected static final String MODULE_ID = "bedwars.bridger";
+    public static final Bridger INSTANCE = Cigarette.CONFIG.constructModule(new Bridger("bedwars.bridger", "Bridger", "Automatically bridges."), "Bedwars");
 
     private final SliderWidget speed = new SliderWidget(Text.literal("Speed"), Text.literal("The higher the speed, the less time spent shifting. To look more legit or improve consistency, lower the speed. Setting to 3 will naturally god bridge straight & diagonally inconsistently.")).withBounds(0, 2, 3);
     private final ToggleWidget blockSwap = new ToggleWidget(Text.literal("Auto Swap Blocks"), Text.literal("Automatically swap to the next available slot with placeable blocks when current stack runs out.")).withDefaultState(true);
@@ -41,15 +40,15 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
 
     protected BridgeType bridgeType = BridgeType.NONE;
 
-    public Bridger() {
-        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+    public Bridger(String id, String name, String tooltip) {
+        super(ToggleWidget::module, id, name, tooltip);
         TextWidget header = new TextWidget(Text.literal("Bridging Styles")).withUnderline();
         this.setChildren(speed, blockSwap, header, toggleStraight, toggleDiagonal, toggleDiagonalGod);
-        speed.registerConfigKey("bedwars.bridger.speed");
-        blockSwap.registerConfigKey("bedwars.bridger.blockswap");
-        toggleStraight.registerConfigKey("bedwars.bridger.straight");
-        toggleDiagonal.registerConfigKey("bedwars.bridger.diagonal");
-        toggleDiagonalGod.registerConfigKey("bedwars.bridger.diagonal.god");
+        speed.registerConfigKey(id + ".speed");
+        blockSwap.registerConfigKey(id + ".blockswap");
+        toggleStraight.registerConfigKey(id + ".straight");
+        toggleDiagonal.registerConfigKey(id + ".diagonal");
+        toggleDiagonalGod.registerConfigKey(id + ".diagonal.god");
     }
 
     private boolean isStraightBridge() {
@@ -251,7 +250,7 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
         return GameDetector.rootGame == GameDetector.ParentGame.BEDWARS && GameDetector.subGame == GameDetector.ChildGame.INSTANCED_BEDWARS;
     }
 
-    private enum BridgeType {
+    protected enum BridgeType {
         NONE(0), STRAIGHT(1), DIAGONAL(2), DIAGONAL_GOD(3);
 
         private final int id;

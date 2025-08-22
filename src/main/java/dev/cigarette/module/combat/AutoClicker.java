@@ -14,15 +14,14 @@ import net.minecraft.util.hit.HitResult;
 import org.jetbrains.annotations.NotNull;
 
 public class AutoClicker extends TickModule<ToggleWidget, Boolean> {
-    protected static final String MODULE_NAME = "AutoClicker";
-    protected static final String MODULE_TOOLTIP = "Automatically clicks each tick when holding attack.";
-    protected static final String MODULE_ID = "combat.autoclicker";
+    public static final AutoClicker INSTANCE = Cigarette.CONFIG.constructModule(new AutoClicker("combat.autoclicker", "AutoClicker", "Automatically clicks each tick when holding attack."), "Combat");
+
     private final SliderWidget clickPercent = new SliderWidget(Text.literal("Click Percent"), Text.literal("The percentage chance for a click to occur each tick of the game while holding left-click.")).withBounds(0, 0.9, 1).withAccuracy(2);
 
-    public AutoClicker() {
-        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+    public AutoClicker(String id, String name, String tooltip) {
+        super(ToggleWidget::module, id, name, tooltip);
         this.setChildren(clickPercent);
-        clickPercent.registerConfigKey("combat.autoclicker.clickpercent");
+        clickPercent.registerConfigKey(id + ".clickpercent");
     }
 
     @Override

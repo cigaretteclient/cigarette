@@ -1,5 +1,6 @@
 package dev.cigarette.module.zombies;
 
+import dev.cigarette.Cigarette;
 import dev.cigarette.GameDetector;
 import dev.cigarette.agent.ZombiesAgent;
 import dev.cigarette.gui.widget.SliderWidget;
@@ -25,12 +26,8 @@ import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
-
 public class Aimbot extends TickModule<ToggleWidget, Boolean> {
-    protected static final String MODULE_NAME = "Aimbot";
-    protected static final String MODULE_TOOLTIP = "Automatically aims at zombies.";
-    protected static final String MODULE_ID = "zombies.aimbot";
+    public static final Aimbot INSTANCE = Cigarette.CONFIG.constructModule(new Aimbot("zombies.aimbot", "Aimbot", "Automatically aims at zombies."), "Zombies");
 
     private final ToggleWidget silentAim = new ToggleWidget(Text.literal("Silent Aim"), Text.literal("Doesn't snap your camera client-side.")).withDefaultState(true);
     private final ToggleWidget autoShoot = new ToggleWidget(Text.literal("Auto Shoot"), Text.literal("Automatically shoots zombies")).withDefaultState(true);
@@ -40,14 +37,14 @@ public class Aimbot extends TickModule<ToggleWidget, Boolean> {
 
     private KeyBinding rightClickKey = null;
 
-    public Aimbot() {
-        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+    public Aimbot(String id, String name, String tooltip) {
+        super(ToggleWidget::module, id, name, tooltip);
         this.setChildren(silentAim, autoShoot, autoWeaponSwitch, predictiveAim, predictionTicks);
-        silentAim.registerConfigKey("zombies.aimbot.silentAim");
-        autoShoot.registerConfigKey("zombies.aimbot.autoShoot");
-        autoWeaponSwitch.registerConfigKey("zombies.aimbot.autoWeaponSwitch");
-        predictiveAim.registerConfigKey("zombies.aimbot.predictiveAim");
-        predictionTicks.registerConfigKey("zombies.aimbot.predictionTicks");
+        silentAim.registerConfigKey(id + ".silentAim");
+        autoShoot.registerConfigKey(id + ".autoShoot");
+        autoWeaponSwitch.registerConfigKey(id + ".autoWeaponSwitch");
+        predictiveAim.registerConfigKey(id + ".predictiveAim");
+        predictionTicks.registerConfigKey(id + ".predictionTicks");
     }
 
     @Override

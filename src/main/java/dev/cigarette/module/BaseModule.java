@@ -5,10 +5,9 @@ import dev.cigarette.gui.hud.notification.Notification;
 import dev.cigarette.gui.widget.BaseWidget;
 import dev.cigarette.gui.widget.DropdownWidget;
 import net.minecraft.text.Text;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
-
-import org.jetbrains.annotations.Nullable;
 
 public abstract class BaseModule<Widget extends BaseWidget<Boolean>, Boolean> {
     private final String key;

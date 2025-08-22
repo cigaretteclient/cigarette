@@ -18,20 +18,20 @@ import org.jetbrains.annotations.NotNull;
 import java.util.UUID;
 
 public class PlayerESP extends TickModule<ToggleWidget, Boolean> {
-    protected static final String MODULE_NAME = "PlayerESP";
-    protected static final String MODULE_TOOLTIP = "Highlights all the players in the world.";
-    protected static final String MODULE_ID = "render.playeresp";
+    public static final PlayerESP INSTANCE = Cigarette.CONFIG.constructModule(new PlayerESP("render.playeresp", "PlayerESP", "Highlights all the players in the world."), "Render");
+
     private final ToggleWidget byTeamColor = new ToggleWidget(Text.literal("By Team Color"), Text.literal("ESP players in the color of their team.")).withDefaultState(true);
     private final TextWidget nonTeamColorText = new TextWidget(Text.literal("Static Color"), Text.literal("The color of all players if coloring by team is disabled.")).centered(false);
     private final ColorDropdownWidget<TextWidget, BaseWidget.Stateless> nonTeamColor = new ColorDropdownWidget<TextWidget, BaseWidget.Stateless>(Text.empty(), null).withAlpha(false).withDefaultColor(0xFFFFFFFF);
+
     private final Glow.Context glowContext = new Glow.Context();
 
-    public PlayerESP() {
-        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+    public PlayerESP(String id, String name, String tooltip) {
+        super(ToggleWidget::module, id, name, tooltip);
         nonTeamColor.setHeader(nonTeamColorText);
         this.setChildren(byTeamColor, nonTeamColor);
-        byTeamColor.registerConfigKey("render.playeresp.byteam");
-        nonTeamColor.registerConfigKey("render.playeresp.static");
+        byTeamColor.registerConfigKey(id + ".byteam");
+        nonTeamColor.registerConfigKey(id + ".static");
     }
 
     @Override

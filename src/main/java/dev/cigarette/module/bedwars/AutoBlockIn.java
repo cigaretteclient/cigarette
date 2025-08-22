@@ -1,5 +1,6 @@
 package dev.cigarette.module.bedwars;
 
+import dev.cigarette.Cigarette;
 import dev.cigarette.GameDetector;
 import dev.cigarette.agent.BedwarsAgent;
 import dev.cigarette.gui.widget.KeybindWidget;
@@ -23,9 +24,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
-    protected static final String MODULE_NAME = "Auto Block-In";
-    protected static final String MODULE_TOOLTIP = "Automatically surrounds you in blocks to help break beds.";
-    protected static final String MODULE_ID = "bedwars.autoblockin";
+    public static final AutoBlockIn INSTANCE = Cigarette.CONFIG.constructModule(new AutoBlockIn("bedwars.autoblockin", "Auto Block-In", "Automatically surrounds you in blocks to help break beds."), "Bedwars");
 
     private final KeybindWidget keybind = new KeybindWidget(Text.literal("Keybind"), Text.literal("A key to trigger the block in module."));
     private final SliderWidget speed = new SliderWidget(Text.literal("Speed"), Text.literal("The higher the speed, the less time spent between adjusting the camera and placing blocks.")).withBounds(0, 12, 15);
@@ -42,15 +41,15 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
     private Vec3d previousVector = null;
     private int cooldownTicks = 0;
 
-    public AutoBlockIn() {
-        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+    public AutoBlockIn(String id, String name, String tooltip) {
+        super(ToggleWidget::module, id, name, tooltip);
         this.setChildren(keybind, speed, proximityToBeds, switchToBlocks, switchToTool, variation);
-        keybind.registerConfigKey("bedwars.autoblockin.key");
-        speed.registerConfigKey("bedwars.autoblockin.speed");
-        proximityToBeds.registerConfigKey("bedwars.autoblockin.proximity");
-        switchToBlocks.registerConfigKey("bedwars.autoblockin.switchblocks");
-        switchToTool.registerConfigKey("bedwars.autoblockin.switchtool");
-        variation.registerConfigKey("bedwars.autoblockin.variation");
+        keybind.registerConfigKey(id + ".key");
+        speed.registerConfigKey(id + ".speed");
+        proximityToBeds.registerConfigKey(id + ".proximity");
+        switchToBlocks.registerConfigKey(id + ".switchblocks");
+        switchToTool.registerConfigKey(id + ".switchtool");
+        variation.registerConfigKey(id + ".variation");
     }
 
     private void enable(@NotNull ClientPlayerEntity player) {

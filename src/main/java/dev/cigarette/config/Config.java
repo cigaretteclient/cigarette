@@ -41,12 +41,14 @@ public class Config {
         }
     }
 
-    public void constructModule(BaseModule<?, ?> moduleRef, String categoryName) {
+    public <M extends BaseModule<?, ?>> M constructModule(M moduleRef, String categoryName) {
         this.constructCategory(categoryName);
 
         CategoryInstance category = CATEGORIES.get(categoryName);
         assert category != null;
 
         category.attach(moduleRef);
+
+        return moduleRef;
     }
 }

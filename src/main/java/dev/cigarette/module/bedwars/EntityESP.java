@@ -1,5 +1,6 @@
 package dev.cigarette.module.bedwars;
 
+import dev.cigarette.Cigarette;
 import dev.cigarette.GameDetector;
 import dev.cigarette.gui.hud.bar.BarDisplay;
 import dev.cigarette.gui.widget.TextWidget;
@@ -21,21 +22,20 @@ import java.util.List;
 import java.util.UUID;
 
 public class EntityESP extends TickModule<ToggleWidget, Boolean> {
-    protected static final String MODULE_NAME = "EntityESP";
-    protected static final String MODULE_TOOLTIP = "Highlights all miscellaneous entities with their team color.";
-    protected static final String MODULE_ID = "bedwars.entityesp";
+    public static final EntityESP INSTANCE = Cigarette.CONFIG.constructModule(new EntityESP("bedwars.entityesp", "EntityESP", "Highlights all miscellaneous entities with their team color."), "Bedwars");
+
     private final ToggleWidget enableEnderDragons = new ToggleWidget(Text.literal("Dragons"), null).withDefaultState(true);
     private final ToggleWidget enableIronGolems = new ToggleWidget(Text.literal("Iron Golems"), null).withDefaultState(true);
     private final ToggleWidget enableSilverfish = new ToggleWidget(Text.literal("Silverfish"), null).withDefaultState(true);
     private final Glow.Context glowContext = new Glow.Context();
 
-    public EntityESP() {
-        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+    public EntityESP(String id, String name, String tooltip) {
+        super(ToggleWidget::module, id, name, tooltip);
         TextWidget header = new TextWidget(Text.literal("Types")).withUnderline();
         this.setChildren(header, enableEnderDragons, enableIronGolems, enableSilverfish);
-        enableEnderDragons.registerConfigKey("bedwars.entityesp.enderdragons");
-        enableIronGolems.registerConfigKey("bedwars.entityesp.irongolems");
-        enableSilverfish.registerConfigKey("bedwars.entityesp.silverfish");
+        enableEnderDragons.registerConfigKey(id + ".enderdragons");
+        enableIronGolems.registerConfigKey(id + ".irongolems");
+        enableSilverfish.registerConfigKey(id + ".silverfish");
     }
 
     private int getNameColor(Entity entity) {

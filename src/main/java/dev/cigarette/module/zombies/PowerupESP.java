@@ -1,6 +1,7 @@
 package dev.cigarette.module.zombies;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
+import dev.cigarette.Cigarette;
 import dev.cigarette.GameDetector;
 import dev.cigarette.agent.ZombiesAgent;
 import dev.cigarette.gui.widget.ToggleWidget;
@@ -19,13 +20,12 @@ import java.util.HashSet;
 import java.util.OptionalDouble;
 
 public class PowerupESP extends RenderModule<ToggleWidget, Boolean> {
-    protected static final String MODULE_NAME = "ItemESP";
-    protected static final String MODULE_TOOLTIP = "Places ESP boxes around dropped powerups and the lucky chest.";
-    protected static final String MODULE_ID = "zombies.powerupesp";
+    public static final PowerupESP INSTANCE = Cigarette.CONFIG.constructModule(new PowerupESP("zombies.powerupesp", "ItemESP", "Places ESP boxes around dropped powerups and the lucky chest."), "Zombies");
+
     private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockesp", 1536, Renderer.BLOCK_ESP_PHASE, RenderLayer.MultiPhaseParameters.builder().lineWidth(new RenderPhase.LineWidth(OptionalDouble.of(1))).build(false));
 
-    public PowerupESP() {
-        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+    public PowerupESP(String id, String name, String tooltip) {
+        super(ToggleWidget::module, id, name, tooltip);
     }
 
     @Override

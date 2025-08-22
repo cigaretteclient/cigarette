@@ -16,9 +16,7 @@ import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
 
 public class Watermark extends RenderModule<ToggleWidget, Boolean> {
-    protected static final String MODULE_NAME = "Watermark";
-    protected static final String MODULE_TOOLTIP = "Displays a watermark.";
-    protected static final String MODULE_ID = "ui.watermark";
+    public static final Watermark INSTANCE = Cigarette.CONFIG.constructModule(new Watermark("ui.watermark", "Watermark", "Displays a watermark."), "UI");
     
     private final ToggleWidget enableText = new ToggleWidget(Text.literal("Text"), Text.literal("Display text.")).withDefaultState(true);
     private final ToggleWidget simplistic = new ToggleWidget(Text.literal("Simplistic"), Text.literal("A very simple watermark.")).withDefaultState(false);
@@ -27,15 +25,15 @@ public class Watermark extends RenderModule<ToggleWidget, Boolean> {
 
     private WatermarkDisplay display;
 
-    public Watermark() {
-        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+    public Watermark(String id, String name, String tooltip) {
+        super(ToggleWidget::module, id, name, tooltip);
         this.setChildren(
                 enableText,
                 simplistic,
                 simpleBgColor
         );
-        enableText.registerConfigKey("ui.watermark.text");
-        simplistic.registerConfigKey("ui.watermark.simplistic");
+        enableText.registerConfigKey(id + ".text");
+        simplistic.registerConfigKey(id + ".simplistic");
     }
 
     @Override

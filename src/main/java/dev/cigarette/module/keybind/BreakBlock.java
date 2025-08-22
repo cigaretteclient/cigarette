@@ -1,5 +1,6 @@
 package dev.cigarette.module.keybind;
 
+import dev.cigarette.Cigarette;
 import dev.cigarette.gui.widget.ToggleWidget;
 import dev.cigarette.module.TickModule;
 import net.fabricmc.api.ClientModInitializer;
@@ -15,13 +16,12 @@ import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
 public class BreakBlock extends TickModule<ToggleWidget, Boolean> implements ClientModInitializer {
-    protected static final String MODULE_NAME = "Break Block";
-    protected static final String MODULE_TOOLTIP = "Breaks the block you're looking at client-side.";
-    protected static final String MODULE_ID = "keybind.break_block";
+    public static final BreakBlock INSTANCE = Cigarette.CONFIG.constructModule(new BreakBlock("keybind.break_block", "Break Block", "Breaks the block you're looking at client-side."), "Keybinds");
+
     private static KeyBinding keyBinding;
 
-    public BreakBlock() {
-        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+    public BreakBlock(String id, String name, String tooltip) {
+        super(ToggleWidget::module, id, name, tooltip);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package dev.cigarette.module.murdermystery;
 
+import dev.cigarette.Cigarette;
 import dev.cigarette.GameDetector;
 import dev.cigarette.agent.MurderMysteryAgent;
 import dev.cigarette.gui.hud.bar.providers.MurderMysteryProvider;
@@ -17,21 +18,21 @@ import org.jetbrains.annotations.NotNull;
 import java.util.HashSet;
 
 public class PlayerESP extends TickModule<ToggleWidget, Boolean> {
-    protected static final String MODULE_NAME = "PlayerESP";
-    protected static final String MODULE_TOOLTIP = "Highlights all the players in ESP.";
-    protected static final String MODULE_ID = "murdermystery.playeresp";
+    public static final PlayerESP INSTANCE = Cigarette.CONFIG.constructModule(new PlayerESP("murdermystery.playeresp", "PlayerESP", "Highlights all the players in ESP."), "Murder Mystery");
+
     private final Glow.Context glowContext = new Glow.Context();
+
     private final ColorDropdownWidget<ToggleWidget, Boolean> innocent = ColorDropdownWidget.buildToggle(Text.literal("Innocents"), Text.literal("The glow color of innocent and unknown players.")).withAlpha(false).withDefaultColor(0xFFFFFFFF).withDefaultState(true);
     private final ColorDropdownWidget<ToggleWidget, Boolean> detective = ColorDropdownWidget.buildToggle(Text.literal("Detective"), Text.literal("The glow color of the detective and bow holding players that aren't murderer.")).withAlpha(false).withDefaultColor(0xFF00FF00).withDefaultState(true);
     private final ColorDropdownWidget<ToggleWidget, Boolean> murderer = ColorDropdownWidget.buildToggle(Text.literal("Murderer"), Text.literal("The glow color of the murderer.")).withAlpha(false).withDefaultColor(0xFFFF0000).withDefaultState(true);
 
-    public PlayerESP() {
-        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+    public PlayerESP(String id, String name, String tooltip) {
+        super(ToggleWidget::module, id, name, tooltip);
         TextWidget header = new TextWidget(Text.literal("Types")).withUnderline();
         this.setChildren(header, innocent, detective, murderer);
-        innocent.registerConfigKey("murdermystery.playeresp.innocent");
-        detective.registerConfigKey("murdermystery.playeresp.detective");
-        murderer.registerConfigKey("murdermystery.playeresp.murderer");
+        innocent.registerConfigKey(id + ".innocent");
+        detective.registerConfigKey(id + ".detective");
+        murderer.registerConfigKey(id + ".murderer");
     }
 
     @Override

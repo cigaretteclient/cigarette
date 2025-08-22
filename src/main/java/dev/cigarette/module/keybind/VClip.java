@@ -1,5 +1,6 @@
 package dev.cigarette.module.keybind;
 
+import dev.cigarette.Cigarette;
 import dev.cigarette.gui.widget.ToggleWidget;
 import dev.cigarette.module.TickModule;
 import net.fabricmc.api.ClientModInitializer;
@@ -15,13 +16,12 @@ import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
 public class VClip extends TickModule<ToggleWidget, Boolean> implements ClientModInitializer {
-    protected static final String MODULE_NAME = "V-Clip Down";
-    protected static final String MODULE_TOOLTIP = "Vertically clips you down through floors.";
-    protected static final String MODULE_ID = "keybind.vclip";
+    public static final VClip INSTANCE = Cigarette.CONFIG.constructModule(new VClip("keybind.vclip", "V-Clip Down", "Vertically clips you down through floors."), "Keybinds");
+
     private static KeyBinding keyBinding;
 
-    public VClip() {
-        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+    public VClip(String id, String name, String tooltip) {
+        super(ToggleWidget::module, id, name, tooltip);
     }
 
     @Override

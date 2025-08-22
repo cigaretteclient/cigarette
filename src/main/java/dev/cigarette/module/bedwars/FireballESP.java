@@ -1,6 +1,7 @@
 package dev.cigarette.module.bedwars;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
+import dev.cigarette.Cigarette;
 import dev.cigarette.GameDetector;
 import dev.cigarette.gui.widget.BaseWidget;
 import dev.cigarette.gui.widget.ColorDropdownWidget;
@@ -33,23 +34,23 @@ import java.util.HashSet;
 import java.util.List;
 
 public class FireballESP extends RenderModule<ToggleWidget, Boolean> {
-    protected static final String MODULE_NAME = "FireballESP";
-    protected static final String MODULE_TOOLTIP = "Displays the trajectory and blast radius of all fireballs.";
-    protected static final String MODULE_ID = "bedwars.fireballesp";
+    public static final FireballESP INSTANCE = Cigarette.CONFIG.constructModule(new FireballESP("bedwars.fireballesp", "FireballESP", "Displays the trajectory and blast radius of all fireballs."), "Bedwars");
+
     private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockespnophase", 1536, Renderer.BLOCK_ESP_NOPHASE, RenderLayer.MultiPhaseParameters.builder().build(false));
     private static final RenderLayer RENDER_LAYER_SPHERE = RenderLayer.of("cigarette.triespnophase", 1536, Renderer.TRI_ESP_NOPHASE, RenderLayer.MultiPhaseParameters.builder().build(false));
     private final HashSet<Fireball> fireballs = new HashSet<>();
     private final Glow.Context glowContext = new Glow.Context();
+
     private final ColorDropdownWidget<ToggleWidget, Boolean> enableGlow = ColorDropdownWidget.buildToggle(Text.literal("Glowing"), Text.literal("Applies the glowing effect to the fireball entities")).withAlpha(false).withDefaultColor(0xFFFF0000);
     private final ColorDropdownWidget<TextWidget, BaseWidget.Stateless> sphereColor = ColorDropdownWidget.buildText(Text.literal("Sphere Color"), null).withDefaultColor(0x4FFF0000);
     private final ColorDropdownWidget<TextWidget, BaseWidget.Stateless> lineColor = ColorDropdownWidget.buildText(Text.literal("Projection Color"), null).withDefaultColor(0xFFFF0000);
 
-    public FireballESP() {
-        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+    public FireballESP(String id, String name, String tooltip) {
+        super(ToggleWidget::module, id, name, tooltip);
         this.setChildren(enableGlow, sphereColor, lineColor);
-        enableGlow.registerConfigKey("bedwars.fireballesp.glow");
-        sphereColor.registerConfigKey("bedwars.fireballesp.spherecolor");
-        lineColor.registerConfigKey("bedwars.fireballesp.linecolor");
+        enableGlow.registerConfigKey(id + ".glow");
+        sphereColor.registerConfigKey(id + ".spherecolor");
+        lineColor.registerConfigKey(id + ".linecolor");
     }
 
     @Override
@@ -124,7 +125,6 @@ public class FireballESP extends RenderModule<ToggleWidget, Boolean> {
                     Vec3d collisionEnd = result.getPos();
                     fireballs.add(new Fireball(null, -1, collisionEnd, collisionEnd, true, Renderer.calculateSphere(collisionEnd, 8.4f, player.getEyePos())));
                 }
-                default -> {}
             }
         }
     }

@@ -17,6 +17,7 @@ public class CategoryInstance {
         this.widget.setHeader(Text.literal(displayName), () -> {
             this.expanded = !this.expanded;
         });
+        this.widget.alphabetic();
     }
 
     public CategoryInstance attach(BaseModule<?, ?>... children) {

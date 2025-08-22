@@ -16,7 +16,7 @@ public class Notifications extends RenderModule<ToggleWidget, Boolean> {
 
     private NotificationDisplay display;
 
-    public Notifications(String id, String name, String tooltip) {
+    private Notifications(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
         this.widget.withDefaultState(true);
     }

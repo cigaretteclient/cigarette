@@ -25,7 +25,7 @@ public class PlayerESP extends TickModule<ToggleWidget, Boolean> {
 
     private final Glow.Context glowContext = new Glow.Context();
 
-    public PlayerESP(String id, String name, String tooltip) {
+    private PlayerESP(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
         nonTeamColor.setHeader(nonTeamColorText);
         this.setChildren(byTeamColor, nonTeamColor);

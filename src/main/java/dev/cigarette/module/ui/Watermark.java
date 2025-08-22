@@ -25,7 +25,7 @@ public class Watermark extends RenderModule<ToggleWidget, Boolean> {
 
     private WatermarkDisplay display;
 
-    public Watermark(String id, String name, String tooltip) {
+    private Watermark(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
         this.setChildren(
                 enableText,

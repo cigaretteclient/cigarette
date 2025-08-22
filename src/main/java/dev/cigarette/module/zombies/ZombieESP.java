@@ -35,7 +35,7 @@ public class ZombieESP extends TickModule<ToggleWidget, Boolean> {
     private final ColorDropdownWidget<ToggleWidget, Boolean> enableGiants = ColorDropdownWidget.buildToggle(Text.literal("Giant Zombies"), null).withAlpha(false).withDefaultColor(0xFF2C936C).withDefaultState(true);
 
 
-    public ZombieESP(String id, String name, String tooltip) {
+    private ZombieESP(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
         TextWidget header = new TextWidget(Text.literal("Types")).withUnderline();
         this.setChildren(header, enableZombies, enableBlazes, enableWolves, enableCreepers, enableMagmaCubes, enableSlimes, enableWitches, enableEndermite, enableSilverfish, enableIronGolems, enableGhast, enableGiants);

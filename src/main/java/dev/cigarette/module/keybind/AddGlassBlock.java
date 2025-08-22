@@ -18,7 +18,7 @@ public class AddGlassBlock extends TickModule<ToggleWidget, Boolean> {
 
     private final KeybindWidget keybind = new KeybindWidget(Text.literal("Keybind"), Text.literal("Key to trigger the placing of a glass block."));
 
-    public AddGlassBlock(String id, String name, String tooltip) {
+    private AddGlassBlock(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
         this.setChildren(keybind);
         keybind.registerConfigKey(id + ".key");

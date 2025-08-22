@@ -18,7 +18,7 @@ public class GoldESP extends TickModule<ToggleWidget, Boolean> {
 
     private final Glow.Context glowContext = new Glow.Context();
 
-    public GoldESP(String id, String name, String tooltip) {
+    private GoldESP(String id, String name, String tooltip) {
         super(ColorDropdownWidget::module, id, name, tooltip);
         assert this.wrapper != null;
         ((ColorDropdownWidget<?, ?>) this.wrapper).withAlpha(false).withDefaultColor(0xFFFFD800);

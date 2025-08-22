@@ -17,7 +17,7 @@ public class AutoClicker extends TickModule<ToggleWidget, Boolean> {
 
     private final SliderWidget clickPercent = new SliderWidget(Text.literal("Click Percent"), Text.literal("The percentage chance for a click to occur each tick of the game while holding left-click.")).withBounds(0, 0.9, 1).withAccuracy(2);
 
-    public AutoClicker(String id, String name, String tooltip) {
+    private AutoClicker(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
         this.setChildren(clickPercent);
         clickPercent.registerConfigKey(id + ".clickpercent");

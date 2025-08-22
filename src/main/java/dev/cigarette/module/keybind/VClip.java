@@ -16,7 +16,7 @@ public class VClip extends TickModule<ToggleWidget, Boolean> {
 
     private final KeybindWidget keybind = new KeybindWidget(Text.literal("Keybind"), Text.literal("Key to trigger the downward clipping."));
 
-    public VClip(String id, String name, String tooltip) {
+    private VClip(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
         this.setChildren(keybind);
         keybind.registerConfigKey(id + ".key");

@@ -39,7 +39,7 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
 
     protected BridgeType bridgeType = BridgeType.NONE;
 
-    public Bridger(String id, String name, String tooltip) {
+    private Bridger(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
         TextWidget header = new TextWidget(Text.literal("Bridging Styles")).withUnderline();
         this.setChildren(speed, blockSwap, header, toggleStraight, toggleDiagonal, toggleDiagonalGod);

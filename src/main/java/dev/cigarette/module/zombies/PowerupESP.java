@@ -23,7 +23,7 @@ public class PowerupESP extends RenderModule<ToggleWidget, Boolean> {
 
     private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockesp", 1536, Renderer.BLOCK_ESP_PHASE, RenderLayer.MultiPhaseParameters.builder().lineWidth(new RenderPhase.LineWidth(OptionalDouble.of(1))).build(false));
 
-    public PowerupESP(String id, String name, String tooltip) {
+    private PowerupESP(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
     }
 

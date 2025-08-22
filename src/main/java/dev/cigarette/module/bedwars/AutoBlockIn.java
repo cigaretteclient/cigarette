@@ -40,7 +40,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
     private Vec3d previousVector = null;
     private int cooldownTicks = 0;
 
-    public AutoBlockIn(String id, String name, String tooltip) {
+    private AutoBlockIn(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
         this.setChildren(keybind, speed, proximityToBeds, switchToBlocks, switchToTool, variation);
         keybind.registerConfigKey(id + ".key");

@@ -21,7 +21,7 @@ public class PerfectHit extends TickModule<ToggleWidget, Boolean> {
     private final SliderWidget clickPercent = new SliderWidget(Text.literal("Click Percent"), Text.literal("The percentage chance for a click to occur each tick of the game while holding left-click and aiming at a hittable entity.")).withBounds(0, 0.9, 1).withAccuracy(2);
 
 
-    public PerfectHit(String id, String name, String tooltip) {
+    private PerfectHit(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
         this.setChildren(clickPercent);
         clickPercent.registerConfigKey(id + ".clickpercent");

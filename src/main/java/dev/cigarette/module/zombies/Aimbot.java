@@ -36,7 +36,7 @@ public class Aimbot extends TickModule<ToggleWidget, Boolean> {
 
     private KeyBinding rightClickKey = null;
 
-    public Aimbot(String id, String name, String tooltip) {
+    private Aimbot(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
         this.setChildren(silentAim, autoShoot, autoWeaponSwitch, predictiveAim, predictionTicks);
         silentAim.registerConfigKey(id + ".silentAim");

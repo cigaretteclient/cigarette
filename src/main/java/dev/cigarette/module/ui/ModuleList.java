@@ -21,7 +21,7 @@ public class ModuleList extends RenderModule<ToggleWidget, Boolean> {
 
     private ModuleListDisplay display;
 
-    public ModuleList(String id, String name, String tooltip) {
+    private ModuleList(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
         this.setChildren(
             enableFlip

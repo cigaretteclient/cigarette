@@ -19,7 +19,7 @@ import org.jetbrains.annotations.NotNull;
 public class AutoTool extends TickModule<ToggleWidget, Boolean> {
     public static final AutoTool INSTANCE = new AutoTool("bedwars.autotool", "Auto Tool", "Automatically swaps your tool to the correct one when breaking blocks.");
 
-    public AutoTool(String id, String name, String tooltip) {
+    private AutoTool(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
     }
 

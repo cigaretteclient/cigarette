@@ -74,7 +74,7 @@ public class DefenseViewer extends RenderModule<ToggleWidget, Boolean> {
         return 0;
     }
 
-    public DefenseViewer(String id, String name, String tooltip) {
+    private DefenseViewer(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
         TextWidget header = new TextWidget(Text.literal("Block Types")).withUnderline();
         this.setChildren(increaseKey, decreaseKey, enableBeds, bedDistance, header, enableWool, enableEndStone, enableWood, enableClay, enableObsidian, enableGlass);

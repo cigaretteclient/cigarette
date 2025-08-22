@@ -16,7 +16,7 @@ public class BreakBlock extends TickModule<ToggleWidget, Boolean> {
 
     private final KeybindWidget keybind = new KeybindWidget(Text.literal("Keybind"), Text.literal("Key to trigger the breaking of a block."));
 
-    public BreakBlock(String id, String name, String tooltip) {
+    private BreakBlock(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
         this.setChildren(keybind);
         keybind.registerConfigKey(id + ".key");

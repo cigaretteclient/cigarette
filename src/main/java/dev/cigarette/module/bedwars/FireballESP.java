@@ -43,7 +43,7 @@ public class FireballESP extends RenderModule<ToggleWidget, Boolean> {
     private final ColorDropdownWidget<TextWidget, BaseWidget.Stateless> sphereColor = ColorDropdownWidget.buildText(Text.literal("Sphere Color"), null).withDefaultColor(0x4FFF0000);
     private final ColorDropdownWidget<TextWidget, BaseWidget.Stateless> lineColor = ColorDropdownWidget.buildText(Text.literal("Projection Color"), null).withDefaultColor(0xFFFF0000);
 
-    public FireballESP(String id, String name, String tooltip) {
+    private FireballESP(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
         this.setChildren(enableGlow, sphereColor, lineColor);
         enableGlow.registerConfigKey(id + ".glow");

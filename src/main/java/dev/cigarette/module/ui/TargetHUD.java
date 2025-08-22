@@ -26,7 +26,7 @@ public class TargetHUD extends RenderModule<ToggleWidget, Boolean> {
 
     private BarDisplay display;
 
-    public TargetHUD(String id, String name, String tooltip) {
+    private TargetHUD(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
         this.widget.withDefaultState(true);
         this.setChildren(

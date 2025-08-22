@@ -48,7 +48,7 @@ public class ProjectileESP extends RenderModule<ToggleWidget, Boolean> {
     private final ColorDropdownWidget<ToggleWidget, Boolean> enableEggs = ColorDropdownWidget.buildToggle(Text.literal("Thrown Eggs"), Text.literal("Display the trajectory of thrown Eggs.")).withDefaultColor(0xFFFFFF00).withDefaultState(true);
     private final SliderWidget maxTicks = new SliderWidget(Text.literal("Max Ticks"), Text.literal("The maximum ticks the projection calculates into the future.")).withBounds(20, 200, 200);
 
-    public ProjectileESP(String id, String name, String tooltip) {
+    private ProjectileESP(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
         TextWidget header = new TextWidget(Text.literal("Types")).withUnderline();
         this.setChildren(enableGlow, enablePrefire, customHitColor, header, enableArrows, enablePearls, enableSnowballs, enableEggs, maxTicks);

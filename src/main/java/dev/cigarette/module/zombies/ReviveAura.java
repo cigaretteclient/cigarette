@@ -24,7 +24,7 @@ public class ReviveAura extends RenderModule<ToggleWidget, Boolean> {
 
     private int tickCount = 0;
 
-    public ReviveAura(String id, String name, String tooltip) {
+    private ReviveAura(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
     }
 

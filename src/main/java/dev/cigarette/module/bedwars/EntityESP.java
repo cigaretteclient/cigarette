@@ -28,7 +28,7 @@ public class EntityESP extends TickModule<ToggleWidget, Boolean> {
     private final ToggleWidget enableSilverfish = new ToggleWidget(Text.literal("Silverfish"), null).withDefaultState(true);
     private final Glow.Context glowContext = new Glow.Context();
 
-    public EntityESP(String id, String name, String tooltip) {
+    private EntityESP(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
         TextWidget header = new TextWidget(Text.literal("Types")).withUnderline();
         this.setChildren(header, enableEnderDragons, enableIronGolems, enableSilverfish);

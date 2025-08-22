@@ -180,7 +180,7 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
             super.unfocus();
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return this.expanded && super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
@@ -198,7 +198,7 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
         return (this.header != null && this.header.mouseDragged(mouseX, mouseY, button, deltaX, deltaY))
-                || super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+                || (this.expanded && super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY));
     }
 
     @Override

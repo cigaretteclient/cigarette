@@ -3,14 +3,19 @@ package dev.cigarette.config;
 import dev.cigarette.Cigarette;
 import dev.cigarette.agent.DevWidget;
 import dev.cigarette.gui.CategoryInstance;
+import dev.cigarette.module.BaseModule;
 import dev.cigarette.module.combat.AutoClicker;
 import dev.cigarette.module.combat.JumpReset;
 import dev.cigarette.module.combat.PerfectHit;
 import dev.cigarette.module.murdermystery.PlayerESP;
 import dev.cigarette.module.ui.Watermark;
 import dev.cigarette.module.zombies.Aimbot;
+import net.minecraft.client.MinecraftClient;
+
+import java.util.TreeMap;
 
 public class Config {
+    public final TreeMap<String, CategoryInstance> CATEGORIES = new TreeMap<>();
     public CategoryInstance[] allCategories = new CategoryInstance[]{Cigarette.IN_DEV_ENVIRONMENT ? DevWidget.CATEGORY_INSTANCE : null};
 
     public final Watermark RENDER_WATERMARK = new Watermark();
@@ -20,6 +25,27 @@ public class Config {
     public final PlayerESP MYSTERY_PLAYERESP = new PlayerESP();
     public final Aimbot ZOMBIES_AIMBOT = new Aimbot();
 
-    public Config() {
+    private void constructCategory(String name) {
+        CATEGORIES.putIfAbsent(name, new CategoryInstance(name, 0, 0));
+
+        int x = 10, y = 10;
+        int maxX = MinecraftClient.getInstance().getWindow().getScaledWidth() - 10;
+        for (CategoryInstance category : CATEGORIES.sequencedValues()) {
+            category.widget.withXY(x, y);
+            x += category.widget.getWidth() + 10;
+            if (x > maxX) {
+                x = 10;
+                y += category.widget.getHeight() + 10;
+            }
+        }
+    }
+
+    public void constructModule(BaseModule<?, ?> moduleRef, String categoryName) {
+        this.constructCategory(categoryName);
+
+        CategoryInstance category = CATEGORIES.get(categoryName);
+        assert category != null;
+
+        category.attach(moduleRef);
     }
 }

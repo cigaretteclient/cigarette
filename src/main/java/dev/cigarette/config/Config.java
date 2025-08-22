@@ -26,7 +26,8 @@ public class Config {
     public final Aimbot ZOMBIES_AIMBOT = new Aimbot();
 
     private void constructCategory(String name) {
-        CATEGORIES.putIfAbsent(name, new CategoryInstance(name, 0, 0));
+        if (CATEGORIES.containsKey(name)) return;
+        CATEGORIES.put(name, new CategoryInstance(name, 0, 0));
 
         int x = 10, y = 10;
         int maxX = MinecraftClient.getInstance().getWindow().getScaledWidth() - 10;

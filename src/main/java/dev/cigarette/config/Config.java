@@ -54,13 +54,13 @@ public class Config {
         if (window == null) return;
 
         int x = 10, y = 10;
-        int maxX = window.getScaledWidth() - 10;
+        int maxX = window.getScaledWidth() - 120;
         for (CategoryInstance category : CATEGORIES.values()) {
             category.widget.withXY(x, y);
-            x += category.widget.getWidth() + 10;
+            x += 110;
             if (x > maxX) {
                 x = 10;
-                y += category.widget.getHeight() + 10;
+                y += 30;
             }
         }
     }

@@ -24,7 +24,7 @@ public class ReviveAura extends RenderModule<ToggleWidget, Boolean> {
     protected static final String MODULE_TOOLTIP = "Automatically revives downed teammates.";
     protected static final String MODULE_ID = "zombies.revive_aura";
 
-    private int tickCount = 0;
+    private int cooldownTicks = 0;
 
     public ReviveAura() {
         super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
@@ -50,6 +50,11 @@ public class ReviveAura extends RenderModule<ToggleWidget, Boolean> {
         double closestDistSq = Double.MAX_VALUE;
         OtherClientPlayerEntity target = null;
 
+        if (cooldownTicks > 0) {
+            cooldownTicks--;
+            return;
+        }
+
         for (Entity entity : world.getEntities()) {
             if (!(entity instanceof OtherClientPlayerEntity otherClientPlayerEntity)) continue;
 
@@ -72,8 +77,6 @@ public class ReviveAura extends RenderModule<ToggleWidget, Boolean> {
         // check that player is alive and not spectating
         if (!player.isAlive() || player.isSpectator() || player.isInvisible()) return;
 
-        tickCount++;
-
         /**
          * {Integer@34732} 2118 -> {ArmorStandEntity@34733} "ArmorStandEntity['0.9s'/2118, l='ClientLevel', x=36.28, y=70.72, z=18.63]"
          * {Integer@34721} 2116 -> {ArmorStandEntity@34722} "ArmorStandEntity['■■■■■■■■■■■■■■■'/2116, l='ClientLevel', x=36.28, y=70.97, z=18.63]"
@@ -81,11 +84,8 @@ public class ReviveAura extends RenderModule<ToggleWidget, Boolean> {
          * {Integer@34736} 2112 -> {ArmorStandEntity@34737} "ArmorStandEntity['■■■■■■■■■■■■■■■'/2112, l='ClientLevel', x=36.28, y=71.47, z=18.63]"
          */
 
-        // Check if another player is already reviving the target.
-        // This is indicated by an Armor Stand with the name "REVIVING..." near the target.
         for (Entity nearbyEntity : world.getEntities()) {
             if (nearbyEntity instanceof ArmorStandEntity armorStand) {
-                // Check for the custom name containing "REVIVING..."
                 if (armorStand.getCustomName() != null && armorStand.getCustomName().getSiblings().getFirst().getString().contains("REVIVING...")) {
                     // A downed player is in a "laying down" pose. Their origin (getPos()) is at their feet.
                     // The "REVIVING..." text appears over their torso, which is offset from the origin
@@ -111,19 +111,18 @@ public class ReviveAura extends RenderModule<ToggleWidget, Boolean> {
                 }
             }
         }
-        if (tickCount > 19) {
-            Vec3d targetCenterPos = target.getBoundingBox().getCenter();
-            Vec3d direction = targetCenterPos.subtract(player.getEyePos()).normalize();
 
-            float aimYaw = (float) Math.toDegrees(Math.atan2(-direction.x, direction.z));
-            float aimPitch = (float) Math.toDegrees(Math.asin(-direction.y));
+        Vec3d targetCenterPos = target.getBoundingBox().getCenter();
+        Vec3d direction = targetCenterPos.subtract(player.getEyePos()).normalize();
 
-            player.networkHandler.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(aimYaw, aimPitch, player.isOnGround(), player.horizontalCollision));
-            player.networkHandler.sendPacket(PlayerInteractEntityC2SPacket.attack(target, player.isSneaking()));
-            player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
+        float aimYaw = (float) Math.toDegrees(Math.atan2(-direction.x, direction.z));
+        float aimPitch = (float) Math.toDegrees(Math.asin(-direction.y));
 
-            tickCount = 0;
-        }
+        player.networkHandler.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(aimYaw, aimPitch, player.isOnGround(), player.horizontalCollision));
+        player.networkHandler.sendPacket(PlayerInteractEntityC2SPacket.attack(target, player.isSneaking()));
+        player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
+
+        cooldownTicks += 25;
     }
 
     @Override

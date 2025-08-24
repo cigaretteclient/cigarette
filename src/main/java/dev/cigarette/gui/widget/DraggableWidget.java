@@ -27,7 +27,7 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
     private double startingMouseY = 0;
     private @Nullable DragCallback dragCallback = null;
     private @Nullable ClickCallback clickCallback = null;
-    public boolean expanded = true;
+    public boolean expanded = false;
 
     private int ticksOnCollapse = 0;
     private static final int MAX_TICKS_ON_COLLAPSE = 10;

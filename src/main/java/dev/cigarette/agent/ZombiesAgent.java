@@ -259,9 +259,9 @@ public class ZombiesAgent extends BaseAgent {
 
             Vec3d instantVelocity = zombie.getPos().subtract(zombie.lastX, zombie.lastY, zombie.lastZ);
 
-            double xVelocity = instantVelocity.x * Cigarette.CONFIG.ZOMBIES_AIMBOT.predictionTicks.getRawState().intValue();
-            double yVelocity = instantVelocity.y > LivingEntity.GRAVITY ? 0 : instantVelocity.y * (instantVelocity.y > 0 ? 1 : Cigarette.CONFIG.ZOMBIES_AIMBOT.predictionTicks.getRawState().intValue());
-            double zVelocity = instantVelocity.z * Cigarette.CONFIG.ZOMBIES_AIMBOT.predictionTicks.getRawState().intValue();
+            double xVelocity = instantVelocity.x * Aimbot.INSTANCE.predictionTicks.getRawState().intValue();
+            double yVelocity = instantVelocity.y > LivingEntity.GRAVITY ? 0 : instantVelocity.y * (instantVelocity.y > 0 ? 1 : Aimbot.INSTANCE.predictionTicks.getRawState().intValue());
+            double zVelocity = instantVelocity.z * Aimbot.INSTANCE.predictionTicks.getRawState().intValue();
             Vec3d realVelocity = new Vec3d(xVelocity, yVelocity, zVelocity);
 
             Vec3d end = zombie.getEyePos().add(realVelocity);

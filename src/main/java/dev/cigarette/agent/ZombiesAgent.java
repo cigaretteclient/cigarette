@@ -249,13 +249,26 @@ public class ZombiesAgent extends BaseAgent {
 
             ZombieTarget target = ZombieTarget.create(livingEntity);
             target.distance = player.distanceTo(zombie);
+            if (livingEntity.bodyYaw != livingEntity.lastYaw) {
+                target.ticksSinceRotation = 0;
+            } else {
+                target.ticksSinceRotation++;
+            }
 
             Vec3d start = player.getPos().add(0, player.getEyeHeight(EntityPose.STANDING), 0);
 
-            Vec3d predictedPos = calculatePredictedPosition(target, player);
-            target.end = predictedPos;
+            Vec3d instantVelocity = zombie.getPos().subtract(zombie.lastX, zombie.lastY, zombie.lastZ);
 
-            Raycast.FirstBlock result = Raycast.firstBlockCollision(start, predictedPos, this::isNoClipBlock);
+            double xVelocity = instantVelocity.x * Cigarette.CONFIG.ZOMBIES_AIMBOT.predictionTicks.getRawState().intValue();
+            double yVelocity = instantVelocity.y > LivingEntity.GRAVITY ? 0 : instantVelocity.y * (instantVelocity.y > 0 ? 1 : Cigarette.CONFIG.ZOMBIES_AIMBOT.predictionTicks.getRawState().intValue());
+            double zVelocity = instantVelocity.z * Cigarette.CONFIG.ZOMBIES_AIMBOT.predictionTicks.getRawState().intValue();
+            Vec3d realVelocity = new Vec3d(xVelocity, yVelocity, zVelocity);
+
+            Vec3d end = zombie.getEyePos().add(realVelocity);
+
+            target.end = end;
+            Raycast.FirstBlock result = Raycast.firstBlockCollision(start, end, this::isNoClipBlock);
+
             if ((result.hit() && result.whitelisted()) || result.missed()) {
                 target.canShoot = true;
                 target.canHeadshot = true;
@@ -287,6 +300,7 @@ public class ZombiesAgent extends BaseAgent {
         private float distance = 0;
         private boolean canShoot = false;
         private boolean canHeadshot = false;
+        private int ticksSinceRotation = 0;
 
         private ZombieTarget(LivingEntity entity) {
             this.entity = entity;

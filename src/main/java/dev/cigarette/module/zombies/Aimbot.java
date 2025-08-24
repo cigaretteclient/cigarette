@@ -62,7 +62,7 @@ public class Aimbot extends TickModule<ToggleWidget, Boolean> {
                 if (lookingAt.isIn(BlockTags.BUTTONS) || lookingAt.isOf(Blocks.CHEST)) return;
             }
 
-            ZombiesAgent.ZombieTarget bestTarget = ZombiesAgent.getBestTarget(player);
+            ZombiesAgent.ZombieTarget bestTarget = ZombiesAgent.getClosestZombie();
             if (bestTarget == null) return;
 
             if (autoWeaponSwitch.getRawState()) {
@@ -71,9 +71,8 @@ public class Aimbot extends TickModule<ToggleWidget, Boolean> {
 
             if (!ZombiesAgent.isGun(player.getMainHandStack())) return;
 
-            Vec3d start = player.getPos().add(0, player.getEyeHeight(EntityPose.STANDING), 0);
-            Vec3d end = bestTarget.getEndVec();
-            Vec3d vector = end.subtract(start).normalize();
+            Vec3d predictedPos = bestTarget.getEndVec();
+            Vec3d vector = predictedPos.subtract(player.getEyePos()).normalize();
 
             WeaponSelector.addCooldown(player.getInventory().getSelectedSlot());
 
@@ -91,7 +90,6 @@ public class Aimbot extends TickModule<ToggleWidget, Boolean> {
             }
         }
     }
-
 
     @Override
     public boolean inValidGame() {

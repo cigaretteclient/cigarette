@@ -3,7 +3,6 @@ package dev.cigarette.gui;
 import dev.cigarette.gui.widget.BaseWidget;
 import dev.cigarette.gui.widget.ScrollableWidget;
 import dev.cigarette.module.BaseModule;
-import net.minecraft.text.Text;
 
 import java.util.HashSet;
 
@@ -14,13 +13,13 @@ public class CategoryInstance {
 
     public CategoryInstance(String displayName, int x, int y) {
         this.widget = new ScrollableWidget<>(x, y);
-        this.widget.setHeader(Text.literal(displayName), () -> {
+        this.widget.setHeader(displayName, () -> {
             this.expanded = !this.expanded;
         });
         this.widget.alphabetic();
     }
 
-    public CategoryInstance attach(BaseModule<?, ?>... children) {
+    public void attach(BaseModule<?, ?>... children) {
         BaseWidget<?>[] childWidgets = new BaseWidget[children.length];
         for (int i = 0; i < children.length; i++) {
             BaseModule<?, ?> module = children[i];
@@ -28,6 +27,5 @@ public class CategoryInstance {
             this.children.add(children[i]);
         }
         this.widget.setChildren(childWidgets);
-        return this;
     }
 }

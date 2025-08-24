@@ -33,12 +33,12 @@ public class Config {
         positionCategories();
     }
 
-    public void putCategory(String name, CategoryInstance category) {
+    private void putCategory(String name, CategoryInstance category) {
         CATEGORIES.put(name, category);
         positionCategories();
     }
 
-    public void putModules(String categoryName, BaseModule<?, ?>... modules) {
+    private void putModules(String categoryName, BaseModule<?, ?>... modules) {
         this.constructCategory(categoryName);
 
         CategoryInstance category = CATEGORIES.get(categoryName);
@@ -63,17 +63,6 @@ public class Config {
                 y += 30;
             }
         }
-    }
-
-    public <M extends BaseModule<?, ?>> M constructModule(M moduleRef, String categoryName) {
-        this.constructCategory(categoryName);
-
-        CategoryInstance category = CATEGORIES.get(categoryName);
-        assert category != null;
-
-        category.attach(moduleRef);
-
-        return moduleRef;
     }
 
     public static Config construct() {

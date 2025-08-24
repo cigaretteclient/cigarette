@@ -2,15 +2,14 @@ package dev.cigarette.gui.widget;
 
 import dev.cigarette.module.BaseModule;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 
 public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType> extends DropdownWidget<Widget, StateType> {
     private final ColorSquareWidget colorSquare = new ColorSquareWidget();
-    private final SliderWidget sliderRed = new SliderWidget(Text.literal("Red")).withBounds(0, 255, 255);
-    private final SliderWidget sliderGreen = new SliderWidget(Text.literal("Green")).withBounds(0, 255, 255);
-    private final SliderWidget sliderBlue = new SliderWidget(Text.literal("Blue")).withBounds(0, 255, 255);
-    private final SliderWidget sliderAlpha = new SliderWidget(Text.literal("Alpha")).withBounds(0, 255, 255);
+    private final SliderWidget sliderRed = new SliderWidget("Red").withBounds(0, 255, 255);
+    private final SliderWidget sliderGreen = new SliderWidget("Green").withBounds(0, 255, 255);
+    private final SliderWidget sliderBlue = new SliderWidget("Blue").withBounds(0, 255, 255);
+    private final SliderWidget sliderAlpha = new SliderWidget("Alpha").withBounds(0, 255, 255);
 
     public int getStateARGB() {
         return this.colorSquare.getRawState();
@@ -32,7 +31,7 @@ public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType
     }
 
     @SuppressWarnings("unchecked")
-    public ColorDropdownWidget(Text message, @Nullable Text tooltip) {
+    public ColorDropdownWidget(String message, @Nullable String tooltip) {
         super(message, tooltip);
         super.withIndicator(false);
         this.setHeader((Widget) new ToggleWidget(message, tooltip));
@@ -80,21 +79,21 @@ public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType
         return this;
     }
 
-    public static BaseModule.GeneratedWidgets<ToggleWidget, Boolean> module(Text displayName, @Nullable Text tooltip) {
+    public static BaseModule.GeneratedWidgets<ToggleWidget, Boolean> module(String displayName, @Nullable String tooltip) {
         ColorDropdownWidget<ToggleWidget, Boolean> wrapper = new ColorDropdownWidget<>(displayName, tooltip);
         ToggleWidget widget = new ToggleWidget(displayName, tooltip);
         wrapper.setHeader(widget);
         return new BaseModule.GeneratedWidgets<>(wrapper, widget);
     }
 
-    public static ColorDropdownWidget<ToggleWidget, Boolean> buildToggle(Text displayName, @Nullable Text tooltip) {
+    public static ColorDropdownWidget<ToggleWidget, Boolean> buildToggle(String displayName, @Nullable String tooltip) {
         ColorDropdownWidget<ToggleWidget, Boolean> wrapper = new ColorDropdownWidget<>(displayName, tooltip);
         ToggleWidget widget = new ToggleWidget(displayName, tooltip);
         wrapper.setHeader(widget);
         return wrapper;
     }
 
-    public static ColorDropdownWidget<TextWidget, Stateless> buildText(Text displayName, @Nullable Text tooltip) {
+    public static ColorDropdownWidget<TextWidget, Stateless> buildText(String displayName, @Nullable String tooltip) {
         ColorDropdownWidget<TextWidget, Stateless> wrapper = new ColorDropdownWidget<>(displayName, tooltip);
         TextWidget widget = new TextWidget(displayName, tooltip).centered(false);
         wrapper.setHeader(widget);

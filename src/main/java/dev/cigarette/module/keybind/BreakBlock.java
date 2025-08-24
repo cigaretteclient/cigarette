@@ -6,7 +6,6 @@ import dev.cigarette.module.TickModule;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.text.Text;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import org.jetbrains.annotations.NotNull;
@@ -14,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 public class BreakBlock extends TickModule<ToggleWidget, Boolean> {
     public static final BreakBlock INSTANCE = new BreakBlock("keybind.break_block", "Break Block", "Breaks the block you're looking at client-side.");
 
-    private final KeybindWidget keybind = new KeybindWidget(Text.literal("Keybind"), Text.literal("Key to trigger the breaking of a block."));
+    private final KeybindWidget keybind = new KeybindWidget("Keybind", "Key to trigger the breaking of a block.");
 
     private BreakBlock(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);

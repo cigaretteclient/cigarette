@@ -4,29 +4,28 @@ import dev.cigarette.Cigarette;
 import dev.cigarette.gui.CigaretteScreen;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 
 public class TextWidget extends BaseWidget<BaseWidget.Stateless> {
     private boolean underlined = false;
     private boolean centered = true;
 
-    public TextWidget(int x, int y, int width, int height, Text message, @Nullable Text tooltip) {
+    public TextWidget(int x, int y, int width, int height, String message, @Nullable String tooltip) {
         super(message, tooltip);
         this.captureHover().withXY(x, y).withWH(width, height);
     }
 
-    public TextWidget(int x, int y, int width, int height, Text message) {
+    public TextWidget(int x, int y, int width, int height, String message) {
         super(message, null);
         this.captureHover().withXY(x, y).withWH(width, height);
     }
 
-    public TextWidget(Text message, @Nullable Text tooltip) {
+    public TextWidget(String message, @Nullable String tooltip) {
         super(message, tooltip);
         this.captureHover();
     }
 
-    public TextWidget(Text message) {
+    public TextWidget(String message) {
         super(message, null);
         this.captureHover();
     }

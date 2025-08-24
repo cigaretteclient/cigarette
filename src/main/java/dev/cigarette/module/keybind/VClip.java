@@ -6,7 +6,6 @@ import dev.cigarette.module.TickModule;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
@@ -14,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 public class VClip extends TickModule<ToggleWidget, Boolean> {
     public static final VClip INSTANCE = new VClip("keybind.vclip", "V-Clip Down", "Vertically clips you down through floors.");
 
-    private final KeybindWidget keybind = new KeybindWidget(Text.literal("Keybind"), Text.literal("Key to trigger the downward clipping."));
+    private final KeybindWidget keybind = new KeybindWidget("Keybind", "Key to trigger the downward clipping.");
 
     private VClip(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);

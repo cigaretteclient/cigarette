@@ -14,7 +14,6 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.item.ItemStack;
-import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
@@ -25,12 +24,12 @@ import org.jetbrains.annotations.Nullable;
 public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
     public static final AutoBlockIn INSTANCE = new AutoBlockIn("bedwars.autoblockin", "Auto Block-In", "Automatically surrounds you in blocks to help break beds.");
 
-    private final KeybindWidget keybind = new KeybindWidget(Text.literal("Keybind"), Text.literal("A key to trigger the block in module."));
-    private final SliderWidget speed = new SliderWidget(Text.literal("Speed"), Text.literal("The higher the speed, the less time spent between adjusting the camera and placing blocks.")).withBounds(0, 12, 15);
-    private final SliderWidget proximityToBeds = new SliderWidget(Text.literal("Max Proximity"), Text.literal("How many blocks close you need to be to any beds for the module to be allowed to activate.")).withBounds(1, 5, 9);
-    private final ToggleWidget switchToBlocks = new ToggleWidget(Text.literal("Switch to Blocks"), Text.literal("Automatically switches to blocks once activated.")).withDefaultState(true);
-    private final ToggleWidget switchToTool = new ToggleWidget(Text.literal("Switch to Tools"), Text.literal("Automatically switches to a tool once finished.")).withDefaultState(true);
-    private final SliderWidget variation = new SliderWidget(Text.literal("Variation"), Text.literal("Applies randomness to the delay between block places.")).withBounds(0, 1, 4);
+    private final KeybindWidget keybind = new KeybindWidget("Keybind", "A key to trigger the block in module.");
+    private final SliderWidget speed = new SliderWidget("Speed", "The higher the speed, the less time spent between adjusting the camera and placing blocks.").withBounds(0, 12, 15);
+    private final SliderWidget proximityToBeds = new SliderWidget("Max Proximity", "How many blocks close you need to be to any beds for the module to be allowed to activate.").withBounds(1, 5, 9);
+    private final ToggleWidget switchToBlocks = new ToggleWidget("Switch to Blocks", "Automatically switches to blocks once activated.").withDefaultState(true);
+    private final ToggleWidget switchToTool = new ToggleWidget("Switch to Tools", "Automatically switches to a tool once finished.").withDefaultState(true);
+    private final SliderWidget variation = new SliderWidget("Variation", "Applies randomness to the delay between block places.").withBounds(0, 1, 4);
 
     private KeyBinding rightClickKey = null;
     private boolean running = false;

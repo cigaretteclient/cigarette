@@ -5,7 +5,6 @@ import dev.cigarette.gui.Scissor;
 import dev.cigarette.lib.Shape;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
@@ -31,7 +30,7 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
     private boolean showBottomRoundedRect = true;
 
     @SafeVarargs
-    public ScrollableWidget(int x, int y, @Nullable Text headerText, @Nullable Widgets... children) {
+    public ScrollableWidget(int x, int y, @Nullable String headerText, @Nullable Widgets... children) {
         super(x, y, DEFAULT_WIDTH + DEFAULT_SCROLLBAR_WIDTH, DEFAULT_HEIGHT, null);
         this.withDefault(new BaseWidget.Stateless());
         this.setChildren(children).setHeader(headerText, null);
@@ -78,11 +77,11 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
         return updateChildrenSizing();
     }
 
-    public ScrollableWidget<Widgets> setHeader(@Nullable Text headerText) {
+    public ScrollableWidget<Widgets> setHeader(@Nullable String headerText) {
         return this.setHeader(headerText, null);
     }
 
-    public ScrollableWidget<Widgets> setHeader(@Nullable Text headerText, @Nullable Runnable onToggleExpand) {
+    public ScrollableWidget<Widgets> setHeader(@Nullable String headerText, @Nullable Runnable onToggleExpand) {
         this.onToggleExpand = onToggleExpand;
         if (headerText == null) {
             this.header = null;

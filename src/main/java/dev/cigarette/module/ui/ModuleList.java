@@ -1,7 +1,5 @@
 package dev.cigarette.module.ui;
 
-import org.jetbrains.annotations.NotNull;
-
 import dev.cigarette.Cigarette;
 import dev.cigarette.gui.hud.modules.ModuleListDisplay;
 import dev.cigarette.gui.widget.ToggleWidget;
@@ -11,12 +9,12 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.text.Text;
+import org.jetbrains.annotations.NotNull;
 
 public class ModuleList extends RenderModule<ToggleWidget, Boolean> {
     public static final ModuleList INSTANCE = new ModuleList("ui.module_list", "Module List", "Displays a list of modules.");
     
-    private final ToggleWidget enableFlip = new ToggleWidget(Text.literal("Flip"), Text.literal("Flip to top left.")).withDefaultState(false);
+    private final ToggleWidget enableFlip = new ToggleWidget("Flip", "Flip to top left.").withDefaultState(false);
 
 
     private ModuleListDisplay display;

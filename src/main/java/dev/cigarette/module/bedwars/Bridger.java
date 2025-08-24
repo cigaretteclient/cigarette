@@ -12,7 +12,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.text.Text;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
@@ -22,11 +21,11 @@ import org.jetbrains.annotations.NotNull;
 public class Bridger extends TickModule<ToggleWidget, Boolean> {
     public static final Bridger INSTANCE = new Bridger("bedwars.bridger", "Bridger", "Automatically bridges.");
 
-    private final SliderWidget speed = new SliderWidget(Text.literal("Speed"), Text.literal("The higher the speed, the less time spent shifting. To look more legit or improve consistency, lower the speed. Setting to 3 will naturally god bridge straight & diagonally inconsistently.")).withBounds(0, 2, 3);
-    private final ToggleWidget blockSwap = new ToggleWidget(Text.literal("Auto Swap Blocks"), Text.literal("Automatically swap to the next available slot with placeable blocks when current stack runs out.")).withDefaultState(true);
-    private final ToggleWidget toggleStraight = new ToggleWidget(Text.literal("Straight"), Text.literal("Toggles automatic straight bridging.")).withDefaultState(true);
-    private final ToggleWidget toggleDiagonal = new ToggleWidget(Text.literal("Diagonal"), Text.literal("Toggles automatic diagonal bridging.")).withDefaultState(true);
-    private final ToggleWidget toggleDiagonalGod = new ToggleWidget(Text.literal("God Bridging"), Text.literal("Toggles diagonal god bridging when positioning yourself half a block from the corner.")).withDefaultState(false);
+    private final SliderWidget speed = new SliderWidget("Speed", "The higher the speed, the less time spent shifting. To look more legit or improve consistency, lower the speed. Setting to 3 will naturally god bridge straight & diagonally inconsistently.").withBounds(0, 2, 3);
+    private final ToggleWidget blockSwap = new ToggleWidget("Auto Swap Blocks", "Automatically swap to the next available slot with placeable blocks when current stack runs out.").withDefaultState(true);
+    private final ToggleWidget toggleStraight = new ToggleWidget("Straight", "Toggles automatic straight bridging.").withDefaultState(true);
+    private final ToggleWidget toggleDiagonal = new ToggleWidget("Diagonal", "Toggles automatic diagonal bridging.").withDefaultState(true);
+    private final ToggleWidget toggleDiagonalGod = new ToggleWidget("God Bridging", "Toggles diagonal god bridging when positioning yourself half a block from the corner.").withDefaultState(false);
 
     private KeyBinding sneakKey = null;
     private KeyBinding backwardsKey = null;
@@ -41,7 +40,7 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
 
     private Bridger(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
-        TextWidget header = new TextWidget(Text.literal("Bridging Styles")).withUnderline();
+        TextWidget header = new TextWidget("Bridging Styles").withUnderline();
         this.setChildren(speed, blockSwap, header, toggleStraight, toggleDiagonal, toggleDiagonalGod);
         speed.registerConfigKey(id + ".speed");
         blockSwap.registerConfigKey(id + ".blockswap");

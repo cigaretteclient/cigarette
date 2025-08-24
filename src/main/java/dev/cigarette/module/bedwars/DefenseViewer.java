@@ -14,7 +14,6 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import org.jetbrains.annotations.NotNull;
@@ -33,16 +32,16 @@ public class DefenseViewer extends RenderModule<ToggleWidget, Boolean> {
     private final HashMap<BlockPos, Integer> defensiveBlocks = new HashMap<>();
     private int layer = 0;
 
-    private final KeybindWidget increaseKey = new KeybindWidget(Text.literal("Increase Layer"), Text.literal("Increases the layer shown by 1."));
-    private final KeybindWidget decreaseKey = new KeybindWidget(Text.literal("Decrease Layer"), Text.literal("Decreases the layer shown by 1."));
-    private final ColorDropdownWidget<ToggleWidget, Boolean> enableBeds = ColorDropdownWidget.buildToggle(Text.literal("Bed Color"), Text.literal("The ESP color used to highlight bed blocks once you are within a small range of the bed.")).withDefaultColor(0xFFFF0000).withDefaultState(true);
-    private final SliderWidget bedDistance = new SliderWidget(Text.literal("Distance"), Text.literal("The max distance the player must be away from the bed for this to stop highlighting blocks and to start highlighting the bed.")).withBounds(0, 10, 30).withAccuracy(1);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> enableWool = ColorDropdownWidget.buildToggle(Text.literal("Wool"), null).withDefaultColor(0x7FFFFFFF).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> enableEndStone = ColorDropdownWidget.buildToggle(Text.literal("Endstone"), null).withDefaultColor(0x7FFFFF00).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> enableWood = ColorDropdownWidget.buildToggle(Text.literal("Wood"), null).withDefaultColor(0x7FFF0000).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> enableClay = ColorDropdownWidget.buildToggle(Text.literal("Clay"), null).withDefaultColor(0x7F0000FF).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> enableObsidian = ColorDropdownWidget.buildToggle(Text.literal("Obsidian"), null).withDefaultColor(0x7FFF00FF).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> enableGlass = ColorDropdownWidget.buildToggle(Text.literal("Glass"), null).withDefaultColor(0x7F00FF00).withDefaultState(true);
+    private final KeybindWidget increaseKey = new KeybindWidget("Increase Layer", "Increases the layer shown by 1.");
+    private final KeybindWidget decreaseKey = new KeybindWidget("Decrease Layer", "Decreases the layer shown by 1.");
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableBeds = ColorDropdownWidget.buildToggle("Bed Color", "The ESP color used to highlight bed blocks once you are within a small range of the bed.").withDefaultColor(0xFFFF0000).withDefaultState(true);
+    private final SliderWidget bedDistance = new SliderWidget("Distance", "The max distance the player must be away from the bed for this to stop highlighting blocks and to start highlighting the bed.").withBounds(0, 10, 30).withAccuracy(1);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableWool = ColorDropdownWidget.buildToggle("Wool", null).withDefaultColor(0x7FFFFFFF).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableEndStone = ColorDropdownWidget.buildToggle("Endstone", null).withDefaultColor(0x7FFFFF00).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableWood = ColorDropdownWidget.buildToggle("Wood", null).withDefaultColor(0x7FFF0000).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableClay = ColorDropdownWidget.buildToggle("Clay", null).withDefaultColor(0x7F0000FF).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableObsidian = ColorDropdownWidget.buildToggle("Obsidian", null).withDefaultColor(0x7FFF00FF).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableGlass = ColorDropdownWidget.buildToggle("Glass", null).withDefaultColor(0x7F00FF00).withDefaultState(true);
 
 
     private HashSet<BlockPos> getBlocksInLayer(BedwarsAgent.PersistentBed bed, int layer) {
@@ -76,7 +75,7 @@ public class DefenseViewer extends RenderModule<ToggleWidget, Boolean> {
 
     private DefenseViewer(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
-        TextWidget header = new TextWidget(Text.literal("Block Types")).withUnderline();
+        TextWidget header = new TextWidget("Block Types").withUnderline();
         this.setChildren(increaseKey, decreaseKey, enableBeds, bedDistance, header, enableWool, enableEndStone, enableWood, enableClay, enableObsidian, enableGlass);
         increaseKey.registerConfigKey(id + ".increase");
         decreaseKey.registerConfigKey(id + ".decrease");

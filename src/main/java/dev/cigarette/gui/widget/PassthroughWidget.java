@@ -1,7 +1,6 @@
 package dev.cigarette.gui.widget;
 
 import net.minecraft.client.gui.Element;
-import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.LinkedHashMap;
@@ -12,16 +11,16 @@ public abstract class PassthroughWidget<ChildType extends BaseWidget<?>, StateTy
     protected Map<String, ChildType> children = new LinkedHashMap<>();
     protected int childLeftOffset = 0;
 
-    public PassthroughWidget(int x, int y, int width, int height, Text message) {
+    public PassthroughWidget(int x, int y, int width, int height, String message) {
         super(message, null);
         this.withXY(x, y).withWH(width, height);
     }
 
-    public PassthroughWidget(Text message, @Nullable Text tooltip) {
+    public PassthroughWidget(String message, @Nullable String tooltip) {
         super(message, tooltip);
     }
 
-    public PassthroughWidget(Text message) {
+    public PassthroughWidget(String message) {
         super(message, null);
     }
 

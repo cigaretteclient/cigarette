@@ -21,7 +21,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.projectile.FireballEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.text.Text;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
@@ -39,9 +38,9 @@ public class FireballESP extends RenderModule<ToggleWidget, Boolean> {
     private final HashSet<Fireball> fireballs = new HashSet<>();
     private final Glow.Context glowContext = new Glow.Context();
 
-    private final ColorDropdownWidget<ToggleWidget, Boolean> enableGlow = ColorDropdownWidget.buildToggle(Text.literal("Glowing"), Text.literal("Applies the glowing effect to the fireball entities")).withAlpha(false).withDefaultColor(0xFFFF0000);
-    private final ColorDropdownWidget<TextWidget, BaseWidget.Stateless> sphereColor = ColorDropdownWidget.buildText(Text.literal("Sphere Color"), null).withDefaultColor(0x4FFF0000);
-    private final ColorDropdownWidget<TextWidget, BaseWidget.Stateless> lineColor = ColorDropdownWidget.buildText(Text.literal("Projection Color"), null).withDefaultColor(0xFFFF0000);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableGlow = ColorDropdownWidget.buildToggle("Glowing", "Applies the glowing effect to the fireball entities").withAlpha(false).withDefaultColor(0xFFFF0000);
+    private final ColorDropdownWidget<TextWidget, BaseWidget.Stateless> sphereColor = ColorDropdownWidget.buildText("Sphere Color", null).withDefaultColor(0x4FFF0000);
+    private final ColorDropdownWidget<TextWidget, BaseWidget.Stateless> lineColor = ColorDropdownWidget.buildText("Projection Color", null).withDefaultColor(0xFFFF0000);
 
     private FireballESP(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);

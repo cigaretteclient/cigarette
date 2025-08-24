@@ -11,7 +11,6 @@ import dev.cigarette.module.TickModule;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
@@ -21,13 +20,13 @@ public class PlayerESP extends TickModule<ToggleWidget, Boolean> {
 
     private final Glow.Context glowContext = new Glow.Context();
 
-    private final ColorDropdownWidget<ToggleWidget, Boolean> innocent = ColorDropdownWidget.buildToggle(Text.literal("Innocents"), Text.literal("The glow color of innocent and unknown players.")).withAlpha(false).withDefaultColor(0xFFFFFFFF).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> detective = ColorDropdownWidget.buildToggle(Text.literal("Detective"), Text.literal("The glow color of the detective and bow holding players that aren't murderer.")).withAlpha(false).withDefaultColor(0xFF00FF00).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> murderer = ColorDropdownWidget.buildToggle(Text.literal("Murderer"), Text.literal("The glow color of the murderer.")).withAlpha(false).withDefaultColor(0xFFFF0000).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> innocent = ColorDropdownWidget.buildToggle("Innocents", "The glow color of innocent and unknown players.").withAlpha(false).withDefaultColor(0xFFFFFFFF).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> detective = ColorDropdownWidget.buildToggle("Detective", "The glow color of the detective and bow holding players that aren't murderer.").withAlpha(false).withDefaultColor(0xFF00FF00).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> murderer = ColorDropdownWidget.buildToggle("Murderer", "The glow color of the murderer.").withAlpha(false).withDefaultColor(0xFFFF0000).withDefaultState(true);
 
     private PlayerESP(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
-        TextWidget header = new TextWidget(Text.literal("Types")).withUnderline();
+        TextWidget header = new TextWidget("Types").withUnderline();
         this.setChildren(header, innocent, detective, murderer);
         innocent.registerConfigKey(id + ".innocent");
         detective.registerConfigKey(id + ".detective");

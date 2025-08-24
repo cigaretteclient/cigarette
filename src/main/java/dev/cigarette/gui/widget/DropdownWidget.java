@@ -5,7 +5,6 @@ import dev.cigarette.gui.CigaretteScreen;
 import dev.cigarette.gui.Scissor;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderLayer;
-import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Quaternionf;
 import org.lwjgl.glfw.GLFW;
@@ -28,7 +27,7 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType>
     private long animStartMillis = 0L;
     private static final int TOGGLE_ANIM_MS = 220;
 
-    public DropdownWidget(Text message, @Nullable Text tooltip) {
+    public DropdownWidget(String message, @Nullable String tooltip) {
         super(message, tooltip);
         this.withDefault(new BaseWidget.Stateless());
         this.container = new ScrollableWidget<>(0, 0, false);

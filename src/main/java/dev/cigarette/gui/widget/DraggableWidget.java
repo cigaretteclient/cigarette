@@ -32,12 +32,12 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
     private int ticksOnCollapse = 0;
     private static final int MAX_TICKS_ON_COLLAPSE = 10;
 
-    public DraggableWidget(int x, int y, int width, int height, Text message) {
+    public DraggableWidget(int x, int y, int width, int height, String message) {
         super(message, null);
         this.captureHover().withXY(x, y).withWH(width, height);
     }
 
-    public DraggableWidget(Text message) {
+    public DraggableWidget(String message) {
         super(message, null);
         this.captureHover();
     }

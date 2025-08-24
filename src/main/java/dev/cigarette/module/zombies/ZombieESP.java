@@ -10,7 +10,6 @@ import dev.cigarette.module.TickModule;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
@@ -20,24 +19,24 @@ public class ZombieESP extends TickModule<ToggleWidget, Boolean> {
 
     private final Glow.Context glowContext = new Glow.Context();
 
-    private final ColorDropdownWidget<ToggleWidget, Boolean> enableZombies = ColorDropdownWidget.buildToggle(Text.literal("Zombies"), null).withAlpha(false).withDefaultColor(0xFF2C936C).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> enableSkeletons = ColorDropdownWidget.buildToggle(Text.literal("Skeletons"), null).withAlpha(false).withDefaultColor(0xFFE0E0E0).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> enableBlazes = ColorDropdownWidget.buildToggle(Text.literal("Blazes"), null).withAlpha(false).withDefaultColor(0xFFFCA50F).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> enableWolves = ColorDropdownWidget.buildToggle(Text.literal("Wolves"), null).withAlpha(false).withDefaultColor(0xFF3FE6FC).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> enableCreepers = ColorDropdownWidget.buildToggle(Text.literal("Creepers"), null).withAlpha(false).withDefaultColor(0xFF155B0D).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> enableMagmaCubes = ColorDropdownWidget.buildToggle(Text.literal("Magma Cubes"), null).withAlpha(false).withDefaultColor(0xFFFC4619).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> enableSlimes = ColorDropdownWidget.buildToggle(Text.literal("Slimes"), null).withAlpha(false).withDefaultColor(0xFF155B0D).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> enableWitches = ColorDropdownWidget.buildToggle(Text.literal("Witches"), null).withAlpha(false).withDefaultColor(0xFFA625F7).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> enableEndermite = ColorDropdownWidget.buildToggle(Text.literal("Endermite"), null).withAlpha(false).withDefaultColor(0xFFA625F7).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> enableSilverfish = ColorDropdownWidget.buildToggle(Text.literal("Silverish"), null).withAlpha(false).withDefaultColor(0xFF3F3F3F).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> enableIronGolems = ColorDropdownWidget.buildToggle(Text.literal("Iron Golems"), null).withAlpha(false).withDefaultColor(0xFF3FE6FC).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> enableGhast = ColorDropdownWidget.buildToggle(Text.literal("Ghast"), null).withAlpha(false).withDefaultColor(0xFF3FE6FC).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> enableGiants = ColorDropdownWidget.buildToggle(Text.literal("Giant Zombies"), null).withAlpha(false).withDefaultColor(0xFF2C936C).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableZombies = ColorDropdownWidget.buildToggle("Zombies", null).withAlpha(false).withDefaultColor(0xFF2C936C).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableSkeletons = ColorDropdownWidget.buildToggle("Skeletons", null).withAlpha(false).withDefaultColor(0xFFE0E0E0).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableBlazes = ColorDropdownWidget.buildToggle("Blazes", null).withAlpha(false).withDefaultColor(0xFFFCA50F).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableWolves = ColorDropdownWidget.buildToggle("Wolves", null).withAlpha(false).withDefaultColor(0xFF3FE6FC).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableCreepers = ColorDropdownWidget.buildToggle("Creepers", null).withAlpha(false).withDefaultColor(0xFF155B0D).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableMagmaCubes = ColorDropdownWidget.buildToggle("Magma Cubes", null).withAlpha(false).withDefaultColor(0xFFFC4619).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableSlimes = ColorDropdownWidget.buildToggle("Slimes", null).withAlpha(false).withDefaultColor(0xFF155B0D).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableWitches = ColorDropdownWidget.buildToggle("Witches", null).withAlpha(false).withDefaultColor(0xFFA625F7).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableEndermite = ColorDropdownWidget.buildToggle("Endermite", null).withAlpha(false).withDefaultColor(0xFFA625F7).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableSilverfish = ColorDropdownWidget.buildToggle("Silverish", null).withAlpha(false).withDefaultColor(0xFF3F3F3F).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableIronGolems = ColorDropdownWidget.buildToggle("Iron Golems", null).withAlpha(false).withDefaultColor(0xFF3FE6FC).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableGhast = ColorDropdownWidget.buildToggle("Ghast", null).withAlpha(false).withDefaultColor(0xFF3FE6FC).withDefaultState(true);
+    private final ColorDropdownWidget<ToggleWidget, Boolean> enableGiants = ColorDropdownWidget.buildToggle("Giant Zombies", null).withAlpha(false).withDefaultColor(0xFF2C936C).withDefaultState(true);
 
 
     private ZombieESP(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
-        TextWidget header = new TextWidget(Text.literal("Types")).withUnderline();
+        TextWidget header = new TextWidget("Types").withUnderline();
         this.setChildren(header, enableZombies, enableBlazes, enableWolves, enableCreepers, enableMagmaCubes, enableSlimes, enableWitches, enableEndermite, enableSilverfish, enableIronGolems, enableGhast, enableGiants);
         enableZombies.registerConfigKey(id + ".zombies");
         enableBlazes.registerConfigKey(id + ".blazes");

@@ -12,16 +12,15 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
 
 public class Watermark extends RenderModule<ToggleWidget, Boolean> {
     public static final Watermark INSTANCE = new Watermark("ui.watermark", "Watermark", "Displays a watermark.");
     
-    private final ToggleWidget enableText = new ToggleWidget(Text.literal("Text"), Text.literal("Display text.")).withDefaultState(true);
-    private final ToggleWidget simplistic = new ToggleWidget(Text.literal("Simplistic"), Text.literal("A very simple watermark.")).withDefaultState(false);
+    private final ToggleWidget enableText = new ToggleWidget("Text", "Display text.").withDefaultState(true);
+    private final ToggleWidget simplistic = new ToggleWidget("Simplistic", "A very simple watermark.").withDefaultState(false);
 
-    private final ColorDropdownWidget simpleBgColor = ColorDropdownWidget.buildToggle(Text.of("Background Color"), Text.literal("The background color of the simplistic watermark.")).withDefaultColor(Color.colorTransparentize(CigaretteScreen.PRIMARY_COLOR, 0.4f)).withDefaultState(true);
+    private final ColorDropdownWidget simpleBgColor = ColorDropdownWidget.buildToggle("Background Color", "The background color of the simplistic watermark.").withDefaultColor(Color.colorTransparentize(CigaretteScreen.PRIMARY_COLOR, 0.4f)).withDefaultState(true);
 
     private WatermarkDisplay display;
 

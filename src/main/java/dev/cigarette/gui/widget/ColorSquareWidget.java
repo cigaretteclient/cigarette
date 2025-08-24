@@ -1,11 +1,10 @@
 package dev.cigarette.gui.widget;
 
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.text.Text;
 
 public class ColorSquareWidget extends BaseWidget<Integer> {
     public ColorSquareWidget() {
-        super(Text.literal(""), null);
+        super("", null);
         this.withDefault(0xFFFFFFFF);
     }
 

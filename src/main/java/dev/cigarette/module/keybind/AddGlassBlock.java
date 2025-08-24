@@ -7,7 +7,6 @@ import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.text.Text;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
@@ -16,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 public class AddGlassBlock extends TickModule<ToggleWidget, Boolean> {
     public static final AddGlassBlock INSTANCE = new AddGlassBlock("keybind.place_glass", "Place Glass", "Places a client-side block where you are facing.");
 
-    private final KeybindWidget keybind = new KeybindWidget(Text.literal("Keybind"), Text.literal("Key to trigger the placing of a glass block."));
+    private final KeybindWidget keybind = new KeybindWidget("Keybind", "Key to trigger the placing of a glass block.");
 
     private AddGlassBlock(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);

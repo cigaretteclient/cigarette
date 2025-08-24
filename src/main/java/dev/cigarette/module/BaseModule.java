@@ -4,7 +4,6 @@ import dev.cigarette.Cigarette;
 import dev.cigarette.gui.hud.notification.Notification;
 import dev.cigarette.gui.widget.BaseWidget;
 import dev.cigarette.gui.widget.DropdownWidget;
-import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
@@ -17,7 +16,7 @@ public abstract class BaseModule<Widget extends BaseWidget<Boolean>, Boolean> {
 
     public BaseModule(WidgetGenerator<Widget, Boolean> func, String key, String displayName, @Nullable String tooltip) {
         this.key = key;
-        GeneratedWidgets<Widget, Boolean> widgets = func.accept(Text.literal(displayName), tooltip == null ? null : Text.literal(tooltip));
+        GeneratedWidgets<Widget, Boolean> widgets = func.accept(displayName, tooltip);
         this.wrapper = widgets.dropdown;
         this.widget = widgets.widget;
         this.prevEnabled = this.getRawState();
@@ -68,7 +67,7 @@ public abstract class BaseModule<Widget extends BaseWidget<Boolean>, Boolean> {
 
     @FunctionalInterface
     public interface WidgetGenerator<HeaderType extends BaseWidget<?>, StateType> {
-        GeneratedWidgets<HeaderType, StateType> accept(Text displayName, @Nullable Text tooltip);
+        GeneratedWidgets<HeaderType, StateType> accept(String displayName, @Nullable String tooltip);
     }
 
     public record GeneratedWidgets<HeaderType extends BaseWidget<?>, StateType>(@Nullable DropdownWidget<HeaderType, StateType> dropdown, HeaderType widget) {

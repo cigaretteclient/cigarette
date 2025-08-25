@@ -31,17 +31,20 @@ public class WeaponSelector {
         public final int ammo;
         public final double fireRate; // Time between shots in seconds
         public final double reloadTime; // Reload time in seconds
+        public final int count;
         public final double DPS;
         public final double burstDPS; // DPS without considering reloads
 
         public WeaponStats(ItemStack weapon, int slotIndex, double damage, int ammo,
-                           double fireRate, double reloadTime) {
+                           double fireRate, double reloadTime, int count) {
             this.weapon = weapon;
             this.slotIndex = slotIndex;
             this.damage = damage;
             this.ammo = ammo;
             this.fireRate = fireRate;
             this.reloadTime = reloadTime;
+            this.count = count;
+
 
             this.burstDPS = damage / fireRate;
 
@@ -52,8 +55,10 @@ public class WeaponSelector {
 
         }
 
+        // TODO: This needs to be more reliable, item damage and count are okay
+        //  but we need to figure out how to force the client to refresh those slots from the server?
         public boolean isValidWeapon() {
-            return damage > 0 && ammo > 0 && fireRate > 0;
+            return damage > 0 && ammo > 0 && fireRate > 0 && count > 0;
         }
     }
 
@@ -117,7 +122,7 @@ public class WeaponSelector {
             }
 
             if (damage > 0 && ammo > 0 && fireRate > 0) {
-                return new WeaponStats(weapon, slotIndex, damage, ammo, fireRate, reloadTime);
+                return new WeaponStats(weapon, slotIndex, damage, ammo, fireRate, reloadTime, weapon.getCount());
             }
 
         } catch (Exception e) {
@@ -134,54 +139,61 @@ public class WeaponSelector {
     @Nullable
     public static WeaponStats selectBestWeapon(ClientPlayerEntity player, @Nullable ZombiesAgent.ZombieTarget target) {
         List<WeaponStats> weapons = analyzeWeapons(player);
-
         if (weapons.isEmpty()) {
             return null;
         }
 
-        // If no specific target, choose highest effective DPS
-        if (target == null) {
-            return weapons.stream()
-                    .max(Comparator.comparingDouble(a -> a.DPS))
-
-                    .orElse(null);
-        }
-
-        // Consider target distance and type for weapon selection
-        double distance = target.getDistance();
+        // If no target, we can assume a default distance and no headshot possibility for scoring.
+        double distance = (target != null) ? target.getDistance() : 10.0; // Default distance
+        boolean canHeadshot = (target != null) && target.canHeadshot();
 
         WeaponStats bestWeapon = null;
-        double bestScore = 0;
+        double bestScore = -1;
 
         for (WeaponStats weapon : weapons) {
-            double score = calculateWeaponScore(weapon, distance, target.canHeadshot());
-
+            double score = calculateWeaponScore(weapon, distance, canHeadshot, player);
             if (score > bestScore) {
                 bestScore = score;
                 bestWeapon = weapon;
             }
         }
-
         return bestWeapon;
     }
 
     /**
      * Calculates weapon score based on situation
      */
-    private static double calculateWeaponScore(WeaponStats weapon, double distance, boolean canHeadshot) {
-        double baseScore = weapon.DPS;
-
-        // check if weapon is in weaponCooldown hashmap
+    private static double calculateWeaponScore(WeaponStats weapon, double distance, boolean canHeadshot, ClientPlayerEntity player) {
+        // Disqualify weapon if it's on cooldown or needs reloading (isDamaged is used for empty clip).
         if (weaponCooldown.containsKey(weapon.slotIndex)) return -1.0;
+        if (player.getInventory().getStack(weapon.slotIndex).isDamaged()) return -1.0;
 
-        if (MinecraftClient.getInstance().player.getInventory().getStack(weapon.slotIndex).isDamaged()) return -1.0;
+        double score;
+        int currentSlot = player.getInventory().getSelectedSlot();
 
-        // Headshot bonus for high-damage weapons
-        if (canHeadshot && weapon.damage > 15) {
-            baseScore *= 1.2;
+        // If this is the currently held weapon, we can use the XP bar for a precise ammo count.
+        if (weapon.slotIndex == currentSlot) {
+            int currentAmmo = player.experienceLevel;
+            if (currentAmmo <= 0) {
+                // This should be caught by isDamaged(), but it's a good fallback.
+                return -1.0;
+            }
+            // Recalculate DPS based on the remaining ammo in the clip.
+            double timeToEmptyClip = currentAmmo * weapon.fireRate;
+            double totalDamagePerCycle = weapon.damage * currentAmmo;
+            score = totalDamagePerCycle / (timeToEmptyClip + weapon.reloadTime);
+        } else {
+            // For weapons not currently held, we assume they have a full clip.
+            // The isDamaged() check above handles the empty case.
+            score = weapon.DPS;
         }
 
-        return baseScore;
+        // Headshot bonus for high-damage weapons.
+        if (canHeadshot && weapon.damage > 15) {
+            score *= 1.2;
+        }
+
+        return score;
     }
 
     /**

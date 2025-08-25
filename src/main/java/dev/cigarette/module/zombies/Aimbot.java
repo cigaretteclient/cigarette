@@ -18,36 +18,31 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
 import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
-
 public class Aimbot extends TickModule<ToggleWidget, Boolean> {
-    protected static final String MODULE_NAME = "Aimbot";
-    protected static final String MODULE_TOOLTIP = "Automatically aims at zombies.";
-    protected static final String MODULE_ID = "zombies.aimbot";
+    public static final Aimbot INSTANCE = new Aimbot("zombies.aimbot", "Aimbot", "Automatically aims at zombies.");
 
-    private final ToggleWidget silentAim = new ToggleWidget(Text.literal("Silent Aim"), Text.literal("Doesn't snap your camera client-side.")).withDefaultState(true);
-    private final ToggleWidget autoShoot = new ToggleWidget(Text.literal("Auto Shoot"), Text.literal("Automatically shoots zombies")).withDefaultState(true);
-    private final ToggleWidget autoWeaponSwitch = new ToggleWidget(Text.literal("Auto Weapon Switch"), Text.literal("Automatically switch weapons")).withDefaultState(true);
-    public final ToggleWidget predictiveAim = new ToggleWidget(Text.literal("Predictive Aim"), Text.literal("Predict zombie movement for better accuracy")).withDefaultState(true);
-    public final SliderWidget predictionTicks = new SliderWidget(Text.literal("Prediction Ticks"), Text.literal("How many ticks ahead to predict zombie movement")).withBounds(1, 10, 20).withAccuracy(0);
+    private final ToggleWidget silentAim = new ToggleWidget("Silent Aim", "Doesn't snap your camera client-side.").withDefaultState(true);
+    private final ToggleWidget autoShoot = new ToggleWidget("Auto Shoot", "Automatically shoots zombies").withDefaultState(true);
+    private final ToggleWidget autoWeaponSwitch = new ToggleWidget("Auto Weapon Switch", "Automatically switch weapons").withDefaultState(true);
+    public final ToggleWidget predictiveAim = new ToggleWidget("Predictive Aim", "Predict zombie movement for better accuracy").withDefaultState(true);
+    public final SliderWidget predictionTicks = new SliderWidget("Prediction Ticks", "How many ticks ahead to predict zombie movement").withBounds(1, 10, 20).withAccuracy(0);
 
     private KeyBinding rightClickKey = null;
 
-    public Aimbot() {
-        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+    private Aimbot(String id, String name, String tooltip) {
+        super(ToggleWidget::module, id, name, tooltip);
         this.setChildren(silentAim, autoShoot, autoWeaponSwitch, predictiveAim, predictionTicks);
-        silentAim.registerConfigKey("zombies.aimbot.silentAim");
-        autoShoot.registerConfigKey("zombies.aimbot.autoShoot");
-        autoWeaponSwitch.registerConfigKey("zombies.aimbot.autoWeaponSwitch");
-        predictiveAim.registerConfigKey("zombies.aimbot.predictiveAim");
-        predictionTicks.registerConfigKey("zombies.aimbot.predictionTicks");
+        silentAim.registerConfigKey(id + ".silentAim");
+        autoShoot.registerConfigKey(id + ".autoShoot");
+        autoWeaponSwitch.registerConfigKey(id + ".autoWeaponSwitch");
+        predictiveAim.registerConfigKey(id + ".predictiveAim");
+        predictionTicks.registerConfigKey(id + ".predictionTicks");
     }
 
     @Override

@@ -10,14 +10,10 @@ import net.minecraft.client.world.ClientWorld;
 import org.jetbrains.annotations.NotNull;
 
 public class GUI extends RenderModule<ToggleWidget, Boolean> {
-    protected static final String MODULE_NAME = "GUI";
-    protected static final String MODULE_TOOLTIP = "ClickGUI settings.";
-    protected static final String MODULE_ID = "ui.gui";
+    public static final GUI INSTANCE = new GUI("ui.gui", "GUI", "ClickGUI settings.");
 
-    public GUI() {
-        super(ToggleWidget.ToggleWidgetDisabled::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
-        this.setChildren(
-        );
+    private GUI(String id, String name, String tooltip) {
+        super(ToggleWidget.ToggleWidgetDisabled::module, id, name, tooltip);
     }
 
     @Override

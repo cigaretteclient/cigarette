@@ -19,11 +19,7 @@
     ],
     "client": [
       "dev.cigarette.Language",
-      "dev.cigarette.gui.KeyBinding",
-      "dev.cigarette.module.bedwars.DefenseViewer",
-      "dev.cigarette.module.keybind.BreakBlock",
-      "dev.cigarette.module.keybind.AddGlassBlock",
-      "dev.cigarette.module.keybind.VClip"
+      "dev.cigarette.gui.KeyBinding"
     ]
   },
   "mixins": [

@@ -5,11 +5,9 @@ import dev.cigarette.module.BaseModule;
 
 
 public class JumpReset extends BaseModule<ToggleWidget, Boolean> {
-    protected static final String MODULE_NAME = "JumpReset";
-    protected static final String MODULE_TOOLTIP = "Jumps upon taking damage to reduce knockback.";
-    protected static final String MODULE_ID = "combat.jumpreset";
+    public static final JumpReset INSTANCE = new JumpReset("combat.jumpreset", "JumpReset", "Jumps upon taking damage to reduce knockback.");
 
-    public JumpReset() {
-        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+    private JumpReset(String id, String name, String tooltip) {
+        super(ToggleWidget::module, id, name, tooltip);
     }
 }

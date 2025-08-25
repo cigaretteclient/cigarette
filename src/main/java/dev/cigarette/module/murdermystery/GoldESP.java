@@ -14,13 +14,13 @@ import org.jetbrains.annotations.NotNull;
 import java.util.HashSet;
 
 public class GoldESP extends TickModule<ToggleWidget, Boolean> {
-    protected static final String MODULE_NAME = "GoldESP";
-    protected static final String MODULE_TOOLTIP = "Highlights all the gold ingots on the ground.";
-    protected static final String MODULE_ID = "murdermystery.goldesp";
+    public static final GoldESP INSTANCE = new GoldESP("murdermystery.goldesp", "GoldESP", "Highlights all the gold ingots on the ground.");
+
     private final Glow.Context glowContext = new Glow.Context();
 
-    public GoldESP() {
-        super(ColorDropdownWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+    private GoldESP(String id, String name, String tooltip) {
+        super(ColorDropdownWidget::module, id, name, tooltip);
+        assert this.wrapper != null;
         ((ColorDropdownWidget<?, ?>) this.wrapper).withAlpha(false).withDefaultColor(0xFFFFD800);
     }
 

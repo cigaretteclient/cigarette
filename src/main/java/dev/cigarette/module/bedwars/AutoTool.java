@@ -17,12 +17,10 @@ import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.NotNull;
 
 public class AutoTool extends TickModule<ToggleWidget, Boolean> {
-    protected static final String MODULE_NAME = "Auto Tool";
-    protected static final String MODULE_TOOLTIP = "Automatically swaps your tool to the correct one when breaking blocks.";
-    protected static final String MODULE_ID = "bedwars.autotool";
+    public static final AutoTool INSTANCE = new AutoTool("bedwars.autotool", "Auto Tool", "Automatically swaps your tool to the correct one when breaking blocks.");
 
-    public AutoTool() {
-        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+    private AutoTool(String id, String name, String tooltip) {
+        super(ToggleWidget::module, id, name, tooltip);
     }
 
     private boolean shouldPickaxe(BlockState state) {

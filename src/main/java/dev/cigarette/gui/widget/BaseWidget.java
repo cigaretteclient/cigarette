@@ -24,9 +24,9 @@ public abstract class BaseWidget<StateType> extends ClickableWidget {
     protected @Nullable Consumer<Object> fsCallback = null;
     protected @Nullable Consumer<StateType> moduleCallback = null;
 
-    public BaseWidget(Text message, @Nullable Text tooltip) {
-        super(0, 0, 0, 0, message);
-        if (tooltip != null) this.setTooltip(Tooltip.of(tooltip));
+    public BaseWidget(String message, @Nullable String tooltip) {
+        super(0, 0, 0, 0, message == null ? Text.empty() : Text.literal(message));
+        if (tooltip != null) this.setTooltip(Tooltip.of(Text.literal(tooltip)));
     }
 
     public boolean isStateless() {

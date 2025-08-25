@@ -5,9 +5,11 @@ import dev.cigarette.gui.Scissor;
 import dev.cigarette.lib.Shape;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
+
+import java.util.Collection;
+import java.util.Objects;
 
 public class ScrollableWidget<Widgets extends BaseWidget<?>>
         extends PassthroughWidget<BaseWidget<?>, BaseWidget.Stateless> {
@@ -28,7 +30,7 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
     private boolean showBottomRoundedRect = true;
 
     @SafeVarargs
-    public ScrollableWidget(int x, int y, @Nullable Text headerText, @Nullable Widgets... children) {
+    public ScrollableWidget(int x, int y, @Nullable String headerText, @Nullable Widgets... children) {
         super(x, y, DEFAULT_WIDTH + DEFAULT_SCROLLBAR_WIDTH, DEFAULT_HEIGHT, null);
         this.withDefault(new BaseWidget.Stateless());
         this.setChildren(children).setHeader(headerText, null);
@@ -52,24 +54,34 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
         this.showBottomRoundedRect = showBottomRoundedRect;
     }
 
-    private boolean updateShouldScroll() {
+    @Override
+    public BaseWidget<BaseWidget.Stateless> withXY(int x, int y) {
+        if(this.header != null) this.header.withXY(x, y);
+        super.withXY(x, y);
+        return this;
+    }
 
-        this.shouldScroll = ((children == null ? 0 : children.length) + (header != null ? 1 : 0))
+    private boolean updateShouldScroll() {
+        this.shouldScroll = ((children == null ? 0 : children.size()) + (header != null ? 1 : 0))
                 * rowHeight > this.height;
         return this.shouldScroll;
     }
 
     @SafeVarargs
     public final ScrollableWidget<Widgets> setChildren(@Nullable Widgets... children) {
-        this.children = children;
+        for (Widgets widget : children) {
+            if (widget == null) continue;
+            String name = Objects.requireNonNullElse(widget.getMessage(), widget.hashCode()).toString();
+            this.children.put(name, widget);
+        }
         return updateChildrenSizing();
     }
 
-    public ScrollableWidget<Widgets> setHeader(@Nullable Text headerText) {
+    public ScrollableWidget<Widgets> setHeader(@Nullable String headerText) {
         return this.setHeader(headerText, null);
     }
 
-    public ScrollableWidget<Widgets> setHeader(@Nullable Text headerText, @Nullable Runnable onToggleExpand) {
+    public ScrollableWidget<Widgets> setHeader(@Nullable String headerText, @Nullable Runnable onToggleExpand) {
         this.onToggleExpand = onToggleExpand;
         if (headerText == null) {
             this.header = null;
@@ -96,7 +108,7 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
     private ScrollableWidget<Widgets> updateChildrenSizing() {
         if (this.children != null) {
             int rightMargin = this.updateShouldScroll() ? DEFAULT_SCROLLBAR_WIDTH : 0;
-            for (ClickableWidget child : children) {
+            for (ClickableWidget child : children.values()) {
                 if (child == null)
                     continue;
                 child.setHeight(rowHeight);
@@ -145,7 +157,7 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
     private int getVisibleBottom(int top, int bottom) {
         int headerHeight = getHeaderHeight();
         int areaHeight = Math.max(0, bottom - top - headerHeight);
-        int contentHeight = (children == null ? 0 : children.length * rowHeight);
+        int contentHeight = (children == null ? 0 : children.size() * rowHeight);
         int maxVisible = Math.min(areaHeight, contentHeight);
 
         double eased = getEasedProgress();
@@ -167,7 +179,7 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
             super.unfocus();
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return this.expanded && super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
@@ -185,7 +197,7 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
         return (this.header != null && this.header.mouseDragged(mouseX, mouseY, button, deltaX, deltaY))
-                || super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+                || (this.expanded && super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY));
     }
 
     @Override
@@ -199,7 +211,7 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
             int animatedArea = this.expanded
                     ? (int) Math.ceil(eased * areaHeight)
                     : (int) Math.floor(eased * areaHeight);
-            int rowCount = (children == null ? 0 : children.length);
+            int rowCount = (children == null ? 0 : children.size());
             int contentHeight = rowCount * rowHeight;
             int maxScroll = Math.max(0, contentHeight - animatedArea);
             scrollPosition = Math.max(0,
@@ -215,11 +227,11 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
 
     @Override
     public void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left,
-            int top, int right, int bottom) {
+                       int top, int right, int bottom) {
         context.getMatrices().push();
 
-        BaseWidget<?>[] localChildren = this.children;
-        int childCount = localChildren == null ? 0 : localChildren.length;
+        Collection<BaseWidget<?>> localChildren = this.children.values();
+        int childCount = localChildren.size();
 
         if (childCount > 0) {
             int target = this.expanded ? MAX_TICKS_ON_OPEN : 0;
@@ -250,8 +262,9 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
                         ? realBottomInt + (showBottomRoundedRect ? BOTTOM_ROUNDED_RECT_HEIGHT : 0) + 3
                         : realBottomInt;
                 Scissor.pushExclusive(context, left, scissorTop, scissorRight, scissorBottom);
-                for (int index = 0; index < childCount; index++) {
-                    BaseWidget<?> child = localChildren[index];
+                int index = -1;
+                for (BaseWidget<?> child : localChildren) {
+                    index++;
                     if (child == null)
                         continue;
                     child.withXY(left, top - (int) scrollPosition + (index + hasHeaderInt) * rowHeight)

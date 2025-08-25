@@ -19,13 +19,12 @@ import java.util.HashSet;
 import java.util.OptionalDouble;
 
 public class PowerupESP extends RenderModule<ToggleWidget, Boolean> {
-    protected static final String MODULE_NAME = "ItemESP";
-    protected static final String MODULE_TOOLTIP = "Places ESP boxes around dropped powerups and the lucky chest.";
-    protected static final String MODULE_ID = "zombies.powerupesp";
+    public static final PowerupESP INSTANCE = new PowerupESP("zombies.powerupesp", "ItemESP", "Places ESP boxes around dropped powerups and the lucky chest.");
+
     private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockesp", 1536, Renderer.BLOCK_ESP_PHASE, RenderLayer.MultiPhaseParameters.builder().lineWidth(new RenderPhase.LineWidth(OptionalDouble.of(1))).build(false));
 
-    public PowerupESP() {
-        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+    private PowerupESP(String id, String name, String tooltip) {
+        super(ToggleWidget::module, id, name, tooltip);
     }
 
     @Override

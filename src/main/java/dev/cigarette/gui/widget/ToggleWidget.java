@@ -1,13 +1,12 @@
 package dev.cigarette.gui.widget;
 
-import dev.cigarette.gui.RenderUtil;
 import dev.cigarette.Cigarette;
 import dev.cigarette.gui.CigaretteScreen;
+import dev.cigarette.gui.RenderUtil;
 import dev.cigarette.lib.Color;
 import dev.cigarette.module.BaseModule;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
@@ -41,7 +40,7 @@ public class ToggleWidget extends BaseWidget<Boolean> {
         return (rA & 0xFF) << 24 | (rR & 0xFF) << 16 | (rG & 0xFF) << 8 | (rB & 0xFF);
     }
 
-    public ToggleWidget(Text message, @Nullable Text tooltip) {
+    public ToggleWidget(String message, @Nullable String tooltip) {
         super(message, tooltip);
         this.captureHover().withDefault(false);
     }
@@ -51,7 +50,7 @@ public class ToggleWidget extends BaseWidget<Boolean> {
         return this;
     }
 
-    public static BaseModule.GeneratedWidgets<ToggleWidget, Boolean> module(Text displayName, @Nullable Text tooltip) {
+    public static BaseModule.GeneratedWidgets<ToggleWidget, Boolean> module(String displayName, @Nullable String tooltip) {
         DropdownWidget<ToggleWidget, Boolean> wrapper = new DropdownWidget<>(displayName, tooltip);
         ToggleWidget widget = new ToggleWidget(displayName, tooltip);
         wrapper.setHeader(widget);
@@ -101,7 +100,7 @@ public class ToggleWidget extends BaseWidget<Boolean> {
     }
 
     public class ToggleWidgetDisabled extends ToggleWidget {
-        public ToggleWidgetDisabled(Text message, @Nullable Text tooltip) {
+        public ToggleWidgetDisabled(String message, @Nullable String tooltip) {
             super(message, tooltip);
         }
 

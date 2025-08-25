@@ -12,14 +12,12 @@ import net.minecraft.client.world.ClientWorld;
 import org.jetbrains.annotations.NotNull;
 
 public class Notifications extends RenderModule<ToggleWidget, Boolean> {
-    protected static final String MODULE_NAME = "Notifications";
-    protected static final String MODULE_TOOLTIP = "Displays notifications.";
-    protected static final String MODULE_ID = "render.notifications";
+    public static final Notifications INSTANCE = new Notifications("ui.notifications", "Notifications", "Displays notifications.");
 
     private NotificationDisplay display;
 
-    public Notifications() {
-        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+    private Notifications(String id, String name, String tooltip) {
+        super(ToggleWidget::module, id, name, tooltip);
         this.widget.withDefaultState(true);
     }
 

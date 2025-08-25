@@ -1,37 +1,29 @@
 package dev.cigarette.module.keybind;
 
+import dev.cigarette.gui.widget.KeybindWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
 import dev.cigarette.module.TickModule;
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
-import org.lwjgl.glfw.GLFW;
 
-public class VClip extends TickModule<ToggleWidget, Boolean> implements ClientModInitializer {
-    protected static final String MODULE_NAME = "V-Clip Down";
-    protected static final String MODULE_TOOLTIP = "Vertically clips you down through floors.";
-    protected static final String MODULE_ID = "keybind.vclip";
-    private static KeyBinding keyBinding;
+public class VClip extends TickModule<ToggleWidget, Boolean> {
+    public static final VClip INSTANCE = new VClip("keybind.vclip", "V-Clip Down", "Vertically clips you down through floors.");
 
-    public VClip() {
-        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
-    }
+    private final KeybindWidget keybind = new KeybindWidget("Keybind", "Key to trigger the downward clipping.");
 
-    @Override
-    public void onInitializeClient() {
-        keyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding("V-Clip Downward", InputUtil.Type.KEYSYM, GLFW.GLFW_NOT_INITIALIZED, "Cigarette | Standalone"));
+    private VClip(String id, String name, String tooltip) {
+        super(ToggleWidget::module, id, name, tooltip);
+        this.setChildren(keybind);
+        keybind.registerConfigKey(id + ".key");
     }
 
     @Override
     protected void onEnabledTick(MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
-        while (keyBinding.wasPressed()) {
+        while (keybind.getKeybind().wasPressed()) {
             Vec3d pos = player.getPos();
             BlockPos blockPos = player.getBlockPos();
             for (int offset = 3; offset < 6; offset++) {

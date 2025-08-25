@@ -51,7 +51,7 @@ public class CigaretteScreen extends Screen {
         this.clearChildren();
         this.priority.clear();
         int idx = 0;
-        for (CategoryInstance categoryInstance : Cigarette.CONFIG.allCategories) {
+        for (CategoryInstance categoryInstance : Cigarette.CONFIG.CATEGORIES.values()) {
             if (categoryInstance == null)
                 continue;
             addDrawableChild(categoryInstance.widget);
@@ -244,7 +244,7 @@ public class CigaretteScreen extends Screen {
         for (int i = 0; i < priority.size(); i++) {
             BaseWidget<?> widget = priority.get(i);
             if (widget instanceof ScrollableWidget<?> sw) {
-                for (CategoryInstance categoryInstance : Cigarette.CONFIG.allCategories) {
+                for (CategoryInstance categoryInstance : Cigarette.CONFIG.CATEGORIES.values()) {
                     if (categoryInstance.widget == sw) {
                         sw.expanded = categoryInstance.expanded;
                         break;

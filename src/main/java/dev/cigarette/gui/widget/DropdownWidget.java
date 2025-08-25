@@ -1,11 +1,10 @@
 package dev.cigarette.gui.widget;
 
 import dev.cigarette.Cigarette;
-import dev.cigarette.gui.Scissor;
 import dev.cigarette.gui.CigaretteScreen;
+import dev.cigarette.gui.Scissor;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderLayer;
-import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Quaternionf;
 import org.lwjgl.glfw.GLFW;
@@ -28,11 +27,11 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType>
     private long animStartMillis = 0L;
     private static final int TOGGLE_ANIM_MS = 220;
 
-    public DropdownWidget(Text message, @Nullable Text tooltip) {
+    public DropdownWidget(String message, @Nullable String tooltip) {
         super(message, tooltip);
         this.withDefault(new BaseWidget.Stateless());
         this.container = new ScrollableWidget<>(0, 0, false);
-        this.children = new ScrollableWidget[] { this.container };
+        super.children.put("0", this.container);
     }
 
     public DropdownWidget<Widget, StateType> setHeader(Widget header) {
@@ -67,6 +66,11 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType>
     }
 
     @Override
+    public void alphabetic() {
+        this.container.alphabetic();
+    }
+
+    @Override
     public void mouseMoved(double mouseX, double mouseY) {
         if (this.header != null)
             this.header.mouseMoved(mouseX, mouseY);
@@ -84,7 +88,7 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType>
                 return true;
             }
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT || button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-                boolean target = children != null && !dropdownVisible;
+                boolean target = !children.isEmpty() && !dropdownVisible;
 
                 if (target != dropdownVisible) {
                     this.animating = true;
@@ -124,7 +128,7 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType>
 
     @Override
     protected void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left,
-            int top, int right, int bottom) {
+                          int top, int right, int bottom) {
         if (this.container == null)
             return;
         if (this.container.focused || this.dropdownVisible) {
@@ -169,9 +173,9 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType>
             }
         }
 
-        if (this.container.children == null)
+        if (this.container.children.isEmpty())
             return;
-        if (this.container.children.length > 0 && dropdownIndicator) {
+        if (dropdownIndicator) {
             int w = 10;
             int h = 10;
             int iconX = right - 12;

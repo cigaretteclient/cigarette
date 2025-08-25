@@ -3,7 +3,6 @@ package dev.cigarette.gui.widget;
 import dev.cigarette.module.BaseModule;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.option.KeyBinding;
-import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
@@ -12,7 +11,7 @@ import java.util.function.Consumer;
 public class ToggleKeybindWidget extends ToggleWidget {
     protected KeybindWidget widget;
 
-    public ToggleKeybindWidget(Text message, @Nullable Text tooltip) {
+    public ToggleKeybindWidget(String message, @Nullable String tooltip) {
         super(message, tooltip);
         this.widget = new KeybindWidget(message, null);
     }
@@ -31,7 +30,7 @@ public class ToggleKeybindWidget extends ToggleWidget {
         return this.widget.getKeybind();
     }
 
-    public static BaseModule.GeneratedWidgets<ToggleKeybindWidget, Boolean> keybindModule(Text displayName, @Nullable Text tooltip) {
+    public static BaseModule.GeneratedWidgets<ToggleKeybindWidget, Boolean> keybindModule(String displayName, @Nullable String tooltip) {
         ToggleKeybindWidget widget = new ToggleKeybindWidget(displayName, tooltip);
         return new BaseModule.GeneratedWidgets<>(null, widget);
     }

@@ -41,22 +41,22 @@ public class SliderWidget extends BaseWidget<Double> {
         this.setState(value);
     }
 
-    public SliderWidget(int x, int y, int width, int height, Text message, @Nullable Text tooltip) {
+    public SliderWidget(int x, int y, int width, int height, String message, @Nullable String tooltip) {
         super(message, tooltip);
         this.captureHover().withXY(x, y).withWH(width, height).withDefault(0d);
     }
 
-    public SliderWidget(int x, int y, int width, int height, Text message) {
+    public SliderWidget(int x, int y, int width, int height, String message) {
         super(message, null);
         this.captureHover().withXY(x, y).withWH(width, height).withDefault(0d);
     }
 
-    public SliderWidget(Text message, Text tooltip) {
+    public SliderWidget(String message, String tooltip) {
         super(message, tooltip);
         this.captureHover().withDefault(0d);
     }
 
-    public SliderWidget(Text message) {
+    public SliderWidget(String message) {
         super(message, null);
         this.captureHover().withDefault(0d);
     }

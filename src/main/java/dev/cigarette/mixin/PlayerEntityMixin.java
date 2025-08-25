@@ -1,6 +1,7 @@
 package dev.cigarette.mixin;
 
 import dev.cigarette.Cigarette;
+import dev.cigarette.module.combat.JumpReset;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -13,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class PlayerEntityMixin {
     @Inject(method = "animateDamage", at = @At("HEAD"))
     private void onDamaged(CallbackInfo ci) {
-        if (!Cigarette.CONFIG.COMBAT_JUMP_RESET.getRawState()) return;
+        if (!JumpReset.INSTANCE.getRawState()) return;
 
         PlayerEntity thisEntity = (PlayerEntity) (Object) this;
 

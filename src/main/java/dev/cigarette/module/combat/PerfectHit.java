@@ -1,6 +1,5 @@
 package dev.cigarette.module.combat;
 
-import dev.cigarette.Cigarette;
 import dev.cigarette.gui.widget.SliderWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
 import dev.cigarette.mixin.KeyBindingAccessor;
@@ -11,22 +10,20 @@ import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.text.Text;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
 import org.jetbrains.annotations.NotNull;
 
 public class PerfectHit extends TickModule<ToggleWidget, Boolean> {
-    protected static final String MODULE_NAME = "PerfectHit";
-    protected static final String MODULE_TOOLTIP = "Perfectly times hits on opponents while holding attack.";
-    protected static final String MODULE_ID = "combat.perfecthit";
-    private final SliderWidget clickPercent = new SliderWidget(Text.literal("Click Percent"), Text.literal("The percentage chance for a click to occur each tick of the game while holding left-click and aiming at a hittable entity.")).withBounds(0, 0.9, 1).withAccuracy(2);
+    public static final PerfectHit INSTANCE = new PerfectHit("combat.perfecthit", "PerfectHit", "Perfectly times hits on opponents while holding attack.");
+
+    private final SliderWidget clickPercent = new SliderWidget("Click Percent", "The percentage chance for a click to occur each tick of the game while holding left-click and aiming at a hittable entity.").withBounds(0, 0.9, 1).withAccuracy(2);
 
 
-    public PerfectHit() {
-        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+    private PerfectHit(String id, String name, String tooltip) {
+        super(ToggleWidget::module, id, name, tooltip);
         this.setChildren(clickPercent);
-        clickPercent.registerConfigKey("combat.perfecthit.clickpercent");
+        clickPercent.registerConfigKey(id + ".clickpercent");
     }
 
     @Override
@@ -48,6 +45,6 @@ public class PerfectHit extends TickModule<ToggleWidget, Boolean> {
 
     @Override
     protected void whenEnabled() {
-        Cigarette.CONFIG.COMBAT_AUTOCLICKER.widget.setRawState(false);
+        AutoClicker.INSTANCE.widget.setRawState(false);
     }
 }

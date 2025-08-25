@@ -1,6 +1,5 @@
 package dev.cigarette.module.render;
 
-import dev.cigarette.Cigarette;
 import dev.cigarette.gui.widget.BaseWidget;
 import dev.cigarette.gui.widget.ColorDropdownWidget;
 import dev.cigarette.gui.widget.TextWidget;
@@ -12,26 +11,25 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
 public class PlayerESP extends TickModule<ToggleWidget, Boolean> {
-    protected static final String MODULE_NAME = "PlayerESP";
-    protected static final String MODULE_TOOLTIP = "Highlights all the players in the world.";
-    protected static final String MODULE_ID = "render.playeresp";
-    private final ToggleWidget byTeamColor = new ToggleWidget(Text.literal("By Team Color"), Text.literal("ESP players in the color of their team.")).withDefaultState(true);
-    private final TextWidget nonTeamColorText = new TextWidget(Text.literal("Static Color"), Text.literal("The color of all players if coloring by team is disabled.")).centered(false);
-    private final ColorDropdownWidget<TextWidget, BaseWidget.Stateless> nonTeamColor = new ColorDropdownWidget<TextWidget, BaseWidget.Stateless>(Text.empty(), null).withAlpha(false).withDefaultColor(0xFFFFFFFF);
+    public static final PlayerESP INSTANCE = new PlayerESP("render.playeresp", "PlayerESP", "Highlights all the players in the world.");
+
+    private final ToggleWidget byTeamColor = new ToggleWidget("By Team Color", "ESP players in the color of their team.").withDefaultState(true);
+    private final TextWidget nonTeamColorText = new TextWidget("Static Color", "The color of all players if coloring by team is disabled.").centered(false);
+    private final ColorDropdownWidget<TextWidget, BaseWidget.Stateless> nonTeamColor = new ColorDropdownWidget<TextWidget, BaseWidget.Stateless>("", null).withAlpha(false).withDefaultColor(0xFFFFFFFF);
+
     private final Glow.Context glowContext = new Glow.Context();
 
-    public PlayerESP() {
-        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+    private PlayerESP(String id, String name, String tooltip) {
+        super(ToggleWidget::module, id, name, tooltip);
         nonTeamColor.setHeader(nonTeamColorText);
         this.setChildren(byTeamColor, nonTeamColor);
-        byTeamColor.registerConfigKey("render.playeresp.byteam");
-        nonTeamColor.registerConfigKey("render.playeresp.static");
+        byTeamColor.registerConfigKey(id + ".byteam");
+        nonTeamColor.registerConfigKey(id + ".static");
     }
 
     @Override
@@ -55,6 +53,6 @@ public class PlayerESP extends TickModule<ToggleWidget, Boolean> {
 
     @Override
     public boolean inValidGame() {
-        return !Cigarette.CONFIG.MYSTERY_PLAYERESP.isRunning();
+        return !dev.cigarette.module.murdermystery.PlayerESP.INSTANCE.isRunning();
     }
 }

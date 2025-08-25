@@ -20,7 +20,7 @@ public class KeybindWidget extends BaseWidget<Integer> {
     private final KeyBinding keyBinding;
     private InputUtil.Key utilKey;
 
-    public KeybindWidget(Text message, @Nullable Text tooltip) {
+    public KeybindWidget(String message, @Nullable String tooltip) {
         super(message, tooltip);
         this.utilKey = InputUtil.UNKNOWN_KEY;
         this.keyBinding = new KeyBinding(UUID.randomUUID().toString(), GLFW.GLFW_KEY_UNKNOWN, "cigarette.null");

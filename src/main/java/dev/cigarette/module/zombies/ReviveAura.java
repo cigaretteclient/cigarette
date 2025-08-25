@@ -20,14 +20,12 @@ import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 
 public class ReviveAura extends RenderModule<ToggleWidget, Boolean> {
-    protected static final String MODULE_NAME = "Revive Aura";
-    protected static final String MODULE_TOOLTIP = "Automatically revives downed teammates.";
-    protected static final String MODULE_ID = "zombies.revive_aura";
+    public static final ReviveAura INSTANCE = new ReviveAura("zombies.revive_aura", "Revive Aura", "Automatically revives downed teammates.");
 
     private int cooldownTicks = 0;
 
-    public ReviveAura() {
-        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+    private ReviveAura(String id, String name, String tooltip) {
+        super(ToggleWidget::module, id, name, tooltip);
     }
 
     /**

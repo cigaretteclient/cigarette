@@ -1,7 +1,5 @@
 package dev.cigarette.module.ui;
 
-import org.jetbrains.annotations.NotNull;
-
 import dev.cigarette.Cigarette;
 import dev.cigarette.gui.hud.modules.ModuleListDisplay;
 import dev.cigarette.gui.widget.ToggleWidget;
@@ -11,25 +9,23 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.text.Text;
+import org.jetbrains.annotations.NotNull;
 
 public class ModuleList extends RenderModule<ToggleWidget, Boolean> {
-    protected static final String MODULE_NAME = "Module List";
-    protected static final String MODULE_TOOLTIP = "Displays a list of modules.";
-    protected static final String MODULE_ID = "ui.module_list";
+    public static final ModuleList INSTANCE = new ModuleList("ui.module_list", "Module List", "Displays a list of modules.");
     
-    private final ToggleWidget enableFlip = new ToggleWidget(Text.literal("Flip"), Text.literal("Flip to top left.")).withDefaultState(false);
+    private final ToggleWidget enableFlip = new ToggleWidget("Flip", "Flip to top left.").withDefaultState(false);
 
 
     private ModuleListDisplay display;
 
-    public ModuleList() {
-        super(ToggleWidget::module, MODULE_ID, MODULE_NAME, MODULE_TOOLTIP);
+    private ModuleList(String id, String name, String tooltip) {
+        super(ToggleWidget::module, id, name, tooltip);
         this.setChildren(
             enableFlip
         );
         this.widget.withDefaultState(true);
-        this.enableFlip.registerConfigKey("ui.module_list.flip");
+        this.enableFlip.registerConfigKey(id + ".flip");
     }
 
     @Override

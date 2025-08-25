@@ -55,6 +55,8 @@ public class WeaponSelector {
 
         }
 
+        // TODO: This needs to be more reliable, item damage and count are okay
+        //  but we need to figure out how to force the client to refresh those slots from the server?
         public boolean isValidWeapon() {
             return damage > 0 && ammo > 0 && fireRate > 0 && count > 0;
         }

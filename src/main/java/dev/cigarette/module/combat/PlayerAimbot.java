@@ -184,7 +184,8 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
     private static void doSprint(boolean sprint) {
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         if (player == null) return;
-        if (!player.isOnGround() || !InputOverride.forwardKey) return;
+        boolean forwardPressed = InputOverride.isActive ? InputOverride.forwardKey : KeyBinding.byId("key.forward").isPressed();
+        if (!player.isOnGround() || !forwardPressed) return;
         if (sprint) {
             if (!player.isSprinting() && !player.isUsingItem() && !player.isSneaking()) {
                 player.setSprinting(true);

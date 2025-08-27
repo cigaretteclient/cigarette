@@ -19,6 +19,7 @@ import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.item.*;
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
@@ -43,6 +44,7 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
     public final ToggleWidget wTap = new ToggleWidget("W-Tap", "Automatically sprint before attacking").withDefaultState(false);
     public final SliderWidget.TwoHandedSlider jitterAmount = new SliderWidget.TwoHandedSlider("Jitter", "Random jitter range (min/max) degrees").withBounds(0, 0, 4).withAccuracy(2);
     public final SliderWidget jitterSpeed = new SliderWidget("Jitter Speed", "How fast jitter target changes (ticks)").withBounds(5, 10, 40).withAccuracy(0);
+    private final ToggleWidget blockHit = new ToggleWidget("Block-Hit", "Briefly block just before attacking (if shield available)").withDefaultState(false);
 
     private KeyBinding rightClickKey = null;
 
@@ -57,7 +59,7 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
 
     private PlayerAimbot(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
-        this.setChildren(autoAttack, autoWeaponSwitch, predictiveAim, predictionTicks, smoothAim, jitterAmount, jitterSpeed, wTap);
+        this.setChildren(autoAttack, autoWeaponSwitch, predictiveAim, predictionTicks, smoothAim, jitterAmount, jitterSpeed, wTap, blockHit);
         autoAttack.registerConfigKey(id + ".autoAttack");
         autoWeaponSwitch.registerConfigKey(id + ".autoWeaponSwitch");
         predictiveAim.registerConfigKey(id + ".predictiveAim");
@@ -66,6 +68,7 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
         wTap.registerConfigKey(id + ".wTap");
         jitterAmount.registerConfigKey(id + ".jitter");
         jitterSpeed.registerConfigKey(id + ".jitterSpeed");
+        blockHit.registerConfigKey(id + ".blockHit");
     }
 
     @Override
@@ -83,33 +86,7 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
                 if (lookingAt.isIn(BlockTags.BUTTONS) || lookingAt.isOf(Blocks.CHEST)) return;
             }
 
-            AbstractClientPlayerEntity bestTarget = WorldL.getRealPlayers().stream().sorted((p1, p2) -> {
-                Vec3d eyePos = player.getEyePos();
-                Vec3d p1Pos = p1.getEyePos().subtract(eyePos);
-                Vec3d p2Pos = p2.getEyePos().subtract(eyePos);
-                double p1Dist = p1Pos.lengthSquared();
-                double p2Dist = p2Pos.lengthSquared();
-
-                if (p1.isSneaking() && !p2.isSneaking()) p1Dist *= 0.8;
-                else if (!p1.isSneaking() && p2.isSneaking()) p2Dist *= 0.8;
-
-                if (p1.getPose() == EntityPose.CROUCHING && p2.getPose() != EntityPose.CROUCHING) p1Dist *= 0.9;
-                else if (p1.getPose() != EntityPose.CROUCHING && p2.getPose() == EntityPose.CROUCHING) p2Dist *= 0.9;
-
-                if (p1.isSprinting() && !p2.isSprinting()) p1Dist *= 1.1;
-                else if (!p1.isSprinting() && p2.isSprinting()) p2Dist *= 1.1;
-                if (p1.getVelocity().lengthSquared() > 0.01 && p2.getVelocity().lengthSquared() < 0.01) p1Dist *= 1.1;
-                else if (p1.getVelocity().lengthSquared() < 0.01 && p2.getVelocity().lengthSquared() > 0.01) p2Dist *= 1.1;
-                return Double.compare(p1Dist, p2Dist);
-            }).filter(p -> {
-                if (p == player) return false;
-                if (player.isTeammate(p) || ServerL.playerOnSameTeam(player, p)) return false;
-                if (p.isDead() || p.getHealth() <= 0) return false;
-                if (p.isInvulnerable()) return false;
-                if (p.age < 20) return false;
-                if (p.distanceTo(player) > 6) return false;
-                return player.canSee(p);
-            }).findFirst().orElse(null);
+            AbstractClientPlayerEntity bestTarget = getBestTargetFor(player);
 
             if (bestTarget == null) {
                 hasLastAim = false;
@@ -117,7 +94,8 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
             }
 
             if (autoWeaponSwitch.getRawState()) {
-                WeaponSelector.switchToBestWeapon(player);
+                double dist = player.distanceTo(bestTarget);
+                WeaponSelector.switchToBestPvPWeapon(player, dist);
             }
 
             Vec3d predictedPos;
@@ -181,10 +159,8 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
             lastAimYaw = sendYaw;
             lastAimPitch = sendPitch;
 
-            WeaponSelector.addCooldown(player.getInventory().getSelectedSlot());
-
-            boolean isGun = dev.cigarette.agent.ZombiesAgent.isGun(player.getMainHandStack());
-            if (isGun) {
+            boolean isRanged = isRangedStack(player.getMainHandStack());
+            if (isRanged) {
                 ClientWorldAccessor clientWorldAccessor = (ClientWorldAccessor) world;
                 try (PendingUpdateManager pendingUpdateManager = clientWorldAccessor.getPendingUpdateManager().incrementSequence()) {
                     int seq = pendingUpdateManager.getSequence();
@@ -198,12 +174,62 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
 
                 player.setYaw(sendYaw);
                 player.setPitch(sendPitch);
+
+                if (blockHit.getRawState() && player.getOffHandStack() != null && player.getOffHandStack().isOf(Items.SHIELD)) {
+                    ClientWorldAccessor clientWorldAccessor = (ClientWorldAccessor) world;
+                    try (PendingUpdateManager pendingUpdateManager = clientWorldAccessor.getPendingUpdateManager().incrementSequence()) {
+                        int seq = pendingUpdateManager.getSequence();
+                        player.networkHandler.sendPacket(new PlayerInteractItemC2SPacket(Hand.OFF_HAND, seq, sendYaw, sendPitch));
+                    }
+                }
+
                 player.networkHandler.sendPacket(PlayerInteractEntityC2SPacket.attack(bestTarget, player.isSneaking()));
                 player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
             }
         } else {
             hasLastAim = false;
         }
+    }
+
+    private static boolean isRangedStack(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) return false;
+        Item item = stack.getItem();
+        return (item instanceof BowItem)
+            || (item instanceof CrossbowItem)
+            || (item instanceof TridentItem)
+            || stack.isOf(Items.SNOWBALL)
+            || stack.isOf(Items.EGG)
+            || stack.isOf(Items.ENDER_PEARL);
+    }
+
+    public static AbstractClientPlayerEntity getBestTargetFor(ClientPlayerEntity player) {
+        return WorldL.getRealPlayers().stream().sorted((p1, p2) -> {
+            Vec3d eyePos = player.getEyePos();
+            Vec3d p1Pos = p1.getEyePos().subtract(eyePos);
+            Vec3d p2Pos = p2.getEyePos().subtract(eyePos);
+            double p1Dist = p1Pos.lengthSquared();
+            double p2Dist = p2Pos.lengthSquared();
+
+            if (p1.isSneaking() && !p2.isSneaking()) p1Dist *= 0.8;
+            else if (!p1.isSneaking() && p2.isSneaking()) p2Dist *= 0.8;
+
+            if (p1.getPose() == EntityPose.CROUCHING && p2.getPose() != EntityPose.CROUCHING) p1Dist *= 0.9;
+            else if (p1.getPose() != EntityPose.CROUCHING && p2.getPose() == EntityPose.CROUCHING) p2Dist *= 0.9;
+
+            if (p1.isSprinting() && !p2.isSprinting()) p1Dist *= 1.1;
+            else if (!p1.isSprinting() && p2.isSprinting()) p2Dist *= 1.1;
+            if (p1.getVelocity().lengthSquared() > 0.01 && p2.getVelocity().lengthSquared() < 0.01) p1Dist *= 1.1;
+            else if (p1.getVelocity().lengthSquared() < 0.01 && p2.getVelocity().lengthSquared() > 0.01) p2Dist *= 1.1;
+            return Double.compare(p1Dist, p2Dist);
+        }).filter(p -> {
+            if (p == player) return false;
+            if (player.isTeammate(p) || ServerL.playerOnSameTeam(player, p)) return false;
+            if (p.isDead() || p.getHealth() <= 0) return false;
+            if (p.isInvulnerable()) return false;
+            if (p.age < 20) return false;
+            if (p.distanceTo(player) > 6) return false;
+            return player.canSee(p);
+        }).findFirst().orElse(null);
     }
 
     private static float wrapDegrees(float degrees) {
@@ -219,7 +245,8 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
     private static void doSprint(boolean sprint) {
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         if (player == null) return;
-        boolean forwardPressed = InputOverride.isActive ? InputOverride.forwardKey : KeyBinding.byId("key.forward").isPressed();
+        KeyBinding forwardKey = KeyBinding.byId("key.forward");
+        boolean forwardPressed = InputOverride.isActive ? InputOverride.forwardKey : (forwardKey != null && forwardKey.isPressed());
         if (!player.isOnGround() || !forwardPressed) return;
         if (sprint) {
             if (!player.isSprinting() && !player.isUsingItem() && !player.isSneaking()) {
@@ -236,6 +263,6 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
 
     @Override
     public boolean inValidGame() {
-        return GameDetector.rootGame == GameDetector.ParentGame.BEDWARS;
+        return GameDetector.rootGame != GameDetector.ParentGame.ZOMBIES;
     }
 }

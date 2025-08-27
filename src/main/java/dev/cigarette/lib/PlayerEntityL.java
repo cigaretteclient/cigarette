@@ -1,7 +1,9 @@
 package dev.cigarette.lib;
 
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.BowItem;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
 
@@ -23,9 +25,7 @@ public class PlayerEntityL {
         player.setPitch(yawPitch[1]);
     }
 
-    public static float angleBetween(float yaw, float pitch, float yaw2, float pitch2) {
-        float yawDiff = Math.abs(((yaw2 - yaw + 180) % 360) - 180);
-        float pitchDiff = Math.abs(pitch2 - pitch);
-        return (float) Math.sqrt(yawDiff * yawDiff + pitchDiff * pitchDiff) % 360;
+    public static float getDistance(PlayerEntity player, PlayerEntity other) {
+        return (float) player.getPos().distanceTo(other.getPos());
     }
 }

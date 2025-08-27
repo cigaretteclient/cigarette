@@ -92,7 +92,7 @@ public class ZombiesAgent extends BaseAgent {
         return bestTarget;
     }
 
-    private Vec3d calculatePredictedPosition(ZombiesAgent.ZombieTarget zombie, ClientPlayerEntity player) {
+    public static Vec3d calculatePredictedPosition(ZombiesAgent.ZombieTarget zombie, ClientPlayerEntity player) {
         if (!Aimbot.INSTANCE.predictiveAim.getRawState()) {
             return zombie.entity.getPos().subtract(player.getPos().add(0, player.getEyeHeight(EntityPose.STANDING), 0));
         }
@@ -119,7 +119,36 @@ public class ZombiesAgent extends BaseAgent {
         return predictedBodyPos.add(0, zombie.entity.getEyeHeight(zombie.entity.getPose()), 0);
     }
 
-    private Vec3d getPathfindingDirection(ZombiesAgent.ZombieTarget zombie, Vec3d zombiePos, Vec3d playerPos, Vec3d currentVelocity) {
+    public static Vec3d calculatePredictedPosition(ClientPlayerEntity target, ClientPlayerEntity player) {
+        Vec3d currentPos = target.getPos();
+        Vec3d playerPos = player.getEyePos();
+        Vec3d instantVelocity = target.getPos().subtract(target.lastX, target.lastY, target.lastZ);
+
+        double xVelocity = instantVelocity.x * Aimbot.INSTANCE.predictionTicks.getRawState().intValue();
+        double yVelocity = instantVelocity.y > LivingEntity.GRAVITY ? 0 : instantVelocity.y * (instantVelocity.y > 0 ? 1 : Aimbot.INSTANCE.predictionTicks.getRawState().intValue());
+        double zVelocity = instantVelocity.z * Aimbot.INSTANCE.predictionTicks.getRawState().intValue();
+        Vec3d currentVelocity = new Vec3d(xVelocity, yVelocity, zVelocity);
+
+        Vec3d pathDirection = getPathfindingDirection(null, currentPos, playerPos, currentVelocity);
+
+        if (pathDirection.lengthSquared() < 1.0E-7D) {
+            return target.getEyePos();
+        }
+
+        double distance = playerPos.distanceTo(currentPos);
+        double projectileSpeed = 20.0;
+        double timeToTarget = distance / projectileSpeed;
+
+        int maxPredictionTicks = Aimbot.INSTANCE.predictionTicks.getRawState().intValue();
+        double maxPredictionTime = maxPredictionTicks / 20.0;
+        timeToTarget = Math.min(timeToTarget, maxPredictionTime);
+
+        Vec3d predictedBodyPos = currentPos.add(pathDirection.multiply(timeToTarget));
+
+        return predictedBodyPos.add(0, target.getEyeHeight(target.getPose()), 0);
+    }
+
+    private static Vec3d getPathfindingDirection(ZombiesAgent.ZombieTarget zombie, Vec3d zombiePos, Vec3d playerPos, Vec3d currentVelocity) {
         Vec3d directPath = playerPos.subtract(zombiePos).normalize();
 
         if (currentVelocity.lengthSquared() > 1.0E-7D) {
@@ -133,7 +162,7 @@ public class ZombiesAgent extends BaseAgent {
         return directPath.multiply(estimateZombieSpeed(zombie) / 20.0);
     }
 
-    private double estimateZombieSpeed(ZombiesAgent.ZombieTarget zombie) {
+    private static double estimateZombieSpeed(ZombiesAgent.ZombieTarget zombie) {
         return switch (zombie.type) {
             case ZOMBIE, SKELETON, CREEPER, WITCH -> 5.0; // ~0.25 B/t * 20 t/s
             case BLAZE -> 8.0;

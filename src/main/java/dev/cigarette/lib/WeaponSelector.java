@@ -6,6 +6,7 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.tooltip.TooltipType;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 
@@ -161,6 +162,34 @@ public class WeaponSelector {
     }
 
     /**
+     * Selects the best weapon for auto-shooting based on situation
+     */
+    @Nullable
+    public static WeaponStats selectBestWeapon(ClientPlayerEntity player, @Nullable ServerPlayerEntity target) {
+        List<WeaponStats> weapons = analyzeWeapons(player);
+        if (weapons.isEmpty()) {
+            return null;
+        }
+
+        // If no target, we can assume a default distance and no headshot possibility for scoring.
+        double distance = (target != null) ? PlayerEntityL.getDistance(player, target) : 10.0; // Default distance
+
+        WeaponStats bestWeapon = null;
+        double bestScore = -1;
+
+        for (WeaponStats weapon : weapons) {
+            double score = calculateWeaponScore(weapon, distance, true, player);
+            if (score > bestScore) {
+                bestScore = score;
+                bestWeapon = weapon;
+            }
+        }
+        return bestWeapon;
+    }
+
+
+
+    /**
      * Calculates weapon score based on situation
      */
     private static double calculateWeaponScore(WeaponStats weapon, double distance, boolean canHeadshot, ClientPlayerEntity player) {
@@ -200,6 +229,25 @@ public class WeaponSelector {
      * Switches to the best weapon if it's not already selected
      */
     public static boolean switchToBestWeapon(ClientPlayerEntity player, @Nullable ZombiesAgent.ZombieTarget target) {
+        WeaponStats bestWeapon = selectBestWeapon(player, target);
+
+        if (bestWeapon == null) {
+            return false;
+        }
+
+        int currentSlot = player.getInventory().getSelectedSlot();
+        if (currentSlot == bestWeapon.slotIndex) {
+            return true;
+        }
+
+        player.getInventory().setSelectedSlot(bestWeapon.slotIndex);
+        return true;
+    }
+
+    /**
+     * Switches to the best weapon if it's not already selected
+     */
+    public static boolean switchToBestWeapon(ClientPlayerEntity player, @Nullable ServerPlayerEntity target) {
         WeaponStats bestWeapon = selectBestWeapon(player, target);
 
         if (bestWeapon == null) {

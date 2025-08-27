@@ -165,20 +165,21 @@ public class WeaponSelector {
      * Selects the best weapon for auto-shooting based on situation
      */
     @Nullable
-    public static WeaponStats selectBestWeapon(ClientPlayerEntity player, @Nullable ServerPlayerEntity target) {
+    public static WeaponStats selectBestWeapon(ClientPlayerEntity player) {
         List<WeaponStats> weapons = analyzeWeapons(player);
         if (weapons.isEmpty()) {
             return null;
         }
 
         // If no target, we can assume a default distance and no headshot possibility for scoring.
-        double distance = (target != null) ? PlayerEntityL.getDistance(player, target) : 10.0; // Default distance
+        // double distance = (target != null) ? PlayerEntityL.getDistance(player, target) : 10.0; // Default distance
+        double distance = 10.0; // Default distance
 
         WeaponStats bestWeapon = null;
         double bestScore = -1;
 
         for (WeaponStats weapon : weapons) {
-            double score = calculateWeaponScore(weapon, distance, true, player);
+            double score = calculateWeaponScore(weapon, distance, true);
             if (score > bestScore) {
                 bestScore = score;
                 bestWeapon = weapon;
@@ -225,6 +226,18 @@ public class WeaponSelector {
         return score;
     }
 
+    private static double calculateWeaponScore(WeaponStats weapon, double distance, boolean canHeadshot) {
+        // Basic score is the weapon's DPS
+        double score = weapon.DPS;
+
+        // Headshot bonus for high-damage weapons.
+        if (canHeadshot && weapon.damage > 15) {
+            score *= 1.2;
+        }
+
+        return score;
+    }
+
     /**
      * Switches to the best weapon if it's not already selected
      */
@@ -247,8 +260,8 @@ public class WeaponSelector {
     /**
      * Switches to the best weapon if it's not already selected
      */
-    public static boolean switchToBestWeapon(ClientPlayerEntity player, @Nullable ServerPlayerEntity target) {
-        WeaponStats bestWeapon = selectBestWeapon(player, target);
+    public static boolean switchToBestWeapon(ClientPlayerEntity player) {
+        WeaponStats bestWeapon = selectBestWeapon(player);
 
         if (bestWeapon == null) {
             return false;

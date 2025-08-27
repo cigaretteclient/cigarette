@@ -188,4 +188,79 @@ public class SliderWidget extends BaseWidget<Double> {
             secondSlider.render(context, secondSlider.isMouseOver(mouseX, mouseY), mouseX, mouseY, deltaTicks, secondSlider.getX(), secondSlider.getY(), secondSlider.getX() + secondSlider.getWidth(), secondSlider.getY() + secondSlider.getHeight());
         }
     }
+
+    // New static variant usable directly: primary slider = minimum, secondary = maximum.
+    public static class TwoHandedSlider extends SliderWidget {
+        private final SliderWidget maxSlider;
+
+        public TwoHandedSlider(String message, String tooltip) {
+            super(message, tooltip);
+            maxSlider = new SliderWidget(message + " Max", tooltip);
+            syncBounds();
+            linkCallbacks();
+        }
+
+        public TwoHandedSlider(String message) {
+            super(message);
+            maxSlider = new SliderWidget(message + " Max");
+            syncBounds();
+            linkCallbacks();
+        }
+
+        private void syncBounds() {
+            maxSlider.withBounds(this.minState, this.maxState, this.maxState);
+            maxSlider.withAccuracy(this.decimalPlaces);
+        }
+
+        private void linkCallbacks() {
+            maxSlider.sliderCallback = (value) -> {
+                // Ensure max >= min
+                if (value < this.getRawState()) {
+                    this.setState(value);
+                }
+            };
+        }
+
+        @Override
+        public SliderWidget withBounds(double min, double def, double max) {
+            super.withBounds(min, def, max);
+            syncBounds();
+            // Ensure ordering
+            if (maxSlider.getRawState() < getRawState()) maxSlider.setState(getRawState());
+            return this;
+        }
+
+        @Override
+        public SliderWidget withAccuracy(int decimalPlaces) {
+            super.withAccuracy(decimalPlaces);
+            maxSlider.withAccuracy(decimalPlaces);
+            return this;
+        }
+
+        @Override
+        public void setState(double state) {
+            super.setState(state);
+            if (maxSlider.getRawState() < state) {
+                maxSlider.setState(state);
+            }
+        }
+
+        @Override
+        public void registerConfigKey(String key) {
+            // Store min and max separately
+            super.registerConfigKey(key + ".min");
+            maxSlider.registerConfigKey(key + ".max");
+        }
+
+        public double getMinValue() { return this.getRawState(); }
+        public double getMaxValue() { return maxSlider.getRawState(); }
+
+        @Override
+        protected void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left, int top, int right, int bottom) {
+            super.render(context, hovered, mouseX, mouseY, deltaTicks, left, top, right, bottom);
+            // Position max slider to the right with small gap
+            maxSlider.withXY(left + this.getWidth() + 5, top).withWH(this.getWidth(), this.getHeight());
+            maxSlider.render(context, maxSlider.isMouseOver(mouseX, mouseY), mouseX, mouseY, deltaTicks, maxSlider.getX(), maxSlider.getY(), maxSlider.getX() + maxSlider.getWidth(), maxSlider.getY() + maxSlider.getHeight());
+        }
+    }
 }

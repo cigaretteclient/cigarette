@@ -41,22 +41,31 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
     public final SliderWidget predictionTicks = new SliderWidget("Prediction Ticks", "How many ticks ahead to predict player movement").withBounds(1, 10, 20).withAccuracy(0);
     public final SliderWidget smoothAim = new SliderWidget("Smooth Aim", "How quickly to snap to target in ticks").withBounds(1, 5, 20).withAccuracy(0);
     public final ToggleWidget wTap = new ToggleWidget("W-Tap", "Automatically sprint before attacking").withDefaultState(false);
+    public final SliderWidget.TwoHandedSlider jitterAmount = new SliderWidget.TwoHandedSlider("Jitter", "Random jitter range (min/max) degrees").withBounds(0, 0, 4).withAccuracy(2);
+    public final SliderWidget jitterSpeed = new SliderWidget("Jitter Speed", "How fast jitter target changes (ticks)").withBounds(5, 10, 40).withAccuracy(0);
 
     private KeyBinding rightClickKey = null;
 
     private boolean hasLastAim = false;
     private float lastAimYaw = 0f;
     private float lastAimPitch = 0f;
+    private float currentJitterYaw = 0f;
+    private float currentJitterPitch = 0f;
+    private float targetJitterYaw = 0f;
+    private float targetJitterPitch = 0f;
+    private int jitterTickCounter = 0;
 
     private PlayerAimbot(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
-        this.setChildren(autoAttack, autoWeaponSwitch, predictiveAim, predictionTicks, smoothAim, wTap);
+        this.setChildren(autoAttack, autoWeaponSwitch, predictiveAim, predictionTicks, smoothAim, jitterAmount, jitterSpeed, wTap);
         autoAttack.registerConfigKey(id + ".autoAttack");
         autoWeaponSwitch.registerConfigKey(id + ".autoWeaponSwitch");
         predictiveAim.registerConfigKey(id + ".predictiveAim");
         predictionTicks.registerConfigKey(id + ".predictionTicks");
         smoothAim.registerConfigKey(id + ".smoothAim");
         wTap.registerConfigKey(id + ".wTap");
+        jitterAmount.registerConfigKey(id + ".jitter");
+        jitterSpeed.registerConfigKey(id + ".jitterSpeed");
     }
 
     @Override
@@ -94,7 +103,7 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
                 return Double.compare(p1Dist, p2Dist);
             }).filter(p -> {
                 if (p == player) return false;
-                if (player.isTeammate(p) || ServerL.playerOnSameTeam(ServerL.getPlayer(player), ServerL.getPlayer((ClientPlayerEntity) p))) return false;
+                if (player.isTeammate(p) || ServerL.playerOnSameTeam(player, p)) return false;
                 if (p.isDead() || p.getHealth() <= 0) return false;
                 if (p.isInvulnerable()) return false;
                 if (p.age < 20) return false;
@@ -108,7 +117,7 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
             }
 
             if (autoWeaponSwitch.getRawState()) {
-                WeaponSelector.switchToBestWeapon(player, (net.minecraft.server.network.ServerPlayerEntity) null);
+                WeaponSelector.switchToBestWeapon(player);
             }
 
             Vec3d predictedPos;
@@ -127,8 +136,28 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
 
             Vec3d vector = predictedPos.subtract(player.getEyePos()).normalize();
 
-            float targetYaw = (float) Math.toDegrees(Math.atan2(-vector.x, vector.z));
-            float targetPitch = (float) Math.toDegrees(Math.asin(-vector.y));
+            float baseYaw = (float) Math.toDegrees(Math.atan2(-vector.x, vector.z));
+            float basePitch = (float) Math.toDegrees(Math.asin(-vector.y));
+
+            double minJitter = jitterAmount.getMinValue();
+            double maxJitter = jitterAmount.getMaxValue();
+            double jitterRange = maxJitter - minJitter;
+            int jitterSpeedTicks = (int) jitterSpeed.getRawState().doubleValue();
+            if (jitterRange > 0 && jitterSpeedTicks > 0) {
+                if (jitterTickCounter++ >= jitterSpeedTicks) {
+                    jitterTickCounter = 0;
+                    targetJitterYaw = (float) randomSigned(minJitter, maxJitter);
+                    targetJitterPitch = (float) randomSigned(minJitter, maxJitter);
+                }
+                float lerpFactor = 1f / Math.max(1, jitterSpeedTicks);
+                currentJitterYaw += (targetJitterYaw - currentJitterYaw) * lerpFactor;
+                currentJitterPitch += (targetJitterPitch - currentJitterPitch) * lerpFactor;
+            } else {
+                currentJitterYaw = currentJitterPitch = targetJitterYaw = targetJitterPitch = 0f;
+            }
+
+            float targetYaw = baseYaw + currentJitterYaw;
+            float targetPitch = basePitch + currentJitterPitch;
 
             int smoothTicks = smoothAim.getRawState().intValue();
             float sendYaw;
@@ -179,6 +208,12 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
 
     private static float wrapDegrees(float degrees) {
         return MathHelper.wrapDegrees(degrees);
+    }
+
+    private double randomSigned(double min, double max) {
+        if (max <= 0) return 0;
+        double magnitude = min + (Math.random() * (max - min));
+        return (Math.random() < 0.5 ? -1 : 1) * magnitude;
     }
     
     private static void doSprint(boolean sprint) {

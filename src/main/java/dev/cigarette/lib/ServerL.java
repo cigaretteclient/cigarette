@@ -4,73 +4,80 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.component.ComponentType;
 import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.AttributeModifiersComponent;
 import net.minecraft.component.type.DyedColorComponent;
-import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.recipe.ArmorDyeRecipe;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Formatting;
 
 import java.util.Objects;
 
 public class ServerL {
+    // Generic variant usable on both client and server player entities.
+    public static boolean playerOnSameTeam(PlayerEntity player, PlayerEntity other) {
+        if (player == null || other == null) return false;
+        if (player.getScoreboardTeam() != null && other.getScoreboardTeam() != null && player.getScoreboardTeam().isEqual(other.getScoreboardTeam()))
+            return true;
+        return getScoreboardColor(player) != -1 && getScoreboardColor(player) == getScoreboardColor(other) ||
+                getArmorColor(player) != -1 && getArmorColor(player) == getArmorColor(other) ||
+                getNameColor(player) != -1 && getNameColor(player) == getNameColor(other);
+    }
+
+    // Backwards-compatible server-specific method (delegates to generic).
     public static boolean playerOnSameTeam(ServerPlayerEntity player, ServerPlayerEntity other) {
-        if (player.getScoreboardTeam() == null || other.getScoreboardTeam() == null) return false;
-        return player.getScoreboardTeam().isEqual(other.getScoreboardTeam()) ||
-                getScoreboardColor(player) == getScoreboardColor(other) ||
-                getArmorColor(player) == getArmorColor(other) ||
-                getNameColor(player) == getNameColor(other);
+        return playerOnSameTeam((PlayerEntity) player, (PlayerEntity) other);
     }
 
-    public static int getNameColor(ServerPlayerEntity player) {
-        return Objects.requireNonNull(
-                Objects.requireNonNull(player.getDisplayName()).getStyle().getColor()
-        ).getRgb();
-    }
-
-    public static int getScoreboardColor(ServerPlayerEntity player) {
-        if (player.getScoreboardTeam() == null) return -1;
+    public static int getNameColor(PlayerEntity player) {
         try {
-            Formatting color = player.getScoreboardTeam().getColor();
-            if (color == null) return -1;
-            assert color.getColorValue() != null;
-            return color.getColorValue();
-        } catch (NullPointerException e) {
+            if (player == null || player.getDisplayName() == null) return -1;
+            var style = player.getDisplayName().getStyle();
+            if (style.getColor() == null) return -1;
+            return style.getColor().getRgb();
+        } catch (Exception ignored) {
             return -1;
         }
     }
 
-    public static int getArmorColor(ServerPlayerEntity player) {
-        if (player.getInventory() == null) return -1;
+    public static int getScoreboardColor(PlayerEntity player) {
+        if (player == null || player.getScoreboardTeam() == null) return -1;
+        try {
+            Formatting color = player.getScoreboardTeam().getColor();
+            if (color == null || color.getColorValue() == null) return -1;
+            return color.getColorValue();
+        } catch (Exception ignored) {
+            return -1;
+        }
+    }
+
+    public static int getArmorColor(PlayerEntity player) {
+        if (player == null || player.getInventory() == null) return -1;
 
         ItemStack boots = player.getInventory().getStack(36);
         ItemStack leggings = player.getInventory().getStack(37);
-        ItemStack chestplate = player.getInventory().getStack(38);
-        ItemStack helmet = player.getInventory().getStack(39);
+        // Chestplate / helmet currently unused; keep commented for potential future logic.
+        // ItemStack chestplate = player.getInventory().getStack(38);
+        // ItemStack helmet = player.getInventory().getStack(39);
 
         DyedColorComponent b = getDyedColorComponent(boots);
         DyedColorComponent l = getDyedColorComponent(leggings);
-//        DyedColorComponent c = getDyedColorComponent(chestplate);
-//        DyedColorComponent h = getDyedColorComponent(helmet);
 
-        if (b != null && l != null) {
-            if (b.rgb() == l.rgb()) {
-                return b.rgb();
-            }
+        if (b != null && l != null && b.rgb() == l.rgb()) {
+            return b.rgb();
         }
-
         return -1;
     }
 
     private static DyedColorComponent getDyedColorComponent(ItemStack stack) {
+        if (stack == null) return null;
         ComponentType<DyedColorComponent> type = DataComponentTypes.DYED_COLOR;
         return stack.getItem().getComponents().get(type);
     }
 
+    // Returns null (instead of crashing) when running on a remote/multiplayer server.
     public static ServerPlayerEntity getPlayer(ClientPlayerEntity player) {
-        assert MinecraftClient.getInstance().getServer() != null;
-        return MinecraftClient.getInstance().getServer().getPlayerManager().getPlayer(player.getUuid());
+        MinecraftClient mc = MinecraftClient.getInstance();
+        if (mc == null || mc.getServer() == null || player == null) return null; // mc.getServer() null on multiplayer clients
+        return mc.getServer().getPlayerManager().getPlayer(player.getUuid());
     }
 }

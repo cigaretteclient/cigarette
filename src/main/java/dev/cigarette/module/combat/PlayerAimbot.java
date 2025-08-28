@@ -8,8 +8,6 @@ import dev.cigarette.lib.ServerL;
 import dev.cigarette.lib.WeaponSelector;
 import dev.cigarette.lib.WorldL;
 import dev.cigarette.module.TickModule;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -20,17 +18,15 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.ZombieVillagerEntity;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.passive.WanderingTraderEntity;
-import net.minecraft.item.*;
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
+import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
-import net.minecraft.registry.tag.BlockTags;
+import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.Box;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -43,13 +39,13 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
 //    private final ToggleWidget silentAim = new ToggleWidget("Silent Aim", "Doesn't snap your camera client-side.").withDefaultState(true);
     private final ToggleWidget autoAttack = new ToggleWidget("Auto Attack", "Automatically hits players").withDefaultState(true);
     private final ToggleWidget autoWeaponSwitch = new ToggleWidget("Auto Weapon Switch", "Automatically switch weapons").withDefaultState(true);
-    public final SliderWidget smoothAim = new SliderWidget("Smooth Aim", "How quickly to snap to target in ticks").withBounds(1, 5, 20).withAccuracy(0);
+    public final SliderWidget smoothAim = new SliderWidget("Smooth Aim", "How quickly to snap to target in ticks").withBounds(1, 5, 20);
     public final ToggleWidget wTap = new ToggleWidget("W-Tap", "Automatically sprint before attacking").withDefaultState(false);
     public final SliderWidget.TwoHandedSlider jitterAmount = new SliderWidget.TwoHandedSlider("Jitter", "Random jitter range (min/max) degrees").withBounds(0, 0, 4).withAccuracy(2);
-    public final SliderWidget jitterSpeed = new SliderWidget("Jitter Speed", "How fast jitter target changes (ticks)").withBounds(5, 10, 40).withAccuracy(0);
+    public final SliderWidget jitterSpeed = new SliderWidget("Jitter Speed", "How fast jitter target changes (ticks)").withBounds(5, 10, 40);
 //    private final ToggleWidget blockHit = new ToggleWidget("Block-Hit", "Briefly block just before attacking").withDefaultState(false);
     private final ToggleWidget testMode = new ToggleWidget("Test Mode", "Allows targeting villagers regardless of team").withDefaultState(false);
-    public final SliderWidget attackCps = new SliderWidget("Attack CPS", "Clicks per second for auto attack").withBounds(1, 8, 15).withAccuracy(0);
+    public final SliderWidget attackCps = new SliderWidget("Attack CPS", "Clicks per second for auto attack").withBounds(1, 8, 15);
 
     private KeyBinding rightClickKey = null;
 
@@ -106,15 +102,7 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
 
         boolean active = rightClickKey.isPressed() || autoAttack.getRawState();
         if (active) {
-            HitResult hitResult = client.crosshairTarget;
-            if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK) {
-                BlockHitResult blockResult = (BlockHitResult) hitResult;
-                BlockState lookingAt = world.getBlockState(blockResult.getBlockPos());
-                if (lookingAt.isIn(BlockTags.BUTTONS) || lookingAt.isOf(Blocks.CHEST)) return;
-            }
-
             LivingEntity bestTarget = testMode.getRawState() ? getBestEntityTargetFor(player) : getBestTargetFor(player);
-
             if (bestTarget == null) {
                 hasLastAim = false;
                 return;
@@ -125,7 +113,7 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
                 WeaponSelector.switchToBestPvPWeapon(player, dist);
             }
 
-            boolean isRanged = isRangedStack(player.getMainHandStack());
+            boolean isRanged = WeaponSelector.isRangedWeapon(player.getMainHandStack());
             boolean shouldAttemptMelee = autoAttack.getRawState() && !isRanged;
             long now = System.currentTimeMillis();
             boolean attackNow = shouldAttemptMelee && now >= nextAttackAtMs;
@@ -156,7 +144,7 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
                     sendYaw = targetYaw;
                     sendPitch = targetPitch;
                 } else {
-                    float yawDiff = wrapDegrees(targetYaw - lastAimYaw);
+                    float yawDiff = MathHelper.wrapDegrees(targetYaw - lastAimYaw);
                     float pitchDiff = targetPitch - lastAimPitch;
                     float stepYaw = yawDiff / smoothTicks;
                     float stepPitch = pitchDiff / smoothTicks;
@@ -243,10 +231,6 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
         return player.getAbilities().creativeMode ? 5.0 : 3.0;
     }
 
-    private static boolean isRangedStack(ItemStack stack) {
-        return WeaponSelector.isRangedWeapon(stack);
-    }
-
     public static AbstractClientPlayerEntity getBestTargetFor(ClientPlayerEntity player) {
         return WorldL.getRealPlayers().stream().sorted((p1, p2) -> {
             Vec3d eyePos = player.getEyePos();
@@ -317,10 +301,6 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
         return candidates.get(0);
     }
 
-    private static float wrapDegrees(float degrees) {
-        return MathHelper.wrapDegrees(degrees);
-    }
-
     private double randomSigned(double min, double max) {
         if (max <= 0) return 0;
         double magnitude = min + (Math.random() * (max - min));
@@ -355,7 +335,7 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
     }
 
     private boolean isSword(ItemStack stack) {
-        return stack.isOf(Items.WOODEN_SWORD) || stack.isOf(Items.STONE_SWORD) || stack.isOf(Items.IRON_SWORD) || stack.isOf(Items.GOLDEN_SWORD) || stack.isOf(Items.DIAMOND_SWORD) || stack.isOf(Items.NETHERITE_SWORD);
+        return stack.isIn(ItemTags.SWORDS);
     }
 
     public static void playerBlockWithSword(ClientPlayerEntity player) {

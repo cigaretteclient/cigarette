@@ -5,12 +5,13 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.item.*;
 import net.minecraft.item.tooltip.TooltipType;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap; // Import ConcurrentHashMap
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -161,35 +162,6 @@ public class WeaponSelector {
     }
 
     /**
-     * Selects the best weapon for auto-shooting based on situation
-     */
-    @Nullable
-    public static WeaponStats selectBestWeapon(ClientPlayerEntity player) {
-        List<WeaponStats> weapons = analyzeWeapons(player);
-        if (weapons.isEmpty()) {
-            return null;
-        }
-
-        // If no target, we can assume a default distance and no headshot possibility for scoring.
-        // double distance = (target != null) ? PlayerEntityL.getDistance(player, target) : 10.0; // Default distance
-        double distance = 10.0; // Default distance
-
-        WeaponStats bestWeapon = null;
-        double bestScore = -1;
-
-        for (WeaponStats weapon : weapons) {
-            double score = calculateWeaponScore(weapon, distance, true);
-            if (score > bestScore) {
-                bestScore = score;
-                bestWeapon = weapon;
-            }
-        }
-        return bestWeapon;
-    }
-
-
-
-    /**
      * Calculates weapon score based on situation
      */
     private static double calculateWeaponScore(WeaponStats weapon, double distance, boolean canHeadshot, ClientPlayerEntity player) {
@@ -225,42 +197,11 @@ public class WeaponSelector {
         return score;
     }
 
-    private static double calculateWeaponScore(WeaponStats weapon, double distance, boolean canHeadshot) {
-        // Basic score is the weapon's DPS
-        double score = weapon.DPS;
-
-        // Headshot bonus for high-damage weapons.
-        if (canHeadshot && weapon.damage > 15) {
-            score *= 1.2;
-        }
-
-        return score;
-    }
-
     /**
      * Switches to the best weapon if it's not already selected
      */
     public static boolean switchToBestWeapon(ClientPlayerEntity player, @Nullable ZombiesAgent.ZombieTarget target) {
         WeaponStats bestWeapon = selectBestWeapon(player, target);
-
-        if (bestWeapon == null) {
-            return false;
-        }
-
-        int currentSlot = player.getInventory().getSelectedSlot();
-        if (currentSlot == bestWeapon.slotIndex) {
-            return true;
-        }
-
-        player.getInventory().setSelectedSlot(bestWeapon.slotIndex);
-        return true;
-    }
-
-    /**
-     * Switches to the best weapon if it's not already selected
-     */
-    public static boolean switchToBestWeapon(ClientPlayerEntity player) {
-        WeaponStats bestWeapon = selectBestWeapon(player);
 
         if (bestWeapon == null) {
             return false;
@@ -313,12 +254,7 @@ public class WeaponSelector {
     public static boolean isRangedWeapon(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return false;
         Item item = stack.getItem();
-        return (item instanceof BowItem)
-            || (item instanceof CrossbowItem)
-            || (item instanceof TridentItem)
-            || stack.isOf(Items.SNOWBALL)
-            || stack.isOf(Items.EGG)
-            || stack.isOf(Items.ENDER_PEARL);
+        return (item instanceof RangedWeaponItem) || (item instanceof ProjectileItem) || stack.isOf(Items.ENDER_PEARL);
     }
 
     /**
@@ -371,7 +307,6 @@ public class WeaponSelector {
 
     private static int meleeScore(ItemStack s) {
         if (s == null || s.isEmpty()) return Integer.MIN_VALUE;
-        Item item = s.getItem();
         if (s.isOf(Items.NETHERITE_SWORD)) return 90;
         if (s.isOf(Items.DIAMOND_SWORD)) return 80;
         if (s.isOf(Items.IRON_SWORD)) return 70;

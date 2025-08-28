@@ -96,83 +96,83 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
 
         if (MinecraftClient.getInstance().currentScreen != null) return;
 
-        boolean active = rightClickKey.isPressed() || autoAttack.getRawState();
-        if (active) {
-            LivingEntity bestTarget = testMode.getRawState() ? getBestEntityTargetFor(player) : getBestTargetFor(player);
-            if (bestTarget == null) {
-                hasLastAim = false;
-                return;
+        if(!rightClickKey.isPressed() && !autoAttack.getRawState()) {
+            hasLastAim = false;
+            return;
+        }
+
+        LivingEntity bestTarget = testMode.getRawState() ? getBestEntityTargetFor(player) : getBestTargetFor(player);
+        if (bestTarget == null) {
+            hasLastAim = false;
+            return;
+        }
+
+        if (autoWeaponSwitch.getRawState()) {
+            double dist = player.distanceTo(bestTarget);
+            switchToBestPvPWeapon(player, dist);
+        }
+
+        boolean isRanged = WeaponHelper.isRanged(player.getMainHandStack());
+        boolean shouldAttemptMelee = autoAttack.getRawState() && !isRanged;
+        long now = System.currentTimeMillis();
+        boolean attackNow = shouldAttemptMelee && now >= nextAttackAtMs;
+        if (attackNow) scheduleNextAttack(now);
+
+        Vec3d aimPoint = getAimPointInsideHitbox(player, bestTarget, attackNow);
+        double reach = getMeleeReach(player);
+        boolean inReach = player.getEyePos().squaredDistanceTo(aimPoint) <= (reach * reach) + 1e-6;
+
+        Vec3d vector = aimPoint.subtract(player.getEyePos()).normalize();
+        float targetYaw = (float) Math.toDegrees(Math.atan2(-vector.x, vector.z));
+        float targetPitch = (float) Math.toDegrees(Math.asin(-vector.y));
+
+        int smoothTicks = smoothAim.getRawState().intValue();
+        float sendYaw;
+        float sendPitch;
+        if (attackNow) {
+            sendYaw = targetYaw;
+            sendPitch = targetPitch;
+            hasLastAim = true;
+        } else {
+            if (!hasLastAim) {
+                lastAimYaw = targetYaw;
+                lastAimPitch = targetPitch;
+                hasLastAim = true;
             }
-
-            if (autoWeaponSwitch.getRawState()) {
-                double dist = player.distanceTo(bestTarget);
-                switchToBestPvPWeapon(player, dist);
-            }
-
-            boolean isRanged = WeaponHelper.isRanged(player.getMainHandStack());
-            boolean shouldAttemptMelee = autoAttack.getRawState() && !isRanged;
-            long now = System.currentTimeMillis();
-            boolean attackNow = shouldAttemptMelee && now >= nextAttackAtMs;
-            if (attackNow) scheduleNextAttack(now);
-
-            Vec3d aimPoint = getAimPointInsideHitbox(player, bestTarget, attackNow);
-            double reach = getMeleeReach(player);
-            boolean inReach = player.getEyePos().squaredDistanceTo(aimPoint) <= (reach * reach) + 1e-6;
-
-            Vec3d vector = aimPoint.subtract(player.getEyePos()).normalize();
-            float targetYaw = (float) Math.toDegrees(Math.atan2(-vector.x, vector.z));
-            float targetPitch = (float) Math.toDegrees(Math.asin(-vector.y));
-
-            int smoothTicks = smoothAim.getRawState().intValue();
-            float sendYaw;
-            float sendPitch;
-            if (attackNow) {
+            if (smoothTicks <= 1) {
                 sendYaw = targetYaw;
                 sendPitch = targetPitch;
-                hasLastAim = true;
             } else {
-                if (!hasLastAim) {
-                    lastAimYaw = targetYaw;
-                    lastAimPitch = targetPitch;
-                    hasLastAim = true;
-                }
-                if (smoothTicks <= 1) {
-                    sendYaw = targetYaw;
-                    sendPitch = targetPitch;
-                } else {
-                    float yawDiff = MathHelper.wrapDegrees(targetYaw - lastAimYaw);
-                    float pitchDiff = targetPitch - lastAimPitch;
-                    float stepYaw = yawDiff / smoothTicks;
-                    float stepPitch = pitchDiff / smoothTicks;
-                    sendYaw = lastAimYaw + stepYaw;
-                    sendPitch = lastAimPitch + stepPitch;
-                }
+                float yawDiff = MathHelper.wrapDegrees(targetYaw - lastAimYaw);
+                float pitchDiff = targetPitch - lastAimPitch;
+                float stepYaw = yawDiff / smoothTicks;
+                float stepPitch = pitchDiff / smoothTicks;
+                sendYaw = lastAimYaw + stepYaw;
+                sendPitch = lastAimPitch + stepPitch;
             }
-            lastAimYaw = sendYaw;
-            lastAimPitch = sendPitch;
+        }
+        lastAimYaw = sendYaw;
+        lastAimPitch = sendPitch;
 
-            if (isRanged) {
+        if (isRanged) {
+            player.setYaw(sendYaw);
+            player.setPitch(sendPitch);
+            player.swingHand(Hand.MAIN_HAND);
+        } else {
+            if (attackNow && inReach) {
+                if (wTap.getRawState()) {
+                    doSprint(false);
+                    doSprint(true);
+                }
                 player.setYaw(sendYaw);
                 player.setPitch(sendPitch);
-                player.swingHand(Hand.MAIN_HAND);
-            } else {
-                if (attackNow && inReach) {
-                    if (wTap.getRawState()) {
-                        doSprint(false);
-                        doSprint(true);
-                    }
-                    player.setYaw(sendYaw);
-                    player.setPitch(sendPitch);
 
-                    player.swingHand(Hand.MAIN_HAND);
-                    player.networkHandler.sendPacket(PlayerInteractEntityC2SPacket.attack(bestTarget, player.isSneaking()));
-                } else {
-                    player.setYaw(sendYaw);
-                    player.setPitch(sendPitch);
-                }
+                player.swingHand(Hand.MAIN_HAND);
+                player.networkHandler.sendPacket(PlayerInteractEntityC2SPacket.attack(bestTarget, player.isSneaking()));
+            } else {
+                player.setYaw(sendYaw);
+                player.setPitch(sendPitch);
             }
-        } else {
-            hasLastAim = false;
         }
     }
 
@@ -302,7 +302,7 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
         double magnitude = min + (Math.random() * (max - min));
         return (Math.random() < 0.5 ? -1 : 1) * magnitude;
     }
-    
+
     private static void doSprint(boolean sprint) {
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         if (player == null) return;

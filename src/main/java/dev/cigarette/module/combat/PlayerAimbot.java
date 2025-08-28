@@ -3,10 +3,8 @@ package dev.cigarette.module.combat;
 import dev.cigarette.GameDetector;
 import dev.cigarette.gui.widget.SliderWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
-import dev.cigarette.lib.InputOverride;
-import dev.cigarette.lib.ServerL;
-import dev.cigarette.lib.WeaponSelector;
-import dev.cigarette.lib.WorldL;
+import dev.cigarette.helper.WeaponHelper;
+import dev.cigarette.lib.*;
 import dev.cigarette.module.TickModule;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
@@ -18,11 +16,9 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.ZombieVillagerEntity;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.passive.WanderingTraderEntity;
-import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
-import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
@@ -110,10 +106,10 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
 
             if (autoWeaponSwitch.getRawState()) {
                 double dist = player.distanceTo(bestTarget);
-                WeaponSelector.switchToBestPvPWeapon(player, dist);
+                switchToBestPvPWeapon(player, dist);
             }
 
-            boolean isRanged = WeaponSelector.isRangedWeapon(player.getMainHandStack());
+            boolean isRanged = WeaponHelper.isRanged(player.getMainHandStack());
             boolean shouldAttemptMelee = autoAttack.getRawState() && !isRanged;
             long now = System.currentTimeMillis();
             boolean attackNow = shouldAttemptMelee && now >= nextAttackAtMs;
@@ -334,13 +330,31 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
         nextAttackAtMs = nowMs + delay;
     }
 
-    private boolean isSword(ItemStack stack) {
-        return stack.isIn(ItemTags.SWORDS);
-    }
-
     public static void playerBlockWithSword(ClientPlayerEntity player) {
         player.networkHandler.sendPacket(new PlayerInteractItemC2SPacket(Hand.OFF_HAND, 1,
                 player.getYaw(), player.getPitch()));
+    }
+
+    /**
+     * Switch to the best PvP weapon for players. For close range, prefer melee (best sword/axe in hotbar).
+     * For long range, prefer bow/crossbow if present.
+     * Returns true if a switch was made or the best weapon is already selected.
+     */
+    public static boolean switchToBestPvPWeapon(ClientPlayerEntity player, double distanceToTarget) {
+        if (player == null) return false;
+        int current = player.getInventory().getSelectedSlot();
+        int bestSlot;
+        if (distanceToTarget > 7.5) {
+            bestSlot = WeaponHelper.getBestRangedSlot(player);
+            if (bestSlot == -1) bestSlot = WeaponHelper.getBestMeleeSlot(player);
+        } else {
+            bestSlot = WeaponHelper.getBestMeleeSlot(player);
+            if (bestSlot == -1) bestSlot = WeaponHelper.getBestRangedSlot(player);
+        }
+        if (bestSlot == -1) return false;
+        if (bestSlot == current) return true;
+        player.getInventory().setSelectedSlot(bestSlot);
+        return true;
     }
 
     @Override

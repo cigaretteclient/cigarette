@@ -7,30 +7,35 @@ import dev.cigarette.lib.InputOverride;
 import dev.cigarette.lib.ServerL;
 import dev.cigarette.lib.WeaponSelector;
 import dev.cigarette.lib.WorldL;
-import dev.cigarette.mixin.ClientWorldAccessor;
 import dev.cigarette.module.TickModule;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.network.PendingUpdateManager;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.mob.ZombieVillagerEntity;
+import net.minecraft.entity.passive.VillagerEntity;
+import net.minecraft.entity.passive.WanderingTraderEntity;
 import net.minecraft.item.*;
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.Box;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
     public static final PlayerAimbot INSTANCE = new PlayerAimbot("combat.playerAimbot", "PlayerAimbot", "Automatically aims at players.");
@@ -38,37 +43,56 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
 //    private final ToggleWidget silentAim = new ToggleWidget("Silent Aim", "Doesn't snap your camera client-side.").withDefaultState(true);
     private final ToggleWidget autoAttack = new ToggleWidget("Auto Attack", "Automatically hits players").withDefaultState(true);
     private final ToggleWidget autoWeaponSwitch = new ToggleWidget("Auto Weapon Switch", "Automatically switch weapons").withDefaultState(true);
-    public final ToggleWidget predictiveAim = new ToggleWidget("Predictive Aim", "Predict player movement for better accuracy").withDefaultState(true);
-    public final SliderWidget predictionTicks = new SliderWidget("Prediction Ticks", "How many ticks ahead to predict player movement").withBounds(1, 10, 20).withAccuracy(0);
     public final SliderWidget smoothAim = new SliderWidget("Smooth Aim", "How quickly to snap to target in ticks").withBounds(1, 5, 20).withAccuracy(0);
     public final ToggleWidget wTap = new ToggleWidget("W-Tap", "Automatically sprint before attacking").withDefaultState(false);
     public final SliderWidget.TwoHandedSlider jitterAmount = new SliderWidget.TwoHandedSlider("Jitter", "Random jitter range (min/max) degrees").withBounds(0, 0, 4).withAccuracy(2);
     public final SliderWidget jitterSpeed = new SliderWidget("Jitter Speed", "How fast jitter target changes (ticks)").withBounds(5, 10, 40).withAccuracy(0);
-    private final ToggleWidget blockHit = new ToggleWidget("Block-Hit", "Briefly block just before attacking (if shield available)").withDefaultState(false);
+//    private final ToggleWidget blockHit = new ToggleWidget("Block-Hit", "Briefly block just before attacking").withDefaultState(false);
+    private final ToggleWidget testMode = new ToggleWidget("Test Mode", "Allows targeting villagers regardless of team").withDefaultState(false);
+    public final SliderWidget attackCps = new SliderWidget("Attack CPS", "Clicks per second for auto attack").withBounds(1, 8, 15).withAccuracy(0);
 
     private KeyBinding rightClickKey = null;
 
     private boolean hasLastAim = false;
     private float lastAimYaw = 0f;
     private float lastAimPitch = 0f;
-    private float currentJitterYaw = 0f;
-    private float currentJitterPitch = 0f;
-    private float targetJitterYaw = 0f;
-    private float targetJitterPitch = 0f;
-    private int jitterTickCounter = 0;
+
+    private long nextAttackAtMs = 0L;
+    private static final double ATTACK_VARIANCE = 0.15;
+    private static final double JITTER_CAP_DEGREES = 2.0;
 
     private PlayerAimbot(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
-        this.setChildren(autoAttack, autoWeaponSwitch, predictiveAim, predictionTicks, smoothAim, jitterAmount, jitterSpeed, wTap, blockHit);
+        this.setChildren(autoAttack, autoWeaponSwitch, smoothAim, jitterAmount, jitterSpeed, wTap, testMode, attackCps);
         autoAttack.registerConfigKey(id + ".autoAttack");
         autoWeaponSwitch.registerConfigKey(id + ".autoWeaponSwitch");
-        predictiveAim.registerConfigKey(id + ".predictiveAim");
-        predictionTicks.registerConfigKey(id + ".predictionTicks");
         smoothAim.registerConfigKey(id + ".smoothAim");
         wTap.registerConfigKey(id + ".wTap");
         jitterAmount.registerConfigKey(id + ".jitter");
         jitterSpeed.registerConfigKey(id + ".jitterSpeed");
-        blockHit.registerConfigKey(id + ".blockHit");
+//        blockHit.registerConfigKey(id + ".blockHit");
+        testMode.registerConfigKey(id + ".testMode");
+        attackCps.registerConfigKey(id + ".attackCps");
+    }
+
+    private static Vec3d getClosestBodyPos(LivingEntity from, LivingEntity to) {
+        Vec3d eyePos = from.getEyePos();
+        Vec3d toPos = to.getPos();
+        Vec3d toEyePos = to.getEyePos();
+        Vec3d toFeetPos = new Vec3d(toPos.x, to.getY(), toPos.z);
+        Vec3d toMidPos = new Vec3d(toPos.x, to.getY() + to.getStandingEyeHeight() / 2, toPos.z);
+        Vec3d toHeadPos = new Vec3d(toPos.x, toEyePos.y, toPos.z);
+        Vec3d[] candidates = new Vec3d[] {toFeetPos, toMidPos, toHeadPos};
+        Vec3d bestPos = toMidPos;
+        double bestDist = eyePos.distanceTo(bestPos);
+        for (Vec3d candidate : candidates) {
+            double dist = eyePos.distanceTo(candidate);
+            if (dist < bestDist) {
+                bestDist = dist;
+                bestPos = candidate;
+            }
+        }
+        return bestPos;
     }
 
     @Override
@@ -78,7 +102,10 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
             return;
         }
 
-        if (rightClickKey.isPressed() || autoAttack.getRawState()) {
+        if (MinecraftClient.getInstance().currentScreen != null) return;
+
+        boolean active = rightClickKey.isPressed() || autoAttack.getRawState();
+        if (active) {
             HitResult hitResult = client.crosshairTarget;
             if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK) {
                 BlockHitResult blockResult = (BlockHitResult) hitResult;
@@ -86,7 +113,7 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
                 if (lookingAt.isIn(BlockTags.BUTTONS) || lookingAt.isOf(Blocks.CHEST)) return;
             }
 
-            AbstractClientPlayerEntity bestTarget = getBestTargetFor(player);
+            LivingEntity bestTarget = testMode.getRawState() ? getBestEntityTargetFor(player) : getBestTargetFor(player);
 
             if (bestTarget == null) {
                 hasLastAim = false;
@@ -98,108 +125,126 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
                 WeaponSelector.switchToBestPvPWeapon(player, dist);
             }
 
-            Vec3d predictedPos;
-            if (predictiveAim.getRawState()) {
-                Vec3d currentPos = bestTarget.getPos();
-                Vec3d instantVelocity = currentPos.subtract(bestTarget.lastX, bestTarget.lastY, bestTarget.lastZ);
-                int ticks = predictionTicks.getRawState().intValue();
-                double xVelocity = instantVelocity.x * ticks;
-                double yVelocity = instantVelocity.y > LivingEntity.GRAVITY ? 0 : instantVelocity.y * (instantVelocity.y > 0 ? 1 : ticks);
-                double zVelocity = instantVelocity.z * ticks;
-                Vec3d projected = currentPos.add(xVelocity, yVelocity, zVelocity);
-                predictedPos = projected.add(0, bestTarget.getEyeHeight(bestTarget.getPose()), 0);
-            } else {
-                predictedPos = bestTarget.getEyePos();
-            }
+            boolean isRanged = isRangedStack(player.getMainHandStack());
+            boolean shouldAttemptMelee = autoAttack.getRawState() && !isRanged;
+            long now = System.currentTimeMillis();
+            boolean attackNow = shouldAttemptMelee && now >= nextAttackAtMs;
+            if (attackNow) scheduleNextAttack(now);
 
-            Vec3d vector = predictedPos.subtract(player.getEyePos()).normalize();
+            Vec3d aimPoint = getAimPointInsideHitbox(player, bestTarget, attackNow);
+            double reach = getMeleeReach(player);
+            boolean inReach = player.getEyePos().squaredDistanceTo(aimPoint) <= (reach * reach) + 1e-6;
 
-            float baseYaw = (float) Math.toDegrees(Math.atan2(-vector.x, vector.z));
-            float basePitch = (float) Math.toDegrees(Math.asin(-vector.y));
-
-            double minJitter = jitterAmount.getMinValue();
-            double maxJitter = jitterAmount.getMaxValue();
-            double jitterRange = maxJitter - minJitter;
-            int jitterSpeedTicks = (int) jitterSpeed.getRawState().doubleValue();
-            if (jitterRange > 0 && jitterSpeedTicks > 0) {
-                if (jitterTickCounter++ >= jitterSpeedTicks) {
-                    jitterTickCounter = 0;
-                    targetJitterYaw = (float) randomSigned(minJitter, maxJitter);
-                    targetJitterPitch = (float) randomSigned(minJitter, maxJitter);
-                }
-                float lerpFactor = 1f / Math.max(1, jitterSpeedTicks);
-                currentJitterYaw += (targetJitterYaw - currentJitterYaw) * lerpFactor;
-                currentJitterPitch += (targetJitterPitch - currentJitterPitch) * lerpFactor;
-            } else {
-                currentJitterYaw = currentJitterPitch = targetJitterYaw = targetJitterPitch = 0f;
-            }
-
-            float targetYaw = baseYaw + currentJitterYaw;
-            float targetPitch = basePitch + currentJitterPitch;
+            Vec3d vector = aimPoint.subtract(player.getEyePos()).normalize();
+            float targetYaw = (float) Math.toDegrees(Math.atan2(-vector.x, vector.z));
+            float targetPitch = (float) Math.toDegrees(Math.asin(-vector.y));
 
             int smoothTicks = smoothAim.getRawState().intValue();
             float sendYaw;
             float sendPitch;
-            if (!hasLastAim) {
-                lastAimYaw = targetYaw;
-                lastAimPitch = targetPitch;
-                hasLastAim = true;
-            }
-            if (smoothTicks <= 1) {
+            if (attackNow) {
                 sendYaw = targetYaw;
                 sendPitch = targetPitch;
+                hasLastAim = true;
             } else {
-                float yawDiff = wrapDegrees(targetYaw - lastAimYaw);
-                float pitchDiff = targetPitch - lastAimPitch;
-                float stepYaw = yawDiff / smoothTicks;
-                float stepPitch = pitchDiff / smoothTicks;
-                sendYaw = lastAimYaw + stepYaw;
-                sendPitch = lastAimPitch + stepPitch;
+                if (!hasLastAim) {
+                    lastAimYaw = targetYaw;
+                    lastAimPitch = targetPitch;
+                    hasLastAim = true;
+                }
+                if (smoothTicks <= 1) {
+                    sendYaw = targetYaw;
+                    sendPitch = targetPitch;
+                } else {
+                    float yawDiff = wrapDegrees(targetYaw - lastAimYaw);
+                    float pitchDiff = targetPitch - lastAimPitch;
+                    float stepYaw = yawDiff / smoothTicks;
+                    float stepPitch = pitchDiff / smoothTicks;
+                    sendYaw = lastAimYaw + stepYaw;
+                    sendPitch = lastAimPitch + stepPitch;
+                }
             }
             lastAimYaw = sendYaw;
             lastAimPitch = sendPitch;
 
-            boolean isRanged = isRangedStack(player.getMainHandStack());
             if (isRanged) {
-                ClientWorldAccessor clientWorldAccessor = (ClientWorldAccessor) world;
-                try (PendingUpdateManager pendingUpdateManager = clientWorldAccessor.getPendingUpdateManager().incrementSequence()) {
-                    int seq = pendingUpdateManager.getSequence();
-                    player.networkHandler.sendPacket(new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, seq, sendYaw, sendPitch));
-                }
-            } else {
-                if (wTap.getRawState()) {
-                    doSprint(false);
-                    doSprint(true);
-                }
-
                 player.setYaw(sendYaw);
                 player.setPitch(sendPitch);
-
-                if (blockHit.getRawState() && player.getOffHandStack() != null && player.getOffHandStack().isOf(Items.SHIELD)) {
-                    ClientWorldAccessor clientWorldAccessor = (ClientWorldAccessor) world;
-                    try (PendingUpdateManager pendingUpdateManager = clientWorldAccessor.getPendingUpdateManager().incrementSequence()) {
-                        int seq = pendingUpdateManager.getSequence();
-                        player.networkHandler.sendPacket(new PlayerInteractItemC2SPacket(Hand.OFF_HAND, seq, sendYaw, sendPitch));
+                player.swingHand(Hand.MAIN_HAND);
+            } else {
+                if (attackNow && inReach) {
+                    if (wTap.getRawState()) {
+                        doSprint(false);
+                        doSprint(true);
                     }
-                }
+                    player.setYaw(sendYaw);
+                    player.setPitch(sendPitch);
 
-                player.networkHandler.sendPacket(PlayerInteractEntityC2SPacket.attack(bestTarget, player.isSneaking()));
-                player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
+                    player.swingHand(Hand.MAIN_HAND);
+                    player.networkHandler.sendPacket(PlayerInteractEntityC2SPacket.attack(bestTarget, player.isSneaking()));
+                } else {
+                    player.setYaw(sendYaw);
+                    player.setPitch(sendPitch);
+                }
             }
         } else {
             hasLastAim = false;
         }
     }
 
+    private Vec3d getAimPointInsideHitbox(ClientPlayerEntity player, LivingEntity target, boolean attackNow) {
+        Box box = target.getBoundingBox();
+        Vec3d eye = player.getEyePos();
+        double cx = (box.minX + box.maxX) * 0.5; double cy = (box.minY + box.maxY) * 0.5; double cz = (box.minZ + box.maxZ) * 0.5;
+        double px = MathHelper.clamp(eye.x, box.minX, box.maxX);
+        double py = MathHelper.clamp(eye.y, box.minY, box.maxY);
+        double pz = MathHelper.clamp(eye.z, box.minZ, box.maxZ);
+        Vec3d closest = new Vec3d(px, py, pz);
+        Vec3d dirToCenter = new Vec3d(Math.copySign(1e-3, cx - px), Math.copySign(1e-3, cy - py), Math.copySign(1e-3, cz - pz));
+        Vec3d basePoint = clampToBox(closest.add(dirToCenter), box);
+
+        if (!attackNow) return basePoint;
+
+        double halfX = (box.maxX - box.minX) * 0.5;
+        double halfY = (box.maxY - box.minY) * 0.5;
+        double halfZ = (box.maxZ - box.minZ) * 0.5;
+        double maxFrac = 0.3;
+        double jMin = Math.max(0.0, Math.min(jitterAmount.getMinValue(), JITTER_CAP_DEGREES));
+        double jMax = Math.max(jMin, Math.min(jitterAmount.getMaxValue(), JITTER_CAP_DEGREES));
+        double jitterScale = jMax <= 0 ? 0 : Math.min(1.0, jMax / JITTER_CAP_DEGREES);
+        double fx = maxFrac * jitterScale;
+        double fy = (maxFrac * 0.6) * jitterScale;
+        double fz = maxFrac * jitterScale;
+
+        double ox = randomSigned(0, halfX * fx);
+        double oy = randomSigned(0, halfY * fy);
+        double oz = randomSigned(0, halfZ * fz);
+
+        Vec3d center = new Vec3d(cx, cy, cz);
+        Vec3d jittered = center.add(ox, oy, oz);
+        return clampToBox(jittered, box, 1e-3);
+    }
+
+    private static Vec3d clampToBox(Vec3d p, Box box) {
+        return clampToBox(p, box, 0);
+    }
+
+    private static Vec3d clampToBox(Vec3d p, Box box, double inset) {
+        double minX = box.minX + inset, minY = box.minY + inset, minZ = box.minZ + inset;
+        double maxX = box.maxX - inset, maxY = box.maxY - inset, maxZ = box.maxZ - inset;
+        return new Vec3d(
+            MathHelper.clamp(p.x, minX, maxX),
+            MathHelper.clamp(p.y, minY, maxY),
+            MathHelper.clamp(p.z, minZ, maxZ)
+        );
+    }
+
+    private static double getMeleeReach(ClientPlayerEntity player) {
+        return player.getAbilities().creativeMode ? 5.0 : 3.0;
+    }
+
     private static boolean isRangedStack(ItemStack stack) {
-        if (stack == null || stack.isEmpty()) return false;
-        Item item = stack.getItem();
-        return (item instanceof BowItem)
-            || (item instanceof CrossbowItem)
-            || (item instanceof TridentItem)
-            || stack.isOf(Items.SNOWBALL)
-            || stack.isOf(Items.EGG)
-            || stack.isOf(Items.ENDER_PEARL);
+        return WeaponSelector.isRangedWeapon(stack);
     }
 
     public static AbstractClientPlayerEntity getBestTargetFor(ClientPlayerEntity player) {
@@ -223,13 +268,53 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
             return Double.compare(p1Dist, p2Dist);
         }).filter(p -> {
             if (p == player) return false;
-            if (player.isTeammate(p) || ServerL.playerOnSameTeam(player, p)) return false;
+            if (!INSTANCE.testMode.getRawState() && (player.isTeammate(p) || ServerL.playerOnSameTeam(player, p))) return false;
             if (p.isDead() || p.getHealth() <= 0) return false;
             if (p.isInvulnerable()) return false;
             if (p.age < 20) return false;
             if (p.distanceTo(player) > 6) return false;
             return player.canSee(p);
         }).findFirst().orElse(null);
+    }
+
+    public static LivingEntity getBestEntityTargetFor(ClientPlayerEntity player) {
+        ClientWorld world = (ClientWorld) player.getWorld();
+        Vec3d eyePos = player.getEyePos();
+        double maxRange = 6.0;
+        Box search = player.getBoundingBox().expand(maxRange + 1.0);
+
+        List<AbstractClientPlayerEntity> players = WorldL.getRealPlayers();
+        List<VillagerEntity> villagers = world.getEntitiesByClass(VillagerEntity.class, search,
+                v -> v.isAlive() && v.distanceTo(player) <= maxRange);
+        List<WanderingTraderEntity> traders = world.getEntitiesByClass(WanderingTraderEntity.class, search,
+                t -> t.isAlive() && t.distanceTo(player) <= maxRange);
+        List<ZombieVillagerEntity> zombieVillagers = world.getEntitiesByClass(ZombieVillagerEntity.class, search,
+                z -> z.isAlive() && z.distanceTo(player) <= maxRange);
+
+        List<LivingEntity> villagerLike = new ArrayList<>();
+        villagerLike.addAll(villagers);
+        villagerLike.addAll(traders);
+        villagerLike.addAll(zombieVillagers);
+
+        if (!villagerLike.isEmpty()) {
+            villagerLike.sort(Comparator.comparingDouble(e -> eyePos.squaredDistanceTo(e.getEyePos())));
+            return villagerLike.get(0);
+        }
+
+        List<LivingEntity> candidates = new ArrayList<>();
+        for (AbstractClientPlayerEntity p : players) {
+            if (p == player) continue;
+            if (player.isTeammate(p) || ServerL.playerOnSameTeam(player, p)) continue;
+            if (p.isDead() || p.getHealth() <= 0) continue;
+            if (p.isInvulnerable()) continue;
+            if (p.age < 20) continue;
+            if (p.distanceTo(player) > maxRange) continue;
+            if (!player.canSee(p)) continue;
+            candidates.add(p);
+        }
+        if (candidates.isEmpty()) return null;
+        candidates.sort(Comparator.comparingDouble(e -> eyePos.squaredDistanceTo(e.getEyePos())));
+        return candidates.get(0);
     }
 
     private static float wrapDegrees(float degrees) {
@@ -259,6 +344,23 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
                 player.networkHandler.sendPacket(new ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.STOP_SPRINTING));
             }
         }
+    }
+
+    private void scheduleNextAttack(long nowMs) {
+        int cps = Math.max(1, attackCps.getRawState().intValue());
+        double baseInterval = 1000.0 / cps;
+        double factor = 1.0 + ((Math.random() * 2 - 1) * ATTACK_VARIANCE);
+        long delay = (long) Math.max(35, baseInterval * factor);
+        nextAttackAtMs = nowMs + delay;
+    }
+
+    private boolean isSword(ItemStack stack) {
+        return stack.isOf(Items.WOODEN_SWORD) || stack.isOf(Items.STONE_SWORD) || stack.isOf(Items.IRON_SWORD) || stack.isOf(Items.GOLDEN_SWORD) || stack.isOf(Items.DIAMOND_SWORD) || stack.isOf(Items.NETHERITE_SWORD);
+    }
+
+    public static void playerBlockWithSword(ClientPlayerEntity player) {
+        player.networkHandler.sendPacket(new PlayerInteractItemC2SPacket(Hand.OFF_HAND, 1,
+                player.getYaw(), player.getPitch()));
     }
 
     @Override

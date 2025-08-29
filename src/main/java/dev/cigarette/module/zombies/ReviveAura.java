@@ -15,8 +15,8 @@ import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.util.Hand;
 import net.minecraft.util.math.Vec3d;
+import dev.cigarette.lib.AimingL;
 import org.jetbrains.annotations.NotNull;
 
 public class ReviveAura extends RenderModule<ToggleWidget, Boolean> {
@@ -111,14 +111,12 @@ public class ReviveAura extends RenderModule<ToggleWidget, Boolean> {
         }
 
         Vec3d targetCenterPos = target.getBoundingBox().getCenter();
-        Vec3d direction = targetCenterPos.subtract(player.getEyePos()).normalize();
+        float[] angles = AimingL.anglesFromTo(player.getEyePos(), targetCenterPos);
+        float aimYaw = angles[0];
+        float aimPitch = angles[1];
 
-        float aimYaw = (float) Math.toDegrees(Math.atan2(-direction.x, direction.z));
-        float aimPitch = (float) Math.toDegrees(Math.asin(-direction.y));
-
-        player.networkHandler.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(aimYaw, aimPitch, player.isOnGround(), player.horizontalCollision));
-        player.networkHandler.sendPacket(PlayerInteractEntityC2SPacket.attack(target, player.isSneaking()));
-        player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
+        // Use centralized helper for look+attack+hand swing
+        AimingL.lookAndAttack(world, player, target, aimYaw, aimPitch);
 
         cooldownTicks += 25;
     }

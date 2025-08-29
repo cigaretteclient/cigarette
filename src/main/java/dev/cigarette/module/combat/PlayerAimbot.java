@@ -16,12 +16,9 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.ZombieVillagerEntity;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.passive.WanderingTraderEntity;
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.Box;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 
@@ -42,12 +39,20 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
 //    private final ToggleWidget blockHit = new ToggleWidget("Block-Hit", "Briefly block just before attacking").withDefaultState(false);
     private final ToggleWidget testMode = new ToggleWidget("Test Mode", "Allows targeting villagers regardless of team").withDefaultState(false);
     public final SliderWidget attackCps = new SliderWidget("Attack CPS", "Clicks per second for auto attack").withBounds(1, 8, 15);
-
+    private final SliderWidget aimSmoothening = new SliderWidget("Aim Smoothing", "How much to smooth/interpolate between steps of the smooth aim").withBounds(0, 0.05, 0.9).withAccuracy(3);
+    public final SliderWidget.TwoHandedSlider aimOffset = new SliderWidget.TwoHandedSlider("Aim Offset", "Aim target offset (min/max) degrees").withBounds(0, 0, 3).withAccuracy(2);
+    public final SliderWidget swayAmount = new SliderWidget("Sway Amount", "Continuous sway amplitude (degrees)").withBounds(0, 0.0, 1.5).withAccuracy(2);
+    public final SliderWidget swaySpeed = new SliderWidget("Sway Speed", "How fast the sway oscillates (ticks)").withBounds(20, 40, 200);
     private KeyBinding rightClickKey = null;
 
     private boolean hasLastAim = false;
     private float lastAimYaw = 0f;
     private float lastAimPitch = 0f;
+
+    private int tickCount = 0;
+    private double currentJitterYaw = 0.0, currentJitterPitch = 0.0;
+    private double nextJitterYaw = 0.0, nextJitterPitch = 0.0;
+    private double wavePhase = 0.0;
 
     private long nextAttackAtMs = 0L;
     private static final double ATTACK_VARIANCE = 0.15;
@@ -55,10 +60,14 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
 
     private PlayerAimbot(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
-        this.setChildren(autoAttack, autoWeaponSwitch, smoothAim, jitterAmount, jitterSpeed, wTap, testMode, attackCps);
+        this.setChildren(autoAttack, autoWeaponSwitch, smoothAim, aimSmoothening, jitterAmount, jitterSpeed, aimOffset, swayAmount, swaySpeed, wTap, testMode, attackCps);
         autoAttack.registerConfigKey(id + ".autoAttack");
         autoWeaponSwitch.registerConfigKey(id + ".autoWeaponSwitch");
         smoothAim.registerConfigKey(id + ".smoothAim");
+        aimSmoothening.registerConfigKey(id + ".aimSmoothening");
+        aimOffset.registerConfigKey(id + ".aimOffset");
+        swayAmount.registerConfigKey(id + ".swayAmount");
+        swaySpeed.registerConfigKey(id + ".swaySpeed");
         wTap.registerConfigKey(id + ".wTap");
         jitterAmount.registerConfigKey(id + ".jitter");
         jitterSpeed.registerConfigKey(id + ".jitterSpeed");
@@ -67,28 +76,24 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
         attackCps.registerConfigKey(id + ".attackCps");
     }
 
-    private static Vec3d getClosestBodyPos(LivingEntity from, LivingEntity to) {
-        Vec3d eyePos = from.getEyePos();
-        Vec3d toPos = to.getPos();
-        Vec3d toEyePos = to.getEyePos();
-        Vec3d toFeetPos = new Vec3d(toPos.x, to.getY(), toPos.z);
-        Vec3d toMidPos = new Vec3d(toPos.x, to.getY() + to.getStandingEyeHeight() / 2, toPos.z);
-        Vec3d toHeadPos = new Vec3d(toPos.x, toEyePos.y, toPos.z);
-        Vec3d[] candidates = new Vec3d[] {toFeetPos, toMidPos, toHeadPos};
-        Vec3d bestPos = toMidPos;
-        double bestDist = eyePos.distanceTo(bestPos);
-        for (Vec3d candidate : candidates) {
-            double dist = eyePos.distanceTo(candidate);
-            if (dist < bestDist) {
-                bestDist = dist;
-                bestPos = candidate;
-            }
-        }
-        return bestPos;
-    }
-
     @Override
     protected void onEnabledTick(MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
+        tickCount++;
+        double swaySpd = Math.max(1.0, swaySpeed.getRawState().doubleValue());
+        wavePhase += (2.0 * Math.PI) / swaySpd;
+
+        int jitterTicks = Math.max(1, jitterSpeed.getRawState().intValue());
+        if (tickCount % jitterTicks == 0) {
+            double jMin = Math.max(0.0, Math.min(jitterAmount.getMinValue(), JITTER_CAP_DEGREES));
+            double jMax = Math.max(jMin, Math.min(jitterAmount.getMaxValue(), JITTER_CAP_DEGREES));
+            nextJitterYaw = AimingL.randomSigned(jMin, jMax);
+            nextJitterPitch = AimingL.randomSigned(jMin * 0.6, jMax * 0.6); // pitch jitter typically smaller
+        }
+        // interpolate jitter targets towards the next jitter using AimingL
+        double asmVal = aimSmoothening.getRawState().doubleValue();
+        currentJitterYaw = AimingL.interpolateTowards(currentJitterYaw, nextJitterYaw, asmVal);
+        currentJitterPitch = AimingL.interpolateTowards(currentJitterPitch, nextJitterPitch, asmVal);
+
         if (rightClickKey == null) {
             rightClickKey = KeyBinding.byId("key.use");
             return;
@@ -109,22 +114,23 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
 
         if (autoWeaponSwitch.getRawState()) {
             double dist = player.distanceTo(bestTarget);
-            switchToBestPvPWeapon(player, dist);
+            AimingL.switchToBestPvPWeapon(player, dist);
         }
 
         boolean isRanged = WeaponHelper.isRanged(player.getMainHandStack());
         boolean shouldAttemptMelee = autoAttack.getRawState() && !isRanged;
         long now = System.currentTimeMillis();
         boolean attackNow = shouldAttemptMelee && now >= nextAttackAtMs;
-        if (attackNow) scheduleNextAttack(now);
+        if (attackNow) nextAttackAtMs = now + AimingL.computeNextAttackDelayMillis(attackCps.getRawState().intValue(), ATTACK_VARIANCE);
 
-        Vec3d aimPoint = getAimPointInsideHitbox(player, bestTarget, attackNow);
+        Vec3d aimPoint = AimingL.getAimPointInsideHitbox(player, bestTarget, attackNow,
+                jitterAmount.getMinValue(), jitterAmount.getMaxValue(), JITTER_CAP_DEGREES);
         double reach = getMeleeReach(player);
         boolean inReach = player.getEyePos().squaredDistanceTo(aimPoint) <= (reach * reach) + 1e-6;
 
-        Vec3d vector = aimPoint.subtract(player.getEyePos()).normalize();
-        float targetYaw = (float) Math.toDegrees(Math.atan2(-vector.x, vector.z));
-        float targetPitch = (float) Math.toDegrees(Math.asin(-vector.y));
+        float[] angles = AimingL.anglesFromTo(player.getEyePos(), aimPoint);
+        float targetYaw = angles[0];
+        float targetPitch = angles[1];
 
         int smoothTicks = smoothAim.getRawState().intValue();
         float sendYaw;
@@ -143,16 +149,34 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
                 sendYaw = targetYaw;
                 sendPitch = targetPitch;
             } else {
-                float yawDiff = MathHelper.wrapDegrees(targetYaw - lastAimYaw);
-                float pitchDiff = targetPitch - lastAimPitch;
-                float stepYaw = yawDiff / smoothTicks;
-                float stepPitch = pitchDiff / smoothTicks;
-                sendYaw = lastAimYaw + stepYaw;
-                sendPitch = lastAimPitch + stepPitch;
+                float[] sm = AimingL.smoothStep(lastAimYaw, lastAimPitch, targetYaw, targetPitch, smoothTicks, aimSmoothening.getRawState().doubleValue());
+                sendYaw = sm[0];
+                sendPitch = sm[1];
             }
         }
         lastAimYaw = sendYaw;
         lastAimPitch = sendPitch;
+
+        double swayAmp = swayAmount.getRawState().doubleValue();
+        double[] sway = AimingL.computeSway(wavePhase, swayAmp);
+        double swayYaw = sway[0];
+        double swayPitch = sway[1];
+        double microNoiseYaw = AimingL.randomSigned(0.0, 0.02); // tiny micro movements
+        double microNoisePitch = AimingL.randomSigned(0.0, 0.02);
+
+        double aoMin = Math.max(0.0, Math.min(aimOffset.getMinValue(), 5.0));
+        double aoMax = Math.max(aoMin, Math.min(aimOffset.getMaxValue(), 5.0));
+        double aimOffYaw = AimingL.randomSigned(aoMin, aoMax);
+        double aimOffPitch = AimingL.randomSigned(aoMin * 0.6, aoMax * 0.6);
+
+        double attackCap = Math.max(0.5, Math.min(2.0, aimOffset.getMaxValue()));
+        double[] combined = AimingL.combineOffsets(currentJitterYaw, currentJitterPitch,
+                swayYaw, swayPitch,
+                microNoiseYaw, microNoisePitch,
+                aimOffYaw, aimOffPitch,
+                attackNow, attackCap);
+        sendYaw = (float) (sendYaw + combined[0]);
+        sendPitch = (float) (sendPitch + combined[1]);
 
         if (isRanged) {
             player.setYaw(sendYaw);
@@ -161,66 +185,19 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
         } else {
             if (attackNow && inReach) {
                 if (wTap.getRawState()) {
-                    doSprint(false);
-                    doSprint(true);
+                    AimingL.doSprint(false);
+                    AimingL.doSprint(true);
                 }
                 player.setYaw(sendYaw);
                 player.setPitch(sendPitch);
 
-                player.swingHand(Hand.MAIN_HAND);
-                player.networkHandler.sendPacket(PlayerInteractEntityC2SPacket.attack(bestTarget, player.isSneaking()));
+                // centralized attack + swing
+                AimingL.sendEntityAttack(player, bestTarget, player.isSneaking());
             } else {
                 player.setYaw(sendYaw);
                 player.setPitch(sendPitch);
             }
         }
-    }
-
-    private Vec3d getAimPointInsideHitbox(ClientPlayerEntity player, LivingEntity target, boolean attackNow) {
-        Box box = target.getBoundingBox();
-        Vec3d eye = player.getEyePos();
-        double cx = (box.minX + box.maxX) * 0.5; double cy = (box.minY + box.maxY) * 0.5; double cz = (box.minZ + box.maxZ) * 0.5;
-        double px = MathHelper.clamp(eye.x, box.minX, box.maxX);
-        double py = MathHelper.clamp(eye.y, box.minY, box.maxY);
-        double pz = MathHelper.clamp(eye.z, box.minZ, box.maxZ);
-        Vec3d closest = new Vec3d(px, py, pz);
-        Vec3d dirToCenter = new Vec3d(Math.copySign(1e-3, cx - px), Math.copySign(1e-3, cy - py), Math.copySign(1e-3, cz - pz));
-        Vec3d basePoint = clampToBox(closest.add(dirToCenter), box);
-
-        if (!attackNow) return basePoint;
-
-        double halfX = (box.maxX - box.minX) * 0.5;
-        double halfY = (box.maxY - box.minY) * 0.5;
-        double halfZ = (box.maxZ - box.minZ) * 0.5;
-        double maxFrac = 0.3;
-        double jMin = Math.max(0.0, Math.min(jitterAmount.getMinValue(), JITTER_CAP_DEGREES));
-        double jMax = Math.max(jMin, Math.min(jitterAmount.getMaxValue(), JITTER_CAP_DEGREES));
-        double jitterScale = jMax <= 0 ? 0 : Math.min(1.0, jMax / JITTER_CAP_DEGREES);
-        double fx = maxFrac * jitterScale;
-        double fy = (maxFrac * 0.6) * jitterScale;
-        double fz = maxFrac * jitterScale;
-
-        double ox = randomSigned(0, halfX * fx);
-        double oy = randomSigned(0, halfY * fy);
-        double oz = randomSigned(0, halfZ * fz);
-
-        Vec3d center = new Vec3d(cx, cy, cz);
-        Vec3d jittered = center.add(ox, oy, oz);
-        return clampToBox(jittered, box, 1e-3);
-    }
-
-    private static Vec3d clampToBox(Vec3d p, Box box) {
-        return clampToBox(p, box, 0);
-    }
-
-    private static Vec3d clampToBox(Vec3d p, Box box, double inset) {
-        double minX = box.minX + inset, minY = box.minY + inset, minZ = box.minZ + inset;
-        double maxX = box.maxX - inset, maxY = box.maxY - inset, maxZ = box.maxZ - inset;
-        return new Vec3d(
-            MathHelper.clamp(p.x, minX, maxX),
-            MathHelper.clamp(p.y, minY, maxY),
-            MathHelper.clamp(p.z, minZ, maxZ)
-        );
     }
 
     private static double getMeleeReach(ClientPlayerEntity player) {
@@ -297,65 +274,7 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
         return candidates.get(0);
     }
 
-    private double randomSigned(double min, double max) {
-        if (max <= 0) return 0;
-        double magnitude = min + (Math.random() * (max - min));
-        return (Math.random() < 0.5 ? -1 : 1) * magnitude;
-    }
 
-    private static void doSprint(boolean sprint) {
-        ClientPlayerEntity player = MinecraftClient.getInstance().player;
-        if (player == null) return;
-        KeyBinding forwardKey = KeyBinding.byId("key.forward");
-        boolean forwardPressed = InputOverride.isActive ? InputOverride.forwardKey : (forwardKey != null && forwardKey.isPressed());
-        if (!player.isOnGround() || !forwardPressed) return;
-        if (sprint) {
-            if (!player.isSprinting() && !player.isUsingItem() && !player.isSneaking()) {
-                player.setSprinting(true);
-                player.networkHandler.sendPacket(new ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.START_SPRINTING));
-            }
-        } else {
-            if (player.isSprinting()) {
-                player.setSprinting(false);
-                player.networkHandler.sendPacket(new ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.STOP_SPRINTING));
-            }
-        }
-    }
-
-    private void scheduleNextAttack(long nowMs) {
-        int cps = Math.max(1, attackCps.getRawState().intValue());
-        double baseInterval = 1000.0 / cps;
-        double factor = 1.0 + ((Math.random() * 2 - 1) * ATTACK_VARIANCE);
-        long delay = (long) Math.max(35, baseInterval * factor);
-        nextAttackAtMs = nowMs + delay;
-    }
-
-    public static void playerBlockWithSword(ClientPlayerEntity player) {
-        player.networkHandler.sendPacket(new PlayerInteractItemC2SPacket(Hand.OFF_HAND, 1,
-                player.getYaw(), player.getPitch()));
-    }
-
-    /**
-     * Switch to the best PvP weapon for players. For close range, prefer melee (best sword/axe in hotbar).
-     * For long range, prefer bow/crossbow if present.
-     * Returns true if a switch was made or the best weapon is already selected.
-     */
-    public static boolean switchToBestPvPWeapon(ClientPlayerEntity player, double distanceToTarget) {
-        if (player == null) return false;
-        int current = player.getInventory().getSelectedSlot();
-        int bestSlot;
-        if (distanceToTarget > 7.5) {
-            bestSlot = WeaponHelper.getBestRangedSlot(player);
-            if (bestSlot == -1) bestSlot = WeaponHelper.getBestMeleeSlot(player);
-        } else {
-            bestSlot = WeaponHelper.getBestMeleeSlot(player);
-            if (bestSlot == -1) bestSlot = WeaponHelper.getBestRangedSlot(player);
-        }
-        if (bestSlot == -1) return false;
-        if (bestSlot == current) return true;
-        player.getInventory().setSelectedSlot(bestSlot);
-        return true;
-    }
 
     @Override
     public boolean inValidGame() {

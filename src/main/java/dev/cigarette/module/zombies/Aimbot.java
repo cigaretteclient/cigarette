@@ -5,20 +5,16 @@ import dev.cigarette.agent.ZombiesAgent;
 import dev.cigarette.gui.widget.SliderWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
 import dev.cigarette.lib.PlayerEntityL;
+import dev.cigarette.lib.AimingL;
 import dev.cigarette.lib.WeaponSelector;
-import dev.cigarette.mixin.ClientWorldAccessor;
 import dev.cigarette.module.TickModule;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.network.PendingUpdateManager;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.EntityPose;
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
 import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Vec3d;
@@ -76,18 +72,15 @@ public class Aimbot extends TickModule<ToggleWidget, Boolean> {
 
             WeaponSelector.addCooldown(player.getInventory().getSelectedSlot());
 
-            float aimYaw = (float) Math.toDegrees(Math.atan2(-vector.x, vector.z));
-            float aimPitch = (float) Math.toDegrees(Math.asin(-vector.y));
+            float[] angles = AimingL.anglesFromTo(player.getEyePos(), predictedPos);
+            float aimYaw = angles[0];
+            float aimPitch = angles[1];
 
             if (!silentAim.getRawState()) {
                 PlayerEntityL.setRotationVector(player, vector);
             }
 
-            ClientWorldAccessor clientWorldAccessor = (ClientWorldAccessor) world;
-            try (PendingUpdateManager pendingUpdateManager = clientWorldAccessor.getPendingUpdateManager().incrementSequence()) {
-                int seq = pendingUpdateManager.getSequence();
-                player.networkHandler.sendPacket(new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, seq, aimYaw, aimPitch));
-            }
+            AimingL.sendAimPacket(world, player, aimYaw, aimPitch);
         }
     }
 

@@ -13,7 +13,11 @@ import net.minecraft.util.Formatting;
 import java.util.Objects;
 
 public class ServerL {
-    // Generic variant usable on both client and server player entities.
+    /*
+     * Returns true if the two players are on the same team.
+     * Uses common Minecraft server logic.
+     * All individual checks are also exposed in ServerL.
+     */
     public static boolean playerOnSameTeam(PlayerEntity player, PlayerEntity other) {
         if (player == null || other == null) return false;
         if (player.getScoreboardTeam() != null && other.getScoreboardTeam() != null && player.getScoreboardTeam().isEqual(other.getScoreboardTeam()))
@@ -23,7 +27,6 @@ public class ServerL {
                 getNameColor(player) != -1 && getNameColor(player) == getNameColor(other);
     }
 
-    // Backwards-compatible server-specific method (delegates to generic).
     public static boolean playerOnSameTeam(ServerPlayerEntity player, ServerPlayerEntity other) {
         return playerOnSameTeam((PlayerEntity) player, (PlayerEntity) other);
     }
@@ -55,7 +58,7 @@ public class ServerL {
 
         ItemStack boots = player.getInventory().getStack(36);
         ItemStack leggings = player.getInventory().getStack(37);
-        // Chestplate / helmet currently unused; keep commented for potential future logic.
+
         // ItemStack chestplate = player.getInventory().getStack(38);
         // ItemStack helmet = player.getInventory().getStack(39);
 
@@ -74,7 +77,6 @@ public class ServerL {
         return stack.getItem().getComponents().get(type);
     }
 
-    // Returns null (instead of crashing) when running on a remote/multiplayer server.
     public static ServerPlayerEntity getPlayer(ClientPlayerEntity player) {
         MinecraftClient mc = MinecraftClient.getInstance();
         if (mc == null || mc.getServer() == null || player == null) return null; // mc.getServer() null on multiplayer clients

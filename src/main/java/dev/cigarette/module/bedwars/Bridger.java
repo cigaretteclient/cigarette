@@ -7,6 +7,7 @@ import dev.cigarette.gui.widget.TextWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
 import dev.cigarette.lib.InputOverride;
 import dev.cigarette.mixin.KeyBindingAccessor;
+import dev.cigarette.mixin.MinecraftClientMixin;
 import dev.cigarette.module.TickModule;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -119,9 +120,14 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
         }
     }
 
-    private void rightClick(int times) {
-        KeyBindingAccessor useAccessor = (KeyBindingAccessor) rightClickKey;
-        useAccessor.setTimesPressed(useAccessor.getTimesPressed() + times);
+    private void rightClick(boolean nextTick) {
+        if (nextTick) {
+            KeyBindingAccessor useAccessor = (KeyBindingAccessor) rightClickKey;
+            useAccessor.setTimesPressed(useAccessor.getTimesPressed() + 1);
+        } else {
+            MinecraftClientMixin var = (MinecraftClientMixin) MinecraftClient.getInstance();
+            var.invokeDoItemUse();
+        }
     }
 
     private void enable(BridgeType type, float yaw) {
@@ -181,6 +187,9 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
                 return;
             }
 
+            MinecraftClientMixin client2 = (MinecraftClientMixin) client;
+            client2.setItemUseCooldown(2);
+
             HitResult hitResult = client.crosshairTarget;
             if (hitResult == null || hitResult.getType() != HitResult.Type.BLOCK) return;
             BlockHitResult blockHitResult = (BlockHitResult) hitResult;
@@ -199,13 +208,15 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
                     cycleIfNoBlocks(player);
 
                     if (blockHitResult.getSide() == Direction.UP) {
-                        rightClick(1);
+                        if (blockHitResult.getBlockPos().getY() < player.getY() - 1) {
+                            rightClick(false);
+                        }
                     } else {
                         if (blockPos.getY() >= player.getY()) {
                             disable();
                             return;
                         }
-                        rightClick(1);
+                        rightClick(false);
                         shiftDiabledTicks = 2 + speed.getRawState().intValue();
                     }
                 }
@@ -214,9 +225,11 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
                     InputOverride.sneakKey = shiftDiabledTicks-- <= 0;
 
                     if (blockHitResult.getSide() == Direction.UP) {
-                        rightClick(1);
+                        if (blockHitResult.getBlockPos().getY() < player.getY() - 1) {
+                            rightClick(true);
+                        }
                     } else {
-                        rightClick(2);
+                        rightClick(true);
                         shiftDiabledTicks = 3 + speed.getRawState().intValue();
                     }
                 }
@@ -225,17 +238,13 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
                     InputOverride.sneakKey = runningTicks++ == 2;
 
                     if (blockHitResult.getSide() == Direction.UP) {
-                        rightClick(1);
+                        rightClick(true);
                     } else {
-                        rightClick(2);
+                        rightClick(true);
                         if (runningTicks >= 80) {
                             runningTicks = 0;
                         }
                     }
-                }
-                case NONE -> {
-                    InputOverride.jumpKey = jumpKey.isPressed();
-                    InputOverride.sneakKey = sneakKey.isPressed();
                 }
             }
 

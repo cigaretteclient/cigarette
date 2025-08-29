@@ -7,7 +7,7 @@
     "ClientWorldAccessor",
     "EntityMixin",
     "KeyBindingAccessor",
-    "MinecraftClientInvoker",
+    "MinecraftClientMixin",
     "PlayerEntityMixin",
     "PropertyMixin",
     "ScoreboardMixin",

@@ -3,278 +3,346 @@ package dev.cigarette.module.combat;
 import dev.cigarette.GameDetector;
 import dev.cigarette.gui.widget.SliderWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
-import dev.cigarette.helper.WeaponHelper;
-import dev.cigarette.lib.*;
+import dev.cigarette.lib.AimingL;
+import dev.cigarette.lib.ServerL;
 import dev.cigarette.module.TickModule;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.mob.ZombieVillagerEntity;
 import net.minecraft.entity.passive.VillagerEntity;
-import net.minecraft.entity.passive.WanderingTraderEntity;
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.Box;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
+import java.util.Random;
+import java.util.UUID;
+import java.util.stream.Stream;
 
 public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
     public static final PlayerAimbot INSTANCE = new PlayerAimbot("combat.playerAimbot", "PlayerAimbot", "Automatically aims at players.");
 
-//    private final ToggleWidget silentAim = new ToggleWidget("Silent Aim", "Doesn't snap your camera client-side.").withDefaultState(true);
     private final ToggleWidget autoAttack = new ToggleWidget("Auto Attack", "Automatically hits players").withDefaultState(true);
-    private final ToggleWidget autoWeaponSwitch = new ToggleWidget("Auto Weapon Switch", "Automatically switch weapons").withDefaultState(true);
     public final SliderWidget smoothAim = new SliderWidget("Smooth Aim", "How quickly to snap to target in ticks").withBounds(1, 5, 20);
     public final ToggleWidget wTap = new ToggleWidget("W-Tap", "Automatically sprint before attacking").withDefaultState(false);
-    public final SliderWidget.TwoHandedSlider jitterAmount = new SliderWidget.TwoHandedSlider("Jitter", "Random jitter range (min/max) degrees").withBounds(0, 0, 4).withAccuracy(2);
-    public final SliderWidget jitterSpeed = new SliderWidget("Jitter Speed", "How fast jitter target changes (ticks)").withBounds(5, 10, 40);
-//    private final ToggleWidget blockHit = new ToggleWidget("Block-Hit", "Briefly block just before attacking").withDefaultState(false);
     private final ToggleWidget testMode = new ToggleWidget("Test Mode", "Allows targeting villagers regardless of team").withDefaultState(false);
+
     public final SliderWidget attackCps = new SliderWidget("Attack CPS", "Clicks per second for auto attack").withBounds(1, 8, 15);
-    private final SliderWidget aimSmoothening = new SliderWidget("Aim Smoothing", "How much to smooth/interpolate between steps of the smooth aim").withBounds(0, 0.05, 0.9).withAccuracy(3);
-    public final SliderWidget.TwoHandedSlider aimOffset = new SliderWidget.TwoHandedSlider("Aim Offset", "Aim target offset (min/max) degrees").withBounds(0, 0, 3).withAccuracy(2);
-    public final SliderWidget swayAmount = new SliderWidget("Sway Amount", "Continuous sway amplitude (degrees)").withBounds(0, 0.0, 1.5).withAccuracy(2);
-    public final SliderWidget swaySpeed = new SliderWidget("Sway Speed", "How fast the sway oscillates (ticks)").withBounds(20, 40, 200);
-    private KeyBinding rightClickKey = null;
 
-    private boolean hasLastAim = false;
-    private float lastAimYaw = 0f;
-    private float lastAimPitch = 0f;
+    public final ToggleWidget ignoreTeammates = new ToggleWidget("Ignore Teammates", "Don't target players on your team").withDefaultState(true);
 
-    private int tickCount = 0;
-    private double currentJitterYaw = 0.0, currentJitterPitch = 0.0;
-    private double nextJitterYaw = 0.0, nextJitterPitch = 0.0;
-    private double wavePhase = 0.0;
+    public final SliderWidget jitterViolence = new SliderWidget("Jitter Aggression", "Scale of aim jitter (0 disables)").withBounds(0.0, 1.0, 3.0).withAccuracy(2);
+    public final SliderWidget driftViolence = new SliderWidget("Drift Aggression", "Scale of slow drift vs jitter").withBounds(0.0, 0.6, 2.0).withAccuracy(2);
+    public final SliderWidget aimToleranceDeg = new SliderWidget("Aim Tolerance (deg)", "Max degrees off for attack").withBounds(0.5, 2.0, 6.0).withAccuracy(1);
 
-    private long nextAttackAtMs = 0L;
-    private static final double ATTACK_VARIANCE = 0.15;
-    private static final double JITTER_CAP_DEGREES = 2.0;
+    public final SliderWidget smoothingMultiplier = new SliderWidget("Smoothing Multiplier", "Scales duration based on angle").withBounds(0.5, 1.0, 3.0).withAccuracy(2);
+    public final SliderWidget bezierInfluence = new SliderWidget("Bezier Influence", "0 = linear, 1 = full bezier curve").withBounds(0.0, 1.0, 1.0).withAccuracy(2);
+    public final SliderWidget controlJitterScale = new SliderWidget("Control Jitter", "Randomness of control points").withBounds(0.0, 1.0, 3.0).withAccuracy(2);
+    public final SliderWidget interpolationMode = new SliderWidget("Interpolation Mode", "0=Linear 1=Cubic 2=Cos 3=Smoothstep").withBounds(0, 1, 3).withAccuracy(0);
+
+    public final SliderWidget interferenceAngleDeg = new SliderWidget("Interference Angle (deg)", "Delta that triggers pause").withBounds(2.0, 6.0, 20.0).withAccuracy(1);
+    public final SliderWidget interferenceGraceTicks = new SliderWidget("Interference Grace (ticks)", "Pause length while moving").withBounds(2, 8, 30).withAccuracy(0);
+
+    public final SliderWidget aimRange = new SliderWidget("Aim Range", "Maximum range to target players").withBounds(3, 6, 20).withAccuracy(1);
 
     private PlayerAimbot(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
-        this.setChildren(autoAttack, autoWeaponSwitch, smoothAim, aimSmoothening, jitterAmount, jitterSpeed, aimOffset, swayAmount, swaySpeed, wTap, testMode, attackCps);
+        this.setChildren(autoAttack, smoothAim, aimRange, wTap, attackCps, ignoreTeammates, testMode,
+                jitterViolence, driftViolence, aimToleranceDeg, smoothingMultiplier, bezierInfluence, controlJitterScale, interpolationMode,
+                interferenceAngleDeg, interferenceGraceTicks);
         autoAttack.registerConfigKey(id + ".autoAttack");
-        autoWeaponSwitch.registerConfigKey(id + ".autoWeaponSwitch");
         smoothAim.registerConfigKey(id + ".smoothAim");
-        aimSmoothening.registerConfigKey(id + ".aimSmoothening");
-        aimOffset.registerConfigKey(id + ".aimOffset");
-        swayAmount.registerConfigKey(id + ".swayAmount");
-        swaySpeed.registerConfigKey(id + ".swaySpeed");
+        aimRange.registerConfigKey(id + ".aimRange");
         wTap.registerConfigKey(id + ".wTap");
-        jitterAmount.registerConfigKey(id + ".jitter");
-        jitterSpeed.registerConfigKey(id + ".jitterSpeed");
-//        blockHit.registerConfigKey(id + ".blockHit");
-        testMode.registerConfigKey(id + ".testMode");
         attackCps.registerConfigKey(id + ".attackCps");
+        ignoreTeammates.registerConfigKey(id + ".ignoreTeammates");
+        testMode.registerConfigKey(id + ".testMode");
+        jitterViolence.registerConfigKey(id + ".jitterViolence");
+        driftViolence.registerConfigKey(id + ".driftViolence");
+        aimToleranceDeg.registerConfigKey(id + ".aimToleranceDeg");
+        smoothingMultiplier.registerConfigKey(id + ".smoothingMultiplier");
+        bezierInfluence.registerConfigKey(id + ".bezierInfluence");
+        controlJitterScale.registerConfigKey(id + ".controlJitterScale");
+        interpolationMode.registerConfigKey(id + ".interpolationMode");
+        interferenceAngleDeg.registerConfigKey(id + ".interferenceAngleDeg");
+        interferenceGraceTicks.registerConfigKey(id + ".interferenceGraceTicks");
     }
+
+    // Bezier aim plan state
+    private @Nullable LivingEntity activeTarget = null;
+    private @Nullable UUID activeTargetId = null;
+    private int planTicksTotal = 0;
+    private int planTicksElapsed = 0;
+    private float startYaw = 0f, startPitch = 0f;
+    private float c1Yaw = 0f, c1Pitch = 0f;
+    private float c2Yaw = 0f, c2Pitch = 0f;
+    private float endYaw = 0f, endPitch = 0f;
+    private final Random rng = new Random();
+
+    // CPS scheduling
+    private int ticksUntilNextAttack = 0;
+
+    // Reach assumption (entityAttackRange not exposed here)
+    private static final double MELEE_REACH = 3.2;
+
+    private int suppressTicks = 0;
+    private boolean lastAppliedValid = false;
+    private float lastAppliedYaw = 0f, lastAppliedPitch = 0f;
 
     @Override
     protected void onEnabledTick(MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
-        tickCount++;
-        double swaySpd = Math.max(1.0, swaySpeed.getRawState().doubleValue());
-        wavePhase += (2.0 * Math.PI) / swaySpd;
-
-        int jitterTicks = Math.max(1, jitterSpeed.getRawState().intValue());
-        if (tickCount % jitterTicks == 0) {
-            double jMin = Math.max(0.0, Math.min(jitterAmount.getMinValue(), JITTER_CAP_DEGREES));
-            double jMax = Math.max(jMin, Math.min(jitterAmount.getMaxValue(), JITTER_CAP_DEGREES));
-            nextJitterYaw = AimingL.randomSigned(jMin, jMax);
-            nextJitterPitch = AimingL.randomSigned(jMin * 0.6, jMax * 0.6); // pitch jitter typically smaller
-        }
-        // interpolate jitter targets towards the next jitter using AimingL
-        double asmVal = aimSmoothening.getRawState().doubleValue();
-        currentJitterYaw = AimingL.interpolateTowards(currentJitterYaw, nextJitterYaw, asmVal);
-        currentJitterPitch = AimingL.interpolateTowards(currentJitterPitch, nextJitterPitch, asmVal);
-
-        if (rightClickKey == null) {
-            rightClickKey = KeyBinding.byId("key.use");
-            return;
-        }
-
         if (MinecraftClient.getInstance().currentScreen != null) return;
 
-        if(!rightClickKey.isPressed() && !autoAttack.getRawState()) {
-            hasLastAim = false;
+        if (handleInterferenceSuppression(player)) return;
+
+        LivingEntity target = pickOrValidateTarget(world, player);
+        if (target == null) {
+            clearPlan();
             return;
         }
 
-        LivingEntity bestTarget = testMode.getRawState() ? getBestEntityTargetFor(player) : getBestTargetFor(player);
-        if (bestTarget == null) {
-            hasLastAim = false;
-            return;
+        Vec3d aimPoint = computeAimPoint(player, target, false);
+        float[] targetAngles = AimingL.anglesFromTo(player.getEyePos(), aimPoint);
+        float curYaw = MathHelper.wrapDegrees(player.getYaw());
+        float curPitch = MathHelper.clamp(player.getPitch(), -90f, 90f);
+
+        if (!isPlanActive() || !Objects.equals(target.getUuid(), activeTargetId) || planTargetChangedSignificantly(targetAngles)) {
+            buildBezierPlan(curYaw, curPitch, targetAngles[0], targetAngles[1]);
+            activeTarget = target;
+            activeTargetId = target.getUuid();
         }
 
-        if (autoWeaponSwitch.getRawState()) {
-            double dist = player.distanceTo(bestTarget);
-            AimingL.switchToBestPvPWeapon(player, dist);
-        }
+        float[] stepAngles = evalPlanStep();
+        player.setYaw(stepAngles[0]);
+        player.setPitch(stepAngles[1]);
+        lastAppliedYaw = player.getYaw();
+        lastAppliedPitch = player.getPitch();
+        lastAppliedValid = true;
 
-        boolean isRanged = WeaponHelper.isRanged(player.getMainHandStack());
-        boolean shouldAttemptMelee = autoAttack.getRawState() && !isRanged;
-        long now = System.currentTimeMillis();
-        boolean attackNow = shouldAttemptMelee && now >= nextAttackAtMs;
-        if (attackNow) nextAttackAtMs = now + AimingL.computeNextAttackDelayMillis(attackCps.getRawState().intValue(), ATTACK_VARIANCE);
-
-        Vec3d aimPoint = AimingL.getAimPointInsideHitbox(player, bestTarget, attackNow,
-                jitterAmount.getMinValue(), jitterAmount.getMaxValue(), JITTER_CAP_DEGREES);
-        double reach = getMeleeReach(player);
-        boolean inReach = player.getEyePos().squaredDistanceTo(aimPoint) <= (reach * reach) + 1e-6;
-
-        float[] angles = AimingL.anglesFromTo(player.getEyePos(), aimPoint);
-        float targetYaw = angles[0];
-        float targetPitch = angles[1];
-
-        int smoothTicks = smoothAim.getRawState().intValue();
-        float sendYaw;
-        float sendPitch;
-        if (attackNow) {
-            sendYaw = targetYaw;
-            sendPitch = targetPitch;
-            hasLastAim = true;
-        } else {
-            if (!hasLastAim) {
-                lastAimYaw = targetYaw;
-                lastAimPitch = targetPitch;
-                hasLastAim = true;
+        if (autoAttack.getRawState()) {
+            if (ticksUntilNextAttack > 0) ticksUntilNextAttack--;
+            boolean withinRange = player.distanceTo(target) <= MELEE_REACH;
+            boolean aimAligned = aimAlignmentOk(player, target);
+            if (withinRange && aimAligned && ticksUntilNextAttack <= 0) {
+                if (wTap.getRawState()) AimingL.doSprint(true);
+                Vec3d atkAim = computeAimPoint(player, target, true);
+                float[] atkAngles = AimingL.anglesFromTo(player.getEyePos(), atkAim);
+                AimingL.lookAndAttack(world, player, target, atkAngles[0], atkAngles[1]);
+                scheduleNextAttack();
             }
-            if (smoothTicks <= 1) {
-                sendYaw = targetYaw;
-                sendPitch = targetPitch;
+        }
+    }
+
+    private boolean handleInterferenceSuppression(ClientPlayerEntity player) {
+        float yaw = player.getYaw();
+        float pitch = player.getPitch();
+        float angleDelta = Math.max(Math.abs(MathHelper.wrapDegrees(yaw - lastAppliedYaw)), Math.abs(pitch - lastAppliedPitch));
+        float trigger = (float) Math.max(0.5, interferenceAngleDeg.getRawState());
+
+        if (suppressTicks > 0) {
+            if (angleDelta > trigger) {
+                suppressTicks = (int) Math.max(1, Math.round(interferenceGraceTicks.getRawState()));
             } else {
-                float[] sm = AimingL.smoothStep(lastAimYaw, lastAimPitch, targetYaw, targetPitch, smoothTicks, aimSmoothening.getRawState().doubleValue());
-                sendYaw = sm[0];
-                sendPitch = sm[1];
+                suppressTicks--;
             }
+            lastAppliedYaw = yaw;
+            lastAppliedPitch = pitch;
+            lastAppliedValid = true;
+            return true;
         }
-        lastAimYaw = sendYaw;
-        lastAimPitch = sendPitch;
 
-        double swayAmp = swayAmount.getRawState().doubleValue();
-        double[] sway = AimingL.computeSway(wavePhase, swayAmp);
-        double swayYaw = sway[0];
-        double swayPitch = sway[1];
-        double microNoiseYaw = AimingL.randomSigned(0.0, 0.02); // tiny micro movements
-        double microNoisePitch = AimingL.randomSigned(0.0, 0.02);
+        if (lastAppliedValid && angleDelta > trigger) {
+            suppressTicks = (int) Math.max(1, Math.round(interferenceGraceTicks.getRawState()));
+            lastAppliedYaw = yaw;
+            lastAppliedPitch = pitch;
+            return true;
+        }
+        return false;
+    }
 
-        double aoMin = Math.max(0.0, Math.min(aimOffset.getMinValue(), 5.0));
-        double aoMax = Math.max(aoMin, Math.min(aimOffset.getMaxValue(), 5.0));
-        double aimOffYaw = AimingL.randomSigned(aoMin, aoMax);
-        double aimOffPitch = AimingL.randomSigned(aoMin * 0.6, aoMax * 0.6);
+    private void scheduleNextAttack() {
+        double cps = Math.max(1.0, attackCps.getRawState());
+        double idealTicks = 20.0 / cps;
+        double jitter = idealTicks * (0.15 + rng.nextDouble() * 0.20);
+        ticksUntilNextAttack = (int) Math.max(1, Math.round(idealTicks + (rng.nextBoolean() ? jitter : -jitter * 0.5)));
+    }
 
-        double attackCap = Math.max(0.5, Math.min(2.0, aimOffset.getMaxValue()));
-        double[] combined = AimingL.combineOffsets(currentJitterYaw, currentJitterPitch,
-                swayYaw, swayPitch,
-                microNoiseYaw, microNoisePitch,
-                aimOffYaw, aimOffPitch,
-                attackNow, attackCap);
-        sendYaw = (float) (sendYaw + combined[0]);
-        sendPitch = (float) (sendPitch + combined[1]);
+    private boolean aimAlignmentOk(ClientPlayerEntity player, LivingEntity target) {
+        Vec3d aimPoint = computeAimPoint(player, target, false);
+        float[] want = AimingL.anglesFromTo(player.getEyePos(), aimPoint);
+        float dyaw = MathHelper.wrapDegrees(player.getYaw() - want[0]);
+        float dpitch = want[1] - player.getPitch();
+        float tol = (float) Math.max(0.1, aimToleranceDeg.getRawState());
+        return Math.abs(dyaw) < tol && Math.abs(dpitch) < tol;
+    }
 
-        if (isRanged) {
-            player.setYaw(sendYaw);
-            player.setPitch(sendPitch);
-            player.swingHand(Hand.MAIN_HAND);
-        } else {
-            if (attackNow && inReach) {
-                if (wTap.getRawState()) {
-                    AimingL.doSprint(false);
-                    AimingL.doSprint(true);
+    private float[] evalPlanStep() {
+        if (!isPlanActive()) return new float[]{startYaw, startPitch};
+        planTicksElapsed = Math.min(planTicksElapsed + 1, planTicksTotal);
+        float t = planTicksTotal == 0 ? 1f : (float) planTicksElapsed / (float) planTicksTotal;
+        float et = applyInterpolation(t);
+        float linYaw = startYaw + (endYaw - startYaw) * et;
+        float linPitch = startPitch + (endPitch - startPitch) * et;
+        float bezYaw = cubicBezier(startYaw, c1Yaw, c2Yaw, endYaw, et);
+        float bezPitch = cubicBezier(startPitch, c1Pitch, c2Pitch, endPitch, et);
+        float inf = (float) Math.max(0.0, Math.min(1.0, bezierInfluence.getRawState()));
+        float yaw = linYaw + (bezYaw - linYaw) * inf;
+        float pitch = linPitch + (bezPitch - linPitch) * inf;
+
+        float angleSpan = Math.abs(MathHelper.wrapDegrees(startYaw - endYaw)) + Math.abs(endPitch - startPitch);
+        float baseJitter = Math.max(0.0f, Math.min(0.5f, angleSpan * 0.003f));
+        float jitterMag = (float) (baseJitter * Math.max(0.0, jitterViolence.getRawState()));
+        float driftMag = (float) (jitterMag * Math.max(0.0, driftViolence.getRawState()));
+        float fineJitterYaw = (float) (rng.nextGaussian() * jitterMag * (1.0 - et));
+        float fineJitterPitch = (float) (rng.nextGaussian() * jitterMag * (1.0 - et));
+        float driftYaw = (float) (rng.nextGaussian() * driftMag * 0.2);
+        float driftPitch = (float) (rng.nextGaussian() * driftMag * 0.2);
+
+        float outYaw = MathHelper.wrapDegrees(yaw + fineJitterYaw + driftYaw);
+        float outPitch = MathHelper.clamp(pitch + fineJitterPitch + driftPitch, -90f, 90f);
+        return new float[]{outYaw, outPitch};
+    }
+
+    private void buildBezierPlan(float curYaw, float curPitch, float targetYaw, float targetPitch) {
+        float tYaw = unwrapTowards(targetYaw, curYaw);
+        startYaw = curYaw;
+        startPitch = curPitch;
+        endYaw = tYaw;
+        endPitch = MathHelper.clamp(targetPitch, -90f, 90f);
+
+        float yawDelta = tYaw - curYaw;
+        float pitchDelta = endPitch - curPitch;
+        float angleMag = Math.abs(yawDelta) + Math.abs(pitchDelta);
+
+        int baseTicks = (int) Math.max(1, Math.round(smoothAim.getRawState()));
+        double mult = Math.max(0.1, smoothingMultiplier.getRawState());
+        planTicksTotal = (int) Math.max(baseTicks, Math.min(baseTicks * 4L, Math.round(baseTicks * mult * (0.5 + angleMag / 45f))));
+        planTicksElapsed = 0;
+
+        float c1t = 0.30f + (float) rng.nextDouble() * 0.15f;
+        float c2t = 0.70f - (float) rng.nextDouble() * 0.15f;
+        float ctrlJitter = (float) (Math.max(0.0f, Math.min(3.5f, angleMag * 0.05f)) * Math.max(0.0, controlJitterScale.getRawState()));
+        c1Yaw = curYaw + yawDelta * c1t + (float) (rng.nextGaussian() * ctrlJitter);
+        c2Yaw = curYaw + yawDelta * c2t + (float) (rng.nextGaussian() * ctrlJitter);
+        c1Pitch = curPitch + pitchDelta * c1t + (float) (rng.nextGaussian() * ctrlJitter * 0.6f);
+        c2Pitch = curPitch + pitchDelta * c2t + (float) (rng.nextGaussian() * ctrlJitter * 0.6f);
+
+        c1Yaw = unwrapTowards(c1Yaw, startYaw);
+        c2Yaw = unwrapTowards(c2Yaw, startYaw);
+        endYaw = unwrapTowards(endYaw, startYaw);
+    }
+
+    private float applyInterpolation(float t) {
+        int mode = (int) Math.round(interpolationMode.getRawState());
+        switch (mode) {
+            case 0: // Linear
+                return t;
+            case 1: // EaseInOutCubic
+                return easeInOutCubic(t);
+            case 2: // Cosine
+                return (float) (0.5 - 0.5 * Math.cos(Math.PI * t));
+            case 3: // Smoothstep
+                return t * t * (3f - 2f * t);
+            default:
+                return t;
+        }
+    }
+
+    private boolean isPlanActive() { return planTicksElapsed < planTicksTotal; }
+
+    private boolean planTargetChangedSignificantly(float[] targetAngles) {
+        float dyaw = Math.abs(MathHelper.wrapDegrees(endYaw - targetAngles[0]));
+        float dpitch = Math.abs(endPitch - targetAngles[1]);
+        return dyaw > 3.0f || dpitch > 3.0f;
+    }
+
+    private void clearPlan() {
+        activeTarget = null;
+        activeTargetId = null;
+        planTicksTotal = 0;
+        planTicksElapsed = 0;
+    }
+
+    private static float cubicBezier(float p0, float p1, float p2, float p3, float t) {
+        float u = 1f - t;
+        return u*u*u*p0 + 3*u*u*t*p1 + 3*u*t*t*p2 + t*t*t*p3;
+    }
+
+    private static float easeInOutCubic(float t) {
+        return t < 0.5f ? 4f * t * t * t : 1f - (float) Math.pow(-2f * t + 2f, 3f) / 2f;
+    }
+
+    private static float unwrapTowards(float target, float reference) {
+        float t = target;
+        while (t - reference > 180f) t -= 360f;
+        while (t - reference < -180f) t += 360f;
+        return t;
+    }
+
+    private Vec3d computeAimPoint(ClientPlayerEntity player, LivingEntity target, boolean attackNow) {
+        return AimingL.getAimPointInsideHitbox(player, target, attackNow, 0.1, 0.6, 2.5);
+    }
+
+    private @Nullable LivingEntity pickOrValidateTarget(ClientWorld world, ClientPlayerEntity player) {
+        if (activeTarget != null && activeTarget.isAlive() && !activeTarget.isRemoved()) {
+            if (activeTarget.squaredDistanceTo(player) <= (MELEE_REACH + 4.0) * (MELEE_REACH + 4.0)) {
+                if (!(activeTarget instanceof AbstractClientPlayerEntity p) || !ignoreTeammates.getRawState() || !ServerL.playerOnSameTeam(player, p)) {
+                    return activeTarget;
                 }
-                player.setYaw(sendYaw);
-                player.setPitch(sendPitch);
-
-                // centralized attack + swing
-                AimingL.sendEntityAttack(player, bestTarget, player.isSneaking());
-            } else {
-                player.setYaw(sendYaw);
-                player.setPitch(sendPitch);
             }
         }
-    }
 
-    private static double getMeleeReach(ClientPlayerEntity player) {
-        return player.getAbilities().creativeMode ? 5.0 : 3.0;
-    }
+        Stream<LivingEntity> players = world.getPlayers().stream()
+                .filter(p -> p != player)
+                .filter(p -> p.isAlive() && !p.isRemoved() && !p.isSpectator())
+                .filter(p -> !ignoreTeammates.getRawState() || !ServerL.playerOnSameTeam(player, p))
+                .map(p -> (LivingEntity) p);
 
-    public static AbstractClientPlayerEntity getBestTargetFor(ClientPlayerEntity player) {
-        return WorldL.getRealPlayers().stream().sorted((p1, p2) -> {
-            Vec3d eyePos = player.getEyePos();
-            Vec3d p1Pos = p1.getEyePos().subtract(eyePos);
-            Vec3d p2Pos = p2.getEyePos().subtract(eyePos);
-            double p1Dist = p1Pos.lengthSquared();
-            double p2Dist = p2Pos.lengthSquared();
-
-            if (p1.isSneaking() && !p2.isSneaking()) p1Dist *= 0.8;
-            else if (!p1.isSneaking() && p2.isSneaking()) p2Dist *= 0.8;
-
-            if (p1.getPose() == EntityPose.CROUCHING && p2.getPose() != EntityPose.CROUCHING) p1Dist *= 0.9;
-            else if (p1.getPose() != EntityPose.CROUCHING && p2.getPose() == EntityPose.CROUCHING) p2Dist *= 0.9;
-
-            if (p1.isSprinting() && !p2.isSprinting()) p1Dist *= 1.1;
-            else if (!p1.isSprinting() && p2.isSprinting()) p2Dist *= 1.1;
-            if (p1.getVelocity().lengthSquared() > 0.01 && p2.getVelocity().lengthSquared() < 0.01) p1Dist *= 1.1;
-            else if (p1.getVelocity().lengthSquared() < 0.01 && p2.getVelocity().lengthSquared() > 0.01) p2Dist *= 1.1;
-            return Double.compare(p1Dist, p2Dist);
-        }).filter(p -> {
-            if (p == player) return false;
-            if (!INSTANCE.testMode.getRawState() && (player.isTeammate(p) || ServerL.playerOnSameTeam(player, p))) return false;
-            if (p.isDead() || p.getHealth() <= 0) return false;
-            if (p.isInvulnerable()) return false;
-            if (p.age < 20) return false;
-            if (p.distanceTo(player) > 6) return false;
-            return player.canSee(p);
-        }).findFirst().orElse(null);
-    }
-
-    public static LivingEntity getBestEntityTargetFor(ClientPlayerEntity player) {
-        ClientWorld world = (ClientWorld) player.getWorld();
-        Vec3d eyePos = player.getEyePos();
-        double maxRange = 6.0;
-        Box search = player.getBoundingBox().expand(maxRange + 1.0);
-
-        List<AbstractClientPlayerEntity> players = WorldL.getRealPlayers();
-        List<VillagerEntity> villagers = world.getEntitiesByClass(VillagerEntity.class, search,
-                v -> v.isAlive() && v.distanceTo(player) <= maxRange);
-        List<WanderingTraderEntity> traders = world.getEntitiesByClass(WanderingTraderEntity.class, search,
-                t -> t.isAlive() && t.distanceTo(player) <= maxRange);
-        List<ZombieVillagerEntity> zombieVillagers = world.getEntitiesByClass(ZombieVillagerEntity.class, search,
-                z -> z.isAlive() && z.distanceTo(player) <= maxRange);
-
-        List<LivingEntity> villagerLike = new ArrayList<>();
-        villagerLike.addAll(villagers);
-        villagerLike.addAll(traders);
-        villagerLike.addAll(zombieVillagers);
-
-        if (!villagerLike.isEmpty()) {
-            villagerLike.sort(Comparator.comparingDouble(e -> eyePos.squaredDistanceTo(e.getEyePos())));
-            return villagerLike.get(0);
+        Stream<LivingEntity> villagers = Stream.empty();
+        if (testMode.getRawState()) {
+            List<VillagerEntity> vs = world.getEntitiesByClass(VillagerEntity.class, player.getBoundingBox().expand(12.0), v -> v.isAlive() && !v.isRemoved());
+            villagers = vs.stream().map(v -> (LivingEntity) v);
         }
 
-        List<LivingEntity> candidates = new ArrayList<>();
-        for (AbstractClientPlayerEntity p : players) {
-            if (p == player) continue;
-            if (player.isTeammate(p) || ServerL.playerOnSameTeam(player, p)) continue;
-            if (p.isDead() || p.getHealth() <= 0) continue;
-            if (p.isInvulnerable()) continue;
-            if (p.age < 20) continue;
-            if (p.distanceTo(player) > maxRange) continue;
-            if (!player.canSee(p)) continue;
-            candidates.add(p);
-        }
-        if (candidates.isEmpty()) return null;
-        candidates.sort(Comparator.comparingDouble(e -> eyePos.squaredDistanceTo(e.getEyePos())));
-        return candidates.get(0);
+        float curYaw = player.getYaw();
+        return Stream.concat(players, villagers)
+                .sorted(Comparator.comparingDouble(player::squaredDistanceTo))
+                .filter(e -> player.squaredDistanceTo(e) <= Math.pow(aimRange.getRawState(), 2))
+                .min(Comparator.comparingDouble(e -> scoreTarget(player, curYaw, e)))
+                .orElse(null);
     }
 
+    private double scoreTarget(ClientPlayerEntity player, float curYaw, LivingEntity e) {
+        double dist = player.distanceTo(e);
+        double dx = e.getX() - player.getX();
+        double dz = e.getZ() - player.getZ();
+        double targetYaw = Math.toDegrees(Math.atan2(-dx, dz));
+        double ang = Math.abs(MathHelper.wrapDegrees((float) (curYaw - targetYaw)));
+        double behindPenalty = ang > 120 ? 1000 : 0;
+        return dist + ang * 0.02 + behindPenalty;
+    }
 
+    public static @Nullable AbstractClientPlayerEntity getBestTargetFor(ClientPlayerEntity self) {
+        if (self == null || self.clientWorld == null) return null;
+        ClientWorld world = self.clientWorld;
+        float curYaw = self.getYaw();
+        return world.getPlayers().stream()
+                .filter(p -> p != self)
+                .filter(p -> p.isAlive() && !p.isRemoved() && !p.isSpectator())
+                .filter(p -> !INSTANCE.ignoreTeammates.getRawState() || !ServerL.playerOnSameTeam(self, p))
+                .min(Comparator.comparingDouble(p -> INSTANCE.scoreTarget(self, curYaw, p)))
+                .orElse(null);
+    }
+
+    @Override
+    protected void onDisabledTick(MinecraftClient client) {
+        clearPlan();
+    }
 
     @Override
     public boolean inValidGame() {

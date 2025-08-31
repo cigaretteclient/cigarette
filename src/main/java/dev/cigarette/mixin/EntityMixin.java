@@ -5,6 +5,7 @@ import net.minecraft.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.UUID;
@@ -31,5 +32,17 @@ public class EntityMixin {
         if (Glow.hasGlow(uuid)) {
             cir.setReturnValue(Glow.getGlowColor(uuid));
         }
+    }
+
+    @Inject(method = "setYaw", at = @At("HEAD"))
+    public void setYaw(float yaw, CallbackInfo ci) {
+        if (yaw > 360) yaw = yaw % 360;
+        if (yaw < 0) yaw = 360 + (yaw % 360);
+    }
+
+    @Inject(method = "setPitch", at = @At("HEAD"))
+    public void setPitch(float pitch, CallbackInfo ci) {
+        if (pitch > 90) pitch = 90;
+        if (pitch < -90) pitch = -90;
     }
 }

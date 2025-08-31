@@ -2,12 +2,14 @@ package dev.cigarette.lib;
 
 import dev.cigarette.helper.WeaponHelper;
 import dev.cigarette.mixin.ClientWorldAccessor;
+import dev.cigarette.mixin.KeyBindingAccessor;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.PendingUpdateManager;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
+import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.world.RaycastContext;
 import net.minecraft.entity.LivingEntity;
@@ -179,7 +181,9 @@ public class AimingL {
      */
     public static void sendAimPacket(ClientWorld world, ClientPlayerEntity player, float yaw, float pitch) {
         if (world == null || player == null) return;
-        float syaw = sanitizeYaw(yaw);
+        // Keep yaw continuous relative to current player yaw to avoid modulo-360 jumps
+        float cur = player.getYaw();
+        float syaw = Float.isFinite(yaw) ? (cur + MathHelper.wrapDegrees(yaw - cur)) : cur;
         float spitch = sanitizePitch(pitch);
         ClientWorldAccessor accessor = (ClientWorldAccessor) world;
         try (PendingUpdateManager pum = accessor.getPendingUpdateManager().incrementSequence()) {
@@ -193,8 +197,17 @@ public class AimingL {
      */
     public static void lookAndAttack(ClientWorld world, ClientPlayerEntity player, LivingEntity target, float yaw, float pitch) {
         if (player == null || target == null || world == null) return;
-        player.attack(target);
-        player.swingHand(Hand.MAIN_HAND);
+        HitResult hitResult = MinecraftClient.getInstance().crosshairTarget;
+        KeyBinding attackKey = KeyBinding.byId("key.attack");
+        KeyBindingAccessor attackKeyAccessor = (KeyBindingAccessor) attackKey;
+        if (hitResult == null || attackKey == null || !attackKey.isPressed()) return;
+        if (hitResult.getType() == HitResult.Type.ENTITY) {
+            EntityHitResult entityHitResult = (EntityHitResult) hitResult;
+            Entity entity = entityHitResult.getEntity();
+            if (!(entity instanceof LivingEntity livingEntity)) return;
+            if (livingEntity.hurtTime > 1) return;
+            attackKeyAccessor.setTimesPressed(attackKeyAccessor.getTimesPressed() + 1);
+        }
     }
 
     // Helpers

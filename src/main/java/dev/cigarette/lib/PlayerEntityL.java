@@ -4,6 +4,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BowItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.tag.ItemTags;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 
 public class PlayerEntityL {
@@ -26,11 +27,11 @@ public class PlayerEntityL {
      */
     public static void setRotationVector(PlayerEntity player, Vec3d vector) {
         float[] yawPitch = getRotationVectorInDirection(vector);
-        player.setYaw(yawPitch[0]);
-        player.setPitch(yawPitch[1]);
+        float currentYaw = player.getYaw();
+        float continuousYaw = currentYaw + MathHelper.wrapDegrees(yawPitch[0] - currentYaw);
+        player.setYaw(continuousYaw);
+        float clampedPitch = MathHelper.clamp(yawPitch[1], -90f, 90f);
+        player.setPitch(clampedPitch);
     }
 
-//    public static float getDistance(PlayerEntity player, PlayerEntity other) {
-//        return (float) player.getPos().distanceTo(other.getPos());
-//    }
 }

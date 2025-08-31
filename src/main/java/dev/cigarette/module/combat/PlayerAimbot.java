@@ -108,7 +108,7 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
 
         Vec3d aimPoint = computeAimPoint(player, target, false);
         float[] targetAngles = AimingL.anglesFromTo(player.getEyePos(), aimPoint);
-        float curYaw = MathHelper.wrapDegrees(player.getYaw());
+        float curYaw = getContinuousYaw(player);
         float curPitch = MathHelper.clamp(player.getPitch(), -90f, 90f);
 
         if (!isPlanActive() || !Objects.equals(target.getUuid(), activeTargetId) || planTargetChangedSignificantly(targetAngles)) {
@@ -120,8 +120,8 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
         float[] stepAngles = evalPlanStep();
         player.setYaw(stepAngles[0]);
         player.setPitch(stepAngles[1]);
-        lastAppliedYaw = player.getYaw();
-        lastAppliedPitch = player.getPitch();
+        lastAppliedYaw = stepAngles[0];
+        lastAppliedPitch = stepAngles[1];
         lastAppliedValid = true;
 
         if (autoAttack.getRawState()) {
@@ -139,9 +139,9 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
     }
 
     private boolean handleInterferenceSuppression(ClientPlayerEntity player) {
-        float yaw = player.getYaw();
+        float yaw = getContinuousYaw(player);
         float pitch = player.getPitch();
-        float angleDelta = Math.max(Math.abs(MathHelper.wrapDegrees(yaw - lastAppliedYaw)), Math.abs(pitch - lastAppliedPitch));
+        float angleDelta = Math.max(Math.abs(yaw - lastAppliedYaw), Math.abs(pitch - lastAppliedPitch));
         float trigger = (float) Math.max(0.5, interferenceAngleDeg.getRawState());
 
         if (suppressTicks > 0) {
@@ -203,7 +203,7 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
         float driftYaw = (float) (rng.nextGaussian() * driftMag * 0.2);
         float driftPitch = (float) (rng.nextGaussian() * driftMag * 0.2);
 
-        float outYaw = MathHelper.wrapDegrees(yaw + fineJitterYaw + driftYaw);
+        float outYaw = yaw + fineJitterYaw + driftYaw;
         float outPitch = MathHelper.clamp(pitch + fineJitterPitch + driftPitch, -90f, 90f);
         return new float[]{outYaw, outPitch};
     }
@@ -284,6 +284,11 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
         return t;
     }
 
+    private float getContinuousYaw(ClientPlayerEntity player) {
+        float wrappedCurrent = MathHelper.wrapDegrees(player.getYaw());
+        return lastAppliedValid ? unwrapTowards(wrappedCurrent, lastAppliedYaw) : wrappedCurrent;
+    }
+
     private Vec3d computeAimPoint(ClientPlayerEntity player, LivingEntity target, boolean attackNow) {
         return AimingL.getAimPointInsideHitbox(player, target, attackNow, 0.1, 0.6, 2.5);
     }
@@ -309,7 +314,7 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
             villagers = vs.stream().map(v -> (LivingEntity) v);
         }
 
-        float curYaw = player.getYaw();
+        float curYaw = getContinuousYaw(player);
         return Stream.concat(players, villagers)
                 .sorted(Comparator.comparingDouble(player::squaredDistanceTo))
                 .filter(e -> player.squaredDistanceTo(e) <= Math.pow(aimRange.getRawState(), 2))

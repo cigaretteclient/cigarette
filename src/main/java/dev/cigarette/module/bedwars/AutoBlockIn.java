@@ -59,8 +59,10 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
 
     private void disable(@NotNull ClientPlayerEntity player) {
         running = false;
-        player.setYaw(originalYaw);
-        player.setPitch(originalPitch);
+        float curYaw = player.getYaw();
+        float smoothYaw = curYaw + net.minecraft.util.math.MathHelper.wrapDegrees(originalYaw - curYaw);
+        player.setYaw(smoothYaw);
+        player.setPitch(net.minecraft.util.math.MathHelper.clamp(originalPitch, -90f, 90f));
         previousVector = null;
     }
 

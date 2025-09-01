@@ -10,6 +10,7 @@ import net.minecraft.entity.player.PlayerEntity;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class WorldL {
     public static List<AbstractClientPlayerEntity> getRealPlayers() {
@@ -41,6 +42,18 @@ public class WorldL {
 
         for (PlayerListEntry entry : networkHandler.getPlayerList()) {
             if (entry.getProfile() != player.getGameProfile()) continue;
+            if (entry.getLatency() <= 0) continue;
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean isRealPlayerByUsername(PlayerEntity player) {
+        ClientPlayNetworkHandler networkHandler = MinecraftClient.getInstance().getNetworkHandler();
+        if (networkHandler == null) return false;
+
+        for (PlayerListEntry entry : networkHandler.getPlayerList()) {
+            if (!Objects.equals(entry.getProfile().getName(), player.getNameForScoreboard())) continue;
             if (entry.getLatency() <= 0) continue;
             return true;
         }

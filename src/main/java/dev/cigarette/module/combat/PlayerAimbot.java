@@ -1,8 +1,10 @@
 package dev.cigarette.module.combat;
 
 import dev.cigarette.GameDetector;
+import dev.cigarette.agent.MurderMysteryAgent;
 import dev.cigarette.gui.widget.SliderWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
+import dev.cigarette.gui.widget.ToggleKeybindWidget;
 import dev.cigarette.lib.AimingL;
 import dev.cigarette.lib.ServerL;
 import dev.cigarette.module.TickModule;
@@ -25,7 +27,7 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
-    public static final PlayerAimbot INSTANCE = new PlayerAimbot("combat.playerAimbot", "PlayerAimbot", "Automatically aims at players.");
+    public static final PlayerAimbot INSTANCE = new PlayerAimbot("combat.playerAimbot", "PlayerAimbot", "Automatically aims at players. The legitest killaura.");
 
     private final ToggleWidget autoAttack = new ToggleWidget("Auto Attack", "Automatically hits players").withDefaultState(true);
     public final SliderWidget smoothAim = new SliderWidget("Smooth Aim", "How quickly to snap to target in ticks").withBounds(1, 5, 20);
@@ -35,6 +37,13 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
     public final SliderWidget attackCps = new SliderWidget("Attack CPS", "Clicks per second for auto attack").withBounds(1, 8, 15);
 
     public final ToggleWidget ignoreTeammates = new ToggleWidget("Ignore Teammates", "Don't target players on your team").withDefaultState(true);
+
+    private final ToggleKeybindWidget lockOnKeybind = new ToggleKeybindWidget(
+            "Lock-On Trigger", "Press key to lock to best target. Releases only when target dies"
+    ).withDefaultState(false);
+
+    private final ToggleWidget murderMysteryMode = new ToggleWidget("Murder Mystery", "Prefer murderer and detective targets").withDefaultState(false);
+    private final ToggleWidget detectiveAim = new ToggleWidget("Detective Aim", "Aim at a detective when no Murderer is available (or you are the mur)").withDefaultState(true);
 
     public final SliderWidget jitterViolence = new SliderWidget("Jitter Aggression", "Scale of aim jitter (0 disables)").withBounds(0.0, 1.0, 3.0).withAccuracy(2);
     public final SliderWidget driftViolence = new SliderWidget("Drift Aggression", "Scale of slow drift vs jitter").withBounds(0.0, 0.6, 2.0).withAccuracy(2);
@@ -52,7 +61,8 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
 
     private PlayerAimbot(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
-        this.setChildren(autoAttack, smoothAim, aimRange, wTap, attackCps, ignoreTeammates, testMode,
+        this.setChildren(autoAttack, smoothAim, aimRange, wTap, attackCps, ignoreTeammates, lockOnKeybind, testMode,
+                murderMysteryMode, detectiveAim,
                 jitterViolence, driftViolence, aimToleranceDeg, smoothingMultiplier, bezierInfluence, controlJitterScale, interpolationMode,
                 interferenceAngleDeg, interferenceGraceTicks);
         autoAttack.registerConfigKey(id + ".autoAttack");
@@ -61,7 +71,10 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
         wTap.registerConfigKey(id + ".wTap");
         attackCps.registerConfigKey(id + ".attackCps");
         ignoreTeammates.registerConfigKey(id + ".ignoreTeammates");
+        lockOnKeybind.registerConfigKey(id + ".lockOnKeybind");
         testMode.registerConfigKey(id + ".testMode");
+        murderMysteryMode.registerConfigKey(id + ".murderMysteryMode");
+        detectiveAim.registerConfigKey(id + ".detectiveAim");
         jitterViolence.registerConfigKey(id + ".jitterViolence");
         driftViolence.registerConfigKey(id + ".driftViolence");
         aimToleranceDeg.registerConfigKey(id + ".aimToleranceDeg");
@@ -94,13 +107,60 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
     private boolean lastAppliedValid = false;
     private float lastAppliedYaw = 0f, lastAppliedPitch = 0f;
 
+    private boolean lockOnEngaged = false;
+
     @Override
     protected void onEnabledTick(MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
         if (MinecraftClient.getInstance().currentScreen != null) return;
 
-        if (handleInterferenceSuppression(player)) return;
+        if (!lockOnKeybind.getRawState() && lockOnEngaged) {
+            lockOnEngaged = false;
+            clearPlan();
+        }
+        boolean keyPressedEvent = lockOnKeybind.getKeybind().wasPressed();
+        boolean keyHeld = lockOnKeybind.getKeybind().isPressed();
+        LivingEntity target;
+        if (keyPressedEvent || keyHeld) {
+            if (lockOnKeybind.getRawState() && lockOnKeybind.getKeybind().wasPressed()) {
+                AbstractClientPlayerEntity best = getBestTargetFor(player);
+                if (best != null) {
+                    lockOnEngaged = true;
+                    activeTarget = best;
+                    activeTargetId = best.getUuid();
+                    planTicksTotal = 0;
+                    planTicksElapsed = 0;
+                }
+            }
 
-        LivingEntity target = pickOrValidateTarget(world, player);
+            target = null;
+            if (handleInterferenceSuppression(player)) return;
+
+            if (lockOnKeybind.getRawState()) {
+                if (lockOnEngaged) {
+                    if (activeTarget != null && activeTarget.isAlive() && !activeTarget.isRemoved()
+                            && player.squaredDistanceTo(activeTarget) <= Math.pow(aimRange.getRawState(), 2)) {
+                        target = activeTarget;
+                    } else {
+                        lockOnEngaged = false;
+                        clearPlan();
+                        return;
+                    }
+                } else {
+                    clearPlan();
+                    return;
+                }
+            } else {
+                target = pickOrValidateTarget(world, player);
+            }
+
+            if (target == null) {
+                clearPlan();
+                return;
+            }
+        } else {
+            target = pickOrValidateTarget(world, player);
+        }
+
         if (target == null) {
             clearPlan();
             return;
@@ -293,10 +353,56 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
         return AimingL.getAimPointInsideHitbox(player, target, attackNow, 0.1, 0.6, 2.5);
     }
 
+    private boolean isMurderMysteryActive() {
+        return murderMysteryMode.getRawState();
+    }
+
+    private boolean shouldFilterTeammates() {
+        return !isMurderMysteryActive() && ignoreTeammates.getRawState();
+    }
+
+    private @Nullable AbstractClientPlayerEntity detectMurderer(@NotNull ClientPlayerEntity self) {
+        if (!isMurderMysteryActive()) return null;
+        float curYaw = getContinuousYaw(self);
+        return MurderMysteryAgent.getVisiblePlayers().stream()
+                .filter(pp -> pp != null && pp.playerEntity != null && pp.playerEntity.isAlive())
+                .filter(pp -> pp.role == MurderMysteryAgent.PersistentPlayer.Role.MURDERER)
+                .map(pp -> pp.playerEntity)
+                .filter(pe -> pe != self)
+                .filter(pe -> self.squaredDistanceTo(pe) <= Math.pow(aimRange.getRawState(), 2))
+                .filter(pe -> pe instanceof AbstractClientPlayerEntity)
+                .map(pe -> (AbstractClientPlayerEntity) pe)
+                .min(Comparator.comparingDouble(p -> scoreTarget(self, curYaw, p)))
+                .orElse(null);
+    }
+
+    private @Nullable AbstractClientPlayerEntity detectDetective(@NotNull ClientPlayerEntity self) {
+        if (!isMurderMysteryActive() || !detectiveAim.getRawState()) return null;
+        float curYaw = getContinuousYaw(self);
+        return MurderMysteryAgent.getVisiblePlayers().stream()
+                .filter(pp -> pp != null && pp.playerEntity != null && pp.playerEntity.isAlive())
+                .filter(pp -> pp.role == MurderMysteryAgent.PersistentPlayer.Role.DETECTIVE)
+                .map(pp -> pp.playerEntity)
+                .filter(pe -> pe != self)
+                .filter(pe -> self.squaredDistanceTo(pe) <= Math.pow(aimRange.getRawState(), 2))
+                .filter(pe -> pe instanceof AbstractClientPlayerEntity)
+                .map(pe -> (AbstractClientPlayerEntity) pe)
+                .min(Comparator.comparingDouble(p -> scoreTarget(self, curYaw, p)))
+                .orElse(null);
+    }
+
     private @Nullable LivingEntity pickOrValidateTarget(ClientWorld world, ClientPlayerEntity player) {
+        if (isMurderMysteryActive()) {
+            AbstractClientPlayerEntity mm = detectMurderer(player);
+            if (mm != null) return mm;
+            AbstractClientPlayerEntity det = detectDetective(player);
+            if (det != null) return det;
+            return null;
+        }
+
         if (activeTarget != null && activeTarget.isAlive() && !activeTarget.isRemoved()) {
             if (activeTarget.squaredDistanceTo(player) <= (MELEE_REACH + 4.0) * (MELEE_REACH + 4.0)) {
-                if (!(activeTarget instanceof AbstractClientPlayerEntity p) || !ignoreTeammates.getRawState() || !ServerL.playerOnSameTeam(player, p)) {
+                if (!(activeTarget instanceof AbstractClientPlayerEntity p) || !shouldFilterTeammates() || !ServerL.playerOnSameTeam(player, p)) {
                     return activeTarget;
                 }
             }
@@ -305,7 +411,7 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
         Stream<LivingEntity> players = world.getPlayers().stream()
                 .filter(p -> p != player)
                 .filter(p -> p.isAlive() && !p.isRemoved() && !p.isSpectator())
-                .filter(p -> !ignoreTeammates.getRawState() || !ServerL.playerOnSameTeam(player, p))
+                .filter(p -> !shouldFilterTeammates() || !ServerL.playerOnSameTeam(player, p))
                 .map(p -> (LivingEntity) p);
 
         Stream<LivingEntity> villagers = Stream.empty();
@@ -336,10 +442,22 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
         if (self == null || self.clientWorld == null) return null;
         ClientWorld world = self.clientWorld;
         float curYaw = self.getYaw();
+        double range2 = Math.pow(INSTANCE.aimRange.getRawState(), 2);
+
+        if (INSTANCE.isMurderMysteryActive()) {
+            AbstractClientPlayerEntity mm = INSTANCE.detectMurderer(self);
+            if (mm != null) return mm;
+            AbstractClientPlayerEntity det = INSTANCE.detectDetective(self);
+            if (det != null) return det;
+            return null;
+        }
+
+        boolean filterTeams = !INSTANCE.isMurderMysteryActive() && INSTANCE.ignoreTeammates.getRawState();
         return world.getPlayers().stream()
                 .filter(p -> p != self)
                 .filter(p -> p.isAlive() && !p.isRemoved() && !p.isSpectator())
-                .filter(p -> !INSTANCE.ignoreTeammates.getRawState() || !ServerL.playerOnSameTeam(self, p))
+                .filter(p -> self.squaredDistanceTo(p) <= range2)
+                .filter(p -> !filterTeams || !ServerL.playerOnSameTeam(self, p))
                 .min(Comparator.comparingDouble(p -> INSTANCE.scoreTarget(self, curYaw, p)))
                 .orElse(null);
     }
@@ -347,6 +465,7 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
     @Override
     protected void onDisabledTick(MinecraftClient client) {
         clearPlan();
+        lockOnEngaged = false;
     }
 
     @Override

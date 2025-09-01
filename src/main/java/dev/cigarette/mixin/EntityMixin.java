@@ -39,7 +39,6 @@ public class EntityMixin {
         if (yaw > 360) yaw = yaw % 360;
         if (yaw < 0) yaw = 360 + (yaw % 360);
     }
-
     @Inject(method = "setPitch", at = @At("HEAD"))
     public void setPitch(float pitch, CallbackInfo ci) {
         if (pitch > 90) pitch = 90;

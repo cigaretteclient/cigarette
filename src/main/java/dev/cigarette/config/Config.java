@@ -12,6 +12,7 @@ import dev.cigarette.module.combat.PlayerAimbot;
 import dev.cigarette.module.keybind.AddGlassBlock;
 import dev.cigarette.module.keybind.BreakBlock;
 import dev.cigarette.module.keybind.VClip;
+import dev.cigarette.module.murdermystery.AutoBow;
 import dev.cigarette.module.murdermystery.GoldESP;
 import dev.cigarette.module.murdermystery.PlayerESP;
 import dev.cigarette.module.render.ProjectileESP;
@@ -71,7 +72,7 @@ public class Config {
         cfg.putModules("Bedwars", AutoBlockIn.INSTANCE, AutoTool.INSTANCE, Bridger.INSTANCE, DefenseViewer.INSTANCE, EntityESP.INSTANCE, FireballESP.INSTANCE);
         cfg.putModules("Combat", AutoClicker.INSTANCE, JumpReset.INSTANCE, PerfectHit.INSTANCE, PlayerAimbot.INSTANCE);
         cfg.putModules("Keybind", AddGlassBlock.INSTANCE, BreakBlock.INSTANCE, VClip.INSTANCE);
-        cfg.putModules("Murder Mystery", GoldESP.INSTANCE, PlayerESP.INSTANCE);
+        cfg.putModules("Murder Mystery", GoldESP.INSTANCE, PlayerESP.INSTANCE, AutoBow.INSTANCE);
         cfg.putModules("Render", dev.cigarette.module.render.PlayerESP.INSTANCE, ProjectileESP.INSTANCE);
         cfg.putModules("UI", GUI.INSTANCE, ModuleList.INSTANCE, Notifications.INSTANCE, TargetHUD.INSTANCE, Watermark.INSTANCE);
         cfg.putModules("Zombies", Aimbot.INSTANCE, PowerupESP.INSTANCE, ReviveAura.INSTANCE, ZombieESP.INSTANCE);

@@ -18,6 +18,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.UUID;
 
 public class MurderMysteryAgent extends BaseAgent {
@@ -53,10 +54,9 @@ public class MurderMysteryAgent extends BaseAgent {
         }
     }
 
-    private boolean isDetectiveItem(ItemStack item) {
+    public static boolean isDetectiveItem(ItemStack item) {
         if (item.isOf(Items.ARROW)) return true;
-        if (item.isOf(Items.BOW)) return true;
-        return false;
+        return item.isOf(Items.BOW);
     }
 
     private PersistentPlayer getOrCreatePersistentPlayer(PlayerEntity player) {
@@ -104,6 +104,7 @@ public class MurderMysteryAgent extends BaseAgent {
                 if (item == ItemStack.EMPTY) continue;
                 if (this.isDetectiveItem(item)) {
                     existingPlayer.setDetective();
+                    existingPlayer.setItemStack(item);
                     continue;
                 }
 
@@ -113,6 +114,7 @@ public class MurderMysteryAgent extends BaseAgent {
                 for (String knife : knives) {
                     if (knife.equals(knifeLang)) {
                         existingPlayer.setMurderer();
+                        existingPlayer.setItemStack(item);
                         break;
                     }
                 }
@@ -139,11 +141,16 @@ public class MurderMysteryAgent extends BaseAgent {
         public PlayerEntity playerEntity;
         public final String name;
         public Role role;
+        public ItemStack itemStack;
 
         public PersistentPlayer(PlayerEntity playerEntity) {
             this.playerEntity = playerEntity;
             this.name = playerEntity.getNameForScoreboard();
             this.role = Role.INNOCENT;
+        }
+
+        public void setItemStack(ItemStack itemStack) {
+            this.itemStack = itemStack;
         }
 
         protected void setPlayerEntity(PlayerEntity playerEntity) {

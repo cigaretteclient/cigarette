@@ -42,8 +42,8 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
             "Lock-On Trigger", "Press key to lock to best target. Releases only when target dies"
     ).withDefaultState(false);
 
-    private final ToggleWidget murderMysteryMode = new ToggleWidget("Murder Mystery", "Prefer murderer and detective targets").withDefaultState(false);
-    private final ToggleWidget detectiveAim = new ToggleWidget("Detective Aim", "Aim at a detective when no Murderer is available (or you are the mur)").withDefaultState(true);
+    public final ToggleWidget murderMysteryMode = new ToggleWidget("Murder Mystery", "Prefer murderer and detective targets").withDefaultState(false);
+    public final ToggleWidget detectiveAim = new ToggleWidget("Detective Aim", "Aim at a detective when no Murderer is available (or you are the mur)").withDefaultState(true);
 
     public final SliderWidget jitterViolence = new SliderWidget("Jitter Aggression", "Scale of aim jitter (0 disables)").withBounds(0.0, 1.0, 3.0).withAccuracy(2);
     public final SliderWidget driftViolence = new SliderWidget("Drift Aggression", "Scale of slow drift vs jitter").withBounds(0.0, 0.6, 2.0).withAccuracy(2);
@@ -87,7 +87,7 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
     }
 
     // Bezier aim plan state
-    private @Nullable LivingEntity activeTarget = null;
+    public @Nullable LivingEntity activeTarget = null;
     private @Nullable UUID activeTargetId = null;
     private int planTicksTotal = 0;
     private int planTicksElapsed = 0;

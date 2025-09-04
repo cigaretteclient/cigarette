@@ -28,6 +28,7 @@ public class AutoBow extends TickModule<ToggleWidget, Boolean> {
     public static final dev.cigarette.module.murdermystery.AutoBow INSTANCE = new dev.cigarette.module.murdermystery.AutoBow("murdermystery.autobow", "AutoBow", "Automatically aims and fires a bow at the murderer.");
 
     private final SliderWidget shootDelay = new SliderWidget("Shoot Delay", "Maximum range to target players").withBounds(20, 45, 60).withAccuracy(1);
+    private final ToggleWidget genericMode = new ToggleWidget("Generic Mode", "Use PlayerAimbot target without role checks").withDefaultState(false);
 
     private boolean paOldEnableState, paMMOldState = false;
 
@@ -38,8 +39,9 @@ public class AutoBow extends TickModule<ToggleWidget, Boolean> {
 
     private AutoBow(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
-        this.setChildren(shootDelay);
+        this.setChildren(shootDelay, genericMode);
         shootDelay.registerConfigKey(id + ".shootDelay");
+        genericMode.registerConfigKey(id + ".genericMode");
     }
 
     @Override
@@ -53,49 +55,78 @@ public class AutoBow extends TickModule<ToggleWidget, Boolean> {
 
         LivingEntity activeTarget = PlayerAimbot.INSTANCE.activeTarget;
         if (activeTarget == null) return;
-        Optional<MurderMysteryAgent.PersistentPlayer> tPlayer = MurderMysteryAgent.getVisiblePlayers().stream().filter((p) -> p.playerEntity == activeTarget).findFirst();
-        if (tPlayer.isPresent()) {
-            MurderMysteryAgent.PersistentPlayer.Role targetRole = tPlayer.get().role;
-            Optional<MurderMysteryAgent.PersistentPlayer> self = MurderMysteryAgent.getVisiblePlayers().stream().filter((p) -> p.playerEntity == MinecraftClient.getInstance().player).findFirst();
-            if (self.isPresent()) {
-                if (self.get().role == MurderMysteryAgent.PersistentPlayer.Role.MURDERER) {
-                    isMurderer = true;
-                    ItemStack i = self.get().itemStack;
-                    DefaultedList<ItemStack> is = self.get().playerEntity.getInventory().getMainStacks();
-                    for (int ix = 0; ix < is.toArray().length; ix++) {
-                        if (is.get(ix).equals(i)) {
-                            assert MinecraftClient.getInstance().player != null;
-                            MinecraftClient.getInstance().player.getInventory().setSelectedSlot(ix);
-                            this.itemSlot = ix;
+        
+        if (!genericMode.getRawState()) {
+            Optional<MurderMysteryAgent.PersistentPlayer> tPlayer = MurderMysteryAgent.getVisiblePlayers().stream().filter((p) -> p.playerEntity == activeTarget).findFirst();
+            if (tPlayer.isPresent()) {
+                MurderMysteryAgent.PersistentPlayer.Role targetRole = tPlayer.get().role;
+                Optional<MurderMysteryAgent.PersistentPlayer> self = MurderMysteryAgent.getVisiblePlayers().stream().filter((p) -> p.playerEntity == MinecraftClient.getInstance().player).findFirst();
+                if (self.isPresent()) {
+                    if (self.get().role == MurderMysteryAgent.PersistentPlayer.Role.MURDERER) {
+                        isMurderer = true;
+                        ItemStack i = self.get().itemStack;
+                        DefaultedList<ItemStack> is = self.get().playerEntity.getInventory().getMainStacks();
+                        for (int ix = 0; ix < is.toArray().length; ix++) {
+                            if (is.get(ix).equals(i)) {
+                                assert MinecraftClient.getInstance().player != null;
+                                MinecraftClient.getInstance().player.getInventory().setSelectedSlot(ix);
+                                this.itemSlot = ix;
+                            }
                         }
-                    }
-                } else {
-                    isMurderer = false;
-                    DefaultedList<ItemStack> is = self.get().playerEntity.getInventory().getMainStacks();
-                    for (int ix = 0; ix < is.toArray().length; ix++) {
-                        if (MurderMysteryAgent.isDetectiveItem(is.get(ix))) {
-                            assert MinecraftClient.getInstance().player != null;
-                            MinecraftClient.getInstance().player.getInventory().setSelectedSlot(ix);
-                            this.itemSlot = ix;
+                    } else {
+                        isMurderer = false;
+                        DefaultedList<ItemStack> is = self.get().playerEntity.getInventory().getMainStacks();
+                        for (int ix = 0; ix < is.toArray().length; ix++) {
+                            if (MurderMysteryAgent.isDetectiveItem(is.get(ix))) {
+                                assert MinecraftClient.getInstance().player != null;
+                                MinecraftClient.getInstance().player.getInventory().setSelectedSlot(ix);
+                                this.itemSlot = ix;
+                            }
                         }
                     }
                 }
             }
         }
 
-        if (this.aimTicks < this.shootDelay.getRawState().intValue()) {
-            assert MinecraftClient.getInstance().player != null;
-            if (MinecraftClient.getInstance().player.getInventory().getSelectedSlot() != this.itemSlot) {
-                aimKey.setPressed(false);
-                this.aimTicks = 0;
-                return;
+        boolean shouldAim = true;
+        if (this.aimTicks >= this.shootDelay.getRawState().intValue()) {
+            shouldAim = false;
+        } else if (genericMode.getRawState() && activeTarget != null && hitResult.getType() == HitResult.Type.ENTITY) {
+            EntityHitResult entityHit = (EntityHitResult) hitResult;
+            if (entityHit.getEntity() == activeTarget) {
+                shouldAim = false;
             }
+        }
+
+        assert MinecraftClient.getInstance().player != null;
+        if (!genericMode.getRawState() && MinecraftClient.getInstance().player.getInventory().getSelectedSlot() != this.itemSlot) {
+            aimKey.setPressed(false);
+            this.aimTicks = 0;
+            return;
+        }
+
+        if (shouldAim) {
             aimKey.setPressed(true);
             aimTicks++;
         } else {
             aimKey.setPressed(false);
             this.aimTicks = 0;
         }
+
+
+        // if (this.aimTicks < this.shootDelay.getRawState().intValue()) {
+        //     assert MinecraftClient.getInstance().player != null;
+        //     if (MinecraftClient.getInstance().player.getInventory().getSelectedSlot() != this.itemSlot) {
+        //         aimKey.setPressed(false);
+        //         this.aimTicks = 0;
+        //         return;
+        //     }
+        //     aimKey.setPressed(true);
+        //     aimTicks++;
+        // } else {
+        //     aimKey.setPressed(false);
+        //     this.aimTicks = 0;
+        // }
     }
 
     @Override
@@ -105,7 +136,9 @@ public class AutoBow extends TickModule<ToggleWidget, Boolean> {
 
         AutoClicker.INSTANCE.widget.setRawState(false);
         PlayerAimbot.INSTANCE.widget.setRawState(true);
-        PlayerAimbot.INSTANCE.murderMysteryMode.setRawState(true);
+        if (!genericMode.getRawState()) {
+            PlayerAimbot.INSTANCE.murderMysteryMode.setRawState(true);
+        }
     }
 
     @Override

@@ -9,8 +9,6 @@ public interface KeyBindingAccessor {
     @Accessor("timesPressed")
     public void setTimesPressed(int timesPressed);
 
-    @Accessor("")
-
     @Accessor
     int getTimesPressed();
 }

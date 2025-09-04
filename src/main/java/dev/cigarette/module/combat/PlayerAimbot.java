@@ -59,15 +59,20 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
 
     public final SliderWidget aimRange = new SliderWidget("Aim Range", "Maximum range to target players").withBounds(3, 6, 20).withAccuracy(1);
 
+    public final ToggleWidget prediction = new ToggleWidget("Prediction", "Predict target position").withDefaultState(false);
+    public final SliderWidget predictionTicks = new SliderWidget("Prediction Ticks", "Ticks ahead to predict").withBounds(0, 5, 20).withAccuracy(1);
+
     private PlayerAimbot(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
-        this.setChildren(autoAttack, smoothAim, aimRange, wTap, attackCps, ignoreTeammates, lockOnKeybind, testMode,
+        this.setChildren(autoAttack, smoothAim, aimRange, prediction, predictionTicks, wTap, attackCps, ignoreTeammates, lockOnKeybind, testMode,
                 murderMysteryMode, detectiveAim,
                 jitterViolence, driftViolence, aimToleranceDeg, smoothingMultiplier, bezierInfluence, controlJitterScale, interpolationMode,
                 interferenceAngleDeg, interferenceGraceTicks);
         autoAttack.registerConfigKey(id + ".autoAttack");
         smoothAim.registerConfigKey(id + ".smoothAim");
         aimRange.registerConfigKey(id + ".aimRange");
+        prediction.registerConfigKey(id + ".prediction");
+        predictionTicks.registerConfigKey(id + ".predictionTicks");
         wTap.registerConfigKey(id + ".wTap");
         attackCps.registerConfigKey(id + ".attackCps");
         ignoreTeammates.registerConfigKey(id + ".ignoreTeammates");
@@ -350,7 +355,13 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
     }
 
     private Vec3d computeAimPoint(ClientPlayerEntity player, LivingEntity target, boolean attackNow) {
-        return AimingL.getAimPointInsideHitbox(player, target, attackNow, 0.1, 0.6, 2.5);
+        if (prediction.getRawState()) {
+            Vec3d vel = target.getVelocity();
+            Vec3d predictedPos = target.getPos().add(vel.multiply(predictionTicks.getRawState()));
+            return predictedPos.add(0, target.getHeight() * 0.5, 0);
+        } else {
+            return AimingL.getAimPointInsideHitbox(player, target, attackNow, 0.1, 0.6, 2.5);
+        }
     }
 
     private boolean isMurderMysteryActive() {

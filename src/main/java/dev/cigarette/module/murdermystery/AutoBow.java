@@ -30,7 +30,12 @@ public class AutoBow extends TickModule<ToggleWidget, Boolean> {
     private final SliderWidget shootDelay = new SliderWidget("Shoot Delay", "Maximum range to target players").withBounds(20, 45, 60).withAccuracy(1);
     private final ToggleWidget genericMode = new ToggleWidget("Generic Mode", "Use PlayerAimbot target without role checks").withDefaultState(false);
 
-    private boolean paOldEnableState, paMMOldState = false;
+    private final ToggleWidget prediction = new ToggleWidget("Prediction", "Predict target position for bow").withDefaultState(false);
+    private final SliderWidget predictionTicks = new SliderWidget("Prediction Ticks", "Ticks ahead to predict").withBounds(0, 5, 20).withAccuracy(1);
+
+    private boolean paOldEnableState, paOldPredictionState, paMMOldState = false;
+
+    private double paOldPredictionTicks;
 
     private boolean isMurderer = false;
 
@@ -39,9 +44,11 @@ public class AutoBow extends TickModule<ToggleWidget, Boolean> {
 
     private AutoBow(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
-        this.setChildren(shootDelay, genericMode);
+        this.setChildren(shootDelay, genericMode, prediction, predictionTicks);
         shootDelay.registerConfigKey(id + ".shootDelay");
         genericMode.registerConfigKey(id + ".genericMode");
+        prediction.registerConfigKey(id + ".prediction");
+        predictionTicks.registerConfigKey(id + ".predictionTicks");
     }
 
     @Override
@@ -133,9 +140,13 @@ public class AutoBow extends TickModule<ToggleWidget, Boolean> {
     protected void whenEnabled() {
         this.paOldEnableState = PlayerAimbot.INSTANCE.getRawState();
         this.paMMOldState = PlayerAimbot.INSTANCE.murderMysteryMode.getRawState();
+        this.paOldPredictionState = PlayerAimbot.INSTANCE.prediction.getRawState();
+        this.paOldPredictionTicks = PlayerAimbot.INSTANCE.predictionTicks.getRawState();
 
         AutoClicker.INSTANCE.widget.setRawState(false);
         PlayerAimbot.INSTANCE.widget.setRawState(true);
+        PlayerAimbot.INSTANCE.prediction.setRawState(prediction.getRawState());
+        PlayerAimbot.INSTANCE.predictionTicks.setRawState(predictionTicks.getRawState());
         if (!genericMode.getRawState()) {
             PlayerAimbot.INSTANCE.murderMysteryMode.setRawState(true);
         }
@@ -145,5 +156,7 @@ public class AutoBow extends TickModule<ToggleWidget, Boolean> {
     protected void whenDisabled() {
         PlayerAimbot.INSTANCE.widget.setRawState(this.paOldEnableState);
         PlayerAimbot.INSTANCE.murderMysteryMode.setRawState(this.paMMOldState);
+        PlayerAimbot.INSTANCE.prediction.setRawState(this.paOldPredictionState);
+        PlayerAimbot.INSTANCE.predictionTicks.setRawState(this.paOldPredictionTicks);
     }
 }

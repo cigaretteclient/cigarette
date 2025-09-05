@@ -2,7 +2,9 @@ package dev.cigarette.agent;
 
 import dev.cigarette.GameDetector;
 import dev.cigarette.Language;
+import dev.cigarette.config.FileSystem;
 import dev.cigarette.gui.widget.ToggleWidget;
+import dev.cigarette.lib.HttpL;
 import dev.cigarette.lib.TextL;
 import dev.cigarette.lib.WorldL;
 import dev.cigarette.lib.XGBoostModelHelper;
@@ -15,9 +17,11 @@ import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import org.apache.logging.log4j.simple.internal.SimpleProvider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Optional;
@@ -27,13 +31,22 @@ public class MurderMysteryAgent extends BaseAgent {
     private static final HashMap<String, PersistentPlayer> persistentPlayers = new HashMap<>();
     private static final HashSet<AvailableGold> availableGold = new HashSet<>();
 
-    private static final XGBoostModelHelper xgHelper = new XGBoostModelHelper(FabricLoader.getInstance().getConfigDir().getFileSystem().getPath("xgboost_murdermystery.json").toString());
+    public static final String MODEL_FILENAME = "xgboost_murdermystery.json";
+    public static final String MODEL_PATH = FabricLoader.getInstance().getConfigDir().getFileSystem().getPath(MODEL_FILENAME).toString();
+    public static XGBoostModelHelper xgHelper;
+
+    private static final String modelInitialPath = "github:cigaretteclient/xgboost";
 
     public MurderMysteryAgent(@Nullable ToggleWidget devToggle) {
         super(devToggle);
     }
 
     public static HashSet<PersistentPlayer> getVisiblePlayers() {
+        Object mp = FileSystem.getState("murdermystery_xgboost_model_path");
+        String modelPath = (String)(mp instanceof String s ? s : modelInitialPath);
+        if (mp == null || modelPath.isEmpty()) modelPath = modelInitialPath;
+        xgHelper = XGBoostModelHelper.prepareModel(MODEL_FILENAME, modelPath);
+
         HashSet<PersistentPlayer> visiblePlayers = new HashSet<>();
         for (PersistentPlayer player : persistentPlayers.values()) {
             if (!player.playerEntity.isAlive()) continue;

@@ -11,6 +11,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+
+import net.fabricmc.loader.api.FabricLoader;
 
 /**
  * Lightweight helper for collecting simple position+rotation training examples
@@ -35,6 +38,57 @@ public class XGBoostModelHelper {
 
     public String getModelPath() {
         return modelPath;
+    }
+
+    /**
+     * Static helper to prepare a model helper instance.
+     *
+     * Supported "spec" formats:
+     *  - "github:<repo>" -> downloads content from repo
+     *  - "url:<url>" -> treats as direct file URL
+     *  - etc -> local path
+     */
+    public static <T extends XGBoostModelHelper> T prepareModel(String filename, String sourceSpec, Function<String, T> factory) {
+        String destPath = FabricLoader.getInstance().getConfigDir().resolve(filename).toString();
+        try {
+            File dest = new File(destPath);
+            if (!dest.exists()) {
+                if (sourceSpec != null && !sourceSpec.isEmpty()) {
+                    if (sourceSpec.startsWith("github:")) {
+                        String repoPath = sourceSpec.split("github:")[1];
+                        String url = "https://raw.githubusercontent.com/" + repoPath + "/refs/heads/main/" + filename;
+                        HttpL.downloadUrlToFile(url, destPath);
+                    } else if (sourceSpec.startsWith("url:")) {
+                        String raw = sourceSpec.substring("url:".length());
+                        String url = raw.endsWith("/") ? raw + filename : raw;
+                        HttpL.downloadUrlToFile(url, destPath);
+                    } else {
+                        File provided = new File(sourceSpec);
+                        if (provided.isDirectory()) {
+                            File candidate = new File(provided, filename);
+                            if (candidate.exists()) {
+                                File parent = dest.getParentFile();
+                                if (parent != null && !parent.exists()) parent.mkdirs();
+                                java.nio.file.Files.copy(candidate.toPath(), dest.toPath());
+                            }
+                        } else if (provided.isFile()) {
+                            File parent = dest.getParentFile();
+                            if (parent != null && !parent.exists()) parent.mkdirs();
+                            java.nio.file.Files.copy(provided.toPath(), dest.toPath());
+                        }
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return factory.apply(destPath);
+    }
+
+    /**
+     * Prepare a model helper instance with the default implementation.
+     */
+    public static XGBoostModelHelper prepareModel(String filename, String sourceSpec) {
+        return prepareModel(filename, sourceSpec, XGBoostModelHelper::new);
     }
 
     /**
@@ -147,4 +201,3 @@ public class XGBoostModelHelper {
         return features.size();
     }
 }
-

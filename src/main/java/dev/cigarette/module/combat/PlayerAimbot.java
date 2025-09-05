@@ -356,6 +356,21 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
 
     private Vec3d computeAimPoint(ClientPlayerEntity player, LivingEntity target, boolean attackNow) {
         if (prediction.getRawState()) {
+            try {
+                if (MurderMysteryAgent.xgHelper != null && MurderMysteryAgent.xgHelper.hasModel()) {
+                    float prob = MurderMysteryAgent.xgHelper.predict(
+                            target.getX(), target.getY(), target.getZ(),
+                            target.getYaw(), target.getPitch()
+                    );
+                    double clamped = Math.max(0.0, Math.min(1.0, prob));
+                    double scale = 0.25 + 1.75 * clamped;
+                    double aheadTicks = Math.max(0.0, predictionTicks.getRawState()) * scale;
+                    Vec3d vel = target.getVelocity();
+                    Vec3d predictedPos = target.getPos().add(vel.multiply(aheadTicks));
+                    return predictedPos.add(0, target.getHeight() * 0.5, 0);
+                }
+            } catch (Throwable ignored) {
+            }
             Vec3d vel = target.getVelocity();
             Vec3d predictedPos = target.getPos().add(vel.multiply(predictionTicks.getRawState()));
             return predictedPos.add(0, target.getHeight() * 0.5, 0);

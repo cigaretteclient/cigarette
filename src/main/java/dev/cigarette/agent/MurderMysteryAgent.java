@@ -5,6 +5,8 @@ import dev.cigarette.Language;
 import dev.cigarette.gui.widget.ToggleWidget;
 import dev.cigarette.lib.TextL;
 import dev.cigarette.lib.WorldL;
+import dev.cigarette.lib.XGBoostModelHelper;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
@@ -24,6 +26,8 @@ import java.util.UUID;
 public class MurderMysteryAgent extends BaseAgent {
     private static final HashMap<String, PersistentPlayer> persistentPlayers = new HashMap<>();
     private static final HashSet<AvailableGold> availableGold = new HashSet<>();
+
+    private static final XGBoostModelHelper xgHelper = new XGBoostModelHelper(FabricLoader.getInstance().getConfigDir().getFileSystem().getPath("xgboost_murdermystery.json").toString());
 
     public MurderMysteryAgent(@Nullable ToggleWidget devToggle) {
         super(devToggle);
@@ -83,6 +87,17 @@ public class MurderMysteryAgent extends BaseAgent {
         availableGold.add(gold);
     }
 
+    public void xgboostRegisterPositionRotation(PersistentPlayer player) {
+        if (player == null || player.playerEntity == null) return;
+        float label = player.role == PersistentPlayer.Role.MURDERER ? 1.0f : 0.0f;
+        xgHelper.addExampleFromPersistentPlayer(player, label);
+        try {
+            if (xgHelper.getBufferedExampleCount() >= 60) {
+                xgHelper.trainAndSaveModel(500);
+            }
+        } catch (Exception ignored) {
+        }
+    }
 
     @Override
     public boolean inValidGame() {
@@ -102,9 +117,10 @@ public class MurderMysteryAgent extends BaseAgent {
 
                 ItemStack item = entityPlayer.getMainHandStack();
                 if (item == ItemStack.EMPTY) continue;
-                if (this.isDetectiveItem(item)) {
+                if (isDetectiveItem(item)) {
                     existingPlayer.setDetective();
                     existingPlayer.setItemStack(item);
+                    xgboostRegisterPositionRotation(existingPlayer);
                     continue;
                 }
 
@@ -115,6 +131,7 @@ public class MurderMysteryAgent extends BaseAgent {
                     if (knife.equals(knifeLang)) {
                         existingPlayer.setMurderer();
                         existingPlayer.setItemStack(item);
+                        xgboostRegisterPositionRotation(existingPlayer);
                         break;
                     }
                 }

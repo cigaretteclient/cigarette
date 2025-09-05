@@ -28,6 +28,10 @@ public class FileSystem {
         saveConfig();
     }
 
+    public static Object getState(String toggle) {
+        return OPTIONS.get(toggle);
+    }
+
     private static Object parseNumber(String value) {
         String actualNumber = value.substring(0, value.length() - 1);
         String suffix = value.substring(value.length() - 1);

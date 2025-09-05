@@ -2,9 +2,13 @@ package dev.cigarette.agent;
 
 import dev.cigarette.GameDetector;
 import dev.cigarette.Language;
+import dev.cigarette.config.FileSystem;
 import dev.cigarette.gui.widget.ToggleWidget;
+import dev.cigarette.lib.HttpL;
 import dev.cigarette.lib.TextL;
 import dev.cigarette.lib.WorldL;
+import dev.cigarette.lib.XGBoostModelHelper;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
@@ -13,22 +17,39 @@ import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import org.apache.logging.log4j.simple.internal.SimpleProvider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.UUID;
 
 public class MurderMysteryAgent extends BaseAgent {
     private static final HashMap<String, PersistentPlayer> persistentPlayers = new HashMap<>();
     private static final HashSet<AvailableGold> availableGold = new HashSet<>();
 
+    public static final String MODEL_FILENAME = "xgboost_murdermystery.json";
+    public static final String MODEL_PATH = FabricLoader.getInstance().getConfigDir().getFileSystem().getPath(MODEL_FILENAME).toString();
+    public static XGBoostModelHelper xgHelper;
+
+    private static final String modelInitialPath = "github:cigaretteclient/xgboost";
+    public static boolean hasFoundRoles = false;
+    private static PersistentPlayer selectedMurderer = null;
+    private static PersistentPlayer selectedDetective = null;
+
     public MurderMysteryAgent(@Nullable ToggleWidget devToggle) {
         super(devToggle);
     }
 
     public static HashSet<PersistentPlayer> getVisiblePlayers() {
+        Object mp = FileSystem.getState("murdermystery_xgboost_model_path");
+        String modelPath = (String)(mp instanceof String s ? s : modelInitialPath);
+        if (mp == null || modelPath.isEmpty()) modelPath = modelInitialPath;
+        xgHelper = XGBoostModelHelper.prepareModel(MODEL_FILENAME, modelPath);
+
         HashSet<PersistentPlayer> visiblePlayers = new HashSet<>();
         for (PersistentPlayer player : persistentPlayers.values()) {
             if (!player.playerEntity.isAlive()) continue;
@@ -53,10 +74,9 @@ public class MurderMysteryAgent extends BaseAgent {
         }
     }
 
-    private boolean isDetectiveItem(ItemStack item) {
+    public static boolean isDetectiveItem(ItemStack item) {
         if (item.isOf(Items.ARROW)) return true;
-        if (item.isOf(Items.BOW)) return true;
-        return false;
+        return item.isOf(Items.BOW);
     }
 
     private PersistentPlayer getOrCreatePersistentPlayer(PlayerEntity player) {
@@ -83,6 +103,17 @@ public class MurderMysteryAgent extends BaseAgent {
         availableGold.add(gold);
     }
 
+    public void xgboostRegisterPositionRotation(PersistentPlayer player) {
+        if (player == null || player.playerEntity == null) return;
+        float label = player.role == PersistentPlayer.Role.MURDERER ? 1.0f : (player.role == PersistentPlayer.Role.DETECTIVE ? 0.5f : 0.0f);
+        xgHelper.addExampleFromPersistentPlayer(player, label);
+        try {
+            if (xgHelper.getBufferedExampleCount() >= 60) {
+                xgHelper.trainAsyncIfNeeded(50, 50);
+            }
+        } catch (Exception ignored) {
+        }
+    }
 
     @Override
     public boolean inValidGame() {
@@ -102,8 +133,14 @@ public class MurderMysteryAgent extends BaseAgent {
 
                 ItemStack item = entityPlayer.getMainHandStack();
                 if (item == ItemStack.EMPTY) continue;
-                if (this.isDetectiveItem(item)) {
+                if (isDetectiveItem(item)) {
                     existingPlayer.setDetective();
+                    existingPlayer.setItemStack(item);
+                    hasFoundRoles = true;
+                    if (selectedDetective == null) {
+                        selectedDetective = existingPlayer;
+                        xgboostRegisterPositionRotation(existingPlayer);
+                    }
                     continue;
                 }
 
@@ -113,6 +150,12 @@ public class MurderMysteryAgent extends BaseAgent {
                 for (String knife : knives) {
                     if (knife.equals(knifeLang)) {
                         existingPlayer.setMurderer();
+                        existingPlayer.setItemStack(item);
+                        hasFoundRoles = true;
+                        if (selectedMurderer == null) {
+                            selectedMurderer = existingPlayer;
+                            xgboostRegisterPositionRotation(existingPlayer);
+                        }
                         break;
                     }
                 }
@@ -133,17 +176,25 @@ public class MurderMysteryAgent extends BaseAgent {
     protected void onInvalidTick(MinecraftClient client) {
         persistentPlayers.clear();
         availableGold.clear();
+        hasFoundRoles = false;
+        selectedMurderer = null;
+        selectedDetective = null;
     }
 
     public static class PersistentPlayer {
         public PlayerEntity playerEntity;
         public final String name;
         public Role role;
+        public ItemStack itemStack;
 
         public PersistentPlayer(PlayerEntity playerEntity) {
             this.playerEntity = playerEntity;
             this.name = playerEntity.getNameForScoreboard();
             this.role = Role.INNOCENT;
+        }
+
+        public void setItemStack(ItemStack itemStack) {
+            this.itemStack = itemStack;
         }
 
         protected void setPlayerEntity(PlayerEntity playerEntity) {

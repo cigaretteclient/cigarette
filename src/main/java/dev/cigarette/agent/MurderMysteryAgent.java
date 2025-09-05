@@ -106,7 +106,7 @@ public class MurderMysteryAgent extends BaseAgent {
         xgHelper.addExampleFromPersistentPlayer(player, label);
         try {
             if (xgHelper.getBufferedExampleCount() >= 60) {
-                xgHelper.trainAndSaveModel(500);
+                xgHelper.trainAsyncIfNeeded(50, 100);
             }
         } catch (Exception ignored) {
         }

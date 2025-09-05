@@ -36,6 +36,9 @@ public class MurderMysteryAgent extends BaseAgent {
     public static XGBoostModelHelper xgHelper;
 
     private static final String modelInitialPath = "github:cigaretteclient/xgboost";
+    public static boolean hasFoundRoles = false;
+    private static PersistentPlayer selectedMurderer = null;
+    private static PersistentPlayer selectedDetective = null;
 
     public MurderMysteryAgent(@Nullable ToggleWidget devToggle) {
         super(devToggle);
@@ -102,11 +105,11 @@ public class MurderMysteryAgent extends BaseAgent {
 
     public void xgboostRegisterPositionRotation(PersistentPlayer player) {
         if (player == null || player.playerEntity == null) return;
-        float label = player.role == PersistentPlayer.Role.MURDERER ? 1.0f : 0.0f;
+        float label = player.role == PersistentPlayer.Role.MURDERER ? 1.0f : (player.role == PersistentPlayer.Role.DETECTIVE ? 0.5f : 0.0f);
         xgHelper.addExampleFromPersistentPlayer(player, label);
         try {
             if (xgHelper.getBufferedExampleCount() >= 60) {
-                xgHelper.trainAsyncIfNeeded(50, 100);
+                xgHelper.trainAsyncIfNeeded(50, 50);
             }
         } catch (Exception ignored) {
         }
@@ -133,7 +136,11 @@ public class MurderMysteryAgent extends BaseAgent {
                 if (isDetectiveItem(item)) {
                     existingPlayer.setDetective();
                     existingPlayer.setItemStack(item);
-                    xgboostRegisterPositionRotation(existingPlayer);
+                    hasFoundRoles = true;
+                    if (selectedDetective == null) {
+                        selectedDetective = existingPlayer;
+                        xgboostRegisterPositionRotation(existingPlayer);
+                    }
                     continue;
                 }
 
@@ -144,7 +151,11 @@ public class MurderMysteryAgent extends BaseAgent {
                     if (knife.equals(knifeLang)) {
                         existingPlayer.setMurderer();
                         existingPlayer.setItemStack(item);
-                        xgboostRegisterPositionRotation(existingPlayer);
+                        hasFoundRoles = true;
+                        if (selectedMurderer == null) {
+                            selectedMurderer = existingPlayer;
+                            xgboostRegisterPositionRotation(existingPlayer);
+                        }
                         break;
                     }
                 }
@@ -165,6 +176,9 @@ public class MurderMysteryAgent extends BaseAgent {
     protected void onInvalidTick(MinecraftClient client) {
         persistentPlayers.clear();
         availableGold.clear();
+        hasFoundRoles = false;
+        selectedMurderer = null;
+        selectedDetective = null;
     }
 
     public static class PersistentPlayer {

@@ -1,5 +1,7 @@
 package dev.cigarette.gui.hud.bar;
 
+import dev.cigarette.Cigarette;
+import dev.cigarette.GameDetector;
 import dev.cigarette.gui.CigaretteScreen;
 import dev.cigarette.gui.Scissor;
 import dev.cigarette.gui.hud.bar.api.BarWidget;
@@ -55,6 +57,11 @@ public class BarDisplay extends ClickableWidget {
 
     @Override
     protected void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
+        if (GameDetector.rootGame == GameDetector.ParentGame.NULL) {
+            anim.clear();
+            return;
+        }
+
         int width;
         int height;
 

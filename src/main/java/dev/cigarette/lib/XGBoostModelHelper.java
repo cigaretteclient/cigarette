@@ -1,9 +1,9 @@
 package dev.cigarette.lib;
 
-import ml.dmlc.xgboost4j.java.Booster;
 import ml.dmlc.xgboost4j.java.DMatrix;
 import ml.dmlc.xgboost4j.java.XGBoost;
 import ml.dmlc.xgboost4j.java.XGBoostError;
+import ml.dmlc.xgboost4j.java.Booster;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
+import dev.cigarette.agent.MurderMysteryAgent;
 import net.fabricmc.loader.api.FabricLoader;
 
 /**
@@ -36,9 +37,9 @@ public class XGBoostModelHelper {
     private volatile boolean trainingInProgress = false;
     private long lastTrainMillis = 0L;
 
-    private static final int DEFAULT_MIN_EXAMPLES_TO_TRAIN = 60;
-    private static final int MAX_BUFFER = 256;
-    private static final long TRAIN_COOLDOWN_MS = 3000L;
+    private static final int DEFAULT_MIN_EXAMPLES_TO_TRAIN = 30;
+    private static final int MAX_BUFFER = 128;
+    private static final long TRAIN_COOLDOWN_MS = 5000L;
 
     public XGBoostModelHelper(String modelPath) {
         this.modelPath = modelPath;
@@ -130,7 +131,7 @@ public class XGBoostModelHelper {
             labels.add(label);
             featureHashes.add(h);
             dedup.add(h);
-            if (label >= 0.5f) positives++; else negatives++;
+            if (label == 1.0f) positives++; else negatives++;
 
             trimBufferIfNeeded();
         }
@@ -155,7 +156,7 @@ public class XGBoostModelHelper {
      * with cooldown to avoid spamming heavy computations on the main thread.
      */
     public void trainAsyncIfNeeded() {
-        trainAsyncIfNeeded(DEFAULT_MIN_EXAMPLES_TO_TRAIN, 120);
+        trainAsyncIfNeeded(DEFAULT_MIN_EXAMPLES_TO_TRAIN, 50);
     }
 
     public void trainAsyncIfNeeded(int minExamples, int numRounds) {
@@ -164,6 +165,8 @@ public class XGBoostModelHelper {
         synchronized (this) {
             long now = System.currentTimeMillis();
             if (trainingInProgress) return;
+            if (this.booster != null) return; 
+            if (!MurderMysteryAgent.hasFoundRoles) return; // Only train if roles have been found
             if (features.size() < Math.max(1, minExamples)) return;
             if (positives == 0 || negatives == 0) return;
             if (now - lastTrainMillis < TRAIN_COOLDOWN_MS) return;
@@ -223,8 +226,8 @@ public class XGBoostModelHelper {
         dtrain.setLabel(snapLabels);
 
         Map<String, Object> params = new HashMap<>();
-        params.put("eta", 0.1);
-        params.put("max_depth", 3);
+        params.put("eta", 0.05);
+        params.put("max_depth", 2);
         params.put("objective", "binary:logistic");
         params.put("silent", 1);
 
@@ -299,7 +302,7 @@ public class XGBoostModelHelper {
             float[] removedFeat = features.remove(0);
             Long removedHash = featureHashes.remove(0);
             if (removedHash != null) dedup.remove(removedHash);
-            if (removedLabel >= 0.5f) positives--; else negatives--;
+            if (removedLabel == 1.0f) positives--; else negatives--;
         }
     }
 
@@ -309,7 +312,7 @@ public class XGBoostModelHelper {
         int zi = Math.round((float) (z * 100f));
         int yiw = Math.round(yaw * 10f);
         int piw = Math.round(pitch * 10f);
-        int li = label >= 0.5f ? 1 : 0;
+        int li = label == 1.0f ? 1 : (label == 0.5f ? 2 : 0);
         long h = 1469598103934665603L;
         h ^= xi; h *= 1099511628211L;
         h ^= yi; h *= 1099511628211L;

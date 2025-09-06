@@ -47,7 +47,7 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
 
     public final SliderWidget jitterViolence = new SliderWidget("Jitter Aggression", "Scale of aim jitter (0 disables)").withBounds(0.0, 1.0, 3.0).withAccuracy(2);
     public final SliderWidget driftViolence = new SliderWidget("Drift Aggression", "Scale of slow drift vs jitter").withBounds(0.0, 0.6, 2.0).withAccuracy(2);
-    public final SliderWidget aimToleranceDeg = new SliderWidget("Aim Tolerance (deg)", "Max degrees off for attack").withBounds(0.5, 2.0, 6.0).withAccuracy(1);
+    public final SliderWidget aimToleranceDeg = new SliderWidget("Aim Tolerance (deg)", "Max angular distance (hypot of yaw/pitch) off for attack").withBounds(0.5, 2.0, 6.0).withAccuracy(1);
 
     public final SliderWidget smoothingMultiplier = new SliderWidget("Smoothing Multiplier", "Scales duration based on angle").withBounds(0.5, 1.0, 3.0).withAccuracy(2);
     public final SliderWidget bezierInfluence = new SliderWidget("Bezier Influence", "0 = linear, 1 = full bezier curve").withBounds(0.0, 1.0, 1.0).withAccuracy(2);
@@ -243,7 +243,9 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
         float dyaw = MathHelper.wrapDegrees(player.getYaw() - want[0]);
         float dpitch = want[1] - player.getPitch();
         float tol = (float) Math.max(0.1, aimToleranceDeg.getRawState());
-        return Math.abs(dyaw) < tol && Math.abs(dpitch) < tol;
+        // Use combined angular distance (circular region) consistent with AutoBow.
+        double angDist = Math.hypot(dyaw, dpitch);
+        return angDist <= tol;
     }
 
     private float[] evalPlanStep() {

@@ -13,6 +13,7 @@ import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.hit.HitResult;
 import org.jetbrains.annotations.NotNull;
@@ -28,17 +29,16 @@ public class AutoBow extends TickModule<ToggleWidget, Boolean> {
     private final SliderWidget targetRange = new SliderWidget("Max Range", "Maximum range to shoot a target.").withBounds(3, 5, 15);
     private final ToggleWidget prediction = new ToggleWidget("Prediction", "Predict target position for bow").withDefaultState(false);
     private final SliderWidget predictionTicks = new SliderWidget("Prediction Ticks", "Ticks ahead to predict").withBounds(0, 5, 20).withAccuracy(1);
-    // AutoBow intentionally relies on PlayerAimbot's aimToleranceDeg to keep a single synchronized tolerance.
+
     private boolean paOldEnableState, paOldPredictionState, paMMOldState = false;
 
     private double paOldPredictionTicks;
 
     private boolean isMurderer = false;
 
-    // Reused as draw ticks counter
     private int aimTicks = 0;
     private int itemSlot;
-    private boolean drawing = false; // whether we are currently holding right-click to draw the bow
+    private boolean drawing = false;
 
     private AutoBow(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
@@ -60,7 +60,6 @@ public class AutoBow extends TickModule<ToggleWidget, Boolean> {
 
         LivingEntity activeTarget = PlayerAimbot.INSTANCE.activeTarget;
         if (activeTarget == null) {
-            // No target -> reset drawing state
             if (drawing) {
                 aimKey.setPressed(false);
                 drawing = false;
@@ -69,7 +68,6 @@ public class AutoBow extends TickModule<ToggleWidget, Boolean> {
             return;
         }
 
-        // Role / item selection logic (unchanged) -------------------------------------------------
         if (!genericMode.getRawState()) {
             Optional<MurderMysteryAgent.PersistentPlayer> tPlayer = MurderMysteryAgent.getVisiblePlayers().stream().filter((p) -> p.playerEntity == activeTarget).findFirst();
             if (tPlayer.isPresent()) {
@@ -91,7 +89,7 @@ public class AutoBow extends TickModule<ToggleWidget, Boolean> {
                         isMurderer = false;
                         DefaultedList<ItemStack> is = self.get().playerEntity.getInventory().getMainStacks();
                         for (int ix = 0; ix < is.toArray().length; ix++) {
-                            if (MurderMysteryAgent.isDetectiveItem(is.get(ix))) {
+                            if (is.get(ix).isOf(Items.BOW)) {
                                 if (MinecraftClient.getInstance().player != null) {
                                     MinecraftClient.getInstance().player.getInventory().setSelectedSlot(ix);
                                 }
@@ -102,10 +100,8 @@ public class AutoBow extends TickModule<ToggleWidget, Boolean> {
                 }
             }
         }
-        // -----------------------------------------------------------------------------------------
 
         if (!genericMode.getRawState() && MinecraftClient.getInstance().player != null && MinecraftClient.getInstance().player.getInventory().getSelectedSlot() != this.itemSlot) {
-            // Selected slot changed away from bow/detective item -> reset
             aimKey.setPressed(false);
             drawing = false;
             this.aimTicks = 0;
@@ -120,10 +116,8 @@ public class AutoBow extends TickModule<ToggleWidget, Boolean> {
         boolean inRange = player.squaredDistanceTo(activeTarget) <= Math.pow(this.targetRange.getRawState(), 2);
         boolean holdingBow = MinecraftClient.getInstance().player != null && MinecraftClient.getInstance().player.getMainHandStack().getItem().toString().toLowerCase().contains("bow");
 
-        // Core shooting logic: start drawing only when aligned & in range & holding a bow.
         if (angleAligned && inRange && holdingBow) {
             if (!drawing) {
-                // Begin drawing
                 aimKey.setPressed(true);
                 drawing = true;
                 aimTicks = 0;
@@ -131,14 +125,12 @@ public class AutoBow extends TickModule<ToggleWidget, Boolean> {
                 aimTicks++;
                 int requiredTicks = this.shootDelay.getRawState().intValue();
                 if (aimTicks >= requiredTicks) {
-                    // Release to fire
                     aimKey.setPressed(false);
                     drawing = false;
                     aimTicks = 0;
                 }
             }
         } else {
-            // Not aligned/in range or not holding bow: ensure we are not drawing
             if (drawing) {
                 aimKey.setPressed(false);
                 drawing = false;
@@ -146,7 +138,6 @@ public class AutoBow extends TickModule<ToggleWidget, Boolean> {
             }
         }
 
-        // Safety: if key binding timesPressed accumulates from other logic reset it when idle
         if (!drawing) {
             KeyBindingAccessor accessor = (KeyBindingAccessor) Objects.requireNonNull(KeyBinding.byId("key.use"));
             if (accessor.getTimesPressed() > 0) {
@@ -179,7 +170,6 @@ public class AutoBow extends TickModule<ToggleWidget, Boolean> {
         PlayerAimbot.INSTANCE.murderMysteryMode.setRawState(this.paMMOldState);
         PlayerAimbot.INSTANCE.prediction.setRawState(this.paOldPredictionState);
         PlayerAimbot.INSTANCE.predictionTicks.setRawState(this.paOldPredictionTicks);
-        // Ensure key released
         KeyBinding aimKey = KeyBinding.byId("key.use");
         if (aimKey != null) aimKey.setPressed(false);
         drawing = false;

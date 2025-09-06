@@ -19,6 +19,7 @@ import net.minecraft.util.hit.HitResult;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
+import net.minecraft.util.Hand;
 import java.util.Optional;
 
 public class AutoBow extends TickModule<ToggleWidget, Boolean> {
@@ -57,6 +58,7 @@ public class AutoBow extends TickModule<ToggleWidget, Boolean> {
         if (hitResult == null) return;
         KeyBinding aimKey = KeyBinding.byId("key.use");
         if (aimKey == null) return;
+        KeyBindingAccessor aimKeyAccessor = (KeyBindingAccessor) aimKey;
 
         LivingEntity activeTarget = PlayerAimbot.INSTANCE.activeTarget;
         if (activeTarget == null) {
@@ -112,13 +114,16 @@ public class AutoBow extends TickModule<ToggleWidget, Boolean> {
         double yawDiff = Math.toRadians(Math.abs(activeTarget.getYaw() - player.getYaw()));
         double pitchDiff = Math.toRadians(Math.abs(activeTarget.getPitch() - player.getPitch()));
         double angularDistance = Math.hypot(yawDiff, pitchDiff);
-        boolean angleAligned = angularDistance <= aimTolerance;
+        double angularDistanceDeg = Math.toDegrees(angularDistance);
         boolean inRange = player.squaredDistanceTo(activeTarget) <= Math.pow(this.targetRange.getRawState(), 2);
-        boolean holdingBow = MinecraftClient.getInstance().player != null && MinecraftClient.getInstance().player.getMainHandStack().getItem().toString().toLowerCase().contains("bow");
+        boolean holdingBow = player.getMainHandStack().isOf(Items.BOW);
+        double baseTol = PlayerAimbot.INSTANCE.aimToleranceDeg.getRawState();
+        double activeTol = drawing ? baseTol * 1.5 : baseTol;
+        boolean angleAligned = angularDistanceDeg <= activeTol;
 
         if (angleAligned && inRange && holdingBow) {
             if (!drawing) {
-                aimKey.setPressed(true);
+                aimKeyAccessor.setTimesPressed(aimKeyAccessor.getTimesPressed() + 1);
                 drawing = true;
                 aimTicks = 0;
             } else {
@@ -126,22 +131,31 @@ public class AutoBow extends TickModule<ToggleWidget, Boolean> {
                 int requiredTicks = this.shootDelay.getRawState().intValue();
                 if (aimTicks >= requiredTicks) {
                     aimKey.setPressed(false);
-                    drawing = false;
-                    aimTicks = 0;
                 }
             }
+        } else if (inRange && holdingBow) {
+            aimKey.setPressed(false);
+            if (angleAligned) {
+                aimKeyAccessor.setTimesPressed(aimKeyAccessor.getTimesPressed() + 1);
+                drawing = true;
+                aimTicks = 0;
+            }
         } else {
-            if (drawing) {
+            if (angularDistanceDeg > baseTol * 2.0) {
                 aimKey.setPressed(false);
                 drawing = false;
                 aimTicks = 0;
-            }
-        }
-
-        if (!drawing) {
-            KeyBindingAccessor accessor = (KeyBindingAccessor) Objects.requireNonNull(KeyBinding.byId("key.use"));
-            if (accessor.getTimesPressed() > 0) {
-                accessor.setTimesPressed(0);
+            } else {
+                if (!player.isUsingItem() && client.interactionManager != null) {
+                    client.interactionManager.interactItem(player, Hand.MAIN_HAND);
+                }
+                aimTicks++;
+                int requiredTicks = this.shootDelay.getRawState().intValue();
+                if (aimTicks >= requiredTicks) {
+                    aimKey.setPressed(false);
+                    drawing = false;
+                    aimTicks = 0;
+                }
             }
         }
     }

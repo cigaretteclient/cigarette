@@ -61,10 +61,12 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
 
     public final ToggleWidget prediction = new ToggleWidget("Prediction", "Predict target position").withDefaultState(false);
     public final SliderWidget predictionTicks = new SliderWidget("Prediction Ticks", "Ticks ahead to predict").withBounds(0, 5, 20).withAccuracy(1);
+    // New: minimum angular gap (deg) before initiating an aim plan & basis for dynamic prediction scaling
+    public final SliderWidget engageAimAngle = new SliderWidget("Engage Angle (deg)", "Only begin aim plan when target angle gap >= this; also scales prediction").withBounds(1.0, 6.0, 30.0).withAccuracy(1);
 
     private PlayerAimbot(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
-        this.setChildren(autoAttack, smoothAim, aimRange, prediction, predictionTicks, wTap, attackCps, ignoreTeammates, lockOnKeybind, testMode,
+        this.setChildren(autoAttack, smoothAim, aimRange, prediction, predictionTicks, engageAimAngle, wTap, attackCps, ignoreTeammates, lockOnKeybind, testMode,
                 murderMysteryMode, detectiveAim,
                 jitterViolence, driftViolence, aimToleranceDeg, smoothingMultiplier, bezierInfluence, controlJitterScale, interpolationMode,
                 interferenceAngleDeg, interferenceGraceTicks);
@@ -73,6 +75,7 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
         aimRange.registerConfigKey(id + ".aimRange");
         prediction.registerConfigKey(id + ".prediction");
         predictionTicks.registerConfigKey(id + ".predictionTicks");
+        engageAimAngle.registerConfigKey(id + ".engageAimAngle");
         wTap.registerConfigKey(id + ".wTap");
         attackCps.registerConfigKey(id + ".attackCps");
         ignoreTeammates.registerConfigKey(id + ".ignoreTeammates");
@@ -171,15 +174,39 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
             return;
         }
 
-        Vec3d aimPoint = computeAimPoint(player, target, false);
+        // Compute raw (non-predicted) angle gap first
+        double angleGap = computeAngleGap(player, target);
+        double engageThresh = Math.max(0.5, engageAimAngle.getRawState());
+
+        // Dynamically boost prediction ticks when large angle corrections are needed
+        int basePred = (int) Math.round(predictionTicks.getRawState());
+        int dynamicPred = basePred;
+        if (prediction.getRawState() && angleGap >= engageThresh) {
+            // scale extra ticks up to +10 based on how many thresholds we exceed (linear)
+            double factor = (angleGap - engageThresh) / engageThresh; // 0 at threshold
+            int extra = (int) Math.min(10, Math.max(0, Math.round(factor * 4))); // each threshold multiple ~+4 ticks
+            dynamicPred = Math.min(30, basePred + extra); // hard cap
+        }
+
+        Vec3d aimPoint = computeAimPoint(player, target, false, dynamicPred);
         float[] targetAngles = AimingL.anglesFromTo(player.getEyePos(), aimPoint);
         float curYaw = getContinuousYaw(player);
         float curPitch = MathHelper.clamp(player.getPitch(), -90f, 90f);
 
-        if (!isPlanActive() || !Objects.equals(target.getUuid(), activeTargetId) || planTargetChangedSignificantly(targetAngles)) {
-            buildBezierPlan(curYaw, curPitch, targetAngles[0], targetAngles[1]);
-            activeTarget = target;
-            activeTargetId = target.getUuid();
+        boolean needPlan = !isPlanActive() || !Objects.equals(target.getUuid(), activeTargetId) || planTargetChangedSignificantly(targetAngles);
+        if (needPlan) {
+            // Only start a NEW plan if we exceed engage threshold OR no active plan yet (to allow first snap if already close)
+            if (angleGap >= engageThresh || !isPlanActive()) {
+                buildBezierPlan(curYaw, curPitch, targetAngles[0], targetAngles[1]);
+                activeTarget = target;
+                activeTargetId = target.getUuid();
+            }
+        }
+
+        if (!isPlanActive() && angleGap < engageThresh) {
+            // Skip micro-adjust aiming until gap large enough
+            lastAppliedValid = false; // allow re-unwrap when we re-engage
+            return;
         }
 
         float[] stepAngles = evalPlanStep();
@@ -195,7 +222,7 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
             boolean aimAligned = aimAlignmentOk(player, target);
             if (withinRange && aimAligned && ticksUntilNextAttack <= 0) {
                 if (wTap.getRawState()) AimingL.doSprint(true);
-                Vec3d atkAim = computeAimPoint(player, target, true);
+                Vec3d atkAim = computeAimPoint(player, target, true, dynamicPred);
                 float[] atkAngles = AimingL.anglesFromTo(player.getEyePos(), atkAim);
                 AimingL.lookAndAttack(world, player, target, atkAngles[0], atkAngles[1]);
                 scheduleNextAttack();
@@ -239,13 +266,15 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
 
     private boolean aimAlignmentOk(ClientPlayerEntity player, LivingEntity target) {
         Vec3d aimPoint = computeAimPoint(player, target, false);
-        float[] want = AimingL.anglesFromTo(player.getEyePos(), aimPoint);
-        float dyaw = MathHelper.wrapDegrees(player.getYaw() - want[0]);
-        float dpitch = want[1] - player.getPitch();
-        float tol = (float) Math.max(0.1, aimToleranceDeg.getRawState());
-        // Use combined angular distance (circular region) consistent with AutoBow.
-        double angDist = Math.hypot(dyaw, dpitch);
-        return angDist <= tol;
+        Vec3d lookVec = player.getRotationVec(1.0F);
+        Vec3d toTarget = aimPoint.subtract(player.getEyePos());
+        if (toTarget.lengthSquared() == 0) return true;
+        lookVec = lookVec.normalize();
+        Vec3d toNorm = toTarget.normalize();
+        double dot = Math.max(-1.0, Math.min(1.0, lookVec.dotProduct(toNorm)));
+        double angleDeg = Math.toDegrees(Math.acos(dot));
+        double tol = Math.max(0.1, aimToleranceDeg.getRawState());
+        return angleDeg <= tol;
     }
 
     private float[] evalPlanStep() {
@@ -320,12 +349,25 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
         }
     }
 
-    private boolean isPlanActive() { return planTicksElapsed < planTicksTotal; }
+    private boolean isPlanActive() {
+        return planTicksElapsed < planTicksTotal;
+    }
+
+    private double computeAngleGap(ClientPlayerEntity player, LivingEntity target) {
+        Vec3d eye = player.getEyePos();
+        Vec3d to = target.getBoundingBox().getCenter().subtract(eye);
+        if (to.lengthSquared() == 0) return 0.0;
+        Vec3d look = player.getRotationVec(1.0F).normalize();
+        Vec3d dir = to.normalize();
+        double dot = Math.max(-1, Math.min(1, look.dotProduct(dir)));
+        return Math.toDegrees(Math.acos(dot));
+    }
 
     private boolean planTargetChangedSignificantly(float[] targetAngles) {
         float dyaw = Math.abs(MathHelper.wrapDegrees(endYaw - targetAngles[0]));
         float dpitch = Math.abs(endPitch - targetAngles[1]);
-        return dyaw > 3.0f || dpitch > 3.0f;
+        double thresh = Math.max(1.0, engageAimAngle.getRawState());
+        return dyaw > thresh || dpitch > thresh;
     }
 
     private void clearPlan() {
@@ -337,7 +379,7 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
 
     private static float cubicBezier(float p0, float p1, float p2, float p3, float t) {
         float u = 1f - t;
-        return u*u*u*p0 + 3*u*u*t*p1 + 3*u*t*t*p2 + t*t*t*p3;
+        return u * u * u * p0 + 3 * u * u * t * p1 + 3 * u * t * t * p2 + t * t * t * p3;
     }
 
     private static float easeInOutCubic(float t) {
@@ -356,14 +398,20 @@ public class PlayerAimbot extends TickModule<ToggleWidget, Boolean> {
         return lastAppliedValid ? unwrapTowards(wrappedCurrent, lastAppliedYaw) : wrappedCurrent;
     }
 
-    private Vec3d computeAimPoint(ClientPlayerEntity player, LivingEntity target, boolean attackNow) {
+    private Vec3d computeAimPoint(ClientPlayerEntity player, LivingEntity target, boolean attackNow, int dynamicTicks) {
         if (prediction.getRawState()) {
             Vec3d vel = target.getVelocity();
-            Vec3d predictedPos = target.getPos().add(vel.multiply(predictionTicks.getRawState()));
+            int ticks = Math.max(0, dynamicTicks);
+            Vec3d predictedPos = target.getPos().add(vel.multiply(ticks));
             return predictedPos.add(0, target.getHeight() * 0.5, 0);
         } else {
             return AimingL.getAimPointInsideHitbox(player, target, attackNow, 0.1, 0.6, 2.5);
         }
+    }
+
+    // Retain original signature for any other callers; delegate to dynamic with base ticks
+    private Vec3d computeAimPoint(ClientPlayerEntity player, LivingEntity target, boolean attackNow) {
+        return computeAimPoint(player, target, attackNow, (int) Math.round(predictionTicks.getRawState()));
     }
 
     private boolean isMurderMysteryActive() {

@@ -21,6 +21,8 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 
+import javax.swing.text.html.parser.DTD;
+
 public class AimingL {
     /**
      * Compute yaw/pitch angles (in degrees) to look from 'from' to 'to'.
@@ -30,10 +32,7 @@ public class AimingL {
         Vec3d d = to.subtract(from);
         double lenSq = d.lengthSquared();
         if (!isFinite(d.x) || !isFinite(d.y) || !isFinite(d.z) || lenSq < 1.0e-12) {
-            ClientPlayerEntity p = MinecraftClient.getInstance().player;
-            float fallbackYaw = p != null ? MathHelper.wrapDegrees(p.getYaw()) : 0f;
-            float fallbackPitch = p != null ? MathHelper.clamp(p.getPitch(), -90f, 90f) : 0f;
-            return new float[]{fallbackYaw, fallbackPitch};
+            return fallbackPE();
         }
         Vec3d v = d.normalize();
         float yaw = (float) Math.toDegrees(Math.atan2(-v.x, v.z));
@@ -43,12 +42,16 @@ public class AimingL {
         yaw = limitAccuracy(yaw, 100);
         pitch = limitAccuracy(pitch, 100);
         if (!Float.isFinite(yaw) || !Float.isFinite(pitch)) {
-            ClientPlayerEntity p = MinecraftClient.getInstance().player;
-            float fallbackYaw = p != null ? MathHelper.wrapDegrees(p.getYaw()) : 0f;
-            float fallbackPitch = p != null ? MathHelper.clamp(p.getPitch(), -90f, 90f) : 0f;
-            return new float[]{fallbackYaw, fallbackPitch};
+            return fallbackPE();
         }
         return new float[]{yaw, pitch};
+    }
+
+    private static float[] fallbackPE() {
+        ClientPlayerEntity p = MinecraftClient.getInstance().player;
+        float fallbackYaw = p != null ? MathHelper.wrapDegrees(p.getYaw()) : 0f;
+        float fallbackPitch = p != null ? MathHelper.clamp(p.getPitch(), -90f, 90f) : 0f;
+        return new float[]{fallbackYaw, fallbackPitch};
     }
 
     /**
@@ -143,12 +146,10 @@ public class AimingL {
         if (sprint) {
             if (!player.isSprinting() && !player.isUsingItem() && !player.isSneaking()) {
                 player.setSprinting(true);
-                player.networkHandler.sendPacket(new ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.START_SPRINTING));
             }
         } else {
             if (player.isSprinting()) {
                 player.setSprinting(false);
-                player.networkHandler.sendPacket(new ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.STOP_SPRINTING));
             }
         }
     }
@@ -179,53 +180,74 @@ public class AimingL {
      * Send a PlayerInteractItemC2SPacket with the given yaw/pitch and a new sequence number.
      * Uses PendingUpdateManager to ensure proper sequencing.
      */
-    public static void sendAimPacket(ClientWorld world, ClientPlayerEntity player, float yaw, float pitch) {
-        if (world == null || player == null) return;
-        // Keep yaw continuous relative to current player yaw to avoid modulo-360 jumps
+    public static void sendAimPacket(ClientPlayerEntity player, float yaw, float pitch) {
+        if (player == null) return;
         float cur = player.getYaw();
         float syaw = Float.isFinite(yaw) ? (cur + MathHelper.wrapDegrees(yaw - cur)) : cur;
         float spitch = sanitizePitch(pitch);
-        ClientWorldAccessor accessor = (ClientWorldAccessor) world;
-        try (PendingUpdateManager pum = accessor.getPendingUpdateManager().incrementSequence()) {
-            int seq = pum.getSequence();
-            player.networkHandler.sendPacket(new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, seq, syaw, spitch));
-        }
+        player.setYaw(syaw);
+        player.setPitch(spitch);
     }
 
-    /**
-     * Send a look packet followed by an attack and a hand swing. Useful for revive/auras that need to set look client-side.
-     */
     public static void lookAndAttack(ClientWorld world, ClientPlayerEntity player, LivingEntity target, float yaw, float pitch) {
         if (player == null || target == null || world == null) return;
         HitResult hitResult = MinecraftClient.getInstance().crosshairTarget;
         KeyBinding attackKey = KeyBinding.byId("key.attack");
+        if (attackKey == null) return;
         KeyBindingAccessor attackKeyAccessor = (KeyBindingAccessor) attackKey;
-        if (hitResult == null || attackKey == null || !attackKey.isPressed()) return;
-        if (hitResult.getType() == HitResult.Type.ENTITY) {
+
+        boolean shouldAttack = false;
+
+        if (hitResult != null && hitResult.getType() == HitResult.Type.ENTITY) {
             EntityHitResult entityHitResult = (EntityHitResult) hitResult;
             Entity entity = entityHitResult.getEntity();
-            if (!(entity instanceof LivingEntity livingEntity)) return;
-            if (livingEntity.hurtTime > 1) return;
-            attackKeyAccessor.setTimesPressed(attackKeyAccessor.getTimesPressed() + 1);
+            if (entity instanceof LivingEntity livingEntity && livingEntity == target) {
+                if (livingEntity.hurtTime <= 1) shouldAttack = true;
+            }
         }
+
+        if (!shouldAttack) {
+            Vec3d eye = player.getEyePos();
+            Vec3d toTarget = target.getBoundingBox().getCenter().subtract(eye);
+            double dist = toTarget.length();
+            if (dist > 1e-6) {
+                double yawRad = Math.toRadians(yaw);
+                double pitchRad = Math.toRadians(pitch);
+                double dx = -Math.sin(yawRad) * Math.cos(pitchRad);
+                double dy = -Math.sin(pitchRad);
+                double dz = Math.cos(yawRad) * Math.cos(pitchRad);
+                Vec3d dir = new Vec3d(dx, dy, dz).normalize();
+                Vec3d toNorm = toTarget.normalize();
+                double dot = Math.max(-1.0, Math.min(1.0, dir.dotProduct(toNorm)));
+                double angleDeg = Math.toDegrees(Math.acos(dot));
+                if (angleDeg <= 8.0 && dist <= 4.0 && target.hurtTime <= 1) {
+                    shouldAttack = true;
+                }
+            }
+        }
+
+        if (!shouldAttack) return;
+
+        sendAimPacket(player, yaw, pitch);
+
+        attackKeyAccessor.setTimesPressed(attackKeyAccessor.getTimesPressed() + 1);
+        MinecraftClient.getInstance().attackCooldown = 0;
     }
 
-    // Helpers
-    private static boolean isFinite(double d) {
-        return !Double.isNaN(d) && !Double.isInfinite(d);
-    }
     private static float sanitizeYaw(float yaw) {
-        if (!Float.isFinite(yaw)) yaw = 0f;
         return MathHelper.wrapDegrees(yaw);
     }
-    // Keep for API parity even if unused internally
-    private static float limitAccuracy(float yaw, int precision) {
-        if (precision <= 0) return yaw;
-        float factor = 1f / precision;
-        return Math.round(yaw * precision) * factor;
-    }
+
     private static float sanitizePitch(float pitch) {
-        if (!Float.isFinite(pitch)) pitch = 0f;
         return MathHelper.clamp(pitch, -90f, 90f);
+    }
+
+    private static float limitAccuracy(float v, int accuracy) {
+        if (accuracy <= 0) return v;
+        return (float) (Math.round(v * accuracy) / (double) accuracy);
+    }
+
+    private static boolean isFinite(double v) {
+        return Double.isFinite(v);
     }
 }

@@ -15,178 +15,336 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.util.collection.DefaultedList;
+import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Objects;
-import net.minecraft.util.Hand;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 
+/**
+ * AutoBow – draws, holds, aims and fires the bow once alignment is acceptable.
+ * Fixes implemented:
+ *  - Removed premature slot switching while still aiming within viable tolerance.
+ *  - Added hold grace (lostHoldTicks) with decay to avoid jitter-based cancellations.
+ *  - Added configurable holdGraceTicks slider.
+ *  - Respect switchSlotOnFail toggle before switching slots.
+ *  - Proper tolerance scaling after long inactivity ( >60 / >120 ticks since last fire ).
+ *  - Simplified and de-duplicated initialization logic.
+ */
 public class AutoBow extends TickModule<ToggleWidget, Boolean> {
-    public static final dev.cigarette.module.murdermystery.AutoBow INSTANCE = new dev.cigarette.module.murdermystery.AutoBow("murdermystery.autobow", "AutoBow", "Automatically aims and fires a bow at the murderer.");
+    public static final AutoBow INSTANCE = new AutoBow("murdermystery.autobow", "AutoBow", "Automatically aims and fires a bow at the murderer.");
 
-    private final SliderWidget shootDelay = new SliderWidget("Shoot Delay", "Maximum delay to draw before shooting").withBounds(20, 45, 60).withAccuracy(1);
-    private final ToggleWidget genericMode = new ToggleWidget("Generic Mode", "Use PlayerAimbot target without role checks").withDefaultState(false);
+    private final SliderWidget shootDelay = new SliderWidget("Shoot Delay", "Maximum delay (ticks) to fully draw before shooting").withBounds(20, 45, 60).withAccuracy(1);
     private final SliderWidget targetRange = new SliderWidget("Max Range", "Maximum range to shoot a target.").withBounds(3, 5, 15);
-    private final ToggleWidget prediction = new ToggleWidget("Prediction", "Predict target position for bow").withDefaultState(false);
+    private final ToggleWidget genericMode = new ToggleWidget("Generic Mode", "Use PlayerAimbot target without Murder Mystery prioritization").withDefaultState(false);
+    private final ToggleWidget prediction = new ToggleWidget("Prediction", "Use PlayerAimbot prediction settings while active").withDefaultState(false);
     private final SliderWidget predictionTicks = new SliderWidget("Prediction Ticks", "Ticks ahead to predict").withBounds(0, 5, 20).withAccuracy(1);
+    private final SliderWidget holdAngleTolerance = new SliderWidget("Hold Angle", "Angle (deg) allowed while continuing to hold draw").withBounds(5, 25, 60).withAccuracy(1);
+    private final SliderWidget holdGraceTicks = new SliderWidget("Hold Grace", "Ticks outside hold tolerance before cancelling").withBounds(1, 3, 12).withAccuracy(0);
+    private final ToggleWidget switchSlotOnFail = new ToggleWidget("Slot Switch Fail", "Switch slot after failed shot alignment").withDefaultState(true);
 
-    private boolean paOldEnableState, paOldPredictionState, paMMOldState = false;
-
+    private boolean paOldEnableState;
+    private boolean paOldPredictionState;
+    private boolean paOldMMState;
     private double paOldPredictionTicks;
+    private Boolean paMMOldState = false;
 
-    private boolean isMurderer = false;
+    private boolean isMurderer = false; // kept for potential HUD usage
 
-    private int aimTicks = 0;
-    private int itemSlot;
+    private int drawTicks = 0;
+    private int requiredDrawTicks = 20;
     private boolean drawing = false;
+    private int ticksSinceLastFire = 0;
+    private int lostHoldTicks = 0;
 
     private AutoBow(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
-        this.setChildren(shootDelay, targetRange, genericMode, prediction, predictionTicks);
+        this.setChildren(shootDelay, targetRange, genericMode, prediction, predictionTicks, holdAngleTolerance, holdGraceTicks, switchSlotOnFail);
         shootDelay.registerConfigKey(id + ".shootDelay");
         targetRange.registerConfigKey(id + ".targetRange");
         genericMode.registerConfigKey(id + ".genericMode");
-        prediction.registerConfigKey(id + ".prediction");
         predictionTicks.registerConfigKey(id + ".predictionTicks");
+        holdAngleTolerance.registerConfigKey(id + ".holdAngleTolerance");
+        holdGraceTicks.registerConfigKey(id + ".holdGraceTicks");
+        switchSlotOnFail.registerConfigKey(id + ".switchSlotOnFail");
     }
 
     @Override
-    protected void onEnabledTick(MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
-        client.attackCooldown = 0;
-        HitResult hitResult = client.crosshairTarget;
-        if (hitResult == null) return;
-        KeyBinding aimKey = KeyBinding.byId("key.use");
-        if (aimKey == null) return;
-        KeyBindingAccessor aimKeyAccessor = (KeyBindingAccessor) aimKey;
+    public void onEnabledTick(MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
+        if (client.currentScreen != null) return;
 
-        LivingEntity activeTarget = PlayerAimbot.INSTANCE.activeTarget;
-        if (activeTarget == null) {
-            if (drawing) {
-                aimKey.setPressed(false);
-                drawing = false;
-                aimTicks = 0;
+        ticksSinceLastFire++;
+
+        boolean shouldMM = !genericMode.getRawState();
+        if (PlayerAimbot.INSTANCE.murderMysteryMode.getRawState() != shouldMM) {
+            PlayerAimbot.INSTANCE.murderMysteryMode.setRawState(shouldMM);
+            releaseIfDrawing(player);
+        }
+
+        ensureActiveTarget(player);
+        LivingEntity target = PlayerAimbot.INSTANCE.activeTarget;
+        if (target != null) {
+            double maxRangeSq = square(targetRange.getRawState());
+            if (!target.isAlive() || target.isRemoved() || player.squaredDistanceTo(target) > maxRangeSq) {
+                PlayerAimbot.INSTANCE.activeTarget = null;
+                target = null;
             }
+        }
+        if (target == null) {
+            releaseIfDrawing(player);
             return;
         }
 
         if (!genericMode.getRawState()) {
-            Optional<MurderMysteryAgent.PersistentPlayer> tPlayer = MurderMysteryAgent.getVisiblePlayers().stream().filter((p) -> p.playerEntity == activeTarget).findFirst();
-            if (tPlayer.isPresent()) {
-                Optional<MurderMysteryAgent.PersistentPlayer> self = MurderMysteryAgent.getVisiblePlayers().stream().filter((p) -> p.playerEntity == MinecraftClient.getInstance().player).findFirst();
-                if (self.isPresent()) {
-                    if (self.get().role == MurderMysteryAgent.PersistentPlayer.Role.MURDERER) {
-                        isMurderer = true;
-                        ItemStack i = self.get().itemStack;
-                        DefaultedList<ItemStack> is = self.get().playerEntity.getInventory().getMainStacks();
-                        for (int ix = 0; ix < is.toArray().length; ix++) {
-                            if (is.get(ix).equals(i)) {
-                                if (MinecraftClient.getInstance().player != null) {
-                                    MinecraftClient.getInstance().player.getInventory().setSelectedSlot(ix);
-                                }
-                                this.itemSlot = ix;
-                            }
-                        }
-                    } else {
-                        isMurderer = false;
-                        DefaultedList<ItemStack> is = self.get().playerEntity.getInventory().getMainStacks();
-                        for (int ix = 0; ix < is.toArray().length; ix++) {
-                            if (is.get(ix).isOf(Items.BOW)) {
-                                if (MinecraftClient.getInstance().player != null) {
-                                    MinecraftClient.getInstance().player.getInventory().setSelectedSlot(ix);
-                                }
-                                this.itemSlot = ix;
-                            }
-                        }
-                    }
-                }
-            }
+            LivingEntity fTarget = target;
+            Optional<MurderMysteryAgent.PersistentPlayer> tPlayer = MurderMysteryAgent.getVisiblePlayers().stream().filter(p -> p.playerEntity == fTarget).findFirst();
+            isMurderer = tPlayer.filter(pp -> pp.role == MurderMysteryAgent.PersistentPlayer.Role.MURDERER).isPresent();
         }
 
-        if (!genericMode.getRawState() && MinecraftClient.getInstance().player != null && MinecraftClient.getInstance().player.getInventory().getSelectedSlot() != this.itemSlot) {
-            aimKey.setPressed(false);
-            drawing = false;
-            this.aimTicks = 0;
+        selectBowIfNeeded(player);
+        if (!holdingBow(player)) {
+            releaseIfDrawing(player);
             return;
         }
 
-        double aimTolerance = Math.toRadians(PlayerAimbot.INSTANCE.aimToleranceDeg.getRawState());
-        double yawDiff = Math.toRadians(Math.abs(activeTarget.getYaw() - player.getYaw()));
-        double pitchDiff = Math.toRadians(Math.abs(activeTarget.getPitch() - player.getPitch()));
-        double angularDistance = Math.hypot(yawDiff, pitchDiff);
-        double angularDistanceDeg = Math.toDegrees(angularDistance);
-        boolean inRange = player.squaredDistanceTo(activeTarget) <= Math.pow(this.targetRange.getRawState(), 2);
-        boolean holdingBow = player.getMainHandStack().isOf(Items.BOW);
-        double baseTol = PlayerAimbot.INSTANCE.aimToleranceDeg.getRawState();
-        double activeTol = drawing ? baseTol * 1.5 : baseTol;
-        boolean angleAligned = angularDistanceDeg <= activeTol;
+        HitResult hr = client.crosshairTarget;
+        if (hr != null && hr.getType() == HitResult.Type.BLOCK) { // avoid wasting arrows into walls
+            releaseIfDrawing(player);
+            return;
+        }
 
-        if (angleAligned && inRange && holdingBow) {
-            if (!drawing) {
-                aimKeyAccessor.setTimesPressed(aimKeyAccessor.getTimesPressed() + 1);
-                drawing = true;
-                aimTicks = 0;
-            } else {
-                aimTicks++;
-                int requiredTicks = this.shootDelay.getRawState().intValue();
-                if (aimTicks >= requiredTicks) {
-                    aimKey.setPressed(false);
-                }
-            }
-        } else if (inRange && holdingBow) {
-            aimKey.setPressed(false);
-            if (angleAligned) {
-                aimKeyAccessor.setTimesPressed(aimKeyAccessor.getTimesPressed() + 1);
-                drawing = true;
-                aimTicks = 0;
+        if (!drawing) {
+            if (!canStartDrawing(player, target)) return;
+            startDrawing(player);
+            return;
+        }
+
+        // Already drawing – maintain or fire
+        double baseTol = PlayerAimbot.INSTANCE.aimToleranceDeg.getRawState();
+        double holdTol = holdAngleTolerance.getRawState();
+        // dynamic scaling: longer since last fire -> relax a bit
+        if (ticksSinceLastFire > 120) {
+            baseTol *= 1.6;
+            holdTol *= 1.25;
+        } else if (ticksSinceLastFire > 60) {
+            baseTol *= 1.4;
+            holdTol *= 1.15;
+        }
+
+        double angleActual = computeAngle(player, target);
+        boolean predEnabled = prediction.getRawState();
+        double predictedAngle = Double.NaN;
+        if (predEnabled) {
+            int pticks = Math.max(0, predictionTicks.getRawState().intValue());
+            Vec3d predicted = target.getPos().add(target.getVelocity().multiply(pticks))
+                .add(0, target.getStandingEyeHeight() * 0.5, 0);
+            predictedAngle = computeAngleToPoint(player, predicted);
+        }
+
+        boolean withinHold = (!Double.isNaN(angleActual) && angleActual <= holdTol) || (predEnabled && !Double.isNaN(predictedAngle) && predictedAngle <= holdTol);
+        int graceLimit = Math.max(1, holdGraceTicks.getRawState().intValue());
+        if (!withinHold) {
+            lostHoldTicks++;
+            if (lostHoldTicks >= graceLimit) {
+                failRelease(player);
+                return;
             }
         } else {
-            if (angularDistanceDeg > baseTol * 2.0) {
-                aimKey.setPressed(false);
-                drawing = false;
-                aimTicks = 0;
-            } else {
-                if (!player.isUsingItem() && client.interactionManager != null) {
-                    client.interactionManager.interactItem(player, Hand.MAIN_HAND);
-                }
-                aimTicks++;
-                int requiredTicks = this.shootDelay.getRawState().intValue();
-                if (aimTicks >= requiredTicks) {
-                    aimKey.setPressed(false);
-                    drawing = false;
-                    aimTicks = 0;
-                }
+            // decay for stability – prevents immediate cancellation after brief jitter
+            if (lostHoldTicks > 0) lostHoldTicks = Math.max(0, lostHoldTicks - 2);
+        }
+
+        drawTicks++;
+        int minHoldTicks = 5; // allow minimal wind-up before considering release
+        if (drawTicks >= requiredDrawTicks && drawTicks >= minHoldTicks) {
+            boolean crosshairOn = client.crosshairTarget instanceof EntityHitResult ehr && ehr.getEntity() == target;
+            boolean actualOk = !Double.isNaN(angleActual) && angleActual <= baseTol;
+            boolean predictedOk = predEnabled && !Double.isNaN(predictedAngle) && predictedAngle <= baseTol;
+            if (crosshairOn || actualOk || predictedOk) {
+                fire(player);
             }
         }
     }
+
+    private boolean canStartDrawing(ClientPlayerEntity player, LivingEntity target) {
+        if (target == null) return false;
+        double maxRangeSq = square(targetRange.getRawState());
+        if (player.squaredDistanceTo(target) > maxRangeSq) return false;
+        double baseTol = PlayerAimbot.INSTANCE.aimToleranceDeg.getRawState();
+        double holdTol = holdAngleTolerance.getRawState();
+        double angleActual = computeAngle(player, target);
+        if (!Double.isNaN(angleActual) && angleActual <= baseTol) return true;
+        boolean predEnabled = prediction.getRawState();
+        if (predEnabled) {
+            int pticks = Math.max(0, predictionTicks.getRawState().intValue());
+            Vec3d predicted = target.getPos().add(target.getVelocity().multiply(pticks))
+                .add(0, target.getStandingEyeHeight() * 0.5, 0);
+            double pAng = computeAngleToPoint(player, predicted);
+            if (!Double.isNaN(pAng) && pAng <= baseTol) return true;
+            // allow relaxed start if close to hold tolerance (helps moving targets)
+            return !Double.isNaN(angleActual) && angleActual <= holdTol;
+        }
+        return !Double.isNaN(angleActual) && angleActual <= holdTol;
+    }
+
+    private void ensureActiveTarget(ClientPlayerEntity player) {
+        LivingEntity current = PlayerAimbot.INSTANCE.activeTarget;
+        if (current == null || !current.isAlive() || current.isRemoved()) {
+            PlayerAimbot.INSTANCE.activeTarget = null;
+            if (drawing) failRelease(player);
+            try {
+                PlayerAimbot.INSTANCE.activeTarget = PlayerAimbot.getBestTargetFor(player);
+            } catch (Exception ignored) {
+                PlayerAimbot.INSTANCE.activeTarget = null;
+            }
+        }
+    }
+
+    private void failRelease(ClientPlayerEntity player) {
+        if (switchSlotOnFail.getRawState()) {
+            releaseAndMaybeSwitch(player);
+        } else {
+            releaseIfDrawing(player);
+        }
+    }
+
+    private void releaseAndMaybeSwitch(ClientPlayerEntity player) {
+        releaseIfDrawing(player);
+        switchHotbarSlot(player);
+    }
+
+    private void selectBowIfNeeded(ClientPlayerEntity player) {
+        if (holdingBow(player)) return;
+        DefaultedList<ItemStack> inv = player.getInventory().getMainStacks();
+        for (int i = 0; i < inv.size(); i++) {
+            if (inv.get(i).isOf(Items.BOW)) {
+                player.getInventory().setSelectedSlot(i);
+                break;
+            }
+        }
+    }
+
+    private boolean holdingBow(ClientPlayerEntity player) {
+        return player.getMainHandStack().isOf(Items.BOW) || player.getOffHandStack().isOf(Items.BOW);
+    }
+
+    private double computeAngle(ClientPlayerEntity player, LivingEntity target) {
+        if (target == null) return Double.NaN;
+        Vec3d eye = player.getEyePos();
+        Vec3d to = target.getPos().add(0, target.getStandingEyeHeight() * 0.5, 0).subtract(eye);
+        if (to.lengthSquared() == 0) return Double.NaN;
+        Vec3d look = player.getRotationVec(1.0F).normalize();
+        Vec3d dir = to.normalize();
+        double dot = Math.max(-1, Math.min(1, look.dotProduct(dir)));
+        return Math.toDegrees(Math.acos(dot));
+    }
+
+    private double computeAngleToPoint(ClientPlayerEntity player, Vec3d point) {
+        Vec3d eye = player.getEyePos();
+        Vec3d to = point.subtract(eye);
+        if (to.lengthSquared() == 0) return 0.0;
+        Vec3d look = player.getRotationVec(1.0F).normalize();
+        Vec3d dir = to.normalize();
+        double dot = Math.max(-1, Math.min(1, look.dotProduct(dir)));
+        return Math.toDegrees(Math.acos(dot));
+    }
+
+    private void startDrawing(ClientPlayerEntity player) {
+        if (!holdingBow(player)) return;
+        if (player.isUsingItem()) return;
+        drawing = true;
+        drawTicks = 0;
+        lostHoldTicks = 0;
+        int max = shootDelay.getRawState().intValue();
+        if (max < 20) max = 20;
+        requiredDrawTicks = 20 + (max > 20 ? ThreadLocalRandom.current().nextInt(Math.max(1, max - 19)) : 0);
+        if (MinecraftClient.getInstance().interactionManager != null) {
+            KeyBinding binding = KeyBinding.byId("key.use");
+            if (binding != null) {
+                binding.setPressed(true);
+                KeyBindingAccessor accessor = (KeyBindingAccessor) binding;
+                accessor.setTimesPressed(accessor.getTimesPressed() + 1);
+            }
+        }
+    }
+
+    private void fire(ClientPlayerEntity player) {
+        if (!drawing) return;
+        if (player.isUsingItem()) {
+            KeyBinding binding = KeyBinding.byId("key.use");
+            if (binding != null) {
+                binding.setPressed(false);
+                KeyBindingAccessor accessor = (KeyBindingAccessor) binding;
+                accessor.setTimesPressed(Math.max(0, accessor.getTimesPressed() - 1));
+            }
+        }
+        drawing = false;
+        drawTicks = 0;
+        lostHoldTicks = 0;
+        ticksSinceLastFire = 0;
+    }
+
+    private void releaseIfDrawing(ClientPlayerEntity player) {
+        if (!drawing) return;
+        fire(player);
+    }
+
+    private void switchHotbarSlot(ClientPlayerEntity player) {
+        if (player == null) return;
+        int current = player.getInventory().getSelectedSlot();
+        for (int i = 1; i < 9; i++) {
+            int next = (current + i) % 9;
+            ItemStack stack = player.getInventory().getStack(next);
+            if (!stack.isEmpty() && !stack.isOf(Items.BOW)) {
+                player.getInventory().setSelectedSlot(next);
+                return;
+            }
+        }
+        player.getInventory().setSelectedSlot((current + 1) % 9);
+    }
+
+    private double square(double v) { return v * v; }
 
     @Override
     protected void whenEnabled() {
         this.paOldEnableState = PlayerAimbot.INSTANCE.getRawState();
         this.paMMOldState = PlayerAimbot.INSTANCE.murderMysteryMode.getRawState();
-        this.paOldPredictionState = PlayerAimbot.INSTANCE.prediction.getRawState();
-        this.paOldPredictionTicks = PlayerAimbot.INSTANCE.predictionTicks.getRawState();
+        paOldPredictionState = PlayerAimbot.INSTANCE.prediction.getRawState();
+        paOldPredictionTicks = PlayerAimbot.INSTANCE.predictionTicks.getRawState();
+        paOldMMState = PlayerAimbot.INSTANCE.murderMysteryMode.getRawState();
 
-        AutoClicker.INSTANCE.widget.setRawState(false);
         PlayerAimbot.INSTANCE.widget.setRawState(true);
-        PlayerAimbot.INSTANCE.prediction.setRawState(prediction.getRawState());
+        AutoClicker.INSTANCE.widget.setRawState(false);
         PlayerAimbot.INSTANCE.predictionTicks.setRawState(predictionTicks.getRawState());
-        if (!genericMode.getRawState()) {
-            PlayerAimbot.INSTANCE.murderMysteryMode.setRawState(true);
-        }
+        PlayerAimbot.INSTANCE.murderMysteryMode.setRawState(!genericMode.getRawState());
+        PlayerAimbot.INSTANCE.prediction.setRawState(prediction.getRawState());
+
+        isMurderer = false;
+        drawTicks = 0;
+        requiredDrawTicks = 20;
         drawing = false;
-        aimTicks = 0;
+        lostHoldTicks = 0;
+        ticksSinceLastFire = 0;
     }
 
     @Override
     protected void whenDisabled() {
         PlayerAimbot.INSTANCE.widget.setRawState(this.paOldEnableState);
         PlayerAimbot.INSTANCE.murderMysteryMode.setRawState(this.paMMOldState);
-        PlayerAimbot.INSTANCE.prediction.setRawState(this.paOldPredictionState);
-        PlayerAimbot.INSTANCE.predictionTicks.setRawState(this.paOldPredictionTicks);
-        KeyBinding aimKey = KeyBinding.byId("key.use");
-        if (aimKey != null) aimKey.setPressed(false);
+        PlayerAimbot.INSTANCE.prediction.setRawState(paOldPredictionState);
+        PlayerAimbot.INSTANCE.predictionTicks.setRawState(paOldPredictionTicks);
+        PlayerAimbot.INSTANCE.murderMysteryMode.setRawState(paOldMMState);
+        AutoClicker.INSTANCE.widget.setRawState(false);
+
+        MinecraftClient mc = MinecraftClient.getInstance();
+        if (mc.interactionManager != null && mc.player != null) {
+            mc.interactionManager.stopUsingItem(mc.player);
+        }
         drawing = false;
-        aimTicks = 0;
+        drawTicks = 0;
+        requiredDrawTicks = 20;
+        lostHoldTicks = 0;
     }
 }

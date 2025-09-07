@@ -80,7 +80,7 @@ public class Aimbot extends TickModule<ToggleWidget, Boolean> {
                 PlayerEntityL.setRotationVector(player, vector);
             }
 
-            AimingL.sendAimPacket(world, player, aimYaw, aimPitch);
+            AimingL.sendAimPacket(player, aimYaw, aimPitch);
         }
     }
 

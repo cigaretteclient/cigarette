@@ -51,7 +51,7 @@ public class AutoBow extends TickModule<ToggleWidget, Boolean> {
     private double paOldPredictionTicks;
     private Boolean paMMOldState = false;
 
-    private boolean isMurderer = false; // kept for potential HUD usage
+    private boolean isMurderer = false;
 
     private int drawTicks = 0;
     private int requiredDrawTicks = 20;
@@ -110,7 +110,7 @@ public class AutoBow extends TickModule<ToggleWidget, Boolean> {
         }
 
         HitResult hr = client.crosshairTarget;
-        if (hr != null && hr.getType() == HitResult.Type.BLOCK) { // avoid wasting arrows into walls
+        if (hr != null && hr.getType() == HitResult.Type.BLOCK) {
             releaseIfDrawing(player);
             return;
         }
@@ -121,10 +121,8 @@ public class AutoBow extends TickModule<ToggleWidget, Boolean> {
             return;
         }
 
-        // Already drawing – maintain or fire
         double baseTol = PlayerAimbot.INSTANCE.aimToleranceDeg.getRawState();
         double holdTol = holdAngleTolerance.getRawState();
-        // dynamic scaling: longer since last fire -> relax a bit
         if (ticksSinceLastFire > 120) {
             baseTol *= 1.6;
             holdTol *= 1.25;
@@ -152,12 +150,11 @@ public class AutoBow extends TickModule<ToggleWidget, Boolean> {
                 return;
             }
         } else {
-            // decay for stability – prevents immediate cancellation after brief jitter
             if (lostHoldTicks > 0) lostHoldTicks = Math.max(0, lostHoldTicks - 2);
         }
 
         drawTicks++;
-        int minHoldTicks = 5; // allow minimal wind-up before considering release
+        int minHoldTicks = 5;
         if (drawTicks >= requiredDrawTicks && drawTicks >= minHoldTicks) {
             boolean crosshairOn = client.crosshairTarget instanceof EntityHitResult ehr && ehr.getEntity() == target;
             boolean actualOk = !Double.isNaN(angleActual) && angleActual <= baseTol;
@@ -183,7 +180,6 @@ public class AutoBow extends TickModule<ToggleWidget, Boolean> {
                 .add(0, target.getStandingEyeHeight() * 0.5, 0);
             double pAng = computeAngleToPoint(player, predicted);
             if (!Double.isNaN(pAng) && pAng <= baseTol) return true;
-            // allow relaxed start if close to hold tolerance (helps moving targets)
             return !Double.isNaN(angleActual) && angleActual <= holdTol;
         }
         return !Double.isNaN(angleActual) && angleActual <= holdTol;

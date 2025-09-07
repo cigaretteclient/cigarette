@@ -83,6 +83,13 @@ public class MurderMysteryAgent extends BaseAgent {
         availableGold.add(gold);
     }
 
+    public static PersistentPlayer.Role getRole(PlayerEntity player) {
+        String playerName = player.getNameForScoreboard();
+        PersistentPlayer persistPlayer = persistentPlayers.get(playerName);
+        if (persistPlayer == null) return PersistentPlayer.Role.INNOCENT;
+        return persistPlayer.role;
+    }
+
 
     @Override
     public boolean inValidGame() {

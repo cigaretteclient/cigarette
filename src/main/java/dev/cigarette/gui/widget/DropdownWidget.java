@@ -11,22 +11,64 @@ import org.lwjgl.glfw.GLFW;
 
 public class DropdownWidget<Widget extends BaseWidget<?>, StateType>
         extends PassthroughWidget<BaseWidget<?>, BaseWidget.Stateless> {
+    /**
+     * The heading widget.
+     */
     protected Widget header;
+    /**
+     * The child widgets inside the dropdown menu.
+     */
     protected ScrollableWidget<BaseWidget<?>> container;
+    /**
+     * Whether the child widgets in this dropdown should be visible.
+     */
     private boolean dropdownVisible = false;
+    /**
+     * Whether a dropdown indicator should be rendered.
+     */
     private boolean dropdownIndicator = true;
 
+    /**
+     * The time at which the rotation started.
+     */
     private long rotateStartMillis = 0L;
+    /**
+     * The current rotation of the dropdown indicator.
+     */
     private double rotateAngleRad = 0.0;
 
+    /**
+     * The current rotation of the dropdown indicator whilst the dropdown is open.
+     */
     private double rotateOffsetRad = 0.0;
+    /**
+     *
+     */
     private static final int ROTATION_PERIOD_MS = 2000;
 
+    /**
+     * Whether the dropdown menu is currently animating.
+     */
     private boolean animating = false;
+    /**
+     * Whether the dropdown menu is in progress of opening.
+     */
     private boolean opening = false;
+    /**
+     * The time at which the animation started.
+     */
     private long animStartMillis = 0L;
+    /**
+     * The maximum animation runtime on opening/closing the dropdown.
+     */
     private static final int TOGGLE_ANIM_MS = 220;
 
+    /**
+     * Creates a widget that can expand like a dropdown menu to show child widgets.
+     *
+     * @param message The text to display inside this widget
+     * @param tooltip The tooltip to render when this widget is hovered
+     */
     public DropdownWidget(String message, @Nullable String tooltip) {
         super(message, tooltip);
         this.withDefault(new BaseWidget.Stateless());
@@ -34,16 +76,34 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType>
         super.children.put("0", this.container);
     }
 
+    /**
+     * Sets this widgets header widget. The dropdown menu opens when this widget is right-clicked and this widget is always visible.
+     *
+     * @param header The widget to use as the header
+     * @return This widget for method chaining
+     */
     public DropdownWidget<Widget, StateType> setHeader(Widget header) {
         this.header = header;
         return this;
     }
 
+    /**
+     * Sets this widget's children. These widgets will become visible when the dropdown menu is opened.
+     *
+     * @param children The children to attach
+     * @return This widget for method chaining
+     */
     public DropdownWidget<Widget, StateType> setChildren(@Nullable BaseWidget<?>... children) {
         this.container.setChildren(children);
         return this;
     }
 
+    /**
+     * Sets whether this widget should render a dropdown indicator over the heading widget.
+     *
+     * @param indicator Whether the indicator should be rendered
+     * @return This widget for method chaining
+     */
     public DropdownWidget<Widget, StateType> withIndicator(boolean indicator) {
         this.dropdownIndicator = indicator;
         return this;
@@ -215,6 +275,16 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType>
         }
     }
 
+    /**
+     * Render the clients logo at a specific location and rotation. Used as the dropdown indicator.
+     *
+     * @param context The draw context to draw on
+     * @param x The X position to draw at
+     * @param y The Y position to draw at
+     * @param w The width of the texture
+     * @param h The height of the texture
+     * @param angle The rotation of the texture
+     */
     public static void cigaretteOnlyAt(DrawContext context, int x, int y, int w, int h, int angle) {
         context.getMatrices().push();
         float cx = x + w / 2f;

@@ -13,13 +13,33 @@ import org.lwjgl.glfw.GLFW;
 import java.util.function.Consumer;
 
 public class ToggleWidget extends BaseWidget<Boolean> {
+    /**
+     * The max number of ticks the hover animation runs for.
+     */
     private static final int MAX_HOVER_TICKS = 35;
+    /**
+     * The current number of ticks the hover animation has run for.
+     */
     private int ticksOnHover = 0;
     private @Nullable Consumer<Boolean> callback = null;
 
+    /**
+     * The max number of ticks the enable animation runs for.
+     */
     private static final float MAX_ENABLE_TICKS = 5f;
+    /**
+     * The current number of ticks the enable animation has run for.
+     */
     private float ticksOnEnable = 0f;
 
+    /**
+     * Smoothly transition from color {@code a} to color {@code b} in {@code t} partial ticks.
+     *
+     * @param a The starting ARGB color to transition from
+     * @param b The new ARGB color to transition to
+     * @param t Partial ticks
+     * @return The current ARGB color at {@code t} partial ticks
+     */
     private static int lerpColor(int a, int b, float t) {
         t = Math.max(0f, Math.min(1f, t));
         int aA = (a >> 24) & 0xFF;
@@ -40,16 +60,35 @@ public class ToggleWidget extends BaseWidget<Boolean> {
         return (rA & 0xFF) << 24 | (rR & 0xFF) << 16 | (rG & 0xFF) << 8 | (rB & 0xFF);
     }
 
+    /**
+     * Creates a togglable widget.
+     *
+     * @param message The text to display inside this widget
+     * @param tooltip The tooltip to render when this widget is hovered
+     */
     public ToggleWidget(String message, @Nullable String tooltip) {
         super(message, tooltip);
         this.captureHover().withDefault(false);
     }
 
+    /**
+     * Sets the state and stored default state of this widget.
+     *
+     * @param state The default state to set
+     * @return This widget for method chaining
+     */
     public ToggleWidget withDefaultState(boolean state) {
         this.withDefault(state);
         return this;
     }
 
+    /**
+     * Generator for modules using this as a top-level widget.
+     *
+     * @param displayName The text to display inside this widget
+     * @param tooltip The tooltip to render when this widget is hovered
+     * @return A {@code GeneratedWidgets} object for use in {@code BaseModule} constructing
+     */
     public static BaseModule.GeneratedWidgets<ToggleWidget, Boolean> module(String displayName, @Nullable String tooltip) {
         DropdownWidget<ToggleWidget, Boolean> wrapper = new DropdownWidget<>(displayName, tooltip);
         ToggleWidget widget = new ToggleWidget(displayName, tooltip);
@@ -57,6 +96,14 @@ public class ToggleWidget extends BaseWidget<Boolean> {
         return new BaseModule.GeneratedWidgets<>(wrapper, widget);
     }
 
+    /**
+     * Captures a mouse click to switch the state.
+     *
+     * @param mouseX the X coordinate of the mouse
+     * @param mouseY the Y coordinate of the mouse
+     * @param button the mouse button number
+     * @return Whether this widget handled the click
+     */
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (!isMouseOver(mouseX, mouseY)) return false;
@@ -100,6 +147,12 @@ public class ToggleWidget extends BaseWidget<Boolean> {
     }
 
     public class ToggleWidgetDisabled extends ToggleWidget {
+        /**
+         * Creates a togglable widget whose state can not be changed and renders disabled.
+         *
+         * @param message The text to display inside this widget
+         * @param tooltip The tooltip to render when this widget is hovered
+         */
         public ToggleWidgetDisabled(String message, @Nullable String tooltip) {
             super(message, tooltip);
         }

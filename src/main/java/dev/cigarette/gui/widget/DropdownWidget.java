@@ -279,11 +279,11 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType>
      * Render the clients logo at a specific location and rotation. Used as the dropdown indicator.
      *
      * @param context The draw context to draw on
-     * @param x The X position to draw at
-     * @param y The Y position to draw at
-     * @param w The width of the texture
-     * @param h The height of the texture
-     * @param angle The rotation of the texture
+     * @param x       The X position to draw at
+     * @param y       The Y position to draw at
+     * @param w       The width of the texture
+     * @param h       The height of the texture
+     * @param angle   The rotation of the texture
      */
     public static void cigaretteOnlyAt(DrawContext context, int x, int y, int w, int h, int angle) {
         context.getMatrices().push();

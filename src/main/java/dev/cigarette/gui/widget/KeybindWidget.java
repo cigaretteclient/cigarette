@@ -131,8 +131,8 @@ public class KeybindWidget extends BaseWidget<Integer> {
     /**
      * Captures a key press to bind to the internal KeyBinding.
      *
-     * @param keyCode the named key code of the event as described in the {@link org.lwjgl.glfw.GLFW GLFW} class
-     * @param scanCode the unique/platform-specific scan code of the keyboard input
+     * @param keyCode   the named key code of the event as described in the {@link org.lwjgl.glfw.GLFW GLFW} class
+     * @param scanCode  the unique/platform-specific scan code of the keyboard input
      * @param modifiers a GLFW bitfield describing the modifier keys that are held down (see <a href="https://www.glfw.org/docs/3.3/group__mods.html">GLFW Modifier key flags</a>)
      * @return Whether this widget handled the key press
      */
@@ -155,8 +155,8 @@ public class KeybindWidget extends BaseWidget<Integer> {
      * Renders the key or binding state of this widget at a specific location.
      *
      * @param context The draw context to draw on
-     * @param top The upper-bounding Y position to draw within
-     * @param right The right-bounding X position to draw within
+     * @param top     The upper-bounding Y position to draw within
+     * @param right   The right-bounding X position to draw within
      */
     public void renderKeyText(DrawContext context, int top, int right) {
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;

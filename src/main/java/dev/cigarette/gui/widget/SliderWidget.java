@@ -175,10 +175,10 @@ public class SliderWidget extends BaseWidget<Double> {
     /**
      * Captures a mouse drag to update the state and position of the slider.
      *
-     * @param mouseX the X coordinate of the mouse
-     * @param mouseY the Y coordinate of the mouse
-     * @param button the mouse button number
-     * @param ignored the mouse delta X
+     * @param mouseX   the X coordinate of the mouse
+     * @param mouseY   the Y coordinate of the mouse
+     * @param button   the mouse button number
+     * @param ignored  the mouse delta X
      * @param ignored_ the mouse delta Y
      * @return Whether this widget handled the drag
      */

@@ -141,7 +141,7 @@ public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType
      * Generator for modules using this as a top-level widget. Creates a togglable {@code ColorDropdownWidget}.
      *
      * @param displayName The text to display inside this widget
-     * @param tooltip The tooltip to render when this widget is hovered
+     * @param tooltip     The tooltip to render when this widget is hovered
      * @return A {@code GeneratedWidgets} object for use in {@code BaseModule} constructing
      */
     public static BaseModule.GeneratedWidgets<ToggleWidget, Boolean> module(String displayName, @Nullable String tooltip) {
@@ -155,7 +155,7 @@ public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType
      * Creates and returns a new togglable {@code ColorDropdownWidget}.
      *
      * @param displayName The text to display inside this widget
-     * @param tooltip The tooltip to render when this widget is hovered
+     * @param tooltip     The tooltip to render when this widget is hovered
      * @return the new widget with a {@code ToggleWidget} attached as the header
      */
     public static ColorDropdownWidget<ToggleWidget, Boolean> buildToggle(String displayName, @Nullable String tooltip) {
@@ -169,7 +169,7 @@ public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType
      * Creates and returns a new {@code ColorDropdownWidget} with only the color configuration, no toggling.
      *
      * @param displayName The text to display inside this widget
-     * @param tooltip The tooltip to render when this widget is hovered
+     * @param tooltip     The tooltip to render when this widget is hovered
      * @return thw new widget with a {@code TextWidget} attached as the header
      */
     public static ColorDropdownWidget<TextWidget, Stateless> buildText(String displayName, @Nullable String tooltip) {

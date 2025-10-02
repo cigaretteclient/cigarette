@@ -86,7 +86,7 @@ public class ToggleWidget extends BaseWidget<Boolean> {
      * Generator for modules using this as a top-level widget.
      *
      * @param displayName The text to display inside this widget
-     * @param tooltip The tooltip to render when this widget is hovered
+     * @param tooltip     The tooltip to render when this widget is hovered
      * @return A {@code GeneratedWidgets} object for use in {@code BaseModule} constructing
      */
     public static BaseModule.GeneratedWidgets<ToggleWidget, Boolean> module(String displayName, @Nullable String tooltip) {

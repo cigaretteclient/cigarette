@@ -20,28 +20,80 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
         void onClick(double mouseX, double mouseY, int button);
     }
 
+    /**
+     * Whether this widget is actively being dragged by the user.
+     */
     private boolean dragging = false;
+    /**
+     * The starting X position of the drag on screen.
+     */
     private int startingX = 0;
+    /**
+     * The starting Y position of the drag on screen.
+     */
     private int startingY = 0;
+    /**
+     * The starting mouse X position that initiated the drag.
+     */
     private double startingMouseX = 0;
+    /**
+     * The starting mouse Y position that initiated the drag.
+     */
     private double startingMouseY = 0;
+    /**
+     * Callback triggered when this widget is moved as a result of a drag.
+     */
     private @Nullable DragCallback dragCallback = null;
+    /**
+     * Callback triggered when this widget is right-clicked.
+     */
     private @Nullable ClickCallback clickCallback = null;
+    /**
+     * If this widget is responsible for a {@code ScrollableWidget}'s visibility, this signals whether that widget is collapsed. Used for rounding the bottom corners of this widget when collapsed.
+     */
     public boolean expanded = false;
 
+    /**
+     * The current number of ticks the collapse animation has progressed through.
+     */
     private int ticksOnCollapse = 0;
+    /**
+     * The max number of ticks the collapse animation lasts.
+     */
     private static final int MAX_TICKS_ON_COLLAPSE = 10;
 
+    /**
+     * Creates a widget that can be dragged and clicked.
+     *
+     * @param x       The initial X position of this widget
+     * @param y       The initial Y position of this widget
+     * @param width   The initial width of this widget
+     * @param height  The initial height of this widget
+     * @param message The text to display inside this widget
+     */
     public DraggableWidget(int x, int y, int width, int height, String message) {
         super(message, null);
         this.captureHover().withXY(x, y).withWH(width, height);
     }
 
+    /**
+     * Creates a widget that can be dragged and clicked.
+     *
+     * @param message The text to display inside this widget
+     */
     public DraggableWidget(String message) {
         super(message, null);
         this.captureHover();
     }
 
+    /**
+     * Captures a mouse click to initiate dragging and trigger click callbacks.
+     *
+     * @param mouseX the X coordinate of the mouse
+     * @param mouseY the Y coordinate of the mouse
+     * @param button the mouse button number
+     * @return Whether this widget handled the click
+     */
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (isMouseOver(mouseX, mouseY)) {
@@ -68,6 +120,16 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
         return false;
     }
 
+    /**
+     * Captures a mouse drag to update the position of this widget.
+     *
+     * @param mouseX   the X coordinate of the mouse
+     * @param mouseY   the Y coordinate of the mouse
+     * @param button   the mouse button number
+     * @param ignored  the mouse delta X
+     * @param ignored_ the mouse delta Y
+     * @return Whether this widget handled the drag
+     */
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double ignored, double ignored_) {
         if (dragging) {
@@ -90,26 +152,42 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
         return dragging;
     }
 
+    /**
+     * Captures a mouse release to stop the dragging of this widget.
+     * <p>Does not prevent this event from propagating to other elements.</p>
+     *
+     * @param mouseX the X coordinate of the mouse
+     * @param mouseY the Y coordinate of the mouse
+     * @param button the mouse button number
+     * @return {@code false}
+     */
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         dragging = false;
         return false;
     }
 
+    /**
+     * Attaches a callback that is triggered when this widget is dragged to a new position.
+     *
+     * @param callback The callback to trigger on drag
+     */
     public void onDrag(DragCallback callback) {
         this.dragCallback = callback;
     }
 
+    /**
+     * Attaches a callback that is triggered when this widget is clicked and not dragged.
+     *
+     * @param callback The callback to trigger on click
+     */
     public void onClick(ClickCallback callback) {
         this.clickCallback = callback;
     }
 
-
-
-
     @Override
     public void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left,
-            int top, int right, int bottom) {
+                       int top, int right, int bottom) {
         TextRenderer textRenderer = Cigarette.REGULAR;
         int bgColor = Color.color(left, top);
         if (!this.expanded) {

@@ -3,6 +3,9 @@ package dev.cigarette.gui.widget;
 import net.minecraft.client.gui.DrawContext;
 
 public class ColorSquareWidget extends BaseWidget<Integer> {
+    /**
+     * Creates a widget whose only purpose is to render a colored square.
+     */
     public ColorSquareWidget() {
         super("", null);
         this.withDefault(0xFFFFFFFF);

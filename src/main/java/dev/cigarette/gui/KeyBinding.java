@@ -14,8 +14,6 @@ public class KeyBinding implements ClientModInitializer {
 
     private static net.minecraft.client.option.KeyBinding keyBinding;
 
-    private static final CigaretteScreen screen = new CigaretteScreen();
-
     @Override
     public void onInitializeClient() {
         keyBinding = KeyBindingHelper.registerKeyBinding(new net.minecraft.client.option.KeyBinding("Toggle GUI", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT_SHIFT, "Cigarette | User Interface"));
@@ -25,8 +23,8 @@ public class KeyBinding implements ClientModInitializer {
                 if (client.currentScreen instanceof CigaretteScreen) {
                     client.currentScreen.close();
                 } else {
-                    screen.setParent(client.currentScreen);
-                    client.setScreen(screen);
+                    Cigarette.SCREEN.setParent(client.currentScreen);
+                    client.setScreen(Cigarette.SCREEN);
                 }
             }
         });

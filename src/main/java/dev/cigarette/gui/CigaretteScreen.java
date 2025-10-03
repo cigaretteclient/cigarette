@@ -38,7 +38,7 @@ public class CigaretteScreen extends Screen {
     private int categoryCount = 0;
     public static @Nullable KeybindWidget bindingKey = null;
 
-    protected CigaretteScreen() {
+    public CigaretteScreen() {
         super(Text.literal("Cigarette Client"));
     }
 

@@ -3,17 +3,26 @@ package dev.cigarette.helper;
 import dev.cigarette.Cigarette;
 import dev.cigarette.gui.CigaretteScreen;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.option.KeyBinding;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.HashSet;
 
 public class KeybindHelper {
     /**
+     * Set of custom keybinds that can be triggered.
+     */
+    private static final HashSet<CigaretteKeyBind> customBinds = new HashSet<>();
+
+    /**
+     * Set of keybinds that should be cancelled.
+     */
+    private static final HashSet<KeyBinding> blockedInputs = new HashSet<>();
+
+    /**
      * Keybind to toggle {@code CigaretteScreen}.
      */
     public static final CigaretteKeyBind TOGGLE_GUI = new CigaretteKeyBind(GLFW.GLFW_KEY_RIGHT_SHIFT);
-
-    private static final HashSet<CigaretteKeyBind> customBinds = new HashSet<>();
 
     /**
      * Attempts to handle a key event inside the {@code CigaretteScreen} GUI.
@@ -54,6 +63,11 @@ public class KeybindHelper {
      */
     public static boolean handleBlockedInputs(MinecraftClient client, int key, int scancode, int action, int modifiers) {
         if (TOGGLE_GUI.matches(key)) return false;
+        for (KeyBinding keybind : blockedInputs) {
+            if (keybind.matchesKey(key, scancode)) {
+                return true;
+            }
+        }
         return false;
     }
 
@@ -81,6 +95,42 @@ public class KeybindHelper {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Attempts to start input blocking. {@return false if input blocking is already running} Use {@code forceBlockInputs()} to bypass this check.
+     *
+     * @param keybindIds The keybind IDs to pass into {@code KeyBinding.byId()}
+     */
+    public static boolean tryBlockInputs(String... keybindIds) {
+        if (!blockedInputs.isEmpty()) return false;
+        for (String id : keybindIds) {
+            KeyBinding keybind = KeyBinding.byId(id);
+            if (keybind == null) continue;
+            blockedInputs.add(keybind);
+        }
+        return true;
+    }
+
+    /**
+     * Force starts input blocking with the provided configuration. Overrides any previously started configurations.
+     *
+     * @param keybindIds The keybind IDs to pass into {@code KeyBinding.byId()}
+     */
+    public static void forceBlockInputs(String... keybindIds) {
+        blockedInputs.clear();
+        for (String id : keybindIds) {
+            KeyBinding keybind = KeyBinding.byId(id);
+            if (keybind == null) continue;
+            blockedInputs.add(keybind);
+        }
+    }
+
+    /**
+     * Disable input blocking.
+     */
+    public static void unblock() {
+        blockedInputs.clear();
     }
 
     /**

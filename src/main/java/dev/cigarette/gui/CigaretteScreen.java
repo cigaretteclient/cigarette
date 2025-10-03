@@ -16,32 +16,88 @@ import org.lwjgl.glfw.GLFW;
 import java.util.Stack;
 
 public class CigaretteScreen extends Screen {
+    /**
+     * Primary feature color. (Orange)
+     */
     public static final int PRIMARY_COLOR = 0xFFFE5F00;
+    /**
+     * Secondary feature color. (Brown)
+     */
     public static final int SECONDARY_COLOR = 0xFFC44700;
+    /**
+     * Primary text color. (White)
+     */
     public static final int PRIMARY_TEXT_COLOR = 0xFFFFFFFF;
+    /**
+     * Primary background color. (Dark Gray)
+     */
     public static final int BACKGROUND_COLOR = 0xFF1A1A1A;
+    /**
+     * Dark background color usually used in gradients with {@code BACKGROUND_COLOR}. (Black)
+     */
     public static final int DARK_BACKGROUND_COLOR = 0xFF000000;
+    /**
+     * Color of enabled things. (Bright Green)
+     */
     public static final int ENABLED_COLOR = 0xFF3AFC3A;
+    /**
+     * Reference to the hovered widget.
+     */
     public static @Nullable Object hoverHandled = null;
+    /**
+     * An ordered list of the widgets on the screen. Ordered by time of focus descending. Event propagation starts with the most recent focused to the last focused.
+     */
     private final Stack<BaseWidget<?>> priority = new Stack<>();
+    /**
+     * The screen that was being rendered before this GUI was opened.
+     */
     private Screen parent = null;
+    /**
+     * Whether the GUI is in process of opening.
+     */
     private boolean begin = false;
+    /**
+     * The time at which the GUI was opened.
+     */
     private long openStartNanos = 0L;
+    /**
+     * Whether the GUI is in process of closing.
+     */
     private boolean closing = false;
+    /**
+     * The time at which the GUI was closed.
+     */
     private long closeStartNanos = 0L;
+    /**
+     * The length of the opening animation in seconds.
+     */
     private static final double OPEN_DURATION_S = 0.4;
     private static final double OPEN_STAGGER_S = 0.06;
     private static final int OPEN_DISTANCE_PX = 24;
 
+    /**
+     * The length of the closing animation as a multiplier of {@code OPEN_DURATION_S}.
+     */
     private static final double CLOSE_DURATION_FACTOR = 0.6;
     private static final double CLOSE_STAGGER_FACTOR = 0.6;
+    /**
+     * The total number of categories in the GUI.
+     */
     private int categoryCount = 0;
+    /**
+     * Reference to a {@code KeybindWidget} or {@code ToggleKeybindWidget} that is actively listening for keys to bind.
+     */
     public static @Nullable KeybindWidget bindingKey = null;
 
     protected CigaretteScreen() {
         super(Text.literal("Cigarette Client"));
     }
 
+    /**
+     * Called when the GUI is being opened to set the previous screen.
+     *
+     * @param parent The parent screen that will be reverted to on close
+     */
     public void setParent(@Nullable Screen parent) {
         this.parent = parent;
     }
@@ -120,6 +176,9 @@ public class CigaretteScreen extends Screen {
         }
     }
 
+    /**
+     * Called when the GUI should be closed.
+     */
     @Override
     public void close() {
         assert client != null;
@@ -143,6 +202,12 @@ public class CigaretteScreen extends Screen {
         return true;
     }
 
+    /**
+     * {@return whether the provided widget can be hovered} If so, that widget is set as the hovered widget.
+     * <p>A widget must call {@code captureHover()} to be hoverable.</p>
+     *
+     * @param obj The widget to check if it can be hovered
+     */
     public static boolean isHoverable(Object obj) {
         if (hoverHandled == null) {
             hoverHandled = obj;
@@ -151,6 +216,14 @@ public class CigaretteScreen extends Screen {
         return hoverHandled == obj;
     }
 
+    /**
+     * Replaces the built-in {@code Screen::render} method. Handles animations and category rendering for the GUI.
+     *
+     * @param context    The current draw context
+     * @param mouseX     Current mouse X position
+     * @param mouseY     Current mouse Y position
+     * @param deltaTicks Current delta ticks
+     */
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
         this.renderBackground(context, mouseX, mouseY, deltaTicks);

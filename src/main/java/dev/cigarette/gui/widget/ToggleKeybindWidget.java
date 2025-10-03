@@ -8,6 +8,9 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.function.Consumer;
 
+/**
+ * A widget that can be toggled by the user and lets a key be bound.
+ */
 public class ToggleKeybindWidget extends ToggleWidget {
     /**
      * The {@code KeybindWidget} for handling configuration of the keybind.

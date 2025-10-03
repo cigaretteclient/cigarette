@@ -16,6 +16,9 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+/**
+ * A widget that lets the user bind a key.
+ */
 public class KeybindWidget extends BaseWidget<Integer> {
     /**
      * The internal Minecraft KeyBinding.

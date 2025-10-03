@@ -12,6 +12,9 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.function.Consumer;
 
+/**
+ * A widget that can be toggled by the user.
+ */
 public class ToggleWidget extends BaseWidget<Boolean> {
     /**
      * The max number of ticks the hover animation runs for.

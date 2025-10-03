@@ -9,6 +9,12 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Quaternionf;
 import org.lwjgl.glfw.GLFW;
 
+/**
+ * A dropdown widget which can show and hide children widgets.
+ *
+ * @param <Widget>    The type of children this widget stores. Use {@code Widget extends BaseWidget<?>} to allow any types as children.
+ * @param <StateType> The custom state this widget stores. Use {@code BaseWidget.Stateless} for widgets that should not hold state.
+ */
 public class DropdownWidget<Widget extends BaseWidget<?>, StateType>
         extends PassthroughWidget<BaseWidget<?>, BaseWidget.Stateless> {
     /**

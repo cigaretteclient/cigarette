@@ -4,6 +4,12 @@ import dev.cigarette.module.BaseModule;
 import net.minecraft.client.gui.DrawContext;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * An extension on {@code DropdownWidget} pre-made for color configuration.
+ *
+ * @param <Widget>    The type of children this widget stores. Use {@code Widget extends BaseWidget<?>} to allow any types as children.
+ * @param <StateType> The custom state this widget stores. Use {@code BaseWidget.Stateless} for widgets that should not hold state.
+ */
 public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType> extends DropdownWidget<Widget, StateType> {
     /**
      * Additional header widget to render the color state from the sliders.

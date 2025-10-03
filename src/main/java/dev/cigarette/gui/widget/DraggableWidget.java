@@ -11,6 +11,9 @@ import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
+/**
+ * A widget that can be dragged around the screen.
+ */
 public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
     public interface DragCallback {
         void updateParentPosition(int newX, int newY, int deltaX, int deltaY);

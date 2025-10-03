@@ -6,6 +6,9 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * A widget that only renders text.
+ */
 public class TextWidget extends BaseWidget<BaseWidget.Stateless> {
     /**
      * Whether a line should be rendered at the bottom of this widget's bounding box.

@@ -10,6 +10,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
 
+/**
+ * A widget that holds a value that be adjusted by a slider.
+ */
 public class SliderWidget extends BaseWidget<Double> {
     /**
      * The amount of padding on the left and right side of the sliders bounding box to prevent the slider bar from reaching the border.

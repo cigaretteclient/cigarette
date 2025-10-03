@@ -15,9 +15,19 @@ public class KeybindHelper {
     private static final HashSet<CigaretteKeyBind> customBinds = new HashSet<>();
 
     /**
+     * The module that is blocking inputs.
+     */
+    private static Object blockingModule = null;
+
+    /**
      * Set of keybinds that should be cancelled.
      */
     private static final HashSet<KeyBinding> blockedInputs = new HashSet<>();
+
+    /**
+     * Whether to block mouse movements from updating the players yaw/pitch.
+     */
+    private static boolean blockMouse = false;
 
     /**
      * Keybind to toggle {@code CigaretteScreen}.
@@ -102,13 +112,15 @@ public class KeybindHelper {
      *
      * @param keybindIds The keybind IDs to pass into {@code KeyBinding.byId()}
      */
-    public static boolean tryBlockInputs(String... keybindIds) {
+    public static boolean tryBlockInputs(Object module, String... keybindIds) {
         if (!blockedInputs.isEmpty()) return false;
         for (String id : keybindIds) {
             KeyBinding keybind = KeyBinding.byId(id);
             if (keybind == null) continue;
             blockedInputs.add(keybind);
         }
+        blockMouse = true;
+        blockingModule = module;
         return true;
     }
 
@@ -117,13 +129,15 @@ public class KeybindHelper {
      *
      * @param keybindIds The keybind IDs to pass into {@code KeyBinding.byId()}
      */
-    public static void forceBlockInputs(String... keybindIds) {
+    public static void forceBlockInputs(Object module, String... keybindIds) {
         blockedInputs.clear();
         for (String id : keybindIds) {
             KeyBinding keybind = KeyBinding.byId(id);
             if (keybind == null) continue;
             blockedInputs.add(keybind);
         }
+        blockMouse = true;
+        blockingModule = module;
     }
 
     /**
@@ -131,6 +145,24 @@ public class KeybindHelper {
      */
     public static void unblock() {
         blockedInputs.clear();
+        blockMouse = false;
+        blockingModule = null;
+    }
+
+    /**
+     * {@return whether the provided module is blocking inputs}
+     *
+     * @param module The module to check
+     */
+    public static boolean isBlocking(Object module) {
+        return blockingModule == module;
+    }
+
+    /**
+     * {@return whether the mouse is being input blocked}
+     */
+    public static boolean isMouseBlocked() {
+        return blockMouse;
     }
 
     /**

@@ -88,7 +88,7 @@ public class KeybindWidget extends BaseWidget<Integer> {
     }
 
     /**
-     * {@return whether this widget is currently being binded by the user}
+     * {@return whether this widget is currently being bound by the user}
      */
     protected boolean isBinding() {
         return CigaretteScreen.bindingKey == this;
@@ -113,7 +113,7 @@ public class KeybindWidget extends BaseWidget<Integer> {
     }
 
     /**
-     * Captures a mouse click to toggle whether the keybind is being binded.
+     * Captures a mouse click to toggle whether the keybind is being bound.
      *
      * @param mouseX the X coordinate of the mouse
      * @param mouseY the Y coordinate of the mouse

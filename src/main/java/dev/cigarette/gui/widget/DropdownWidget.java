@@ -48,7 +48,7 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType>
      */
     private double rotateOffsetRad = 0.0;
     /**
-     *
+     * The time it takes in milliseconds for a full rotation of the dropdown indicator.
      */
     private static final int ROTATION_PERIOD_MS = 2000;
 

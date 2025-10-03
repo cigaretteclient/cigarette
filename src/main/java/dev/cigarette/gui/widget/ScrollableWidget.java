@@ -12,7 +12,7 @@ import java.util.Collection;
 import java.util.Objects;
 
 /**
- * Extends a scrollable widget which provides scrolling functionality.
+ * A scrollable widget which provides scrolling functionality.
  *
  * @param <Widgets> The type of children this widget stores. Use {@code Widget extends BaseWidget<?>} to allow any types as children.
  */

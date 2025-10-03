@@ -18,8 +18,7 @@
       "dev.cigarette.Cigarette"
     ],
     "client": [
-      "dev.cigarette.Language",
-      "dev.cigarette.gui.KeyBinding"
+      "dev.cigarette.Language"
     ]
   },
   "mixins": [

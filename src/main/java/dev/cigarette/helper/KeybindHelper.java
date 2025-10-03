@@ -5,11 +5,15 @@ import dev.cigarette.gui.CigaretteScreen;
 import net.minecraft.client.MinecraftClient;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.HashSet;
+
 public class KeybindHelper {
     /**
      * Keybind to toggle {@code CigaretteScreen}.
      */
-    public static CigaretteKeyBind TOGGLE_GUI = new CigaretteKeyBind(GLFW.GLFW_KEY_RIGHT_SHIFT);
+    public static final CigaretteKeyBind TOGGLE_GUI = new CigaretteKeyBind(GLFW.GLFW_KEY_RIGHT_SHIFT);
+
+    private static final HashSet<CigaretteKeyBind> customBinds = new HashSet<>();
 
     /**
      * Attempts to handle a key event inside the {@code CigaretteScreen} GUI.
@@ -71,6 +75,11 @@ public class KeybindHelper {
             client.setScreen(Cigarette.SCREEN);
             return true;
         }
+        for (CigaretteKeyBind binding : customBinds) {
+            if (!binding.matches(key)) continue;
+            binding.processAction(action);
+            return true;
+        }
         return false;
     }
 
@@ -79,13 +88,21 @@ public class KeybindHelper {
      */
     public static class CigaretteKeyBind {
         /**
-         * The key code that triggers this keybind
+         * The key code that triggers this keybind.
          */
         private int key;
         /**
-         * The default key code set for this keybind
+         * The default key code set for this keybind.
          */
         private final int defaultKey;
+        /**
+         * Whether this key is currently pressed or not.
+         */
+        private boolean pressed = false;
+        /**
+         * The number of times this key has been pressed.
+         */
+        private int timesPressed = 0;
 
         /**
          * Creates a custom key bind.
@@ -95,6 +112,38 @@ public class KeybindHelper {
         public CigaretteKeyBind(int defaultKey) {
             this.key = defaultKey;
             this.defaultKey = defaultKey;
+            customBinds.add(this);
+        }
+
+        /**
+         * Updates {@code pressed} and {@code timesPressed} depending on the action that occurred on the key.
+         *
+         * @param glfwAction The key events action as defined by GLFW
+         */
+        protected void processAction(int glfwAction) {
+            switch (glfwAction) {
+                case GLFW.GLFW_PRESS -> {
+                    this.timesPressed++;
+                    this.pressed = true;
+                }
+                case GLFW.GLFW_RELEASE -> this.pressed = false;
+            }
+        }
+
+        /**
+         * {@return whether this keybind is currently pressed}
+         */
+        public boolean isPressed() {
+            return this.pressed;
+        }
+
+        /**
+         * {@return whether this keybind was pressed}
+         */
+        public boolean wasPressed() {
+            if (this.timesPressed == 0) return false;
+            this.timesPressed--;
+            return true;
         }
 
         /**

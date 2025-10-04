@@ -61,6 +61,24 @@ public class MinecraftKeybind extends VirtualKeybind {
     }
 
     /**
+     * Virtually holds the key triggering any Minecraft related events.
+     */
+    public void hold() {
+        if (this.minecraftBinding == null) return;
+        InputUtil.Key key = InputUtil.fromTranslationKey(this.minecraftBinding.getBoundKeyTranslationKey());
+        KeyBinding.setKeyPressed(key, true);
+    }
+
+    /**
+     * Virtually releases the key.
+     */
+    public void release() {
+        if (this.minecraftBinding == null) return;
+        InputUtil.Key key = InputUtil.fromTranslationKey(this.minecraftBinding.getBoundKeyTranslationKey());
+        KeyBinding.setKeyPressed(key, false);
+    }
+
+    /**
      * {@return whether the translation key name of both objects are identical}
      *
      * @param o the reference object with which to compare.

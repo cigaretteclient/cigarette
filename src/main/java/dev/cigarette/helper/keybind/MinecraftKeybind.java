@@ -60,6 +60,17 @@ public class MinecraftKeybind extends VirtualKeybind {
         KeyBinding.onKeyPressed(key);
     }
 
+    /**
+     * {@return whether the translation key name of both objects are identical}
+     *
+     * @param o the reference object with which to compare.
+     */
+    public boolean equals(Object o) {
+        if (!(o instanceof MinecraftKeybind other) || this.minecraftBinding == null) return false;
+        if (other.minecraftBinding == null) return false;
+        return this.minecraftBinding.getTranslationKey().equals(other.minecraftBinding.getTranslationKey());
+    }
+
     @Override
     public boolean isOf(int key, int scancode) {
         if (this.minecraftBinding == null) return false;

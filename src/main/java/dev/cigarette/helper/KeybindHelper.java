@@ -18,6 +18,18 @@ public class KeybindHelper {
     public static final MinecraftKeybind KEY_MOVE_RIGHT = new MinecraftKeybind("key.right");
     public static final MinecraftKeybind KEY_RIGHT_CLICK = new MinecraftKeybind("key.use");
     public static final MinecraftKeybind KEY_JUMP = new MinecraftKeybind("key.jump");
+
+    private static final HashSet<MinecraftKeybind> wrappedBindings = new HashSet<>();
+
+    static {
+        wrappedBindings.add(KEY_SNEAK);
+        wrappedBindings.add(KEY_MOVE_BACK);
+        wrappedBindings.add(KEY_MOVE_LEFT);
+        wrappedBindings.add(KEY_MOVE_RIGHT);
+        wrappedBindings.add(KEY_RIGHT_CLICK);
+        wrappedBindings.add(KEY_JUMP);
+    }
+
     /**
      * Keybind to toggle {@code CigaretteScreen}.
      */
@@ -93,6 +105,11 @@ public class KeybindHelper {
      * @return Whether the key event is handled and should be cancelled
      */
     public static boolean handleCustom(MinecraftClient client, int key, int scancode, int action, int modifiers) {
+        for (MinecraftKeybind keybind : wrappedBindings) {
+            if (!keybind.isAttached() && !keybind.tryToAttach()) continue;
+            if (!keybind.isOf(key, scancode)) continue;
+            keybind.physicalAction(action);
+        }
         if (action != GLFW.GLFW_PRESS) return false;
         if (TOGGLE_GUI.isOf(key, scancode)) {
             Cigarette.SCREEN.setParent(client.currentScreen);
@@ -105,6 +122,19 @@ public class KeybindHelper {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Register a {@code MinecraftKeybind} wrapper so it can receive physical events. Wrappers from {@code KeybindHelper} are already registered.
+     * <p>Required to use {@code isPhysicallyPressed()} and {@code wasPhysicallyPressed()}.</p>
+     *
+     * @param keybind The keybind wrapper register
+     */
+    public static void registerWrapper(MinecraftKeybind keybind) {
+        for (MinecraftKeybind existing : wrappedBindings) {
+            if (existing.equals(keybind)) return;
+        }
+        wrappedBindings.add(keybind);
     }
 
     /**

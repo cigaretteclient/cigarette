@@ -1,6 +1,7 @@
 package dev.cigarette.helper.keybind;
 
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.util.InputUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
@@ -48,6 +49,15 @@ public class MinecraftKeybind extends VirtualKeybind {
     public boolean wasVirtuallyPressed() {
         if (this.minecraftBinding == null) return false;
         return this.minecraftBinding.wasPressed();
+    }
+
+    /**
+     * Virtually presses the key triggering any Minecraft related events.
+     */
+    public void press() {
+        if (this.minecraftBinding == null) return;
+        InputUtil.Key key = InputUtil.fromTranslationKey(this.minecraftBinding.getBoundKeyTranslationKey());
+        KeyBinding.onKeyPressed(key);
     }
 
     @Override

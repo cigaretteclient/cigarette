@@ -1,0 +1,37 @@
+package dev.cigarette.helper.keybind;
+
+public class InputBlocker {
+    private final MinecraftKeybind[] blockedBindings;
+    protected boolean complete = false;
+
+    public InputBlocker(MinecraftKeybind... blockedBindings) {
+        this.blockedBindings = blockedBindings;
+    }
+
+    /**
+     * Verifies that each keybind object is linked with their native Minecraft {@code KeyBinding}.
+     *
+     * @return whether all keybinds are linked or not
+     */
+    private boolean complete() {
+        if (this.complete) return true;
+        int linked = 0;
+        for (MinecraftKeybind binding : this.blockedBindings) {
+            if (binding.isAttached() || binding.tryToAttach()) {
+                linked++;
+            }
+        }
+        this.complete = linked == this.blockedBindings.length;
+        return this.complete;
+    }
+
+    public boolean process(int key, int scancode, int action, int modifiers) {
+        if (!this.complete()) return false;
+        for (MinecraftKeybind binding : blockedBindings) {
+            if (!binding.isOf(key, scancode)) continue;
+            binding.physicalAction(action);
+            return true;
+        }
+        return false;
+    }
+}

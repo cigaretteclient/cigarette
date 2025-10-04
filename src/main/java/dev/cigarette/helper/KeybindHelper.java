@@ -6,6 +6,8 @@ import dev.cigarette.helper.keybind.InputBlocker;
 import dev.cigarette.helper.keybind.MinecraftKeybind;
 import dev.cigarette.helper.keybind.VirtualKeybind;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.util.InputUtil;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
@@ -209,6 +211,7 @@ public class KeybindHelper {
     public static void unblock() {
         blockedInputs = null;
         blockingModule = null;
+        updateKeyStates();
     }
 
     /**
@@ -225,5 +228,16 @@ public class KeybindHelper {
      */
     public static boolean isMouseBlocked() {
         return blockedInputs != null && blockedInputs.blocksCamera();
+    }
+
+    public static void updateKeyStates() {
+        long window = MinecraftClient.getInstance().getWindow().getHandle();
+        KeyBinding.updatePressedStates();
+
+        int[] buttons = {GLFW.GLFW_MOUSE_BUTTON_LEFT, GLFW.GLFW_MOUSE_BUTTON_MIDDLE, GLFW.GLFW_MOUSE_BUTTON_RIGHT};
+        for (int j : buttons) {
+            InputUtil.Key button = InputUtil.Type.MOUSE.createFromCode(j);
+            KeyBinding.setKeyPressed(button, GLFW.glfwGetMouseButton(window, j) == GLFW.GLFW_PRESS);
+        }
     }
 }

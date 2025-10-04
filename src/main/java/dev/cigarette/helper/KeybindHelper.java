@@ -146,4 +146,11 @@ public class KeybindHelper {
     public static boolean isBlocking(Object module) {
         return blockingModule == module;
     }
+
+    /**
+     * {@return whether an input blocker is applied that blocks mouse movement or not}
+     */
+    public static boolean isMouseBlocked() {
+        return blockedInputs != null && blockedInputs.blocksCamera();
+    }
 }

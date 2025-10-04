@@ -2,10 +2,25 @@ package dev.cigarette.helper.keybind;
 
 public class InputBlocker {
     private final MinecraftKeybind[] blockedBindings;
+    private boolean blockCamera = false;
     protected boolean complete = false;
 
     public InputBlocker(MinecraftKeybind... blockedBindings) {
         this.blockedBindings = blockedBindings;
+    }
+
+    /**
+     * Prevents the user from changing their yaw and pitch.
+     *
+     * @return This object for method chaining
+     */
+    public InputBlocker preventCameraChanges() {
+        this.blockCamera = true;
+        return this;
+    }
+
+    public boolean blocksCamera() {
+        return this.blockCamera;
     }
 
     /**

@@ -16,7 +16,7 @@ public class KeybindHelper {
     public static final MinecraftKeybind KEY_MOVE_BACK = new MinecraftKeybind("key.back");
     public static final MinecraftKeybind KEY_MOVE_LEFT = new MinecraftKeybind("key.left");
     public static final MinecraftKeybind KEY_MOVE_RIGHT = new MinecraftKeybind("key.right");
-    public static final MinecraftKeybind KEY_RIGHT_CLICK = new MinecraftKeybind("key.use");
+    public static final MinecraftKeybind KEY_RIGHT_CLICK = new MinecraftKeybind("key.use").asMouse();
     public static final MinecraftKeybind KEY_JUMP = new MinecraftKeybind("key.jump");
 
     private static final HashSet<MinecraftKeybind> wrappedBindings = new HashSet<>();
@@ -61,7 +61,7 @@ public class KeybindHelper {
      * @param modifiers The events modifier
      * @return Whether the key event is handled and should be cancelled
      */
-    public static boolean handleByGUI(MinecraftClient client, int key, int scancode, int action, int modifiers) {
+    public static boolean handleKeyByGUI(MinecraftClient client, int key, int scancode, int action, int modifiers) {
         if (!(client.currentScreen instanceof CigaretteScreen)) return false;
         if (CigaretteScreen.bindingKey != null) {
             switch (action) {
@@ -78,7 +78,7 @@ public class KeybindHelper {
 
     /**
      * Checks if the input should be cancelled because of modules blocking inputs.
-     * <p>{@code KeyboardMixin} checks this handler second, after {@code handleByGUI()}.</p>
+     * <p>{@code KeyboardMixin} checks this handler second, after {@code handleKeyByGUI()}.</p>
      *
      * @param client    The Minecraft client
      * @param key       The events key code
@@ -87,15 +87,30 @@ public class KeybindHelper {
      * @param modifiers The events modifier
      * @return Whether the key event should be cancelled
      */
-    public static boolean handleBlockedInputs(MinecraftClient client, int key, int scancode, int action, int modifiers) {
+    public static boolean handleBlockedKeyInputs(MinecraftClient client, int key, int scancode, int action, int modifiers) {
         if (TOGGLE_GUI.isOf(key, scancode)) return false;
         if (blockedInputs == null) return false;
-        return blockedInputs.process(key, scancode, action, modifiers);
+        return blockedInputs.processKey(key, scancode, action, modifiers);
+    }
+
+    /**
+     * Checks if the input should be cancelled because of modules blocking inputs.
+     * <p>{@code MouseMixin} checks this handler first.</p>
+     *
+     * @param client The Minecraft client
+     * @param button The buttons key code
+     * @param action The events GLFW action
+     * @param mods   The events modifier
+     * @return Whether the mouse event is handled and should be cancelled
+     */
+    public static boolean handleBlockedMouseInputs(MinecraftClient client, int button, int action, int mods) {
+        if (blockedInputs == null) return false;
+        return blockedInputs.processMouse(button, action, mods);
     }
 
     /**
      * Attempts to handle a key event outside the {@code CigaretteScreen} GUI and after input blocking.
-     * <p>{@code KeyboardMixin} checks this handler last, after {@code handleBlockedInputs()}.</p>
+     * <p>{@code KeyboardMixin} checks this handler last, after {@code handleBlockedKeyInputs()}.</p>
      *
      * @param client    The Minecraft client
      * @param key       The events key code
@@ -104,9 +119,10 @@ public class KeybindHelper {
      * @param modifiers The events modifier
      * @return Whether the key event is handled and should be cancelled
      */
-    public static boolean handleCustom(MinecraftClient client, int key, int scancode, int action, int modifiers) {
+    public static boolean handleCustomKeys(MinecraftClient client, int key, int scancode, int action, int modifiers) {
         for (MinecraftKeybind keybind : wrappedBindings) {
             if (!keybind.isAttached() && !keybind.tryToAttach()) continue;
+            if (keybind.isMouse()) continue;
             if (!keybind.isOf(key, scancode)) continue;
             keybind.physicalAction(action);
         }
@@ -117,7 +133,34 @@ public class KeybindHelper {
             return true;
         }
         for (VirtualKeybind binding : customBinds) {
+            if (binding.isMouse()) continue;
             if (!binding.isOf(key, scancode)) continue;
+            binding.physicalAction(action);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Attempts to handle a mouse event outside the {@code CigaretteScreen} GUI and after input blocking.
+     * <p>{@code MouseMixin} checks this handler last, after {@code handleBlocksMouseInputs()}</p>
+     *
+     * @param client The Minecraft client
+     * @param button The buttons key code
+     * @param action The events GLFW action
+     * @param mods   The events modifier
+     * @return Whether the mouse event is handled and should be cancelled
+     */
+    public static boolean handleCustomMouse(MinecraftClient client, int button, int action, int mods) {
+        for (MinecraftKeybind keybind : wrappedBindings) {
+            if (!keybind.isAttached() && !keybind.tryToAttach()) continue;
+            if (!keybind.isMouse()) continue;
+            if (!keybind.isOfMouse(button)) continue;
+            keybind.physicalAction(action);
+        }
+        for (VirtualKeybind binding : customBinds) {
+            if (!binding.isMouse()) continue;
+            if (!binding.isOfMouse(button)) continue;
             binding.physicalAction(action);
             return true;
         }

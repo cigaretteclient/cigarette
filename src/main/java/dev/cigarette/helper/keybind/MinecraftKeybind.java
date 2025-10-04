@@ -72,8 +72,20 @@ public class MinecraftKeybind extends VirtualKeybind {
     }
 
     @Override
+    public MinecraftKeybind asMouse() {
+        this.isMouse = true;
+        return this;
+    }
+
+    @Override
     public boolean isOf(int key, int scancode) {
         if (this.minecraftBinding == null) return false;
         return this.minecraftBinding.matchesKey(key, scancode);
+    }
+
+    @Override
+    public boolean isOfMouse(int button) {
+        if (this.minecraftBinding == null) return false;
+        return this.minecraftBinding.matchesMouse(button);
     }
 }

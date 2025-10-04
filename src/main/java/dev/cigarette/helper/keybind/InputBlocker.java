@@ -40,10 +40,23 @@ public class InputBlocker {
         return this.complete;
     }
 
-    public boolean process(int key, int scancode, int action, int modifiers) {
+    public boolean processKey(int key, int scancode, int action, int modifiers) {
         if (!this.complete()) return false;
         for (MinecraftKeybind binding : blockedBindings) {
+            if (binding.isMouse) continue;
             if (!binding.isOf(key, scancode)) continue;
+            binding.physicalAction(action);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean processMouse(int button, int action, int modifiers) {
+        if (!this.complete()) return false;
+        for (MinecraftKeybind binding : blockedBindings) {
+            if (!binding.isMouse) continue;
+            if (!binding.isOfMouse(button)) continue;
+            System.out.println("Processing Mouse | button=" + button + " action=" + action);
             binding.physicalAction(action);
             return true;
         }

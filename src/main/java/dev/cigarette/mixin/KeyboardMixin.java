@@ -17,7 +17,7 @@ public class KeyboardMixin {
             ci.cancel();
             return;
         }
-        if (KeybindHelper.handleByGUI(client, key, scancode, action, modifiers) || KeybindHelper.handleBlockedInputs(client, key, scancode, action, modifiers) || KeybindHelper.handleCustom(client, key, scancode, action, modifiers)) {
+        if (KeybindHelper.handleKeyByGUI(client, key, scancode, action, modifiers) || KeybindHelper.handleBlockedKeyInputs(client, key, scancode, action, modifiers) || KeybindHelper.handleCustomKeys(client, key, scancode, action, modifiers)) {
             ci.cancel();
             return;
         }

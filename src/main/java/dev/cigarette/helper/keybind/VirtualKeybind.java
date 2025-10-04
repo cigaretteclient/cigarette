@@ -7,10 +7,28 @@ public class VirtualKeybind {
     protected final int defaultKey;
     protected boolean pressed = false;
     protected int timesPressed = 0;
+    protected boolean isMouse = false;
 
     public VirtualKeybind(int defaultKey) {
         this.currentKey = defaultKey;
         this.defaultKey = defaultKey;
+    }
+
+    /**
+     * Indicates that this keybind should receive events from the mouse instead of the keyboard.
+     *
+     * @return This object for method chaining
+     */
+    public VirtualKeybind asMouse() {
+        this.isMouse = true;
+        return this;
+    }
+
+    /**
+     * {@return whether this a mouse keybind or not}
+     */
+    public boolean isMouse() {
+        return this.isMouse;
     }
 
     /**
@@ -46,5 +64,9 @@ public class VirtualKeybind {
 
     public boolean isOf(int key, int scancode) {
         return this.currentKey == key;
+    }
+
+    public boolean isOfMouse(int button) {
+        return this.currentKey == button;
     }
 }

@@ -1,5 +1,6 @@
 package dev.cigarette.helper.keybind;
 
+import dev.cigarette.helper.TickHelper;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import org.jetbrains.annotations.NotNull;
@@ -52,7 +53,7 @@ public class MinecraftKeybind extends VirtualKeybind {
     }
 
     /**
-     * Virtually presses the key triggering any Minecraft related events.
+     * Virtually presses the key triggering any Minecraft related events. For player movement, you must use {@code holdForTicks(1)} to simulate a key press because the client only uses {@code isPressed()} to process movement.
      */
     public void press() {
         if (this.minecraftBinding == null) return;
@@ -70,12 +71,50 @@ public class MinecraftKeybind extends VirtualKeybind {
     }
 
     /**
+     * Virtually sets the holding state of the key.
+     *
+     * @param state The state to set
+     */
+    public void hold(boolean state) {
+        if (this.minecraftBinding == null) return;
+        if (state) this.hold();
+        else this.release();
+    }
+
+    /**
+     * Virtually hold this key for a specific number of ticks.
+     *
+     * @param numOfTicks The number of ticks to hold the key for
+     */
+    public void holdForTicks(int numOfTicks) {
+        if (this.minecraftBinding == null) return;
+        this.hold();
+        TickHelper.scheduleOnce(this, this::release, numOfTicks);
+    }
+
+    /**
      * Virtually releases the key.
      */
     public void release() {
         if (this.minecraftBinding == null) return;
         InputUtil.Key key = InputUtil.fromTranslationKey(this.minecraftBinding.getBoundKeyTranslationKey());
         KeyBinding.setKeyPressed(key, false);
+        TickHelper.unschedule(this);
+    }
+
+    /**
+     * Virtually releases this key for a specific number of ticks.
+     *
+     * @param numOfTicks The number of ticks to release the key for
+     */
+    public void releaseForTicks(int numOfTicks) {
+        if (this.minecraftBinding == null) return;
+        this.release();
+        TickHelper.scheduleOnce(this, this::hold, numOfTicks);
+    }
+
+    public int ticksLeft() {
+        return TickHelper.whenOnce(this);
     }
 
     /**

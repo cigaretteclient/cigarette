@@ -7,10 +7,24 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
+/**
+ * A wrapper class for more precise control over a Minecraft {@code KeyBinding}.
+ */
 public class MinecraftKeybind extends VirtualKeybind {
+    /**
+     * The reference to the actual {@code KeyBinding}.
+     */
     private @Nullable KeyBinding minecraftBinding;
+    /**
+     * The keybind ID to support creation of keybinds before they exist.
+     */
     private final @NotNull String minecraftKeybindId;
 
+    /**
+     * Create a new {@code KeyBinding} wrapper.
+     *
+     * @param keybindId The keybinds translation key
+     */
     public MinecraftKeybind(@NotNull String keybindId) {
         super(GLFW.GLFW_KEY_UNKNOWN);
         this.minecraftBinding = KeyBinding.byId(keybindId);
@@ -113,6 +127,11 @@ public class MinecraftKeybind extends VirtualKeybind {
         TickHelper.scheduleOnce(this, this::hold, numOfTicks);
     }
 
+    /**
+     * The remaining ticks on the {@code holdForTicks()} or {@code releaseForTicks()}.
+     *
+     * @return The remaining ticks
+     */
     public int ticksLeft() {
         return TickHelper.whenOnce(this);
     }
@@ -134,12 +153,23 @@ public class MinecraftKeybind extends VirtualKeybind {
         return this;
     }
 
+    /**
+     * {@return if this keybind is currently bound to a specific key}
+     *
+     * @param key      The key to check if bounded
+     * @param scancode The scancode for misc {@code GLFW_KEY_UNKNOWN} keys
+     */
     @Override
     public boolean isOf(int key, int scancode) {
         if (this.minecraftBinding == null) return false;
         return this.minecraftBinding.matchesKey(key, scancode);
     }
 
+    /**
+     * {@return if this keybind is currently bound to a specific mouse button}
+     *
+     * @param button The mouse button to check if bounded
+     */
     @Override
     public boolean isOfMouse(int button) {
         if (this.minecraftBinding == null) return false;

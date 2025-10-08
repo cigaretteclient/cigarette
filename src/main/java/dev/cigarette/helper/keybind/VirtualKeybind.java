@@ -94,7 +94,7 @@ public class VirtualKeybind {
      * @param scancode The scancode for misc {@code GLFW_KEY_UNKNOWN} keys
      */
     public boolean isOf(int key, int scancode) {
-        return this.currentKey == key;
+        return !this.isMouse && this.currentKey == key;
     }
 
     /**
@@ -103,6 +103,6 @@ public class VirtualKeybind {
      * @param button The mouse button to check if bounded
      */
     public boolean isOfMouse(int button) {
-        return this.currentKey == button;
+        return this.isMouse && this.currentKey == button;
     }
 }

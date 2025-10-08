@@ -209,13 +209,22 @@ public class KeybindHelper {
      * Register a {@code MinecraftKeybind} wrapper so it can receive physical events. Wrappers from {@code KeybindHelper} are already registered.
      * <p>Required to use {@code isPhysicallyPressed()} and {@code wasPhysicallyPressed()}.</p>
      *
-     * @param keybind The keybind wrapper register
+     * @param keybind The keybind wrapper to register
      */
     public static void registerWrapper(MinecraftKeybind keybind) {
         for (MinecraftKeybind existing : wrappedBindings) {
             if (existing.equals(keybind)) return;
         }
         wrappedBindings.add(keybind);
+    }
+
+    /**
+     * Register a {@code VirtualKeybind} so it can receive physical events.
+     *
+     * @param keybind The keybind to register
+     */
+    public static void registerVirtualKey(VirtualKeybind keybind) {
+        customBinds.add(keybind);
     }
 
     /**

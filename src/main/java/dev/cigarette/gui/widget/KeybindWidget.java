@@ -2,45 +2,42 @@ package dev.cigarette.gui.widget;
 
 import dev.cigarette.Cigarette;
 import dev.cigarette.gui.CigaretteScreen;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import dev.cigarette.helper.KeybindHelper;
+import dev.cigarette.helper.keybind.VirtualKeybind;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Objects;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 public class KeybindWidget extends BaseWidget<Integer> {
-    private final KeyBinding keyBinding;
-    private InputUtil.Key utilKey;
+    private final VirtualKeybind keyBinding = new VirtualKeybind(GLFW.GLFW_KEY_UNKNOWN);
+    private InputUtil.Key utilKey = InputUtil.UNKNOWN_KEY;
 
     public KeybindWidget(String message, @Nullable String tooltip) {
         super(message, tooltip);
-        this.utilKey = InputUtil.UNKNOWN_KEY;
-        this.keyBinding = new KeyBinding(UUID.randomUUID().toString(), GLFW.GLFW_KEY_UNKNOWN, "cigarette.null");
-        KeyBindingHelper.registerKeyBinding(this.keyBinding);
+        KeybindHelper.registerVirtualKey(this.keyBinding);
     }
 
     public KeybindWidget withDefaultKey(int key) {
         utilKey = InputUtil.fromKeyCode(key, 0);
-        keyBinding.setBoundKey(utilKey);
+        keyBinding.setDefaultKey(key);
         super.withDefault(key);
         return this;
     }
 
-    public void setBoundKey(@Nullable InputUtil.Key key) {
-        utilKey = key == null ? InputUtil.UNKNOWN_KEY : key;
-        keyBinding.setBoundKey(utilKey);
-        this.setRawState(utilKey.getCode());
+    public void setBoundKey(int key) {
+        utilKey = key == GLFW.GLFW_KEY_UNKNOWN ? InputUtil.UNKNOWN_KEY : InputUtil.fromKeyCode(key, 0);
+        keyBinding.setKey(key);
+        this.setRawState(key);
     }
 
-    public KeyBinding getKeybind() {
+    public VirtualKeybind getKeybind() {
         return this.keyBinding;
     }
 
@@ -89,12 +86,12 @@ public class KeybindWidget extends BaseWidget<Integer> {
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (!isBinding()) return false;
         if (keyCode == GLFW.GLFW_KEY_ESCAPE || keyCode == GLFW.GLFW_KEY_RIGHT_SHIFT) {
-            this.setBoundKey(null);
+            this.setBoundKey(GLFW.GLFW_KEY_UNKNOWN);
         } else {
             InputUtil.Key key = InputUtil.fromKeyCode(keyCode, scanCode);
             String keyName = key.getLocalizedText().getLiteralString();
             if (keyName == null) return true;
-            this.setBoundKey(key);
+            this.setBoundKey(keyCode);
         }
         clearBinding();
         return true;

@@ -23,7 +23,7 @@ public class VClip extends TickModule<ToggleWidget, Boolean> {
 
     @Override
     protected void onEnabledTick(MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
-        while (keybind.getKeybind().wasPressed()) {
+        while (keybind.getKeybind().wasPhysicallyPressed()) {
             Vec3d pos = player.getPos();
             BlockPos blockPos = player.getBlockPos();
             for (int offset = 3; offset < 6; offset++) {

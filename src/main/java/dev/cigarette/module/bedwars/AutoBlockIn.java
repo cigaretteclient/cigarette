@@ -131,7 +131,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
             return;
         }
         if (!running) {
-            if (!keybind.getKeybind().isPressed()) return;
+            if (!keybind.getKeybind().wasPhysicallyPressed()) return;
             BlockPos pos = player.getBlockPos();
             for (BedwarsAgent.PersistentBed bed : BedwarsAgent.getVisibleBeds()) {
                 if (bed.head().isWithinDistance(pos, proximityToBeds.getRawState()) || bed.foot().isWithinDistance(pos, proximityToBeds.getRawState())) {

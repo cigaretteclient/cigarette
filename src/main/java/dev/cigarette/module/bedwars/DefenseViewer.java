@@ -136,10 +136,10 @@ public class DefenseViewer extends RenderModule<ToggleWidget, Boolean> {
                 if (color != 0) defensiveBlocks.put(pos, color);
             }
         }
-        while (increaseKey.getKeybind().wasPressed()) {
+        while (increaseKey.getKeybind().wasPhysicallyPressed()) {
             this.layer = Math.min(this.layer + 1, PyramidQuadrant.MAX_LAYER);
         }
-        while (decreaseKey.getKeybind().wasPressed()) {
+        while (decreaseKey.getKeybind().wasPhysicallyPressed()) {
             this.layer = Math.max(this.layer - 1, 0);
         }
     }

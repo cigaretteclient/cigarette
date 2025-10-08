@@ -2,7 +2,6 @@ package dev.cigarette.gui.widget;
 
 import dev.cigarette.module.BaseModule;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.option.KeyBinding;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
@@ -24,10 +23,6 @@ public class ToggleKeybindWidget extends ToggleWidget {
     public ToggleKeybindWidget withDefaultKey(int keyCode) {
         this.widget.withDefaultKey(keyCode);
         return this;
-    }
-
-    public KeyBinding getKeybind() {
-        return this.widget.getKeybind();
     }
 
     public static BaseModule.GeneratedWidgets<ToggleKeybindWidget, Boolean> keybindModule(String displayName, @Nullable String tooltip) {

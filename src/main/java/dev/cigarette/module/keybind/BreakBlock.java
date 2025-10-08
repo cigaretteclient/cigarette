@@ -23,7 +23,7 @@ public class BreakBlock extends TickModule<ToggleWidget, Boolean> {
 
     @Override
     protected void onEnabledTick(MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
-        while (keybind.getKeybind().wasPressed()) {
+        while (keybind.getKeybind().wasPhysicallyPressed()) {
             HitResult target = client.crosshairTarget;
             if (target == null) break;
             if (target.getType() != HitResult.Type.BLOCK) break;

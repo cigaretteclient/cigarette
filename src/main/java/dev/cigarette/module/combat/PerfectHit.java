@@ -2,11 +2,10 @@ package dev.cigarette.module.combat;
 
 import dev.cigarette.gui.widget.SliderWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
-import dev.cigarette.mixin.KeyBindingAccessor;
+import dev.cigarette.helper.KeybindHelper;
 import dev.cigarette.module.TickModule;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -30,16 +29,14 @@ public class PerfectHit extends TickModule<ToggleWidget, Boolean> {
     protected void onEnabledTick(MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
         client.attackCooldown = 0;
         HitResult hitResult = client.crosshairTarget;
-        KeyBinding attackKey = KeyBinding.byId("key.attack");
-        KeyBindingAccessor attackKeyAccessor = (KeyBindingAccessor) attackKey;
-        if (hitResult == null || attackKey == null || !attackKey.isPressed()) return;
+        if (hitResult == null || !KeybindHelper.KEY_ATTACK.isPhysicallyPressed()) return;
         if (hitResult.getType() == HitResult.Type.ENTITY) {
             EntityHitResult entityHitResult = (EntityHitResult) hitResult;
             Entity entity = entityHitResult.getEntity();
             if (!(entity instanceof LivingEntity livingEntity)) return;
             if (livingEntity.hurtTime > 1) return;
             if (Math.random() > clickPercent.getRawState()) return;
-            attackKeyAccessor.setTimesPressed(attackKeyAccessor.getTimesPressed() + 1);
+            KeybindHelper.KEY_ATTACK.press();
         }
     }
 

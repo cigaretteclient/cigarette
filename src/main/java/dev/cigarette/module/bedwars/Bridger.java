@@ -5,12 +5,10 @@ import dev.cigarette.agent.BedwarsAgent;
 import dev.cigarette.gui.widget.SliderWidget;
 import dev.cigarette.gui.widget.TextWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
-import dev.cigarette.lib.InputOverride;
-import dev.cigarette.mixin.KeyBindingAccessor;
+import dev.cigarette.helper.keybind.InputBlocker;
 import dev.cigarette.module.TickModule;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
@@ -18,8 +16,12 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.NotNull;
 
+import static dev.cigarette.helper.KeybindHelper.*;
+
 public class Bridger extends TickModule<ToggleWidget, Boolean> {
     public static final Bridger INSTANCE = new Bridger("bedwars.bridger", "Bridger", "Automatically bridges.");
+    public static final InputBlocker INPUT_BLOCKER = new InputBlocker(KEY_JUMP, KEY_MOVE_BACK, KEY_MOVE_LEFT, KEY_MOVE_RIGHT,
+            KEY_USE_ITEM, KEY_SNEAK).preventCameraChanges();
 
     private final SliderWidget speed = new SliderWidget("Speed", "The higher the speed, the less time spent shifting. To look more legit or improve consistency, lower the speed. Setting to 3 will naturally god bridge straight & diagonally inconsistently.").withBounds(0, 2, 3);
     private final ToggleWidget blockSwap = new ToggleWidget("Auto Swap Blocks", "Automatically swap to the next available slot with placeable blocks when current stack runs out.").withDefaultState(true);
@@ -27,16 +29,8 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
     private final ToggleWidget toggleDiagonal = new ToggleWidget("Diagonal", "Toggles automatic diagonal bridging.").withDefaultState(true);
     private final ToggleWidget toggleDiagonalGod = new ToggleWidget("God Bridging", "Toggles diagonal god bridging when positioning yourself half a block from the corner.").withDefaultState(false);
 
-    private KeyBinding sneakKey = null;
-    private KeyBinding backwardsKey = null;
-    private KeyBinding leftKey = null;
-    private KeyBinding rightKey = null;
-    private KeyBinding rightClickKey = null;
-    private KeyBinding jumpKey = null;
     private int runningTicks = 0;
-    private int shiftDiabledTicks = 0;
-
-    protected BridgeType bridgeType = BridgeType.NONE;
+    private BridgeType bridgingMode = BridgeType.NONE;
 
     private Bridger(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
@@ -49,14 +43,8 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
         toggleDiagonalGod.registerConfigKey(id + ".diagonal.god");
     }
 
-    private boolean isStraightBridge() {
-        if (!leftKey.isPressed() && !rightKey.isPressed()) return false;
-        if (leftKey.isPressed() && rightKey.isPressed()) return false;
-        return true;
-    }
-
     private float straightBridgeYaw(Direction placingFace) {
-        boolean right = rightKey.isPressed();
+        boolean right = KEY_MOVE_RIGHT.isPhysicallyPressed();
         switch (placingFace) {
             case NORTH -> {
                 return right ? 45f : -45f;
@@ -74,10 +62,6 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
                 throw new IllegalStateException("The side of the block must be the north, south, west, or east when starting the bridger.");
             }
         }
-    }
-
-    private boolean isDiagonalBridge() {
-        return !leftKey.isPressed() && !rightKey.isPressed();
     }
 
     private float getBoundedYaw(ClientPlayerEntity player) {
@@ -105,10 +89,6 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
         return player.getYaw();
     }
 
-    private boolean isDiagonalGodBridge(BlockPos playerPos, BlockPos blockPos) {
-        return playerPos.getX() == blockPos.getX() || playerPos.getZ() == blockPos.getZ();
-    }
-
     private void cycleIfNoBlocks(ClientPlayerEntity player) {
         if (!blockSwap.getRawState()) return;
         if (!BedwarsAgent.isBlock(player.getMainHandStack())) {
@@ -119,46 +99,27 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
         }
     }
 
-    private void rightClick(int times) {
-        KeyBindingAccessor useAccessor = (KeyBindingAccessor) rightClickKey;
-        useAccessor.setTimesPressed(useAccessor.getTimesPressed() + times);
-    }
-
-    private void enable(BridgeType type, float yaw) {
-        this.bridgeType = type;
-        InputOverride.isActive = true;
-        InputOverride.pitch = 77.0f;
-        InputOverride.yaw = yaw;
-        InputOverride.sneakKey = true;
-        InputOverride.backKey = true;
-        InputOverride.leftKey = leftKey.isPressed();
-        InputOverride.rightKey = rightKey.isPressed();
-        InputOverride.jumpKey = false;
+    private void enable(@NotNull ClientPlayerEntity player, BridgeType mode, float yaw) {
+        this.bridgingMode = mode;
+        tryBlockInputs(this, INPUT_BLOCKER);
+        player.setPitch(77.0f);
+        player.setYaw(yaw);
+        KEY_SNEAK.hold();
     }
 
     private void disable() {
-        this.bridgeType = BridgeType.NONE;
-        InputOverride.isActive = false;
+        unblock();
     }
 
     @Override
     protected void onEnabledTick(MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
-        if (sneakKey == null || backwardsKey == null || leftKey == null || rightKey == null || rightClickKey == null || jumpKey == null) {
-            this.sneakKey = KeyBinding.byId("key.sneak");
-            this.backwardsKey = KeyBinding.byId("key.back");
-            this.leftKey = KeyBinding.byId("key.left");
-            this.rightKey = KeyBinding.byId("key.right");
-            this.rightClickKey = KeyBinding.byId("key.use");
-            this.jumpKey = KeyBinding.byId("key.jump");
-            return;
-        }
-        if (bridgeType == BridgeType.NONE) {
-            if (!sneakKey.isPressed() || !backwardsKey.isPressed() || !rightClickKey.isPressed()) return;
+        if (this.bridgingMode == BridgeType.NONE) {
+            if (!KEY_SNEAK.isPhysicallyPressed() || !KEY_MOVE_BACK.isPhysicallyPressed() || !KEY_USE_ITEM.isPhysicallyPressed()) return;
 
             HitResult hitResult = client.crosshairTarget;
             if (hitResult == null || hitResult.getType() != HitResult.Type.BLOCK) return;
-            BlockHitResult blockHitResult = (BlockHitResult) hitResult;
 
+            BlockHitResult blockHitResult = (BlockHitResult) hitResult;
             Direction placingFace = blockHitResult.getSide();
             if (placingFace == Direction.UP || placingFace == Direction.DOWN) return;
 
@@ -167,16 +128,18 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
             if (playerPos.getY() - blockPos.getY() != 1) return;
             if (Math.abs(playerPos.getX() - blockPos.getX()) > 1 || Math.abs(playerPos.getZ() - blockPos.getZ()) > 1) return;
 
-            if (isStraightBridge()) {
-                if (!toggleStraight.getRawState()) return;
-                enable(BridgeType.STRAIGHT, straightBridgeYaw(placingFace));
-            } else if (isDiagonalBridge()) {
-                if (!toggleDiagonal.getRawState()) return;
-                boolean godBridge = toggleDiagonalGod.getRawState() && isDiagonalGodBridge(playerPos, blockPos);
-                enable(godBridge ? BridgeType.DIAGONAL_GOD : BridgeType.DIAGONAL, diagonalBridgeYaw(player));
+            BridgeType mode = BridgeType.get(blockPos, playerPos, toggleStraight.getRawState(), toggleDiagonal.getRawState(), toggleDiagonalGod.getRawState());
+            float yaw = 0;
+            switch (mode) {
+                case STRAIGHT -> yaw = straightBridgeYaw(placingFace);
+                case DIAGONAL, DIAGONAL_GOD -> yaw = diagonalBridgeYaw(player);
+                case NONE -> throw new IllegalStateException("no bridging mode set");
             }
+
+            enable(player, mode, yaw);
         } else {
-            if (!sneakKey.isPressed() || !backwardsKey.isPressed() || !rightClickKey.isPressed()) {
+            if (!KEY_SNEAK.isPhysicallyPressed() || !KEY_MOVE_BACK.isPhysicallyPressed() || !KEY_USE_ITEM.isPhysicallyPressed()) {
+                bridgingMode = BridgeType.NONE;
                 disable();
                 return;
             }
@@ -186,56 +149,40 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
             BlockHitResult blockHitResult = (BlockHitResult) hitResult;
             BlockPos blockPos = blockHitResult.getBlockPos();
 
-            switch (bridgeType) {
+            boolean facingTop = blockHitResult.getSide() == Direction.UP;
+            boolean facingSide = !facingTop && blockPos.getY() < player.getY();
+
+            switch (bridgingMode) {
                 case STRAIGHT -> {
-                    if (!rightKey.isPressed() && !leftKey.isPressed()) {
+                    if (!KEY_MOVE_RIGHT.isPhysicallyPressed() && !KEY_MOVE_LEFT.isPhysicallyPressed()) {
                         disable();
                         return;
                     }
 
-                    InputOverride.jumpKey = jumpKey.isPressed();
-                    InputOverride.sneakKey = shiftDiabledTicks-- <= 0;
-
-                    cycleIfNoBlocks(player);
-
-                    if (blockHitResult.getSide() == Direction.UP) {
-                        rightClick(1);
-                    } else {
-                        if (blockPos.getY() >= player.getY()) {
-                            disable();
-                            return;
-                        }
-                        rightClick(1);
-                        shiftDiabledTicks = 2 + speed.getRawState().intValue();
+                    KEY_JUMP.hold(KEY_JUMP.isPhysicallyPressed());
+                    KEY_USE_ITEM.press();
+                    if (facingSide) {
+                        KEY_SNEAK.releaseForTicks(2 + speed.getRawState().intValue());
                     }
                 }
                 case DIAGONAL -> {
-                    InputOverride.jumpKey = shiftDiabledTicks == 1 && jumpKey.isPressed();
-                    InputOverride.sneakKey = shiftDiabledTicks-- <= 0;
-
-                    if (blockHitResult.getSide() == Direction.UP) {
-                        rightClick(1);
-                    } else {
-                        rightClick(2);
-                        shiftDiabledTicks = 3 + speed.getRawState().intValue();
+                    KEY_JUMP.hold(KEY_JUMP.isPhysicallyPressed() && KEY_SNEAK.ticksLeft() == 1);
+                    KEY_USE_ITEM.press();
+                    if (facingSide) {
+                        KEY_USE_ITEM.press();
+                        KEY_SNEAK.releaseForTicks(3 + speed.getRawState().intValue());
                     }
                 }
                 case DIAGONAL_GOD -> {
-                    InputOverride.jumpKey = shiftDiabledTicks == 1 && jumpKey.isPressed();
-                    InputOverride.sneakKey = runningTicks++ == 2;
-
-                    if (blockHitResult.getSide() == Direction.UP) {
-                        rightClick(1);
-                    } else {
-                        rightClick(2);
+                    KEY_JUMP.hold(KEY_JUMP.isPhysicallyPressed() && KEY_SNEAK.ticksLeft() == 1);
+                    KEY_SNEAK.hold(runningTicks++ == 2);
+                    KEY_USE_ITEM.press();
+                    if (facingSide) {
+                        KEY_USE_ITEM.press();
                         if (runningTicks >= 80) {
                             runningTicks = 0;
                         }
                     }
-                }
-                case NONE -> {
-                    InputOverride.jumpKey = jumpKey.isPressed();
-                    InputOverride.sneakKey = sneakKey.isPressed();
                 }
             }
 
@@ -251,16 +198,23 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
     protected enum BridgeType {
         NONE(0), STRAIGHT(1), DIAGONAL(2), DIAGONAL_GOD(3);
 
+        protected static BridgeType get(BlockPos blockPos, BlockPos playerPos, boolean straight, boolean diagonal, boolean diagonalGod) {
+            boolean left = KEY_MOVE_LEFT.isPhysicallyPressed();
+            boolean right = KEY_MOVE_RIGHT.isPhysicallyPressed();
+            if (diagonal && !left && !right) {
+                if (diagonalGod && (playerPos.getX() == blockPos.getX() || playerPos.getZ() == blockPos.getZ())) {
+                    return BridgeType.DIAGONAL_GOD;
+                }
+                return BridgeType.DIAGONAL;
+            }
+            if (straight && left != right) return BridgeType.STRAIGHT;
+            return BridgeType.NONE;
+        }
+
         private final int id;
 
         BridgeType(int id) {
             this.id = id;
         }
-
-        /*
-            public int getId() {
-                return this.id;
-            }
-        */
     }
 }

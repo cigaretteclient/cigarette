@@ -6,7 +6,6 @@
     "BedBlockEntityMixin",
     "ClientWorldAccessor",
     "EntityMixin",
-    "KeyBindingAccessor",
     "MinecraftClientInvoker",
     "PlayerEntityMixin",
     "PropertyMixin",
@@ -16,7 +15,6 @@
     "defaultRequire": 1
   },
   "client": [
-    "KeyboardInputMixin",
     "KeyboardMixin",
     "MouseMixin"
   ]

@@ -160,23 +160,12 @@ public class MinecraftKeybind extends VirtualKeybind {
         return this.minecraftBinding.getTranslationKey().equals(other.minecraftBinding.getTranslationKey());
     }
 
-    /**
-     * {@return if this keybind is currently bound to a specific key}
-     *
-     * @param key      The key to check if bounded
-     * @param scancode The scancode for misc {@code GLFW_KEY_UNKNOWN} keys
-     */
     @Override
     public boolean isOf(int key, int scancode) {
         if (this.minecraftBinding == null) return false;
         return this.minecraftBinding.matchesKey(key, scancode);
     }
 
-    /**
-     * {@return if this keybind is currently bound to a specific mouse button}
-     *
-     * @param button The mouse button to check if bounded
-     */
     @Override
     public boolean isOfMouse(int button) {
         if (this.minecraftBinding == null) return false;

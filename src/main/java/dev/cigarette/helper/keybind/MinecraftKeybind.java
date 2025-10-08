@@ -44,6 +44,20 @@ public class MinecraftKeybind extends VirtualKeybind {
         this.isMouse = isMouse;
     }
 
+    @Override
+    public void setDefaultKey(int defaultKey) {
+    }
+
+    @Override
+    public void setKey(int key) {
+        if (this.minecraftBinding == null) return;
+        if (this.isMouse) {
+            this.minecraftBinding.setBoundKey(InputUtil.Type.MOUSE.createFromCode(key));
+        } else {
+            this.minecraftBinding.setBoundKey(InputUtil.Type.KEYSYM.createFromCode(key));
+        }
+    }
+
     /**
      * Attempts to link this object with the native {@code KeyBinding} from Minecraft.
      *

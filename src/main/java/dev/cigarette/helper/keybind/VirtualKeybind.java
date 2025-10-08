@@ -13,7 +13,7 @@ public class VirtualKeybind {
     /**
      * The original key that was bounded to.
      */
-    protected final int defaultKey;
+    protected int defaultKey;
     /**
      * Whether the bounded key is physically pressed.
      */
@@ -47,6 +47,24 @@ public class VirtualKeybind {
         this.currentKey = defaultKey;
         this.defaultKey = defaultKey;
         this.isMouse = isMouse;
+    }
+
+    /**
+     * Set the default key for this keybinding. Does not update the currently bounded key.
+     *
+     * @param defaultKey The key to set as default
+     */
+    public void setDefaultKey(int defaultKey) {
+        this.defaultKey = defaultKey;
+    }
+
+    /**
+     * Sets the current key for this keybinding.
+     *
+     * @param key The key to set as currently bounded
+     */
+    public void setKey(int key) {
+        this.currentKey = key;
     }
 
     /**

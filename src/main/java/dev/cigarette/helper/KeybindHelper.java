@@ -17,12 +17,27 @@ import java.util.HashSet;
  * Helper class for handling the physical and virtual state of keybinds. Also supports input blocking via {@code InputBlocker}.
  */
 public class KeybindHelper {
+    public static final MinecraftKeybind KEY_SPRINT = new MinecraftKeybind("key.sprint");
     public static final MinecraftKeybind KEY_SNEAK = new MinecraftKeybind("key.sneak");
+    public static final MinecraftKeybind KEY_MOVE_FORWARD = new MinecraftKeybind("key.forward");
     public static final MinecraftKeybind KEY_MOVE_BACK = new MinecraftKeybind("key.back");
     public static final MinecraftKeybind KEY_MOVE_LEFT = new MinecraftKeybind("key.left");
     public static final MinecraftKeybind KEY_MOVE_RIGHT = new MinecraftKeybind("key.right");
     public static final MinecraftKeybind KEY_USE_ITEM = new MinecraftKeybind("key.use").asMouse();
+    public static final MinecraftKeybind KEY_ATTACK = new MinecraftKeybind("key.attack").asMouse();
+    public static final MinecraftKeybind KEY_PICK_ITEM = new MinecraftKeybind("key.pickItem").asMouse();
     public static final MinecraftKeybind KEY_JUMP = new MinecraftKeybind("key.jump");
+    public static final MinecraftKeybind KEY_DROP_ITEM = new MinecraftKeybind("key.drop");
+    public static final MinecraftKeybind KEY_TOGGLE_INVENTORY = new MinecraftKeybind("key.inventory");
+    public static final MinecraftKeybind KEY_SLOT_1 = new MinecraftKeybind("key.hotbar.1");
+    public static final MinecraftKeybind KEY_SLOT_2 = new MinecraftKeybind("key.hotbar.2");
+    public static final MinecraftKeybind KEY_SLOT_3 = new MinecraftKeybind("key.hotbar.3");
+    public static final MinecraftKeybind KEY_SLOT_4 = new MinecraftKeybind("key.hotbar.4");
+    public static final MinecraftKeybind KEY_SLOT_5 = new MinecraftKeybind("key.hotbar.5");
+    public static final MinecraftKeybind KEY_SLOT_6 = new MinecraftKeybind("key.hotbar.6");
+    public static final MinecraftKeybind KEY_SLOT_7 = new MinecraftKeybind("key.hotbar.7");
+    public static final MinecraftKeybind KEY_SLOT_8 = new MinecraftKeybind("key.hotbar.8");
+    public static final MinecraftKeybind KEY_SLOT_9 = new MinecraftKeybind("key.hotbar.9");
 
     /**
      * Set of bindings that wrap native Minecraft {@code KeyBinding}'s.
@@ -30,12 +45,27 @@ public class KeybindHelper {
     private static final HashSet<MinecraftKeybind> wrappedBindings = new HashSet<>();
 
     static {
+        wrappedBindings.add(KEY_SPRINT);
         wrappedBindings.add(KEY_SNEAK);
+        wrappedBindings.add(KEY_MOVE_FORWARD);
         wrappedBindings.add(KEY_MOVE_BACK);
         wrappedBindings.add(KEY_MOVE_LEFT);
         wrappedBindings.add(KEY_MOVE_RIGHT);
         wrappedBindings.add(KEY_USE_ITEM);
+        wrappedBindings.add(KEY_ATTACK);
+        wrappedBindings.add(KEY_PICK_ITEM);
         wrappedBindings.add(KEY_JUMP);
+        wrappedBindings.add(KEY_DROP_ITEM);
+        wrappedBindings.add(KEY_TOGGLE_INVENTORY);
+        wrappedBindings.add(KEY_SLOT_1);
+        wrappedBindings.add(KEY_SLOT_2);
+        wrappedBindings.add(KEY_SLOT_3);
+        wrappedBindings.add(KEY_SLOT_4);
+        wrappedBindings.add(KEY_SLOT_5);
+        wrappedBindings.add(KEY_SLOT_6);
+        wrappedBindings.add(KEY_SLOT_7);
+        wrappedBindings.add(KEY_SLOT_8);
+        wrappedBindings.add(KEY_SLOT_9);
     }
 
     /**

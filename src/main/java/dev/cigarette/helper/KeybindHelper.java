@@ -23,9 +23,9 @@ public class KeybindHelper {
     public static final MinecraftKeybind KEY_MOVE_BACK = new MinecraftKeybind("key.back");
     public static final MinecraftKeybind KEY_MOVE_LEFT = new MinecraftKeybind("key.left");
     public static final MinecraftKeybind KEY_MOVE_RIGHT = new MinecraftKeybind("key.right");
-    public static final MinecraftKeybind KEY_USE_ITEM = new MinecraftKeybind("key.use").asMouse();
-    public static final MinecraftKeybind KEY_ATTACK = new MinecraftKeybind("key.attack").asMouse();
-    public static final MinecraftKeybind KEY_PICK_ITEM = new MinecraftKeybind("key.pickItem").asMouse();
+    public static final MinecraftKeybind KEY_USE_ITEM = new MinecraftKeybind("key.use", true);
+    public static final MinecraftKeybind KEY_ATTACK = new MinecraftKeybind("key.attack", true);
+    public static final MinecraftKeybind KEY_PICK_ITEM = new MinecraftKeybind("key.pickItem", true);
     public static final MinecraftKeybind KEY_JUMP = new MinecraftKeybind("key.jump");
     public static final MinecraftKeybind KEY_DROP_ITEM = new MinecraftKeybind("key.drop");
     public static final MinecraftKeybind KEY_TOGGLE_INVENTORY = new MinecraftKeybind("key.inventory");

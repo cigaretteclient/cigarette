@@ -14,14 +14,10 @@ public class VirtualKeybind {
         this.defaultKey = defaultKey;
     }
 
-    /**
-     * Indicates that this keybind should receive events from the mouse instead of the keyboard.
-     *
-     * @return This object for method chaining
-     */
-    public VirtualKeybind asMouse() {
-        this.isMouse = true;
-        return this;
+    public VirtualKeybind(int defaultKey, boolean isMouse) {
+        this.currentKey = defaultKey;
+        this.defaultKey = defaultKey;
+        this.isMouse = isMouse;
     }
 
     /**

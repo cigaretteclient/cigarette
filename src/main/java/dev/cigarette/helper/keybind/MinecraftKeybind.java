@@ -32,6 +32,19 @@ public class MinecraftKeybind extends VirtualKeybind {
     }
 
     /**
+     * Create a new {@code KeyBinding} wrapper.
+     *
+     * @param keybindId The keybinds translation key
+     * @param isMouse   Whether this is a mouse keybind or not
+     */
+    public MinecraftKeybind(@NotNull String keybindId, boolean isMouse) {
+        super(GLFW.GLFW_KEY_UNKNOWN);
+        this.minecraftBinding = KeyBinding.byId(keybindId);
+        this.minecraftKeybindId = keybindId;
+        this.isMouse = isMouse;
+    }
+
+    /**
      * Attempts to link this object with the native {@code KeyBinding} from Minecraft.
      *
      * @return whether this object was linked successfully or not
@@ -145,12 +158,6 @@ public class MinecraftKeybind extends VirtualKeybind {
         if (!(o instanceof MinecraftKeybind other) || this.minecraftBinding == null) return false;
         if (other.minecraftBinding == null) return false;
         return this.minecraftBinding.getTranslationKey().equals(other.minecraftBinding.getTranslationKey());
-    }
-
-    @Override
-    public MinecraftKeybind asMouse() {
-        this.isMouse = true;
-        return this;
     }
 
     /**

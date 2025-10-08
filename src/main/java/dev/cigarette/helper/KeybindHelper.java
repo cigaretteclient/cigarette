@@ -21,7 +21,7 @@ public class KeybindHelper {
     public static final MinecraftKeybind KEY_MOVE_BACK = new MinecraftKeybind("key.back");
     public static final MinecraftKeybind KEY_MOVE_LEFT = new MinecraftKeybind("key.left");
     public static final MinecraftKeybind KEY_MOVE_RIGHT = new MinecraftKeybind("key.right");
-    public static final MinecraftKeybind KEY_RIGHT_CLICK = new MinecraftKeybind("key.use").asMouse();
+    public static final MinecraftKeybind KEY_USE_ITEM = new MinecraftKeybind("key.use").asMouse();
     public static final MinecraftKeybind KEY_JUMP = new MinecraftKeybind("key.jump");
 
     /**
@@ -34,14 +34,14 @@ public class KeybindHelper {
         wrappedBindings.add(KEY_MOVE_BACK);
         wrappedBindings.add(KEY_MOVE_LEFT);
         wrappedBindings.add(KEY_MOVE_RIGHT);
-        wrappedBindings.add(KEY_RIGHT_CLICK);
+        wrappedBindings.add(KEY_USE_ITEM);
         wrappedBindings.add(KEY_JUMP);
     }
 
     /**
      * Keybind to toggle {@code CigaretteScreen}.
      */
-    public static final VirtualKeybind TOGGLE_GUI = new VirtualKeybind(GLFW.GLFW_KEY_RIGHT_SHIFT);
+    public static final VirtualKeybind KEY_TOGGLE_GUI = new VirtualKeybind(GLFW.GLFW_KEY_RIGHT_SHIFT);
 
     /**
      * Set of custom keybinds that can be triggered.
@@ -77,7 +77,7 @@ public class KeybindHelper {
                 case GLFW.GLFW_RELEASE -> CigaretteScreen.bindingKey.keyReleased(key, scancode, modifiers);
             }
         } else {
-            if (key == GLFW.GLFW_KEY_ESCAPE || (action == GLFW.GLFW_PRESS && TOGGLE_GUI.isOf(key, scancode))) {
+            if (key == GLFW.GLFW_KEY_ESCAPE || (action == GLFW.GLFW_PRESS && KEY_TOGGLE_GUI.isOf(key, scancode))) {
                 Cigarette.SCREEN.close();
             }
         }
@@ -96,7 +96,7 @@ public class KeybindHelper {
      * @return Whether the key event should be cancelled
      */
     public static boolean handleBlockedKeyInputs(MinecraftClient client, int key, int scancode, int action, int modifiers) {
-        if (TOGGLE_GUI.isOf(key, scancode)) return false;
+        if (KEY_TOGGLE_GUI.isOf(key, scancode)) return false;
         if (blockedInputs == null) return false;
         return blockedInputs.processKey(key, scancode, action, modifiers);
     }
@@ -135,7 +135,7 @@ public class KeybindHelper {
             keybind.physicalAction(action);
         }
         if (action != GLFW.GLFW_PRESS) return false;
-        if (TOGGLE_GUI.isOf(key, scancode)) {
+        if (KEY_TOGGLE_GUI.isOf(key, scancode)) {
             Cigarette.SCREEN.setParent(client.currentScreen);
             client.setScreen(Cigarette.SCREEN);
             return true;

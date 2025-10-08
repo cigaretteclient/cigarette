@@ -27,6 +27,7 @@ public class KeybindWidget extends BaseWidget<Integer> {
     public KeybindWidget withDefaultKey(int key) {
         utilKey = InputUtil.fromKeyCode(key, 0);
         keyBinding.setDefaultKey(key);
+        keyBinding.setKey(key);
         super.withDefault(key);
         return this;
     }

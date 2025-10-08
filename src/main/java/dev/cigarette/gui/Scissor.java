@@ -9,7 +9,7 @@ import java.util.Stack;
  */
 public class Scissor {
     /**
-     * An exclusive (non-additive) scissor. Use {@code apply()} to activate and {@code remove()} to deactivate.
+     * An exclusive (non-additive) scissor. Use {@link #apply()} to activate and {@link #remove()} to deactivate.
      */
     private static class Bound {
         /**
@@ -70,7 +70,7 @@ public class Scissor {
     private static final Stack<Bound> exclusiveScissors = new Stack<>();
 
     /**
-     * Push an exclusive (non-additive) scissor to a {@code DrawContext}.
+     * Push an exclusive (non-additive) scissor to a {@link DrawContext}.
      *
      * @param context The draw context to activate the scissor on
      * @param left    The left edge of the bounding box

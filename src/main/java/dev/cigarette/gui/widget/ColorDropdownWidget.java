@@ -5,10 +5,10 @@ import net.minecraft.client.gui.DrawContext;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * An extension on {@code DropdownWidget} pre-made for color configuration.
+ * An extension on {@link DropdownWidget} pre-made for color configuration.
  *
  * @param <Widget>    The type of children this widget stores. Use {@code Widget extends BaseWidget<?>} to allow any types as children.
- * @param <StateType> The custom state this widget stores. Use {@code BaseWidget.Stateless} for widgets that should not hold state.
+ * @param <StateType> The custom state this widget stores. Use {@link BaseWidget.Stateless} for widgets that should not hold state.
  */
 public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType> extends DropdownWidget<Widget, StateType> {
     /**
@@ -56,7 +56,7 @@ public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType
     /**
      * {@return the toggled state of this widget}
      *
-     * @throws IllegalStateException If the header of this widget is not an instance of {@code ToggleWidget}
+     * @throws IllegalStateException If the header of this widget is not an instance of {@link ToggleWidget}
      */
     public boolean getToggleState() {
         if (this.header instanceof ToggleWidget) {
@@ -66,7 +66,7 @@ public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType
     }
 
     /**
-     * Creates a dropdown widget pre-made for color configuration. Has a {@code ToggleWidget} and {@code ColorSquareWidget} header, and {@code SliderWidget} children for customizing the selected color.
+     * Creates a dropdown widget pre-made for color configuration. Has a {@link ToggleWidget} and {@link ColorSquareWidget} header, and {@link SliderWidget} children for customizing the selected color.
      *
      * @param message The text to display inside this widget
      * @param tooltip The tooltip to render when this widget is hovered
@@ -95,7 +95,7 @@ public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType
     }
 
     /**
-     * Sets the state and stored default state of the heading {@code ToggleWidget}.
+     * Sets the state and stored default state of the heading {@link ToggleWidget}.
      *
      * @param state The default state to set
      * @return This widget for method chaining
@@ -144,11 +144,11 @@ public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType
     }
 
     /**
-     * Generator for modules using this as a top-level widget. Creates a togglable {@code ColorDropdownWidget}.
+     * Generator for modules using this as a top-level widget. Creates a togglable {@link ColorDropdownWidget}.
      *
      * @param displayName The text to display inside this widget
      * @param tooltip     The tooltip to render when this widget is hovered
-     * @return A {@code GeneratedWidgets} object for use in {@code BaseModule} constructing
+     * @return A {@link BaseModule.GeneratedWidgets} object for use in {@link BaseModule} constructing
      */
     public static BaseModule.GeneratedWidgets<ToggleWidget, Boolean> module(String displayName, @Nullable String tooltip) {
         ColorDropdownWidget<ToggleWidget, Boolean> wrapper = new ColorDropdownWidget<>(displayName, tooltip);
@@ -158,11 +158,11 @@ public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType
     }
 
     /**
-     * Creates and returns a new togglable {@code ColorDropdownWidget}.
+     * Creates and returns a new togglable {@link ColorDropdownWidget}.
      *
      * @param displayName The text to display inside this widget
      * @param tooltip     The tooltip to render when this widget is hovered
-     * @return the new widget with a {@code ToggleWidget} attached as the header
+     * @return the new widget with a {@link ToggleWidget} attached as the header
      */
     public static ColorDropdownWidget<ToggleWidget, Boolean> buildToggle(String displayName, @Nullable String tooltip) {
         ColorDropdownWidget<ToggleWidget, Boolean> wrapper = new ColorDropdownWidget<>(displayName, tooltip);
@@ -172,11 +172,11 @@ public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType
     }
 
     /**
-     * Creates and returns a new {@code ColorDropdownWidget} with only the color configuration, no toggling.
+     * Creates and returns a new {@link ColorDropdownWidget} with only the color configuration, no toggling.
      *
      * @param displayName The text to display inside this widget
      * @param tooltip     The tooltip to render when this widget is hovered
-     * @return thw new widget with a {@code TextWidget} attached as the header
+     * @return thw new widget with a {@link TextWidget} attached as the header
      */
     public static ColorDropdownWidget<TextWidget, Stateless> buildText(String displayName, @Nullable String tooltip) {
         ColorDropdownWidget<TextWidget, Stateless> wrapper = new ColorDropdownWidget<>(displayName, tooltip);

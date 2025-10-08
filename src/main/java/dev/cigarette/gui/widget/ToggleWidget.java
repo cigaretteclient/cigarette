@@ -90,7 +90,7 @@ public class ToggleWidget extends BaseWidget<Boolean> {
      *
      * @param displayName The text to display inside this widget
      * @param tooltip     The tooltip to render when this widget is hovered
-     * @return A {@code GeneratedWidgets} object for use in {@code BaseModule} constructing
+     * @return A {@link BaseModule.GeneratedWidgets} object for use in {@link BaseModule} constructing
      */
     public static BaseModule.GeneratedWidgets<ToggleWidget, Boolean> module(String displayName, @Nullable String tooltip) {
         DropdownWidget<ToggleWidget, Boolean> wrapper = new DropdownWidget<>(displayName, tooltip);

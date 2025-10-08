@@ -13,7 +13,7 @@ import java.util.function.Consumer;
  */
 public class ToggleKeybindWidget extends ToggleWidget {
     /**
-     * The {@code KeybindWidget} for handling configuration of the keybind.
+     * The {@link KeybindWidget} for handling configuration of the keybind.
      */
     protected KeybindWidget widget;
 
@@ -56,7 +56,7 @@ public class ToggleKeybindWidget extends ToggleWidget {
      *
      * @param displayName The text to display inside this widget
      * @param tooltip     The tooltip to render when this widget is hovered
-     * @return A {@code GeneratedWidgets} object for use in {@code BaseModule} constructing
+     * @return A {@link BaseModule.GeneratedWidgets} object for use in {@link BaseModule} constructing
      */
     public static BaseModule.GeneratedWidgets<ToggleKeybindWidget, Boolean> keybindModule(String displayName, @Nullable String tooltip) {
         ToggleKeybindWidget widget = new ToggleKeybindWidget(displayName, tooltip);

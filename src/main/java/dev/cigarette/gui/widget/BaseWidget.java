@@ -15,7 +15,7 @@ import java.util.function.Consumer;
 /**
  * Extends the base widget providing default functionality for saving/loading custom state from the config.
  *
- * @param <StateType> The custom state this widget stores. Use {@code BaseWidget.Stateless} for widgets that should not hold state.
+ * @param <StateType> The custom state this widget stores. Use {@link BaseWidget.Stateless} for widgets that should not hold state.
  */
 public abstract class BaseWidget<StateType> extends ClickableWidget {
     /**
@@ -203,7 +203,7 @@ public abstract class BaseWidget<StateType> extends ClickableWidget {
     }
 
     /**
-     * Sets the hover tooltip of this widget. The tooltip will only be rendered if {@code captureHover} was called allowing this widget to capture hovering events.
+     * Sets the hover tooltip of this widget. The tooltip will only be rendered if {@link #captureHover()} was called allowing this widget to capture hovering events.
      * <p>For basic tooltips, you can use {@code Tooltip.of(Text.literal(String))} to convert a String to a Tooltip.</p>
      *
      * @param tooltip The tooltip
@@ -252,7 +252,7 @@ public abstract class BaseWidget<StateType> extends ClickableWidget {
     }
 
     /**
-     * Replacement method for the {@code ClickableWidget::render} method that cannot be overridden. Automatically handles rendering tooltips when this widget is hovered and the top-most widget. Also pulls the bounding box of this widget and supplies the values to the {@code render} method for cleaner code.
+     * Replacement method for the {@link ClickableWidget#render(DrawContext, int, int, float) ClickableWidget.render()} method that cannot be overridden. Automatically handles rendering tooltips when this widget is hovered and the top-most widget. Also pulls the bounding box of this widget and supplies the values to the {@link #render(DrawContext, boolean, int, int, float, int, int, int, int) render()} method for cleaner code.
      *
      * @param context    The draw context to pass through
      * @param mouseX     The mouse X position to pass through
@@ -267,8 +267,8 @@ public abstract class BaseWidget<StateType> extends ClickableWidget {
     }
 
     /**
-     * Alias that calls {@code _render} but looks nicer.
-     * <p>Automatically handles rendering tooltips when this widget is hovered and the top-most widget. Also pulls the bounding box of this widget and supplies the values to the {@code render} method for cleaner code.</p>
+     * Alias that calls {@link #_render(DrawContext, int, int, float) _render()} but looks nicer.
+     * <p>Automatically handles rendering tooltips when this widget is hovered and the top-most widget. Also pulls the bounding box of this widget and supplies the values to the {@link #render(DrawContext, boolean, int, int, float, int, int, int, int) render()} method for cleaner code.</p>
      *
      * @param context    The draw context to pass through
      * @param mouseX     The mouse X position to pass through
@@ -281,7 +281,7 @@ public abstract class BaseWidget<StateType> extends ClickableWidget {
     }
 
     /**
-     * The custom rendering method that replaces the built-in {@code ClickableWidget::render} method.
+     * The custom rendering method that replaces the built-in {@link ClickableWidget#render(DrawContext, int, int, float) ClickableWidget.render()} method.
      *
      * @param context    The current draw context
      * @param hovered    Whether this widget is hovered by the mouse

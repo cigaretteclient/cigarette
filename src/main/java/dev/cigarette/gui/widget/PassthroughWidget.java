@@ -11,12 +11,12 @@ import java.util.TreeMap;
  * Extends the passthrough widget which holds children widgets and automatically forwards events and rendering to them.
  *
  * @param <ChildType> The type of children this widget stores. Use {@code Widget extends BaseWidget<?>} to allow any types as children.
- * @param <StateType> The custom state this widget stores. Use {@code BaseWidget.Stateless} for widgets that should not hold state.
+ * @param <StateType> The custom state this widget stores. Use {@link BaseWidget.Stateless} for widgets that should not hold state.
  */
 public abstract class PassthroughWidget<ChildType extends BaseWidget<?>, StateType> extends BaseWidget<StateType> {
     /**
      * The children that this widget is the parent of, mapped by String to the actual child reference for sorting capabilities.
-     * <p>There is no default methods for adding children as defined in {@code PassthroughWidget}, so check the subclasses for implementation details.</p>
+     * <p>There is no default methods for adding children as defined in {@link PassthroughWidget}, so check the subclasses for implementation details.</p>
      */
     protected Map<String, ChildType> children = new LinkedHashMap<>();
     /**
@@ -58,7 +58,7 @@ public abstract class PassthroughWidget<ChildType extends BaseWidget<?>, StateTy
     }
 
     /**
-     * Switches the {@code Map} type of {@code children} to a {@code TreeMap} which automatically sorts by the {@code String} keys.
+     * Switches the {@link Map} type of {@link #children} to a {@link TreeMap} which automatically sorts by the {@link String} keys.
      */
     public void alphabetic() {
         this.children = new TreeMap<>(this.children);

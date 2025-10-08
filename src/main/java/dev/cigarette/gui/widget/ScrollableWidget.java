@@ -71,7 +71,7 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
      */
     private static final int MAX_TICKS_ON_OPEN = 20;
     /**
-     * Callback triggered when the header is clicked to toggle the {@code expanded} state of this widget.
+     * Callback triggered when the header is clicked to toggle the {@link #expanded} state of this widget.
      */
     private @Nullable Runnable onToggleExpand;
     /**
@@ -140,7 +140,7 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
     }
 
     /**
-     * {@return whether the container should be scrollable} Updates {@code shouldScroll}.
+     * {@return whether the container should be scrollable} Updates {@link #shouldScroll}.
      */
     private boolean updateShouldScroll() {
         this.shouldScroll = ((children == null ? 0 : children.size()) + (header != null ? 1 : 0))
@@ -165,7 +165,7 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
     }
 
     /**
-     * Sets the header text of this widget. This creates a {@code DraggableWidget} that renders at the top of the widget that also controls its position.
+     * Sets the header text of this widget. This creates a {@link DraggableWidget} that renders at the top of the widget that also controls its position.
      *
      * @param headerText The text to display
      * @return This widget for method chaining
@@ -175,7 +175,7 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
     }
 
     /**
-     * Sets the header text of this widget. This creates a {@code DraggableWidget} that renders at the top of the widget that also controls its position.
+     * Sets the header text of this widget. This creates a {@link DraggableWidget} that renders at the top of the widget that also controls its position.
      *
      * @param headerText     The text to display
      * @param onToggleExpand The callback to run when the header is right-clicked
@@ -206,7 +206,7 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
     }
 
     /**
-     * Sets all the children width and heights. This also triggers {@code updateShouldScroll} to set whether there needs to be a scrollbar.
+     * Sets all the children width and heights. This also triggers {@link #updateShouldScroll()} to set whether there needs to be a scrollbar.
      *
      * @return This widget for method chaining
      */

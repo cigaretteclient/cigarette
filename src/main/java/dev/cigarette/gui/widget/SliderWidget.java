@@ -57,7 +57,7 @@ public class SliderWidget extends BaseWidget<Double> {
     }
 
     /**
-     * Updates the raw state of the slider do the {@code decimalPlaces} degree of accuracy.
+     * Updates the raw state of the slider do the {@link #decimalPlaces} degree of accuracy.
      * <p>This returns prematurely if the state is not within bounds. Does not trigger any callbacks by itself.</p>
      *
      * @param state The new state to set to this widget

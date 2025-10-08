@@ -5,6 +5,7 @@ import dev.cigarette.gui.hud.notification.NotificationDisplay;
 import dev.cigarette.gui.widget.BaseWidget;
 import dev.cigarette.gui.widget.KeybindWidget;
 import dev.cigarette.gui.widget.ScrollableWidget;
+import dev.cigarette.gui.widget.ToggleKeybindWidget;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
@@ -33,7 +34,7 @@ public class CigaretteScreen extends Screen {
      */
     public static final int BACKGROUND_COLOR = 0xFF1A1A1A;
     /**
-     * Dark background color usually used in gradients with {@code BACKGROUND_COLOR}. (Black)
+     * Dark background color usually used in gradients with {@link #BACKGROUND_COLOR}. (Black)
      */
     public static final int DARK_BACKGROUND_COLOR = 0xFF000000;
     /**
@@ -76,7 +77,7 @@ public class CigaretteScreen extends Screen {
     private static final int OPEN_DISTANCE_PX = 24;
 
     /**
-     * The length of the closing animation as a multiplier of {@code OPEN_DURATION_S}.
+     * The length of the closing animation as a multiplier of {@link #OPEN_DURATION_S}.
      */
     private static final double CLOSE_DURATION_FACTOR = 0.6;
     private static final double CLOSE_STAGGER_FACTOR = 0.6;
@@ -85,7 +86,7 @@ public class CigaretteScreen extends Screen {
      */
     private int categoryCount = 0;
     /**
-     * Reference to a {@code KeybindWidget} or {@code ToggleKeybindWidget} that is actively listening for keys to bind.
+     * Reference to a {@link KeybindWidget} or {@link ToggleKeybindWidget} that is actively listening for keys to bind.
      */
     public static @Nullable KeybindWidget bindingKey = null;
 
@@ -204,7 +205,7 @@ public class CigaretteScreen extends Screen {
 
     /**
      * {@return whether the provided widget can be hovered} If so, that widget is set as the hovered widget.
-     * <p>A widget must call {@code captureHover()} to be hoverable.</p>
+     * <p>A widget must call {@link BaseWidget#captureHover() captureHover()} to be hoverable.</p>
      *
      * @param obj The widget to check if it can be hovered
      */
@@ -217,7 +218,7 @@ public class CigaretteScreen extends Screen {
     }
 
     /**
-     * Replaces the built-in {@code Screen::render} method. Handles animations and category rendering for the GUI.
+     * Replaces the built-in {@link Screen#render(DrawContext, int, int, float) Screen.render()} method. Handles animations and category rendering for the GUI.
      *
      * @param context    The current draw context
      * @param mouseX     Current mouse X position

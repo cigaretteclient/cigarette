@@ -52,7 +52,7 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
      */
     private @Nullable ClickCallback clickCallback = null;
     /**
-     * If this widget is responsible for a {@code ScrollableWidget}'s visibility, this signals whether that widget is collapsed. Used for rounding the bottom corners of this widget when collapsed.
+     * If this widget is responsible for a {@link ScrollableWidget}'s visibility, this signals whether that widget is collapsed. Used for rounding the bottom corners of this widget when collapsed.
      */
     public boolean expanded = false;
 

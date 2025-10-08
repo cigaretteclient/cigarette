@@ -107,7 +107,7 @@ public class KeybindHelper {
                 case GLFW.GLFW_RELEASE -> CigaretteScreen.bindingKey.keyReleased(key, scancode, modifiers);
             }
         } else {
-            if (key == GLFW.GLFW_KEY_ESCAPE || (action == GLFW.GLFW_PRESS && KEY_TOGGLE_GUI.isOf(key, scancode))) {
+            if (action == GLFW.GLFW_PRESS && (key == GLFW.GLFW_KEY_ESCAPE || KEY_TOGGLE_GUI.isOf(key, scancode))) {
                 Cigarette.SCREEN.close();
             }
         }

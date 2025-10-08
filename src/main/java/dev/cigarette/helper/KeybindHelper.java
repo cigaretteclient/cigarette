@@ -13,6 +13,9 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.HashSet;
 
+/**
+ * Helper class for handling the physical and virtual state of keybinds. Also supports input blocking via {@code InputBlocker}.
+ */
 public class KeybindHelper {
     public static final MinecraftKeybind KEY_SNEAK = new MinecraftKeybind("key.sneak");
     public static final MinecraftKeybind KEY_MOVE_BACK = new MinecraftKeybind("key.back");
@@ -21,6 +24,9 @@ public class KeybindHelper {
     public static final MinecraftKeybind KEY_RIGHT_CLICK = new MinecraftKeybind("key.use").asMouse();
     public static final MinecraftKeybind KEY_JUMP = new MinecraftKeybind("key.jump");
 
+    /**
+     * Set of bindings that wrap native Minecraft {@code KeyBinding}'s.
+     */
     private static final HashSet<MinecraftKeybind> wrappedBindings = new HashSet<>();
 
     static {
@@ -230,6 +236,9 @@ public class KeybindHelper {
         return blockedInputs != null && blockedInputs.blocksCamera();
     }
 
+    /**
+     * Reset the state of all key and mouse bindings to the last physical state reported by GLFW. Wraps {@code KeyBinding.updatePressedStates()} as that method does not reset mouse buttons.
+     */
     public static void updateKeyStates() {
         long window = MinecraftClient.getInstance().getWindow().getHandle();
         KeyBinding.updatePressedStates();

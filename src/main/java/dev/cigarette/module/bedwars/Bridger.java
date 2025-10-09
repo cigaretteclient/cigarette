@@ -16,6 +16,7 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.MathHelper;
 import org.jetbrains.annotations.NotNull;
 
 public class Bridger extends TickModule<ToggleWidget, Boolean> {
@@ -124,11 +125,17 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
         useAccessor.setTimesPressed(useAccessor.getTimesPressed() + times);
     }
 
-    private void enable(BridgeType type, float yaw) {
+    private float continuousYawFor(ClientPlayerEntity player, float desiredYaw) {
+        float current = player.getYaw();
+        float delta = MathHelper.wrapDegrees(desiredYaw - current);
+        return current + delta;
+    }
+
+    private void enable(BridgeType type, ClientPlayerEntity player, float yaw) {
         this.bridgeType = type;
         InputOverride.isActive = true;
         InputOverride.pitch = 77.0f;
-        InputOverride.yaw = yaw;
+        InputOverride.yaw = continuousYawFor(player, yaw);
         InputOverride.sneakKey = true;
         InputOverride.backKey = true;
         InputOverride.leftKey = leftKey.isPressed();
@@ -169,11 +176,11 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
 
             if (isStraightBridge()) {
                 if (!toggleStraight.getRawState()) return;
-                enable(BridgeType.STRAIGHT, straightBridgeYaw(placingFace));
+                enable(BridgeType.STRAIGHT, player, straightBridgeYaw(placingFace));
             } else if (isDiagonalBridge()) {
                 if (!toggleDiagonal.getRawState()) return;
                 boolean godBridge = toggleDiagonalGod.getRawState() && isDiagonalGodBridge(playerPos, blockPos);
-                enable(godBridge ? BridgeType.DIAGONAL_GOD : BridgeType.DIAGONAL, diagonalBridgeYaw(player));
+                enable(godBridge ? BridgeType.DIAGONAL_GOD : BridgeType.DIAGONAL, player, diagonalBridgeYaw(player));
             }
         } else {
             if (!sneakKey.isPressed() || !backwardsKey.isPressed() || !rightClickKey.isPressed()) {
@@ -264,3 +271,4 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
         */
     }
 }
+

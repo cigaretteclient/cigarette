@@ -10,6 +10,6 @@ public final class DefaultProviders {
         BarWidgetRegistry.register(new ZombiesProvider());
         BarWidgetRegistry.register(new BedwarsProvider());
         BarWidgetRegistry.register(new NearbyPlayersProvider());
+        BarWidgetRegistry.register(new AimbotTargetProvider());
     }
 }
-

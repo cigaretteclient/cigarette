@@ -71,6 +71,7 @@ public class BarDisplay extends ClickableWidget {
         List<BarWidget> widgets = new ArrayList<>();
         Set<String> seenUuids = new HashSet<>();
         List<Class<?>> providerOrder = List.of(
+            dev.cigarette.gui.hud.bar.providers.AimbotTargetProvider.class,
             dev.cigarette.gui.hud.bar.providers.MurderMysteryProvider.class,
             dev.cigarette.gui.hud.bar.providers.BedwarsProvider.class,
             dev.cigarette.gui.hud.bar.providers.ZombiesProvider.class,

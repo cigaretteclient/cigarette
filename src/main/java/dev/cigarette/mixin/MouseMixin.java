@@ -23,7 +23,7 @@ public class MouseMixin {
             ci.cancel();
             return;
         }
-        if (KeybindHelper.handleBlockedMouseInputs(client, button, action, mods) || KeybindHelper.handleCustomMouse(client, button, action, mods)) {
+        if (client.currentScreen == null && (KeybindHelper.handleBlockedMouseInputs(client, button, action, mods) || KeybindHelper.handleCustomMouse(client, button, action, mods))) {
             ci.cancel();
             return;
         }

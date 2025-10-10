@@ -133,10 +133,10 @@ public class Bridger extends TickModule<ToggleWidget, Boolean> {
             switch (mode) {
                 case STRAIGHT -> yaw = straightBridgeYaw(placingFace);
                 case DIAGONAL, DIAGONAL_GOD -> yaw = diagonalBridgeYaw(player);
-                case NONE -> throw new IllegalStateException("no bridging mode set");
             }
-
-            enable(player, mode, yaw);
+            if (mode != BridgeType.NONE) {
+                enable(player, mode, yaw);
+            }
         } else {
             if (!KEY_SNEAK.isPhysicallyPressed() || !KEY_MOVE_BACK.isPhysicallyPressed() || !KEY_USE_ITEM.isPhysicallyPressed()) {
                 bridgingMode = BridgeType.NONE;

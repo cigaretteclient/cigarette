@@ -89,9 +89,6 @@ public class KeybindWidget extends BaseWidget<Integer> {
         if (keyCode == GLFW.GLFW_KEY_ESCAPE || keyCode == GLFW.GLFW_KEY_RIGHT_SHIFT) {
             this.setBoundKey(GLFW.GLFW_KEY_UNKNOWN);
         } else {
-            InputUtil.Key key = InputUtil.fromKeyCode(keyCode, scanCode);
-            String keyName = key.getLocalizedText().getLiteralString();
-            if (keyName == null) return true;
             this.setBoundKey(keyCode);
         }
         clearBinding();

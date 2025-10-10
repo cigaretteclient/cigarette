@@ -15,15 +15,30 @@ import org.lwjgl.glfw.GLFW;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+/**
+ * A widget that lets the user bind a key.
+ */
 public class KeybindWidget extends BaseWidget<Integer> {
     private final VirtualKeybind keyBinding = new VirtualKeybind(GLFW.GLFW_KEY_UNKNOWN);
     private InputUtil.Key utilKey = InputUtil.UNKNOWN_KEY;
 
+    /**
+     * Creates a widget that stores a keybind and allows it to be configured.
+     *
+     * @param message The text to display inside this widget
+     * @param tooltip The tooltip to render when this widget is hovered
+     */
     public KeybindWidget(String message, @Nullable String tooltip) {
         super(message, tooltip);
         KeybindHelper.registerVirtualKey(this.keyBinding);
     }
 
+    /**
+     * Sets the key and stored default key of this widget.
+     *
+     * @param key The default key to set
+     * @return This widget for method chaining
+     */
     public KeybindWidget withDefaultKey(int key) {
         utilKey = InputUtil.fromKeyCode(key, 0);
         keyBinding.setDefaultKey(key);
@@ -42,14 +57,23 @@ public class KeybindWidget extends BaseWidget<Integer> {
         return this.keyBinding;
     }
 
+    /**
+     * Stops this widget from capturing keys to update binding.
+     */
     protected void clearBinding() {
         CigaretteScreen.bindingKey = null;
     }
 
+    /**
+     * Toggles whether this widget is currently binding and capturing keys.
+     */
     protected void toggleBinding() {
         CigaretteScreen.bindingKey = isBinding() ? null : this;
     }
 
+    /**
+     * {@return whether this widget is currently being bound by the user}
+     */
     protected boolean isBinding() {
         return CigaretteScreen.bindingKey == this;
     }
@@ -72,6 +96,14 @@ public class KeybindWidget extends BaseWidget<Integer> {
         });
     }
 
+    /**
+     * Captures a mouse click to toggle whether the keybind is being bound.
+     *
+     * @param mouseX the X coordinate of the mouse
+     * @param mouseY the Y coordinate of the mouse
+     * @param button the mouse button number
+     * @return Whether this widget handled the click
+     */
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (isMouseOver(mouseX, mouseY)) {
@@ -83,6 +115,14 @@ public class KeybindWidget extends BaseWidget<Integer> {
         return false;
     }
 
+    /**
+     * Captures a key press to bind to the internal KeyBinding.
+     *
+     * @param keyCode   the named key code of the event as described in the {@link org.lwjgl.glfw.GLFW GLFW} class
+     * @param scanCode  the unique/platform-specific scan code of the keyboard input
+     * @param modifiers a GLFW bitfield describing the modifier keys that are held down (see <a href="https://www.glfw.org/docs/3.3/group__mods.html">GLFW Modifier key flags</a>)
+     * @return Whether this widget handled the key press
+     */
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (!isBinding()) return false;
@@ -95,6 +135,13 @@ public class KeybindWidget extends BaseWidget<Integer> {
         return true;
     }
 
+    /**
+     * Renders the key or binding state of this widget at a specific location.
+     *
+     * @param context The draw context to draw on
+     * @param top     The upper-bounding Y position to draw within
+     * @param right   The right-bounding X position to draw within
+     */
     public void renderKeyText(DrawContext context, int top, int right) {
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
 

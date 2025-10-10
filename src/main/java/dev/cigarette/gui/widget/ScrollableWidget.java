@@ -11,24 +11,82 @@ import org.lwjgl.glfw.GLFW;
 import java.util.Collection;
 import java.util.Objects;
 
+/**
+ * A scrollable widget which provides scrolling functionality.
+ *
+ * @param <Widgets> The type of children this widget stores. Use {@code Widget extends BaseWidget<?>} to allow any types as children.
+ */
 public class ScrollableWidget<Widgets extends BaseWidget<?>>
         extends PassthroughWidget<BaseWidget<?>, BaseWidget.Stateless> {
+    /**
+     * Multiplier applied to the vertical scrolling delta to determine distance to actually scroll.
+     */
     private static final int VERTICAL_SCROLL_MULTIPLIER = 6;
+    /**
+     * The default width of this widget.
+     */
     private static final int DEFAULT_WIDTH = 100;
+    /**
+     * The default height of this widget.
+     */
     private static final int DEFAULT_HEIGHT = 200;
+    /**
+     * The default scrollbar width of this widget.
+     */
     private static final int DEFAULT_SCROLLBAR_WIDTH = 3;
+    /**
+     * The height of the bottom padding for the rounded effect.
+     */
     private static final int BOTTOM_ROUNDED_RECT_HEIGHT = 6;
+    /**
+     * The height of each row inside this widget.
+     */
     private final int rowHeight = 20;
+    /**
+     * Whether this widget is supposed to be scrollable or not.
+     */
     private boolean shouldScroll = false;
+    /**
+     * The current scroll position.
+     */
     private double scrollPosition = 0D;
+    /**
+     * The optional header that can move this widget when dragged.
+     */
     private @Nullable DraggableWidget header;
+    /**
+     * The category offset index.
+     */
     private int categoryOffsetIndex = 0;
+    /**
+     * Whether this widget is expanded, revealing its children, or not.
+     */
     public boolean expanded = true;
+    /**
+     * Partial ticks when the widget is expanded.
+     */
     private int ticksOnOpen = 0;
+    /**
+     * Max ticks to complete the expanding animation.
+     */
     private static final int MAX_TICKS_ON_OPEN = 20;
+    /**
+     * Callback triggered when the header is clicked to toggle the {@link #expanded} state of this widget.
+     */
     private @Nullable Runnable onToggleExpand;
+    /**
+     * Whether to show the bottom rounding effect or not.
+     */
     private boolean showBottomRoundedRect = true;
 
+    /**
+     * Creates a widget that renders children in a scrollable window.
+     *
+     * @param x          The initial X position of this widget
+     * @param y          The initial Y position of this widget
+     * @param headerText The text to display as the header at the top of this widget
+     * @param children   The children to attach to this widget
+     */
     @SafeVarargs
     public ScrollableWidget(int x, int y, @Nullable String headerText, @Nullable Widgets... children) {
         super(x, y, DEFAULT_WIDTH + DEFAULT_SCROLLBAR_WIDTH, DEFAULT_HEIGHT, null);
@@ -36,6 +94,13 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
         this.setChildren(children).setHeader(headerText, null);
     }
 
+    /**
+     * Creates a widget that renders children in a scrollable window.
+     *
+     * @param x        The initial X position of this widget
+     * @param y        The initial Y position of this widget
+     * @param children The children to attach to this widget
+     */
     @SafeVarargs
     public ScrollableWidget(int x, int y, @Nullable Widgets... children) {
         super(x, y, DEFAULT_WIDTH + DEFAULT_SCROLLBAR_WIDTH, DEFAULT_HEIGHT, null);
@@ -43,11 +108,24 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
         this.setChildren(children);
     }
 
+    /**
+     * Creates a widget that renders children in a scrollable window.
+     *
+     * @param x The initial X position of this widget
+     * @param y The initial Y position of this widget
+     */
     public ScrollableWidget(int x, int y) {
         super(x, y, DEFAULT_WIDTH + DEFAULT_SCROLLBAR_WIDTH, DEFAULT_HEIGHT, null);
         this.withDefault(new BaseWidget.Stateless());
     }
 
+    /**
+     * Creates a widget that renders children in a scrollable window.
+     *
+     * @param x                     The initial X position of this widget
+     * @param y                     The initial Y position of this widget
+     * @param showBottomRoundedRect Whether to show the bottom rounded effect
+     */
     public ScrollableWidget(int x, int y, boolean showBottomRoundedRect) {
         super(x, y, DEFAULT_WIDTH + DEFAULT_SCROLLBAR_WIDTH, DEFAULT_HEIGHT, null);
         this.withDefault(new BaseWidget.Stateless());
@@ -56,17 +134,26 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
 
     @Override
     public BaseWidget<BaseWidget.Stateless> withXY(int x, int y) {
-        if(this.header != null) this.header.withXY(x, y);
+        if (this.header != null) this.header.withXY(x, y);
         super.withXY(x, y);
         return this;
     }
 
+    /**
+     * {@return whether the container should be scrollable} Updates {@link #shouldScroll}.
+     */
     private boolean updateShouldScroll() {
         this.shouldScroll = ((children == null ? 0 : children.size()) + (header != null ? 1 : 0))
                 * rowHeight > this.height;
         return this.shouldScroll;
     }
 
+    /**
+     * Sets the children attached to this widget.
+     *
+     * @param children The children to attach
+     * @return This widget for method chaining
+     */
     @SafeVarargs
     public final ScrollableWidget<Widgets> setChildren(@Nullable Widgets... children) {
         for (Widgets widget : children) {
@@ -77,10 +164,23 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
         return updateChildrenSizing();
     }
 
+    /**
+     * Sets the header text of this widget. This creates a {@link DraggableWidget} that renders at the top of the widget that also controls its position.
+     *
+     * @param headerText The text to display
+     * @return This widget for method chaining
+     */
     public ScrollableWidget<Widgets> setHeader(@Nullable String headerText) {
         return this.setHeader(headerText, null);
     }
 
+    /**
+     * Sets the header text of this widget. This creates a {@link DraggableWidget} that renders at the top of the widget that also controls its position.
+     *
+     * @param headerText     The text to display
+     * @param onToggleExpand The callback to run when the header is right-clicked
+     * @return This widget for method chaining
+     */
     public ScrollableWidget<Widgets> setHeader(@Nullable String headerText, @Nullable Runnable onToggleExpand) {
         this.onToggleExpand = onToggleExpand;
         if (headerText == null) {
@@ -105,6 +205,11 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
         return updateChildrenSizing();
     }
 
+    /**
+     * Sets all the children width and heights. This also triggers {@link #updateShouldScroll()} to set whether there needs to be a scrollbar.
+     *
+     * @return This widget for method chaining
+     */
     private ScrollableWidget<Widgets> updateChildrenSizing() {
         if (this.children != null) {
             int rightMargin = this.updateShouldScroll() ? DEFAULT_SCROLLBAR_WIDTH : 0;
@@ -121,14 +226,27 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
         return this;
     }
 
+    /**
+     * {@return the category offset index}
+     */
     public int getCategoryOffsetIndex() {
         return this.categoryOffsetIndex;
     }
 
+    /**
+     * Sets the category offset index.
+     *
+     * @param index The category offset index
+     */
     public void setCategoryOffsetIndex(int index) {
         this.categoryOffsetIndex = Math.max(0, index);
     }
 
+    /**
+     * Sets whether this widget is expanded.
+     *
+     * @param expanded Whether this widget should be expanded
+     */
     public void setExpanded(boolean expanded) {
         if (this.expanded == expanded)
             return;

@@ -123,4 +123,11 @@ public class VirtualKeybind {
     public boolean isOfMouse(int button) {
         return this.isMouse && this.currentKey == button;
     }
+
+    /**
+     * Resets the {@link #timesPressed} property. Should be triggered at the end of every client tick to prevent queueing of events.
+     */
+    public void unset() {
+        this.timesPressed = 0;
+    }
 }

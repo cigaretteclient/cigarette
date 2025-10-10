@@ -5,6 +5,7 @@ import dev.cigarette.gui.CigaretteScreen;
 import dev.cigarette.helper.keybind.InputBlocker;
 import dev.cigarette.helper.keybind.MinecraftKeybind;
 import dev.cigarette.helper.keybind.VirtualKeybind;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
@@ -44,6 +45,16 @@ public class KeybindHelper {
      */
     private static final HashSet<MinecraftKeybind> wrappedBindings = new HashSet<>();
 
+    /**
+     * Keybind to toggle {@code CigaretteScreen}.
+     */
+    public static final VirtualKeybind KEY_TOGGLE_GUI = new VirtualKeybind(GLFW.GLFW_KEY_RIGHT_SHIFT);
+
+    /**
+     * Set of custom keybinds that can be triggered.
+     */
+    private static final HashSet<VirtualKeybind> customBinds = new HashSet<>();
+
     static {
         wrappedBindings.add(KEY_SPRINT);
         wrappedBindings.add(KEY_SNEAK);
@@ -66,17 +77,13 @@ public class KeybindHelper {
         wrappedBindings.add(KEY_SLOT_7);
         wrappedBindings.add(KEY_SLOT_8);
         wrappedBindings.add(KEY_SLOT_9);
+
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            for (VirtualKeybind bind : customBinds) {
+                bind.unset();
+            }
+        });
     }
-
-    /**
-     * Keybind to toggle {@code CigaretteScreen}.
-     */
-    public static final VirtualKeybind KEY_TOGGLE_GUI = new VirtualKeybind(GLFW.GLFW_KEY_RIGHT_SHIFT);
-
-    /**
-     * Set of custom keybinds that can be triggered.
-     */
-    private static final HashSet<VirtualKeybind> customBinds = new HashSet<>();
 
     /**
      * The module that is blocking inputs.

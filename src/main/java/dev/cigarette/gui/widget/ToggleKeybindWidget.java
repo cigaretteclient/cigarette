@@ -2,7 +2,6 @@ package dev.cigarette.gui.widget;
 
 import dev.cigarette.module.BaseModule;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.option.KeyBinding;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
@@ -42,13 +41,6 @@ public class ToggleKeybindWidget extends ToggleWidget {
     public ToggleKeybindWidget withDefaultKey(int keyCode) {
         this.widget.withDefaultKey(keyCode);
         return this;
-    }
-
-    /**
-     * {@return the internal Minecraft KeyBinding}
-     */
-    public KeyBinding getKeybind() {
-        return this.widget.getKeybind();
     }
 
     /**

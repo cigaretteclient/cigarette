@@ -5,13 +5,12 @@ import dev.cigarette.agent.BedwarsAgent;
 import dev.cigarette.gui.widget.KeybindWidget;
 import dev.cigarette.gui.widget.SliderWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
+import dev.cigarette.helper.KeybindHelper;
 import dev.cigarette.lib.PlayerEntityL;
-import dev.cigarette.mixin.KeyBindingAccessor;
 import dev.cigarette.module.TickModule;
 import dev.cigarette.precomputed.BlockIn;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
@@ -31,7 +30,6 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
     private final ToggleWidget switchToTool = new ToggleWidget("Switch to Tools", "Automatically switches to a tool once finished.").withDefaultState(true);
     private final SliderWidget variation = new SliderWidget("Variation", "Applies randomness to the delay between block places.").withBounds(0, 1, 4);
 
-    private KeyBinding rightClickKey = null;
     private boolean running = false;
     private BlockPos originalPos = null;
     private float originalYaw = 0;
@@ -119,19 +117,10 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
         return null;
     }
 
-    private void rightClick() {
-        KeyBindingAccessor useAccessor = (KeyBindingAccessor) rightClickKey;
-        useAccessor.setTimesPressed(useAccessor.getTimesPressed() + 1);
-    }
-
     @Override
     protected void onEnabledTick(MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
-        if (rightClickKey == null) {
-            rightClickKey = KeyBinding.byId("key.use");
-            return;
-        }
         if (!running) {
-            if (!keybind.getKeybind().isPressed()) return;
+            if (!keybind.getKeybind().wasPhysicallyPressed()) return;
             BlockPos pos = player.getBlockPos();
             for (BedwarsAgent.PersistentBed bed : BedwarsAgent.getVisibleBeds()) {
                 if (bed.head().isWithinDistance(pos, proximityToBeds.getRawState()) || bed.foot().isWithinDistance(pos, proximityToBeds.getRawState())) {
@@ -156,7 +145,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
         previousVector = nextLookVector;
 
         PlayerEntityL.setRotationVector(player, nextLookVector);
-        rightClick();
+        KeybindHelper.KEY_USE_ITEM.press();
 
         int rand = variation.getRawState().intValue() > 0 ? (int) (Math.random() * variation.getRawState().intValue()) : 0;
         cooldownTicks = 16 - speed.getRawState().intValue() + rand;

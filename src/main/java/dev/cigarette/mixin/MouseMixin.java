@@ -1,9 +1,8 @@
 package dev.cigarette.mixin;
 
-import dev.cigarette.lib.InputOverride;
+import dev.cigarette.helper.KeybindHelper;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
-import net.minecraft.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -13,11 +12,20 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MouseMixin {
     @Inject(method = "updateMouse", at = @At("HEAD"), cancellable = true)
     private void updateMouse(double timeDelta, CallbackInfo ci) {
-        if (!InputOverride.isActive) return;
-        Entity player = MinecraftClient.getInstance().player;
-        if (player != null) {
-            player.setAngles(InputOverride.yaw, InputOverride.pitch);
-        }
+        if (!KeybindHelper.isMouseBlocked()) return;
         ci.cancel();
+    }
+
+    @Inject(method = "onMouseButton", at = @At("HEAD"), cancellable = true)
+    private void onMouseButton(long window, int button, int action, int mods, CallbackInfo ci) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (window != client.getWindow().getHandle()) {
+            ci.cancel();
+            return;
+        }
+        if (client.currentScreen == null && (KeybindHelper.handleBlockedMouseInputs(client, button, action, mods) || KeybindHelper.handleCustomMouse(client, button, action, mods))) {
+            ci.cancel();
+            return;
+        }
     }
 }

@@ -7,6 +7,7 @@ import dev.cigarette.agent.ZombiesAgent;
 import dev.cigarette.config.Config;
 import dev.cigarette.config.FileSystem;
 import dev.cigarette.events.Events;
+import dev.cigarette.gui.CigaretteScreen;
 import dev.cigarette.gui.hud.notification.NotificationDisplay;
 import dev.cigarette.lib.ChatLogger;
 import net.fabricmc.api.ModInitializer;
@@ -37,6 +38,7 @@ public class Cigarette implements ModInitializer {
     public static final Identifier LOGO_IDENTIFIER = Identifier.of("cigarette", "icon.png");
     public static final boolean IN_DEV_ENVIRONMENT = FabricLoader.getInstance().isDevelopmentEnvironment();
     public static Config CONFIG = Config.construct();
+    public static CigaretteScreen SCREEN = new CigaretteScreen();
     public static BedwarsAgent BEDWARS_AGENT = new BedwarsAgent(DevWidget.bedwarsAgent);
     public static MurderMysteryAgent MURDER_MYSTERY_AGENT = new MurderMysteryAgent(DevWidget.murderMysteryAgent);
     public static ZombiesAgent ZOMBIES_AGENT = new ZombiesAgent(DevWidget.zombiesAgent);

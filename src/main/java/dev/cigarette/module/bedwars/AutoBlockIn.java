@@ -7,12 +7,15 @@ import dev.cigarette.gui.widget.SliderWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
 import dev.cigarette.helper.KeybindHelper;
 import dev.cigarette.lib.PlayerEntityL;
+import dev.cigarette.lib.Raycast;
 import dev.cigarette.module.TickModule;
 import dev.cigarette.precomputed.BlockIn;
+import net.minecraft.block.ShapeContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
@@ -29,17 +32,21 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
     private final ToggleWidget switchToBlocks = new ToggleWidget("Switch to Blocks", "Automatically switches to blocks once activated.").withDefaultState(true);
     private final ToggleWidget switchToTool = new ToggleWidget("Switch to Tools", "Automatically switches to a tool once finished.").withDefaultState(true);
     private final SliderWidget variation = new SliderWidget("Variation", "Applies randomness to the delay between block places.").withBounds(0, 1, 4);
+    private final ToggleWidget jumpEnabled = new ToggleWidget("Jump", "Jumps immediately to ensure the block above you is placed.").withDefaultState(true);
+    private final ToggleWidget ignoreBeds = new ToggleWidget("Ignore Bed Proximity", "Ignores bed proximity and allows activation anywhere in bedwars.").withDefaultState(false);
 
     private boolean running = false;
     private BlockPos originalPos = null;
+    private Vec3d originalPosVec = null;
     private float originalYaw = 0;
     private float originalPitch = 0;
     private Vec3d previousVector = null;
     private int cooldownTicks = 0;
+    private boolean hasJumped = false;
 
     private AutoBlockIn(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
-        this.setChildren(keybind, speed, proximityToBeds, switchToBlocks, switchToTool, variation);
+        this.setChildren(keybind, speed, proximityToBeds, switchToBlocks, switchToTool, variation, jumpEnabled, ignoreBeds);
         keybind.registerConfigKey(id + ".key");
         speed.registerConfigKey(id + ".speed");
         proximityToBeds.registerConfigKey(id + ".proximity");
@@ -48,15 +55,18 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
         variation.registerConfigKey(id + ".variation");
     }
 
-    private void enable(@NotNull ClientPlayerEntity player) {
+    private void enable(@NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
         running = true;
+        hasJumped = false;
         originalPos = player.getBlockPos();
+        originalPosVec = player.getPos();
         originalYaw = player.getYaw();
         originalPitch = player.getPitch();
     }
 
     private void disable(@NotNull ClientPlayerEntity player) {
         running = false;
+        hasJumped = false;
         player.setYaw(originalYaw);
         player.setPitch(originalPitch);
         previousVector = null;
@@ -85,7 +95,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
             Vec3d eye = player.getEyePos();
 
             double distance = faceCenter.distanceTo(eye);
-            if (distance > 3) continue;
+            if (distance > 4) continue;
 
             Direction face = Direction.fromVector(offset, Direction.UP).getOpposite();
             if (face == Direction.UP && eye.getY() <= faceCenter.getY()) continue;
@@ -95,16 +105,24 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
             if (face == Direction.EAST && eye.getX() <= faceCenter.getX()) continue;
             if (face == Direction.WEST && eye.getX() >= faceCenter.getX()) continue;
 
+            BlockHitResult res = Raycast.raycastBlock(eye, faceCenter, ShapeContext.absent());
+            if (res.getType() != BlockHitResult.Type.MISS) {
+                if (!res.getBlockPos().equals(neighborPos)) continue;
+            }
+
             if (closest == null || distance < closestDistance) {
-                closest = new ReachableNeighbor(neighborPos, face, faceCenter);
+                closest = new ReachableNeighbor(neighborPos, face, faceCenter, distance);
                 closestDistance = distance;
             }
         }
         return closest;
     }
 
-    private @Nullable Vec3d getNextBlockPlaceVector(@NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
-        if (!player.getBlockPos().equals(originalPos)) return null;
+    private @Nullable NextVector getNextBlockPlaceVector(@NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
+        BlockPos newBlockPos = player.getBlockPos();
+        if (newBlockPos.getX() != originalPos.getX() || newBlockPos.getZ() != originalPos.getZ() || Math.abs(newBlockPos.getY() - originalPos.getY()) > 2) return null;
+        ReachableNeighbor closest = null;
+        ReachableNeighbor jumpNeighbor = null;
         for (Vec3i offset : BlockIn.PLAYER_NEIGHBORS) {
             BlockPos pos = originalPos.add(offset);
             if (!world.getBlockState(pos).isAir()) continue;
@@ -112,7 +130,19 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
             ReachableNeighbor neighbor = getReachableNeighbor(world, player, pos);
             if (neighbor == null) continue;
 
-            return neighbor.faceCenter().subtract(player.getEyePos()).normalize();
+            if (offset.getX() == 0 && offset.getZ() == 0) {
+                jumpNeighbor = neighbor;
+                continue;
+            }
+            if (closest == null || neighbor.distance < closest.distance) {
+                closest = neighbor;
+            }
+        }
+        if (closest != null) {
+            return new NextVector(closest.faceCenter().subtract(player.getEyePos()).normalize(), false);
+        }
+        if (jumpNeighbor != null) {
+            return new NextVector(jumpNeighbor.faceCenter().subtract(player.getEyePos()).normalize(), true);
         }
         return null;
     }
@@ -121,10 +151,14 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
     protected void onEnabledTick(MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
         if (!running) {
             if (!keybind.getKeybind().wasPhysicallyPressed()) return;
+            if (ignoreBeds.getRawState()) {
+                enable(world, player);
+                return;
+            }
             BlockPos pos = player.getBlockPos();
             for (BedwarsAgent.PersistentBed bed : BedwarsAgent.getVisibleBeds()) {
                 if (bed.head().isWithinDistance(pos, proximityToBeds.getRawState()) || bed.foot().isWithinDistance(pos, proximityToBeds.getRawState())) {
-                    enable(player);
+                    enable(world, player);
                     return;
                 }
             }
@@ -137,18 +171,28 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
             return;
         }
 
-        Vec3d nextLookVector = getNextBlockPlaceVector(world, player);
-        if (nextLookVector == null || (previousVector != null && previousVector.equals(nextLookVector))) {
+        NextVector next = getNextBlockPlaceVector(world, player);
+        if (next == null || (previousVector != null && previousVector.equals(next.lookVector))) {
+            if (jumpEnabled.getRawState() && player.getPos().getY() > originalPosVec.getY()) {
+                return;
+            }
             disableAndSwitch(player);
             return;
         }
-        previousVector = nextLookVector;
+        previousVector = next.lookVector;
 
-        PlayerEntityL.setRotationVector(player, nextLookVector);
+        PlayerEntityL.setRotationVector(player, next.lookVector);
         KeybindHelper.KEY_USE_ITEM.press();
 
         int rand = variation.getRawState().intValue() > 0 ? (int) (Math.random() * variation.getRawState().intValue()) : 0;
         cooldownTicks = 16 - speed.getRawState().intValue() + rand;
+
+        if (jumpEnabled.getRawState() && !hasJumped && !next.aboveHead) {
+            if (world.getBlockState(BlockPos.ofFloored(player.getPos().add(0, 2, 0))).isAir()) {
+                KeybindHelper.KEY_JUMP.holdForTicks(1);
+                hasJumped = true;
+            }
+        }
     }
 
     @Override
@@ -156,6 +200,9 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
         return GameDetector.rootGame == GameDetector.ParentGame.BEDWARS && GameDetector.subGame == GameDetector.ChildGame.INSTANCED_BEDWARS;
     }
 
-    private record ReachableNeighbor(BlockPos pos, Direction side, Vec3d faceCenter) {
+    private record ReachableNeighbor(BlockPos pos, Direction side, Vec3d faceCenter, double distance) {
+    }
+
+    private record NextVector(Vec3d lookVector, boolean aboveHead) {
     }
 }

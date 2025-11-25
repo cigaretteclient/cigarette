@@ -58,7 +58,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
         super(ToggleWidget::module, id, name, tooltip);
         allowedBlocks.setHeader(allowedBlocksText);
         allowedBlocks.setChildren(prioritizeStrongest, enableObsidian, enableEndstone, enableWood, enableClay, enableWool, enableGlass);
-        this.setChildren(keybind, speed, proximityToBeds, switchToBlocks, switchToTool, variation, jumpEnabled, ignoreBeds, allowedBlocks);
+        this.setChildren(keybind, allowedBlocks, switchToBlocks, switchToTool, jumpEnabled, speed, variation, proximityToBeds, ignoreBeds);
         keybind.registerConfigKey(id + ".key");
         speed.registerConfigKey(id + ".speed");
         proximityToBeds.registerConfigKey(id + ".proximity");

@@ -8,6 +8,8 @@ import dev.cigarette.lib.PlayerEntityL;
 import dev.cigarette.lib.Raycast;
 import dev.cigarette.module.TickModule;
 import dev.cigarette.precomputed.BlockIn;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -108,7 +110,9 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
         double closestDistance = 0;
         for (Vec3i offset : BlockIn.BLOCK_NEIGHBORS) {
             BlockPos neighborPos = pos.add(offset);
-            if (world.getBlockState(neighborPos).isAir()) continue;
+
+            BlockState state = world.getBlockState(neighborPos);
+            if (state.isAir() || BedwarsAgent.isBed(state) || state.isOf(Blocks.LADDER)) continue;
             Vec3d faceCenter = neighborPos.toCenterPos().subtract(new Vec3d(offset).multiply(0.5f));
             Vec3d eye = player.getEyePos();
 

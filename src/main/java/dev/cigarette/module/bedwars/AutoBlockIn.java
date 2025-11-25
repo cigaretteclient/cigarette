@@ -112,7 +112,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
             BlockPos neighborPos = pos.add(offset);
 
             BlockState state = world.getBlockState(neighborPos);
-            if (state.isAir() || BedwarsAgent.isBed(state) || state.isOf(Blocks.LADDER)) continue;
+            if (state.isAir() || state.isOf(Blocks.WATER) || BedwarsAgent.isBed(state) || state.isOf(Blocks.LADDER)) continue;
             Vec3d faceCenter = neighborPos.toCenterPos().subtract(new Vec3d(offset).multiply(0.5f));
             Vec3d eye = player.getEyePos();
 
@@ -148,7 +148,9 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
         ReachableNeighbor jumpNeighbor = null;
         for (Vec3i offset : BlockIn.PLAYER_NEIGHBORS) {
             BlockPos pos = originalPos.add(offset);
-            if (!world.getBlockState(pos).isAir()) continue;
+
+            BlockState state = world.getBlockState(pos);
+            if (!state.isAir() && !state.isOf(Blocks.WATER)) continue;
 
             ReachableNeighbor neighbor = getReachableNeighbor(world, player, pos);
             if (neighbor == null) continue;

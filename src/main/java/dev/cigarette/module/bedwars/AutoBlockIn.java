@@ -35,6 +35,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
     private final TextWidget allowedBlocksText = new TextWidget("Block Config", "Configure which blocks can be used by the module.").centered(false);
     private final DropdownWidget<TextWidget, BaseWidget.Stateless> allowedBlocks = new DropdownWidget<>("", null);
     private final ToggleWidget prioritizeStrongest = new ToggleWidget("Prioritize Strongest", "Prioritizes stronger blocks over weaker ones when placing.\nOrder: Obsidian > Endstone > Wood > Clay > Wool > Glass").withDefaultState(true);
+    private final ToggleWidget weakNonAdjacent = new ToggleWidget("Weak Non-Adjacent", "Places the weakest blocks on positions not immediately next to or above the player.").withDefaultState(true);
     private final ToggleWidget enableObsidian = new ToggleWidget("Use Obsidian", "Allows the module to use obsidian blocks.").withDefaultState(false);
     private final ToggleWidget enableEndstone = new ToggleWidget("Use Endstone", "Allows the module to use endstone blocks.").withDefaultState(true);
     private final ToggleWidget enableWood = new ToggleWidget("Use Wood", "Allows the module to use wood blocks.").withDefaultState(true);
@@ -54,7 +55,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
     private AutoBlockIn(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
         allowedBlocks.setHeader(allowedBlocksText);
-        allowedBlocks.setChildren(prioritizeStrongest, enableObsidian, enableEndstone, enableWood, enableClay, enableWool, enableGlass);
+        allowedBlocks.setChildren(prioritizeStrongest, weakNonAdjacent, enableObsidian, enableEndstone, enableWood, enableClay, enableWool, enableGlass);
         this.setChildren(keybind, allowedBlocks, switchToBlocks, switchToTool, jumpEnabled, speed, variation, proximityToBeds);
         keybind.registerConfigKey(id + ".key");
         speed.registerConfigKey(id + ".speed");
@@ -63,6 +64,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
         switchToTool.registerConfigKey(id + ".switchtool");
         variation.registerConfigKey(id + ".variation");
         prioritizeStrongest.registerConfigKey(id + ".prioritizestrongest");
+        weakNonAdjacent.registerConfigKey(id + ".weaknonadjacent");
         enableObsidian.registerConfigKey(id + ".allow.obsidian");
         enableEndstone.registerConfigKey(id + ".allow.endstone");
         enableWood.registerConfigKey(id + ".allow.wood");
@@ -138,6 +140,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
         BlockPos newBlockPos = player.getBlockPos();
         if (newBlockPos.getX() != originalPos.getX() || newBlockPos.getZ() != originalPos.getZ() || Math.abs(newBlockPos.getY() - originalPos.getY()) > 2) return null;
         ReachableNeighbor closest = null;
+        Vec3i closestOffset = null;
         ReachableNeighbor jumpNeighbor = null;
         for (Vec3i offset : BlockIn.PLAYER_NEIGHBORS) {
             BlockPos pos = originalPos.add(offset);
@@ -152,19 +155,24 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
             }
             if (closest == null || neighbor.distance < closest.distance) {
                 closest = neighbor;
+                closestOffset = offset;
             }
         }
         if (closest != null) {
-            return new NextVector(closest.faceCenter().subtract(player.getEyePos()).normalize(), false);
+            return new NextVector(closest.faceCenter().subtract(player.getEyePos()).normalize(), false, BlockIn.isPlayerAdjacent(closestOffset));
         }
         if (jumpNeighbor != null) {
-            return new NextVector(jumpNeighbor.faceCenter().subtract(player.getEyePos()).normalize(), true);
+            return new NextVector(jumpNeighbor.faceCenter().subtract(player.getEyePos()).normalize(), true, true);
         }
         return null;
     }
 
     private boolean switchToNextStackOfBlocks(@NotNull ClientPlayerEntity player) {
         return BedwarsAgent.switchToNextStackOfBlocks(player, new BedwarsAgent.BlockConfig(enableObsidian.getRawState(), enableEndstone.getRawState(), enableWood.getRawState(), enableClay.getRawState(), enableWool.getRawState(), enableGlass.getRawState(), prioritizeStrongest.getRawState(), !prioritizeStrongest.getRawState()));
+    }
+
+    private boolean switchToWeakestBlocks(@NotNull ClientPlayerEntity player) {
+        return BedwarsAgent.switchToNextStackOfBlocks(player, new BedwarsAgent.BlockConfig(enableObsidian.getRawState(), enableEndstone.getRawState(), enableWood.getRawState(), enableClay.getRawState(), enableWool.getRawState(), enableGlass.getRawState(), false, false));
     }
 
     @Override
@@ -186,11 +194,6 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
         }
         if (--cooldownTicks > 0) return;
 
-        if (!switchToBlocks.getRawState() || !switchToNextStackOfBlocks(player)) {
-            disable(player);
-            return;
-        }
-
         NextVector next = getNextBlockPlaceVector(world, player);
         if (next == null || (previousVector != null && previousVector.equals(next.lookVector))) {
             if (jumpEnabled.getRawState() && player.getPos().getY() > originalPosVec.getY()) {
@@ -200,6 +203,11 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
             return;
         }
         previousVector = next.lookVector;
+
+        if (!switchToBlocks.getRawState() || !(next.isAdjacent || !weakNonAdjacent.getRawState() ? switchToNextStackOfBlocks(player) : switchToWeakestBlocks(player))) {
+            disable(player);
+            return;
+        }
 
         PlayerEntityL.setRotationVector(player, next.lookVector);
         KeybindHelper.KEY_USE_ITEM.press();
@@ -223,6 +231,6 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
     private record ReachableNeighbor(BlockPos pos, Direction side, Vec3d faceCenter, double distance) {
     }
 
-    private record NextVector(Vec3d lookVector, boolean aboveHead) {
+    private record NextVector(Vec3d lookVector, boolean aboveHead, boolean isAdjacent) {
     }
 }

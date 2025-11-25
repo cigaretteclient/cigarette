@@ -16,10 +16,8 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.math.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -105,14 +103,18 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
         }
     }
 
+    private boolean blockBlockedByEntity(@NotNull ClientWorld world, @NotNull ClientPlayerEntity player, @NotNull BlockPos pos) {
+        return !world.getOtherEntities(player, new Box(pos)).isEmpty();
+    }
+
     private @Nullable ReachableNeighbor getReachableNeighbor(@NotNull ClientWorld world, @NotNull ClientPlayerEntity player, BlockPos pos) {
         ReachableNeighbor closest = null;
         double closestDistance = 0;
         for (Vec3i offset : BlockIn.BLOCK_NEIGHBORS) {
             BlockPos neighborPos = pos.add(offset);
-
             BlockState state = world.getBlockState(neighborPos);
             if (state.isAir() || state.isOf(Blocks.WATER) || BedwarsAgent.isBed(state) || state.isOf(Blocks.LADDER)) continue;
+
             Vec3d faceCenter = neighborPos.toCenterPos().subtract(new Vec3d(offset).multiply(0.5f));
             Vec3d eye = player.getEyePos();
 
@@ -127,9 +129,11 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
             if (face == Direction.EAST && eye.getX() <= faceCenter.getX()) continue;
             if (face == Direction.WEST && eye.getX() >= faceCenter.getX()) continue;
 
-            BlockHitResult res = Raycast.raycastBlock(eye, faceCenter, ShapeContext.absent());
-            if (res.getType() != BlockHitResult.Type.MISS) {
-                if (!res.getBlockPos().equals(neighborPos)) continue;
+            HitResult res = Raycast.raycast(eye, faceCenter, ShapeContext.absent());
+            if (res.getType() == BlockHitResult.Type.BLOCK) {
+                if (!((BlockHitResult) res).getBlockPos().equals(neighborPos)) continue;
+            } else if (res.getType() == HitResult.Type.ENTITY) {
+                continue;
             }
 
             if (closest == null || distance < closestDistance) {
@@ -151,6 +155,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
 
             BlockState state = world.getBlockState(pos);
             if (!state.isAir() && !state.isOf(Blocks.WATER)) continue;
+            if (blockBlockedByEntity(world, player, pos)) continue;
 
             ReachableNeighbor neighbor = getReachableNeighbor(world, player, pos);
             if (neighbor == null) continue;
@@ -185,6 +190,12 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
     protected void onEnabledTick(MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
         if (!running) {
             if (!keybind.getKeybind().wasPhysicallyPressed()) return;
+            double xDecimal = player.getX() - Math.floor(player.getX());
+            double zDecimal = player.getZ() - Math.floor(player.getZ());
+            if (xDecimal < 0.3 || xDecimal > 0.7 || zDecimal < 0.3 || zDecimal > 0.7) {
+                return;
+            }
+
             if (proximityToBeds.getRawState() == 0) {
                 enable(world, player);
                 return;

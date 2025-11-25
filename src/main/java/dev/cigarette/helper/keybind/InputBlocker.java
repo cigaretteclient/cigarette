@@ -93,7 +93,6 @@ public class InputBlocker {
         for (MinecraftKeybind binding : blockedBindings) {
             if (!binding.isMouse) continue;
             if (!binding.isOfMouse(button)) continue;
-            System.out.println("Processing Mouse | button=" + button + " action=" + action);
             binding.physicalAction(action);
             return true;
         }

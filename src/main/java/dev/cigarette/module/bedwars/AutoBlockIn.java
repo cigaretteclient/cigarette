@@ -65,6 +65,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
         switchToBlocks.registerConfigKey(id + ".switchblocks");
         switchToTool.registerConfigKey(id + ".switchtool");
         variation.registerConfigKey(id + ".variation");
+        ignoreBeds.registerConfigKey(id + ".ignorebeds");
         prioritizeStrongest.registerConfigKey(id + ".prioritizestrongest");
         enableObsidian.registerConfigKey(id + ".allow.obsidian");
         enableEndstone.registerConfigKey(id + ".allow.endstone");

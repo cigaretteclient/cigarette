@@ -8,12 +8,10 @@ import dev.cigarette.lib.PlayerEntityL;
 import dev.cigarette.lib.Raycast;
 import dev.cigarette.module.TickModule;
 import dev.cigarette.precomputed.BlockIn;
-import net.minecraft.block.BlockState;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
@@ -166,31 +164,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
     }
 
     private boolean switchToNextStackOfBlocks(@NotNull ClientPlayerEntity player) {
-        int bestSlot = 0;
-        BlockPriority bestBlock = null;
-        for (int i = 0; i < 9; i++) {
-            BlockPriority block = BlockPriority.fromStack(player.getInventory().getStack(i));
-            if (!block.isBedwarsBlock()) continue;
-            if (!prioritizeStrongest.getRawState()) {
-                player.getInventory().setSelectedSlot(i);
-                return true;
-            }
-            if (block == BlockPriority.OBSIDIAN && !enableObsidian.getRawState()) continue;
-            if (block == BlockPriority.ENDSTONE && !enableEndstone.getRawState()) continue;
-            if (block == BlockPriority.WOOD && !enableWood.getRawState()) continue;
-            if (block == BlockPriority.CLAY && !enableClay.getRawState()) continue;
-            if (block == BlockPriority.WOOL && !enableWool.getRawState()) continue;
-            if (block == BlockPriority.GLASS && !enableGlass.getRawState()) continue;
-            if (bestBlock == null || block.strongerThan(bestBlock)) {
-                bestSlot = i;
-                bestBlock = block;
-            }
-        }
-        if (bestBlock != null) {
-            player.getInventory().setSelectedSlot(bestSlot);
-            return true;
-        }
-        return false;
+        return BedwarsAgent.switchToNextStackOfBlocks(player, new BedwarsAgent.BlockConfig(enableObsidian.getRawState(), enableEndstone.getRawState(), enableWood.getRawState(), enableClay.getRawState(), enableWool.getRawState(), enableGlass.getRawState(), prioritizeStrongest.getRawState(), !prioritizeStrongest.getRawState()));
     }
 
     @Override
@@ -250,36 +224,5 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
     }
 
     private record NextVector(Vec3d lookVector, boolean aboveHead) {
-    }
-
-    private enum BlockPriority {
-        OBSIDIAN(10), ENDSTONE(8), WOOD(6), CLAY(4), WOOL(2), GLASS(1), NONE(0);
-
-        private int id;
-
-        BlockPriority(int id) {
-            this.id = id;
-        }
-
-        public boolean isBedwarsBlock() {
-            return this != NONE;
-        }
-
-        public boolean strongerThan(BlockPriority other) {
-            return this.id > other.id;
-        }
-
-        public static BlockPriority fromStack(ItemStack item) {
-            if (item.getItem() instanceof BlockItem blockItem) {
-                BlockState state = blockItem.getBlock().getDefaultState();
-                if (BedwarsAgent.isObsidian(state)) return OBSIDIAN;
-                if (BedwarsAgent.isEndStone(state)) return ENDSTONE;
-                if (BedwarsAgent.isWood(state)) return WOOD;
-                if (BedwarsAgent.isClay(state)) return CLAY;
-                if (BedwarsAgent.isWool(state)) return WOOL;
-                if (BedwarsAgent.isGlass(state)) return GLASS;
-            }
-            return NONE;
-        }
     }
 }

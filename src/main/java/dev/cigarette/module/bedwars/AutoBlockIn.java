@@ -28,12 +28,11 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
 
     private final KeybindWidget keybind = new KeybindWidget("Keybind", "A key to trigger the block in module.");
     private final SliderWidget speed = new SliderWidget("Speed", "The higher the speed, the less time spent between adjusting the camera and placing blocks.").withBounds(0, 12, 15);
-    private final SliderWidget proximityToBeds = new SliderWidget("Max Proximity", "How many blocks close you need to be to any beds for the module to be allowed to activate.").withBounds(1, 5, 9);
+    private final SliderWidget proximityToBeds = new SliderWidget("Max Proximity", "How many blocks close you need to be to any beds for the module to be allowed to activate. Set to 0 to remove the proximity requirement entirely, allowing you to block-in anywhere.").withBounds(0, 5, 9);
     private final ToggleWidget switchToBlocks = new ToggleWidget("Switch to Blocks", "Automatically switches to blocks once activated.").withDefaultState(true);
     private final ToggleWidget switchToTool = new ToggleWidget("Switch to Tools", "Automatically switches to a tool once finished.").withDefaultState(true);
     private final SliderWidget variation = new SliderWidget("Variation", "Applies randomness to the delay between block places.").withBounds(0, 1, 4);
     private final ToggleWidget jumpEnabled = new ToggleWidget("Jump", "Jumps immediately to ensure the block above you is placed.").withDefaultState(true);
-    private final ToggleWidget ignoreBeds = new ToggleWidget("Ignore Bed Proximity", "Ignores bed proximity and allows activation anywhere in bedwars.").withDefaultState(false);
 
     private final TextWidget allowedBlocksText = new TextWidget("Block Config", "Configure which blocks can be used by the module.").centered(false);
     private final DropdownWidget<TextWidget, BaseWidget.Stateless> allowedBlocks = new DropdownWidget<>("", null);
@@ -58,14 +57,13 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
         super(ToggleWidget::module, id, name, tooltip);
         allowedBlocks.setHeader(allowedBlocksText);
         allowedBlocks.setChildren(prioritizeStrongest, enableObsidian, enableEndstone, enableWood, enableClay, enableWool, enableGlass);
-        this.setChildren(keybind, allowedBlocks, switchToBlocks, switchToTool, jumpEnabled, speed, variation, proximityToBeds, ignoreBeds);
+        this.setChildren(keybind, allowedBlocks, switchToBlocks, switchToTool, jumpEnabled, speed, variation, proximityToBeds);
         keybind.registerConfigKey(id + ".key");
         speed.registerConfigKey(id + ".speed");
         proximityToBeds.registerConfigKey(id + ".proximity");
         switchToBlocks.registerConfigKey(id + ".switchblocks");
         switchToTool.registerConfigKey(id + ".switchtool");
         variation.registerConfigKey(id + ".variation");
-        ignoreBeds.registerConfigKey(id + ".ignorebeds");
         prioritizeStrongest.registerConfigKey(id + ".prioritizestrongest");
         enableObsidian.registerConfigKey(id + ".allow.obsidian");
         enableEndstone.registerConfigKey(id + ".allow.endstone");
@@ -199,7 +197,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
     protected void onEnabledTick(MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
         if (!running) {
             if (!keybind.getKeybind().wasPhysicallyPressed()) return;
-            if (ignoreBeds.getRawState()) {
+            if (proximityToBeds.getRawState() == 0) {
                 enable(world, player);
                 return;
             }

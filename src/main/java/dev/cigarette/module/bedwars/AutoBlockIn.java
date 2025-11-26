@@ -196,18 +196,19 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
                 return;
             }
 
+            enableChecks:
             if (proximityToBeds.getRawState() == 0) {
                 enable(world, player);
+            } else {
+                BlockPos pos = player.getBlockPos();
+                for (BedwarsAgent.PersistentBed bed : BedwarsAgent.getVisibleBeds()) {
+                    if (bed.head().isWithinDistance(pos, proximityToBeds.getRawState()) || bed.foot().isWithinDistance(pos, proximityToBeds.getRawState())) {
+                        enable(world, player);
+                        break enableChecks;
+                    }
+                }
                 return;
             }
-            BlockPos pos = player.getBlockPos();
-            for (BedwarsAgent.PersistentBed bed : BedwarsAgent.getVisibleBeds()) {
-                if (bed.head().isWithinDistance(pos, proximityToBeds.getRawState()) || bed.foot().isWithinDistance(pos, proximityToBeds.getRawState())) {
-                    enable(world, player);
-                    return;
-                }
-            }
-            return;
         }
         if (--cooldownTicks > 0) return;
 

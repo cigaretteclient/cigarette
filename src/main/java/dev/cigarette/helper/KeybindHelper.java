@@ -171,8 +171,7 @@ public class KeybindHelper {
             if (!keybind.isOf(key, scancode)) continue;
             keybind.physicalAction(action);
         }
-        if (action != GLFW.GLFW_PRESS) return false;
-        if (KEY_TOGGLE_GUI.isOf(key, scancode)) {
+        if (action == GLFW.GLFW_PRESS && KEY_TOGGLE_GUI.isOf(key, scancode)) {
             Cigarette.SCREEN.setParent(client.currentScreen);
             client.setScreen(Cigarette.SCREEN);
             return true;
@@ -263,7 +262,7 @@ public class KeybindHelper {
     public static void unblock() {
         blockedInputs = null;
         blockingModule = null;
-        for(MinecraftKeybind keybind : wrappedBindings) {
+        for (MinecraftKeybind keybind : wrappedBindings) {
             keybind.release();
         }
         updateKeyStates();

@@ -126,6 +126,36 @@ public class BedwarsAgent extends BaseAgent {
         return false;
     }
 
+    public static boolean switchToNextStackOfBlocks(@NotNull ClientPlayerEntity player, BlockConfig config) {
+        if (config.selectFirst && isBlock(player.getMainHandStack())) return true;
+        int bestSlot = 0;
+        BlockPriority bestBlock = null;
+        for (int i = 0; i < 9; i++) {
+            BlockPriority block = BlockPriority.fromStack(player.getInventory().getStack(i));
+            if (!block.isBedwarsBlock()) continue;
+            if (config.selectFirst) {
+                player.getInventory().setSelectedSlot(i);
+                return true;
+            }
+            if (block == BlockPriority.OBSIDIAN && !config.enableObsidian) continue;
+            if (block == BlockPriority.ENDSTONE && !config.enableEndstone) continue;
+            if (block == BlockPriority.WOOD && !config.enableWood) continue;
+            if (block == BlockPriority.CLAY && !config.enableClay) continue;
+            if (block == BlockPriority.WOOL && !config.enableWool) continue;
+            if (block == BlockPriority.GLASS && !config.enableGlass) continue;
+
+            if (bestBlock == null || (block.strongerThan(bestBlock) == config.orderStrongest)) {
+                bestSlot = i;
+                bestBlock = block;
+            }
+        }
+        if (bestBlock != null) {
+            player.getInventory().setSelectedSlot(bestSlot);
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public boolean inValidGame() {
         return GameDetector.rootGame == GameDetector.ParentGame.BEDWARS;
@@ -158,5 +188,39 @@ public class BedwarsAgent extends BaseAgent {
         public boolean contains(BlockPos pos) {
             return this.head.equals(pos) || this.foot.equals(pos);
         }
+    }
+
+    private enum BlockPriority {
+        OBSIDIAN(10), ENDSTONE(8), WOOD(6), CLAY(4), WOOL(2), GLASS(1), NONE(0);
+
+        private final int id;
+
+        BlockPriority(int id) {
+            this.id = id;
+        }
+
+        public boolean isBedwarsBlock() {
+            return this != NONE;
+        }
+
+        public boolean strongerThan(BlockPriority other) {
+            return this.id > other.id;
+        }
+
+        public static BlockPriority fromStack(ItemStack item) {
+            if (item.getItem() instanceof BlockItem blockItem) {
+                BlockState state = blockItem.getBlock().getDefaultState();
+                if (BedwarsAgent.isObsidian(state)) return OBSIDIAN;
+                if (BedwarsAgent.isEndStone(state)) return ENDSTONE;
+                if (BedwarsAgent.isWood(state)) return WOOD;
+                if (BedwarsAgent.isClay(state)) return CLAY;
+                if (BedwarsAgent.isWool(state)) return WOOL;
+                if (BedwarsAgent.isGlass(state)) return GLASS;
+            }
+            return NONE;
+        }
+    }
+
+    public record BlockConfig(boolean enableObsidian, boolean enableEndstone, boolean enableWood, boolean enableClay, boolean enableWool, boolean enableGlass, boolean orderStrongest, boolean selectFirst) {
     }
 }

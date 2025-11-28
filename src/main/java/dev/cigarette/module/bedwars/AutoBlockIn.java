@@ -31,6 +31,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
     private final ToggleWidget switchToTool = new ToggleWidget("Switch to Tools", "Automatically switches to a tool once finished.").withDefaultState(true);
     private final SliderWidget variation = new SliderWidget("Variation", "Applies randomness to the delay between block places.").withBounds(0, 1, 4);
     private final ToggleWidget jumpEnabled = new ToggleWidget("Jump", "Jumps immediately to ensure the block above you is placed.").withDefaultState(true);
+    private final ToggleWidget tpToCenter = new ToggleWidget("TP to Center", "Risky option that teleports you to the center of the block when activating the module to ensure proper placement.").withDefaultState(false);
 
     private final TextWidget allowedBlocksText = new TextWidget("Block Config", "Configure which blocks can be used by the module.").centered(false);
     private final DropdownWidget<TextWidget, BaseWidget.Stateless> allowedBlocks = new DropdownWidget<>("", null);
@@ -56,7 +57,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
         super(ToggleWidget::module, id, name, tooltip);
         allowedBlocks.setHeader(allowedBlocksText);
         allowedBlocks.setChildren(prioritizeStrongest, weakNonAdjacent, enableObsidian, enableEndstone, enableWood, enableClay, enableWool, enableGlass);
-        this.setChildren(keybind, allowedBlocks, switchToBlocks, switchToTool, jumpEnabled, speed, variation, proximityToBeds);
+        this.setChildren(keybind, allowedBlocks, switchToBlocks, switchToTool, jumpEnabled, tpToCenter, speed, variation, proximityToBeds);
         keybind.registerConfigKey(id + ".key");
         speed.registerConfigKey(id + ".speed");
         proximityToBeds.registerConfigKey(id + ".proximity");
@@ -64,6 +65,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
         switchToTool.registerConfigKey(id + ".switchtool");
         variation.registerConfigKey(id + ".variation");
         prioritizeStrongest.registerConfigKey(id + ".prioritizestrongest");
+        tpToCenter.registerConfigKey(id + ".tptocenter");
         weakNonAdjacent.registerConfigKey(id + ".weaknonadjacent");
         enableObsidian.registerConfigKey(id + ".allow.obsidian");
         enableEndstone.registerConfigKey(id + ".allow.endstone");
@@ -193,7 +195,10 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
             double xDecimal = player.getX() - Math.floor(player.getX());
             double zDecimal = player.getZ() - Math.floor(player.getZ());
             if (xDecimal < 0.3 || xDecimal > 0.7 || zDecimal < 0.3 || zDecimal > 0.7) {
-                return;
+                if (!tpToCenter.getRawState()) return;
+                double xCorrection = 0.5 - xDecimal;
+                double zCorrection = 0.5 - zDecimal;
+                player.updatePosition(player.getX() + xCorrection, player.getY(), player.getZ() + zCorrection);
             }
 
             enableChecks:

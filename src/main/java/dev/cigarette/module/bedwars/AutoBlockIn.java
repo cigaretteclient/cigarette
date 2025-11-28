@@ -196,8 +196,8 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
             double zDecimal = player.getZ() - Math.floor(player.getZ());
             if (xDecimal < 0.3 || xDecimal > 0.7 || zDecimal < 0.3 || zDecimal > 0.7) {
                 if (!tpToCenter.getRawState()) return;
-                double xCorrection = 0.5 - xDecimal;
-                double zCorrection = 0.5 - zDecimal;
+                double xCorrection = (xDecimal < 0.3 ? (0.3 + Math.random() * 0.069) : Math.min(xDecimal, 0.7 - Math.random() * 0.069)) - xDecimal;
+                double zCorrection = (zDecimal < 0.3 ? 0.3 + Math.random() * 0.069 : Math.min(zDecimal, 0.7 - Math.random() * 0.069)) - zDecimal;
                 player.updatePosition(player.getX() + xCorrection, player.getY(), player.getZ() + zCorrection);
             }
 

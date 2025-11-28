@@ -3,6 +3,7 @@ package dev.cigarette.mixin;
 import dev.cigarette.helper.KeybindHelper;
 import net.minecraft.client.Keyboard;
 import net.minecraft.client.MinecraftClient;
+import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -17,9 +18,13 @@ public class KeyboardMixin {
             ci.cancel();
             return;
         }
-        if (client.currentScreen == null && (KeybindHelper.handleKeyByGUI(client, key, scancode, action, modifiers) || KeybindHelper.handleBlockedKeyInputs(client, key, scancode, action, modifiers) || KeybindHelper.handleCustomKeys(client, key, scancode, action, modifiers))) {
-            ci.cancel();
-            return;
+        if (client.currentScreen == null) {
+            if (KeybindHelper.handleKeyByGUI(client, key, scancode, action, modifiers) || KeybindHelper.handleBlockedKeyInputs(client, key, scancode, action, modifiers) || KeybindHelper.handleCustomKeys(client, key, scancode, action, modifiers)) {
+                ci.cancel();
+                return;
+            }
+        } else if (action == GLFW.GLFW_RELEASE) {
+            KeybindHelper.handleCustomKeys(client, key, scancode, action, modifiers);
         }
     }
 }

@@ -263,6 +263,9 @@ public class KeybindHelper {
     public static void unblock() {
         blockedInputs = null;
         blockingModule = null;
+        for(MinecraftKeybind keybind : wrappedBindings) {
+            keybind.release();
+        }
         updateKeyStates();
     }
 

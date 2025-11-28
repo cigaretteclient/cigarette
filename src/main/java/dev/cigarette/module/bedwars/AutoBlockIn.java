@@ -191,7 +191,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
     @Override
     protected void onEnabledTick(MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
         if (!running) {
-            if (!keybind.getKeybind().wasPhysicallyPressed()) return;
+            if (!keybind.getKeybind().isPhysicallyPressed()) return;
             double xDecimal = player.getX() - Math.floor(player.getX());
             double zDecimal = player.getZ() - Math.floor(player.getZ());
             if (xDecimal < 0.3 || xDecimal > 0.7 || zDecimal < 0.3 || zDecimal > 0.7) {

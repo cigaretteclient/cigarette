@@ -5,9 +5,7 @@ import dev.cigarette.agent.DevWidget;
 import dev.cigarette.gui.CategoryInstance;
 import dev.cigarette.module.BaseModule;
 import dev.cigarette.module.bedwars.*;
-import dev.cigarette.module.combat.AutoClicker;
-import dev.cigarette.module.combat.JumpReset;
-import dev.cigarette.module.combat.PerfectHit;
+import dev.cigarette.module.combat.*;
 import dev.cigarette.module.keybind.AddGlassBlock;
 import dev.cigarette.module.keybind.BreakBlock;
 import dev.cigarette.module.keybind.VClip;
@@ -68,7 +66,7 @@ public class Config {
     public static Config construct() {
         Config cfg = new Config();
         cfg.putModules("Bedwars", AutoBlockIn.INSTANCE, AutoTool.INSTANCE, Bridger.INSTANCE, DefenseViewer.INSTANCE, EntityESP.INSTANCE, FireballESP.INSTANCE);
-        cfg.putModules("Combat", AutoClicker.INSTANCE, JumpReset.INSTANCE, PerfectHit.INSTANCE);
+        cfg.putModules("Combat", AutoClicker.INSTANCE, JumpReset.INSTANCE, PerfectHit.INSTANCE, AimSlow.INSTANCE, SprintAlways.INSTANCE);
         cfg.putModules("Keybind", AddGlassBlock.INSTANCE, BreakBlock.INSTANCE, VClip.INSTANCE);
         cfg.putModules("Murder Mystery", GoldESP.INSTANCE, PlayerESP.INSTANCE);
         cfg.putModules("Render", dev.cigarette.module.render.PlayerESP.INSTANCE, ProjectileESP.INSTANCE);

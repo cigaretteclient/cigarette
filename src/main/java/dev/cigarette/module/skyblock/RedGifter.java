@@ -5,10 +5,14 @@ import dev.cigarette.gui.widget.ToggleWidget;
 import dev.cigarette.lib.PlayerEntityL;
 import dev.cigarette.lib.TextL;
 import dev.cigarette.module.TickModule;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
+import org.jetbrains.annotations.NotNull;
 
 public class RedGifter extends TickModule<ToggleWidget, Boolean> {
     public static final RedGifter INSTANCE = new RedGifter("skyblock.redgifter", "Auto Red Gifter", "Automatically gives and opens red gifts.");
@@ -34,7 +38,7 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
     }
 
     @Override
-    protected void onEnabledTick(net.minecraft.client.MinecraftClient client, net.minecraft.client.world.ClientWorld world, net.minecraft.client.network.ClientPlayerEntity player) {
+    protected void onEnabledTick(@NotNull MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
         if (opener.getRawState()) {
             for (Entity entity : world.getOtherEntities(player, player.getBoundingBox().expand(4))) {
                 if (!(entity instanceof ArmorStandEntity armorStand)) continue;

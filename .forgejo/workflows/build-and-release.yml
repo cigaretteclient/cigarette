@@ -51,4 +51,4 @@ jobs:
           title: Release ${{ github.ref_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
           prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
-          files: dist/release
+          release-dir: dist/release

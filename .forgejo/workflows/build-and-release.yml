@@ -10,7 +10,9 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: docker
+    container:
+      image: ghcr.io/catthehacker/ubuntu:act-22.04
 
     steps:
       - name: Checkout code
@@ -33,18 +35,20 @@ jobs:
           MC_VERSION=$(cat gradle.properties | grep minecraft_version | cut -d '=' -f2)
           JAR_NAME=$(ls build/libs/*.jar | grep -v '\-sources\.jar$')
           NEW_JAR_NAME="cigarette-${GITHUB_REF##*/}+$MC_VERSION.jar"
-          mv "$JAR_NAME" "build/libs/$NEW_JAR_NAME"
-          echo "Renamed JAR to $NEW_JAR_NAME"
+          mkdir -p dist/release
+          mv "$JAR_NAME" "dist/release/$NEW_JAR_NAME"
+          echo "Moved JAR to dist/release/$NEW_JAR_NAME"
           echo "NEW_JAR_NAME=$NEW_JAR_NAME" >> $GITHUB_ENV
 
       - name: Create Release and Upload JAR
         id: create_release
-        uses: softprops/action-gh-release@v1
+        uses: actions/forgejo-release@v2.7.3
         with:
-          tag_name: ${{ github.ref }}
-          name: Release ${{ github.ref_name }}
-          draft: false
+          direction: upload
+          url: https://git.okr765.com
+          repo: cigarette/client
+          tag: ${{ github.ref }}
+          title: Release ${{ github.ref_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
-          files: build/libs/${{ env.NEW_JAR_NAME }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          files: dist/release

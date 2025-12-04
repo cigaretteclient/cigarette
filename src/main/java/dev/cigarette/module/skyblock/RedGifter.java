@@ -31,7 +31,8 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
     private final ToggleWidget cycleSacks = new ToggleWidget("Cycle Sack", "Swap gifts from within your sacks into your inventory to continue gifting.").withDefaultState(false);
 
     public UUID playerToGift = null;
-    private boolean waitingForClose = false;
+    private boolean waitingForGUI = false;
+    private boolean justClearedInventory = false;
 
     private RedGifter(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
@@ -77,8 +78,34 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
         return -1;
     }
 
+    private void clearInventory(@NotNull MinecraftClient client, @NotNull ClientPlayerEntity player, int startingSlot) {
+        if (startingSlot < 0 || startingSlot >= 36) {
+            if (client.interactionManager != null) {
+                player.closeHandledScreen();
+                waitingForGUI = false;
+                justClearedInventory = true;
+            }
+            return;
+        }
+        TickHelper.scheduleOnce(this, () -> {
+            if (client.interactionManager == null) return;
+            for (int slot = startingSlot; slot < 36; slot++) {
+                ItemStack stack = player.getInventory().getStack(slot);
+                if (stack == ItemStack.EMPTY || isAGiftOfSomeSorts(stack) || slot == 8) continue;
+                player.swingHand(Hand.MAIN_HAND);
+
+                int actualSlot = slot < 9 ? slot + 36 : slot;
+                client.interactionManager.clickSlot(0, actualSlot, 1, SlotActionType.THROW, player);
+                clearInventory(client, player, slot + 1);
+                return;
+            }
+            clearInventory(client, player, -1);
+        }, 1);
+    }
+
     @Override
     protected void onEnabledTick(@NotNull MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
+        if (waitingForGUI) return;
         if (opener.getRawState()) {
             for (Entity entity : world.getOtherEntities(player, player.getBoundingBox().expand(4))) {
                 if (!(entity instanceof ArmorStandEntity armorStand)) continue;
@@ -95,14 +122,24 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
                     client.interactionManager.interactEntity(player, armorStand, Hand.OFF_HAND);
                 }
             }
-        } else if (gifter.getRawState() && this.playerToGift != null && !waitingForClose) {
+        } else if (gifter.getRawState() && this.playerToGift != null) {
             if (!RedGifter.isHoldingAGift()) {
                 int slot = nextSlotWithGifts(player);
+                if (justClearedInventory && slot != -1) {
+                    justClearedInventory = false;
+                }
                 if (slot == -1) {
                     if (!cycleSacks.getRawState()) {
                         this.playerToGift = null;
                         Cigarette.CHAT_LOGGER.info("No more gifts to give, sack cycling is disabled.");
                         return;
+                    }
+                    if (justClearedInventory) {
+                        justClearedInventory = false;
+//                        perform sack check
+                    } else {
+                        waitingForGUI = true;
+                        clearInventory(client, player, 0);
                     }
                     return;
                 } else if (slot < 9) {
@@ -114,13 +151,12 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
                         return;
                     }
                     client.interactionManager.clickSlot(0, slot, 0, SlotActionType.SWAP, player);
-                    waitingForClose = true;
+                    waitingForGUI = true;
                     TickHelper.scheduleOnce(this, () -> {
                         if (client.interactionManager != null) {
-                            client.setScreen(null);
                             player.closeHandledScreen();
                         }
-                        waitingForClose = false;
+                        waitingForGUI = false;
                     }, 1);
                 }
                 return;

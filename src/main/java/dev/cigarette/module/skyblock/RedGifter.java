@@ -1,5 +1,6 @@
 package dev.cigarette.module.skyblock;
 
+import com.mojang.blaze3d.vertex.VertexFormat;
 import dev.cigarette.Cigarette;
 import dev.cigarette.GameDetector;
 import dev.cigarette.gui.widget.KeybindWidget;
@@ -7,11 +8,15 @@ import dev.cigarette.gui.widget.TextWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
 import dev.cigarette.helper.TickHelper;
 import dev.cigarette.lib.PlayerEntityL;
+import dev.cigarette.lib.Renderer;
 import dev.cigarette.lib.TextL;
 import dev.cigarette.lib.WorldL;
-import dev.cigarette.module.TickModule;
+import dev.cigarette.module.RenderModule;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.render.*;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.decoration.ArmorStandEntity;
@@ -23,11 +28,14 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4f;
 
 import java.util.UUID;
 
-public class RedGifter extends TickModule<ToggleWidget, Boolean> {
+public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
     public static final RedGifter INSTANCE = new RedGifter("skyblock.redgifter", "Auto Red Gifter", "Automatically gives and opens red gifts.");
+
+    private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockespnophase", 1536, Renderer.BLOCK_ESP_NOPHASE, RenderLayer.MultiPhaseParameters.builder().build(false));
 
     public final ToggleWidget gifter = new ToggleWidget("Run as Gifter", "Automatically gives red gifts to nearby players.").withDefaultState(false);
     public final ToggleWidget opener = new ToggleWidget("Run as Opener", "Automatically opens red gifts you receive.").withDefaultState(true);
@@ -204,6 +212,30 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
             }
             clearInventoryOfWorth(client, player, -1, false, trashNext, trashNextSnapAim);
         }, 1);
+    }
+
+    @Override
+    protected void onWorldRender(WorldRenderContext ctx, @NotNull MatrixStack matrixStack) {
+        matrixStack.push();
+
+        Matrix4f matrix = Renderer.getCameraTranslatedMatrix(matrixStack, ctx);
+        Tessellator tessellator = Tessellator.getInstance();
+
+        BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+
+        if (trashDropLocation != null && !trashDropLocation.position.isInRange(ctx.camera().getPos(), 3)) {
+            Renderer.drawCube(buffer, matrix, 0x80FF0000, trashDropLocation.position.add(0, 1.7, 0), 0.6f);
+            Renderer.drawFakeLine(buffer, matrix, 0x80FF0000, trashDropLocation.position.add(0, 1.7, 0).toVector3f(), trashDropLocation.position.add(trashDropLocation.direction.multiply(2)).add(0, 1.7, 0).toVector3f(), 0.05f);
+        }
+        if (worthDropLocation != null && !worthDropLocation.position.isInRange(ctx.camera().getPos(), 3)) {
+            Renderer.drawCube(buffer, matrix, 0x8000FF00, worthDropLocation.position.add(0, 1.7, 0), 0.6f);
+            Renderer.drawFakeLine(buffer, matrix, 0x8000FF00, worthDropLocation.position.add(0, 1.7, 0).toVector3f(), worthDropLocation.position.add(worthDropLocation.direction.multiply(2)).add(0, 1.7, 0).toVector3f(), 0.05f);
+        }
+
+        BuiltBuffer build = buffer.endNullable();
+        if (build != null) RENDER_LAYER.draw(build);
+
+        matrixStack.pop();
     }
 
     @Override

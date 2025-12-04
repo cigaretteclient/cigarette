@@ -1,5 +1,6 @@
 package dev.cigarette.module.skyblock;
 
+import dev.cigarette.Cigarette;
 import dev.cigarette.GameDetector;
 import dev.cigarette.gui.widget.ToggleWidget;
 import dev.cigarette.helper.TickHelper;
@@ -112,6 +113,7 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
             PlayerEntity targetPlayer = WorldL.getRealPlayerByUUID(this.playerToGift);
             if (targetPlayer == null || player.distanceTo(targetPlayer) > 3) {
                 this.playerToGift = null;
+                Cigarette.CHAT_LOGGER.info("Target player is out of range or no longer found.");
                 return;
             }
             PlayerEntityL.setRotationVector(player, targetPlayer.getPos().add(0, 1, 0).subtract(player.getEyePos()));

@@ -2,6 +2,7 @@ package dev.cigarette.module.skyblock;
 
 import dev.cigarette.GameDetector;
 import dev.cigarette.gui.widget.ToggleWidget;
+import dev.cigarette.helper.TickHelper;
 import dev.cigarette.lib.PlayerEntityL;
 import dev.cigarette.lib.TextL;
 import dev.cigarette.lib.WorldL;
@@ -13,6 +14,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import org.jetbrains.annotations.NotNull;
@@ -22,9 +24,11 @@ import java.util.UUID;
 public class RedGifter extends TickModule<ToggleWidget, Boolean> {
     public static final RedGifter INSTANCE = new RedGifter("skyblock.redgifter", "Auto Red Gifter", "Automatically gives and opens red gifts.");
 
-    public UUID playerToGift = null;
     public final ToggleWidget gifter = new ToggleWidget("Run as Gifter", "Automatically gives red gifts to nearby players.").withDefaultState(false);
     public final ToggleWidget opener = new ToggleWidget("Run as Opener", "Automatically opens red gifts you receive.").withDefaultState(true);
+
+    public UUID playerToGift = null;
+    private boolean waitingForClose = false;
 
     private RedGifter(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
@@ -57,6 +61,16 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
         return false;
     }
 
+    public static int nextSlotWithGifts(@NotNull ClientPlayerEntity player) {
+        for (int i = 0; i < 36; i++) {
+            ItemStack stack = player.getInventory().getStack(i);
+            if (isAGiftOfSomeSorts(stack)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     @Override
     protected void onEnabledTick(@NotNull MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
         if (opener.getRawState()) {
@@ -75,8 +89,24 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
                     client.interactionManager.interactEntity(player, armorStand, Hand.OFF_HAND);
                 }
             }
-        } else if (gifter.getRawState() && this.playerToGift != null) {
+        } else if (gifter.getRawState() && this.playerToGift != null && !waitingForClose) {
             if (!RedGifter.isHoldingAGift()) {
+                int slot = nextSlotWithGifts(player);
+                if (slot == -1) {
+                    return;
+                } else if (slot < 9) {
+                    player.getInventory().setSelectedSlot(slot);
+                } else if (client.interactionManager != null) {
+                    client.interactionManager.clickSlot(0, slot, 0, SlotActionType.SWAP, player);
+                    waitingForClose = true;
+                    TickHelper.scheduleOnce(this, () -> {
+                        if (client.interactionManager != null) {
+                            client.setScreen(null);
+                            player.closeHandledScreen();
+                        }
+                        waitingForClose = false;
+                    }, 1);
+                }
                 return;
             }
             PlayerEntity targetPlayer = WorldL.getRealPlayerByUUID(this.playerToGift);

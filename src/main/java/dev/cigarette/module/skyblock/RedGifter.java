@@ -2,6 +2,7 @@ package dev.cigarette.module.skyblock;
 
 import dev.cigarette.Cigarette;
 import dev.cigarette.GameDetector;
+import dev.cigarette.gui.widget.KeybindWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
 import dev.cigarette.helper.TickHelper;
 import dev.cigarette.lib.PlayerEntityL;
@@ -29,6 +30,8 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
     public final ToggleWidget opener = new ToggleWidget("Run as Opener", "Automatically opens red gifts you receive.").withDefaultState(true);
     private final ToggleWidget cycleInventory = new ToggleWidget("Cycle Inventory", "Swap gifts from within your inventory into the hotbar to continue gifting.").withDefaultState(true);
     private final ToggleWidget cycleSacks = new ToggleWidget("Cycle Sack", "Swap gifts from within your sacks into your inventory to continue gifting.").withDefaultState(false);
+    private final ToggleWidget clearInventory = new ToggleWidget("Clear Inventory", "Automatically clears non-gift items from your inventory to refill from sacks.").withDefaultState(false);
+    private final KeybindWidget clearInventoryNow = new KeybindWidget("Clear Now", "Clears non-gift items from your inventory when pressed.");
 
     public UUID playerToGift = null;
     private boolean waitingForGUI = false;
@@ -36,9 +39,13 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
 
     private RedGifter(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
-        this.setChildren(gifter, opener);
+        this.setChildren(gifter, opener, cycleInventory, cycleSacks, clearInventory, clearInventoryNow);
         gifter.registerConfigKey(id + ".asgifter");
         opener.registerConfigKey(id + ".asopener");
+        cycleInventory.registerConfigKey(id + ".cycleinventory");
+        cycleSacks.registerConfigKey(id + ".cyclesacks");
+        clearInventory.registerConfigKey(id + ".clearinventory");
+        clearInventoryNow.registerConfigKey(id + ".clearinventory.now");
         gifter.registerModuleCallback((Boolean state) -> {
             if (opener.getRawState() == state) {
                 opener.setRawState(!state);
@@ -51,6 +58,9 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
         });
         cycleSacks.registerModuleCallback((Boolean state) -> {
             if (state) cycleInventory.setRawState(true);
+        });
+        clearInventory.registerModuleCallback((Boolean state) -> {
+            if (state) cycleSacks.setRawState(true);
         });
     }
 
@@ -106,6 +116,11 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
     @Override
     protected void onEnabledTick(@NotNull MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
         if (waitingForGUI) return;
+        if (clearInventoryNow.getKeybind().isPhysicallyPressed()) {
+            waitingForGUI = true;
+            clearInventory(client, player, 0);
+            return;
+        }
         if (opener.getRawState()) {
             for (Entity entity : world.getOtherEntities(player, player.getBoundingBox().expand(4))) {
                 if (!(entity instanceof ArmorStandEntity armorStand)) continue;

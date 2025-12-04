@@ -25,10 +25,22 @@ jobs:
           distribution: 'adopt'
 
       - name: Set Mod Version
-        run: sed -i "s/development_build/${GITHUB_REF##*/}/" gradle.properties 
+        run: sed -i "s/development_build/${GITHUB_REF##*/}/" gradle.properties
+
+      - name: Cache Gradle files
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
       - name: Build with Gradle
-        run: ./gradlew build
+        run: |
+          ./gradlew build
+          ./gradlew --stop
 
       - name: Rename JAR file
         run: |
@@ -47,7 +59,7 @@ jobs:
           direction: upload
           url: https://git.okr765.com
           repo: cigarette/client
-          tag: ${{ github.ref }}
+          tag: ${{ github.ref_name }}
           title: Release ${{ github.ref_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
           prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}

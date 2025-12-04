@@ -1,6 +1,7 @@
 package dev.cigarette.mixin;
 
 import dev.cigarette.Cigarette;
+import dev.cigarette.agent.DevWidget;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.PacketCallbacks;
 import net.minecraft.network.listener.PacketListener;
@@ -46,7 +47,7 @@ public class ClientConnectionMixin {
 
     @Inject(method = "sendInternal", at = @At("HEAD"), cancellable = true)
     private void sendInternal(Packet<?> packet, @Nullable PacketCallbacks callbacks, boolean flush, CallbackInfo ci) {
-        if (!Cigarette.IN_DEV_ENVIRONMENT) return;
+        if (!Cigarette.IN_DEV_ENVIRONMENT || !DevWidget.c2sPacketLogging.getRawState()) return;
         String type = packet.getPacketType().toString();
         for (String blacklisted : C2S_LOG_BLACKLIST) {
             if (type.equals(blacklisted)) {
@@ -64,7 +65,7 @@ public class ClientConnectionMixin {
 
     @Inject(method = "handlePacket", at = @At("HEAD"), cancellable = true)
     private static void handlePacket(Packet<?> packet, PacketListener listener, CallbackInfo ci) {
-        if (!Cigarette.IN_DEV_ENVIRONMENT) return;
+        if (!Cigarette.IN_DEV_ENVIRONMENT || !DevWidget.s2cPacketLogging.getRawState()) return;
         String type = packet.getPacketType().toString();
         for (String blacklisted : S2C_LOG_BLACKLIST) {
             if (type.equals(blacklisted)) {

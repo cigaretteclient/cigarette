@@ -186,7 +186,7 @@ public class Language implements ClientModInitializer {
         DETECTOR_MYSTERY_TIMELEFT("murdermystery.timeleft"), DETECTOR_MYSTERY_DETECTIVE("murdermystery.detective"),
         DETECTOR_MYSTERY_BOW("murdermystery.bow"), DETECTOR_MYSTERY_INFECTED("murdermystery.infected"),
         DETECTOR_MYSTERY_BOW1("murdermystery.bow1"), MYSTERY_KNIFE("murdermystery.knife"),
-        SKYBLOCK_HEADER("skyblock.header"), ZOMBIES_HEADER("zombies.header"),
+        SKYBLOCK_HEADER("skyblock.header"), PIT_HEADER("pit.header"), ZOMBIES_HEADER("zombies.header"),
         ZOMBIES_ZOMBIESLEFT("zombies.zombiesleft");
 
         private final String key;

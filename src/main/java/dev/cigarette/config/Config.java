@@ -76,6 +76,7 @@ public class Config {
         cfg.putModules("UI", GUI.INSTANCE, ModuleList.INSTANCE, Notifications.INSTANCE, TargetHUD.INSTANCE, Watermark.INSTANCE);
         cfg.putModules("Zombies", Aimbot.INSTANCE, PowerupESP.INSTANCE, ReviveAura.INSTANCE, ZombieESP.INSTANCE);
         cfg.putModules("Skyblock", RedGifter.INSTANCE);
+        cfg.putModules("Pit", dev.cigarette.module.pit.PlayerESP.INSTANCE);
         if (Cigarette.IN_DEV_ENVIRONMENT) {
             cfg.putCategory("Agents", DevWidget.CATEGORY_INSTANCE);
         }

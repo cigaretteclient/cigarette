@@ -18,6 +18,7 @@ public class GameDetector {
         final String[] BEDWARS_HEADER = Language.getPhraseFromAll(Language.Phrase.BEDWARS_HEADER);
         final String[] MYSTERY_HEADER = Language.getPhraseFromAll(Language.Phrase.MYSTERY_HEADER);
         final String[] SKYBLOCK_HEADER = Language.getPhraseFromAll(Language.Phrase.SKYBLOCK_HEADER);
+        final String[] PIT_HEADER = Language.getPhraseFromAll(Language.Phrase.PIT_HEADER);
         final String[] ZOMBIES_HEADER = Language.getPhraseFromAll(Language.Phrase.ZOMBIES_HEADER);
 
         String headerText = ScoreboardL.getUnformattedHeader(client);
@@ -57,6 +58,10 @@ public class GameDetector {
 
         } else if (GameDetector.some(headerText, SKYBLOCK_HEADER)) {
             GameDetector.rootGame = ParentGame.SKYBLOCK;
+            GameDetector.subGame = ChildGame.NULL;
+
+        } else if (GameDetector.some(headerText, PIT_HEADER)) {
+            GameDetector.rootGame = ParentGame.PIT;
             GameDetector.subGame = ChildGame.NULL;
 
         } else if (GameDetector.some(headerText, ZOMBIES_HEADER)) {
@@ -106,7 +111,7 @@ public class GameDetector {
     }
 
     public enum ParentGame {
-        NULL(0), SKYBLOCK(1), BEDWARS(2), MURDER_MYSTERY(3), ZOMBIES(4);
+        NULL(0), SKYBLOCK(1), BEDWARS(2), MURDER_MYSTERY(3), ZOMBIES(4), PIT(5);
 
         private final int id;
 

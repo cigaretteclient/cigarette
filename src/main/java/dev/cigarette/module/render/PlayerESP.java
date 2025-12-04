@@ -53,6 +53,6 @@ public class PlayerESP extends TickModule<ToggleWidget, Boolean> {
 
     @Override
     public boolean inValidGame() {
-        return !dev.cigarette.module.murdermystery.PlayerESP.INSTANCE.isRunning();
+        return !(dev.cigarette.module.murdermystery.PlayerESP.INSTANCE.isRunning() || dev.cigarette.module.pit.PlayerESP.INSTANCE.isRunning());
     }
 }

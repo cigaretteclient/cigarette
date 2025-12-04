@@ -6,11 +6,9 @@ import dev.cigarette.GameDetector;
 import dev.cigarette.gui.widget.KeybindWidget;
 import dev.cigarette.gui.widget.TextWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
+import dev.cigarette.helper.KeybindHelper;
 import dev.cigarette.helper.TickHelper;
-import dev.cigarette.lib.PlayerEntityL;
-import dev.cigarette.lib.Renderer;
-import dev.cigarette.lib.TextL;
-import dev.cigarette.lib.WorldL;
+import dev.cigarette.lib.*;
 import dev.cigarette.module.RenderModule;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.minecraft.client.MinecraftClient;
@@ -22,6 +20,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.screen.slot.Slot;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
@@ -136,6 +135,18 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
             }
         }
         return -1;
+    }
+
+    private boolean switchToWinterSack(@NotNull ClientPlayerEntity player) {
+        for (int i = 0; i < 9; i++) {
+            ItemStack stack = player.getInventory().getStack(i);
+            String itemName = TextL.toColorCodedString(stack.getName());
+            if (itemName.endsWith("Winter Sack")) {
+                player.getInventory().setSelectedSlot(i);
+                return true;
+            }
+        }
+        return false;
     }
 
     private void clearInventoryOfTrash(@NotNull MinecraftClient client, @NotNull ClientPlayerEntity player, int startingSlot, boolean snapAim, boolean worthNext, boolean worthNextSnapAim) {
@@ -276,7 +287,35 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
                     }
                     if (justClearedInventory) {
                         justClearedInventory = false;
-//                        perform sack check
+                        boolean switchedToSack = this.switchToWinterSack(player);
+                        if (switchedToSack) {
+                            waitingForGUI = true;
+                            KeybindHelper.KEY_USE_ITEM.holdForTicks(1);
+                            TickHelper.scheduleOnce(this, () -> {
+                                if (client.currentScreen != null && client.interactionManager != null) {
+                                    Text title = client.currentScreen.getTitle();
+                                    String titleString = TextL.toColorCodedString(title);
+                                    if (titleString.equals("Winter Sack")) {
+                                        for (Slot invSlot : player.currentScreenHandler.slots) {
+                                            ItemStack stack = invSlot.getStack();
+                                            if (!itemIsGift(stack)) continue;
+                                            for (String line : ItemStackL.getLoreLines(stack)) {
+                                                if (!line.contains("Stored")) continue;
+                                                if (!line.contains("§e")) continue;
+                                                client.interactionManager.clickSlot(player.currentScreenHandler.syncId, invSlot.id, 0, SlotActionType.PICKUP, player);
+                                                TickHelper.scheduleOnce(this, () -> {
+                                                    player.closeHandledScreen();
+                                                    waitingForGUI = false;
+                                                }, 1);
+                                                return;
+                                            }
+                                        }
+                                    }
+                                    player.closeHandledScreen();
+                                }
+                                waitingForGUI = false;
+                            }, 4);
+                        }
                     } else {
                         waitingForGUI = true;
                         clearInventoryOfTrash(client, player, 0, true, true, true);

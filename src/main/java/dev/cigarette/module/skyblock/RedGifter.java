@@ -164,7 +164,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
             if (client.interactionManager == null) return;
             for (int slot = startingSlot; slot < 36; slot++) {
                 ItemStack stack = player.getInventory().getStack(slot);
-                if (stack == ItemStack.EMPTY || !itemIsTrash(stack) || slot == 8) continue;
+                if (stack == ItemStack.EMPTY || !itemIsTrash(stack) || slot == 7 || slot == 8) continue;
                 player.swingHand(Hand.MAIN_HAND);
 
                 int actualSlot = slot < 9 ? slot + 36 : slot;
@@ -202,7 +202,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
             if (client.interactionManager == null) return;
             for (int slot = startingSlot; slot < 36; slot++) {
                 ItemStack stack = player.getInventory().getStack(slot);
-                if (stack == ItemStack.EMPTY || !itemIsWorthSomething(stack) || slot == 8) continue;
+                if (stack == ItemStack.EMPTY || !itemIsWorthSomething(stack) || slot == 7 || slot == 8) continue;
                 player.swingHand(Hand.MAIN_HAND);
 
                 int actualSlot = slot < 9 ? slot + 36 : slot;

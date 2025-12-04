@@ -7,10 +7,12 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.player.PlayerEntity;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 public class WorldL {
     public static List<AbstractClientPlayerEntity> getRealPlayers() {
@@ -34,6 +36,15 @@ public class WorldL {
             }
         }
         return realPlayers;
+    }
+
+    public static @Nullable PlayerEntity getRealPlayerByUUID(UUID uuid) {
+        for (AbstractClientPlayerEntity player : getRealPlayers()) {
+            if (player.getGameProfile().getId().equals(uuid)) {
+                return player;
+            }
+        }
+        return null;
     }
 
     public static boolean isRealPlayer(PlayerEntity player) {

@@ -27,6 +27,8 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
 
     public final ToggleWidget gifter = new ToggleWidget("Run as Gifter", "Automatically gives red gifts to nearby players.").withDefaultState(false);
     public final ToggleWidget opener = new ToggleWidget("Run as Opener", "Automatically opens red gifts you receive.").withDefaultState(true);
+    private final ToggleWidget cycleInventory = new ToggleWidget("Cycle Inventory", "Swap gifts from within your inventory into the hotbar to continue gifting.").withDefaultState(true);
+    private final ToggleWidget cycleSacks = new ToggleWidget("Cycle Sack", "Swap gifts from within your sacks into your inventory to continue gifting.").withDefaultState(false);
 
     public UUID playerToGift = null;
     private boolean waitingForClose = false;
@@ -45,6 +47,9 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
             if (gifter.getRawState() == state) {
                 gifter.setRawState(!state);
             }
+        });
+        cycleSacks.registerModuleCallback((Boolean state) -> {
+            if (state) cycleInventory.setRawState(true);
         });
     }
 
@@ -94,10 +99,20 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
             if (!RedGifter.isHoldingAGift()) {
                 int slot = nextSlotWithGifts(player);
                 if (slot == -1) {
+                    if (!cycleSacks.getRawState()) {
+                        this.playerToGift = null;
+                        Cigarette.CHAT_LOGGER.info("No more gifts to give, sack cycling is disabled.");
+                        return;
+                    }
                     return;
                 } else if (slot < 9) {
                     player.getInventory().setSelectedSlot(slot);
-                } else if (client.interactionManager != null) {
+                } else {
+                    if (client.interactionManager == null || !cycleInventory.getRawState()) {
+                        this.playerToGift = null;
+                        Cigarette.CHAT_LOGGER.info("No more gifts to give, inventory cycling is disabled.");
+                        return;
+                    }
                     client.interactionManager.clickSlot(0, slot, 0, SlotActionType.SWAP, player);
                     waitingForClose = true;
                     TickHelper.scheduleOnce(this, () -> {

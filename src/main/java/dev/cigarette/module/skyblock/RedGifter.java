@@ -3,6 +3,7 @@ package dev.cigarette.module.skyblock;
 import dev.cigarette.Cigarette;
 import dev.cigarette.GameDetector;
 import dev.cigarette.gui.widget.KeybindWidget;
+import dev.cigarette.gui.widget.TextWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
 import dev.cigarette.helper.TickHelper;
 import dev.cigarette.lib.PlayerEntityL;
@@ -34,6 +35,8 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
     private final ToggleWidget cycleSacks = new ToggleWidget("Cycle Sack", "Swap gifts from within your sacks into your inventory to continue gifting.").withDefaultState(false);
     private final ToggleWidget clearInventory = new ToggleWidget("Clear Inventory", "Automatically clears everything besides gifts from your inventory to refill from sacks.").withDefaultState(false);
     private final KeybindWidget clearInventoryNow = new KeybindWidget("Clear Now", "Clears non-gift drops and bad gift drops from your inventory when pressed.");
+    private final ToggleWidget setTrashLocation = new ToggleWidget("Set Trash", "Sets the trash drop location and look direction when clearing inventory.");
+    private final ToggleWidget setWorthLocation = new ToggleWidget("Set Worth", "Sets the worth drop location and look direction when clearing inventory.");
 
     public UUID playerToGift = null;
     private boolean waitingForGUI = false;
@@ -43,7 +46,8 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
 
     private RedGifter(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
-        this.setChildren(gifter, opener, cycleInventory, cycleSacks, clearInventory, clearInventoryNow);
+        TextWidget header = new TextWidget("Drop Locations").withUnderline();
+        this.setChildren(gifter, opener, cycleInventory, cycleSacks, clearInventory, clearInventoryNow, header, setTrashLocation, setWorthLocation);
         gifter.registerConfigKey(id + ".asgifter");
         opener.registerConfigKey(id + ".asopener");
         cycleInventory.registerConfigKey(id + ".cycleinventory");
@@ -66,6 +70,22 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
         clearInventory.registerModuleCallback((Boolean state) -> {
             if (state) cycleSacks.setRawState(true);
         });
+        setTrashLocation.registerModuleCallback((Boolean state) -> {
+            if (!state) return;
+            ClientPlayerEntity player = MinecraftClient.getInstance().player;
+            if (player != null) {
+                trashDropLocation = new ItemDropLocation(player.getPos(), player.getRotationVector());
+            }
+            setTrashLocation.setRawState(false);
+        });
+        setWorthLocation.registerModuleCallback((Boolean state) -> {
+            if (!state) return;
+            ClientPlayerEntity player = MinecraftClient.getInstance().player;
+            if (player != null) {
+                worthDropLocation = new ItemDropLocation(player.getPos(), player.getRotationVector());
+            }
+            setWorthLocation.setRawState(false);
+        });
     }
 
     public static boolean itemIsGift(ItemStack item) {
@@ -83,7 +103,7 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
     }
 
     public static boolean itemIsWorthSomething(String itemName) {
-        return itemName.endsWith("Krampus Helmet") || itemName.endsWith("Winter Island") || itemName.endsWith("Cryopowder Shard") || itemName.endsWith("Snowman") || itemName.endsWith("Golden Gift") || itemName.endsWith("Holly Dye") || itemName.endsWith("Talisman");
+        return itemName.endsWith("amond") || itemName.endsWith("Krampus Helmet") || itemName.endsWith("Winter Island") || itemName.endsWith("Cryopowder Shard") || itemName.endsWith("Snowman") || itemName.endsWith("Golden Gift") || itemName.endsWith("Holly Dye") || itemName.endsWith("Talisman");
     }
 
     public static boolean itemIsTrash(ItemStack item) {
@@ -110,10 +130,10 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
         return -1;
     }
 
-    private void clearInventoryOfTrash(@NotNull MinecraftClient client, @NotNull ClientPlayerEntity player, int startingSlot, boolean snapAim, boolean worthNext) {
+    private void clearInventoryOfTrash(@NotNull MinecraftClient client, @NotNull ClientPlayerEntity player, int startingSlot, boolean snapAim, boolean worthNext, boolean worthNextSnapAim) {
         if (startingSlot < 0 || startingSlot >= 36) {
             if (worthNext) {
-                clearInventoryOfWorth(client, player, 0, snapAim, false);
+                clearInventoryOfWorth(client, player, 0, worthNextSnapAim, false, false);
                 return;
             }
             if (client.interactionManager != null) {
@@ -127,7 +147,7 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
             if (player.squaredDistanceTo(trashDropLocation.position) < 0.5) {
                 PlayerEntityL.setRotationVector(player, trashDropLocation.direction);
                 TickHelper.scheduleOnce(this, () -> {
-                    clearInventoryOfTrash(client, player, startingSlot, false, worthNext);
+                    clearInventoryOfTrash(client, player, startingSlot, false, worthNext, worthNextSnapAim);
                 }, 1);
                 return;
             }
@@ -141,17 +161,17 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
 
                 int actualSlot = slot < 9 ? slot + 36 : slot;
                 client.interactionManager.clickSlot(0, actualSlot, 1, SlotActionType.THROW, player);
-                clearInventoryOfTrash(client, player, slot + 1, false, worthNext);
+                clearInventoryOfTrash(client, player, slot + 1, false, worthNext, worthNextSnapAim);
                 return;
             }
-            clearInventoryOfTrash(client, player, -1, false, worthNext);
+            clearInventoryOfTrash(client, player, -1, false, worthNext, worthNextSnapAim);
         }, 1);
     }
 
-    private void clearInventoryOfWorth(@NotNull MinecraftClient client, @NotNull ClientPlayerEntity player, int startingSlot, boolean snapAim, boolean trashNext) {
+    private void clearInventoryOfWorth(@NotNull MinecraftClient client, @NotNull ClientPlayerEntity player, int startingSlot, boolean snapAim, boolean trashNext, boolean trashNextSnapAim) {
         if (startingSlot < 0 || startingSlot >= 36) {
             if (trashNext) {
-                clearInventoryOfTrash(client, player, 0, snapAim, false);
+                clearInventoryOfTrash(client, player, 0, trashNextSnapAim, false, false);
                 return;
             }
             if (client.interactionManager != null) {
@@ -165,7 +185,7 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
             if (player.squaredDistanceTo(worthDropLocation.position) < 0.5) {
                 PlayerEntityL.setRotationVector(player, worthDropLocation.direction);
                 TickHelper.scheduleOnce(this, () -> {
-                    clearInventoryOfWorth(client, player, startingSlot, false, trashNext);
+                    clearInventoryOfWorth(client, player, startingSlot, false, trashNext, trashNextSnapAim);
                 }, 1);
                 return;
             }
@@ -179,10 +199,10 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
 
                 int actualSlot = slot < 9 ? slot + 36 : slot;
                 client.interactionManager.clickSlot(0, actualSlot, 1, SlotActionType.THROW, player);
-                clearInventoryOfWorth(client, player, slot + 1, false, trashNext);
+                clearInventoryOfWorth(client, player, slot + 1, false, trashNext, trashNextSnapAim);
                 return;
             }
-            clearInventoryOfWorth(client, player, -1, false, trashNext);
+            clearInventoryOfWorth(client, player, -1, false, trashNext, trashNextSnapAim);
         }, 1);
     }
 
@@ -191,7 +211,7 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
         if (waitingForGUI) return;
         if (clearInventoryNow.getKeybind().isPhysicallyPressed()) {
             waitingForGUI = true;
-            clearInventoryOfTrash(client, player, 0, true, false);
+            clearInventoryOfTrash(client, player, 0, false, true, false);
             return;
         }
         if (opener.getRawState()) {
@@ -227,7 +247,7 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
 //                        perform sack check
                     } else {
                         waitingForGUI = true;
-                        clearInventoryOfTrash(client, player, 0, true, true);
+                        clearInventoryOfTrash(client, player, 0, true, true, true);
                     }
                     return;
                 } else if (slot < 9) {
@@ -274,5 +294,9 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
     }
 
     private record ItemDropLocation(Vec3d position, Vec3d direction) {
+        public ItemDropLocation(Vec3d position, Vec3d direction) {
+            this.position = new Vec3d(position.x, position.y, position.z);
+            this.direction = new Vec3d(direction.x, direction.y, direction.z).normalize();
+        }
     }
 }

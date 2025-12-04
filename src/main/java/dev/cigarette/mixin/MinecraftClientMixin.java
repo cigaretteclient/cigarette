@@ -21,7 +21,7 @@ public class MinecraftClientMixin {
 
     @Inject(method = "doItemUse", at = @At("HEAD"), cancellable = true)
     private void doItemUse(CallbackInfo ci) {
-        if (RedGifter.INSTANCE.getRawState() && RedGifter.INSTANCE.inValidGame() && RedGifter.INSTANCE.gifter.getRawState() && RedGifter.isHoldingAGift() && this.crosshairTarget != null && this.crosshairTarget.getType() == HitResult.Type.ENTITY) {
+        if (RedGifter.INSTANCE.getRawState() && RedGifter.INSTANCE.inValidGame() && RedGifter.INSTANCE.gifter.getRawState() && RedGifter.holdingGift() && this.crosshairTarget != null && this.crosshairTarget.getType() == HitResult.Type.ENTITY) {
             Entity target = ((EntityHitResult) this.crosshairTarget).getEntity();
             if (target instanceof PlayerEntity && WorldL.isRealPlayer((PlayerEntity) target)) {
                 ci.cancel();

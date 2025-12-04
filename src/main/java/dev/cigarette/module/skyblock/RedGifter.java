@@ -19,7 +19,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
+import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
@@ -30,12 +32,14 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
     public final ToggleWidget opener = new ToggleWidget("Run as Opener", "Automatically opens red gifts you receive.").withDefaultState(true);
     private final ToggleWidget cycleInventory = new ToggleWidget("Cycle Inventory", "Swap gifts from within your inventory into the hotbar to continue gifting.").withDefaultState(true);
     private final ToggleWidget cycleSacks = new ToggleWidget("Cycle Sack", "Swap gifts from within your sacks into your inventory to continue gifting.").withDefaultState(false);
-    private final ToggleWidget clearInventory = new ToggleWidget("Clear Inventory", "Automatically clears non-gift items from your inventory to refill from sacks.").withDefaultState(false);
-    private final KeybindWidget clearInventoryNow = new KeybindWidget("Clear Now", "Clears non-gift items from your inventory when pressed.");
+    private final ToggleWidget clearInventory = new ToggleWidget("Clear Inventory", "Automatically clears everything besides gifts from your inventory to refill from sacks.").withDefaultState(false);
+    private final KeybindWidget clearInventoryNow = new KeybindWidget("Clear Now", "Clears non-gift drops and bad gift drops from your inventory when pressed.");
 
     public UUID playerToGift = null;
     private boolean waitingForGUI = false;
     private boolean justClearedInventory = false;
+    private @Nullable ItemDropLocation trashDropLocation = null;
+    private @Nullable ItemDropLocation worthDropLocation = null;
 
     private RedGifter(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
@@ -64,16 +68,34 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
         });
     }
 
-    public static boolean isAGiftOfSomeSorts(ItemStack item) {
+    public static boolean itemIsGift(ItemStack item) {
         String itemName = TextL.toColorCodedString(item.getName());
+        return itemIsGift(itemName);
+    }
+
+    public static boolean itemIsGift(String itemName) {
         return itemName.endsWith("Red Gift") || itemName.endsWith("White Gift") || itemName.endsWith("Green Gift");
     }
 
-    public static boolean isHoldingAGift() {
+    public static boolean itemIsWorthSomething(ItemStack item) {
+        String itemName = TextL.toColorCodedString(item.getName());
+        return itemIsWorthSomething(itemName);
+    }
+
+    public static boolean itemIsWorthSomething(String itemName) {
+        return itemName.endsWith("Krampus Helmet") || itemName.endsWith("Winter Island") || itemName.endsWith("Cryopowder Shard") || itemName.endsWith("Snowman") || itemName.endsWith("Golden Gift") || itemName.endsWith("Holly Dye") || itemName.endsWith("Talisman");
+    }
+
+    public static boolean itemIsTrash(ItemStack item) {
+        String itemName = TextL.toColorCodedString(item.getName());
+        return !(itemIsGift(itemName) || itemIsWorthSomething(itemName));
+    }
+
+    public static boolean holdingGift() {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player != null) {
             ItemStack mainHand = client.player.getStackInHand(Hand.MAIN_HAND);
-            return isAGiftOfSomeSorts(mainHand);
+            return itemIsGift(mainHand);
         }
         return false;
     }
@@ -81,35 +103,86 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
     public static int nextSlotWithGifts(@NotNull ClientPlayerEntity player) {
         for (int i = 0; i < 36; i++) {
             ItemStack stack = player.getInventory().getStack(i);
-            if (isAGiftOfSomeSorts(stack)) {
+            if (itemIsGift(stack)) {
                 return i;
             }
         }
         return -1;
     }
 
-    private void clearInventory(@NotNull MinecraftClient client, @NotNull ClientPlayerEntity player, int startingSlot) {
+    private void clearInventoryOfTrash(@NotNull MinecraftClient client, @NotNull ClientPlayerEntity player, int startingSlot, boolean snapAim, boolean worthNext) {
         if (startingSlot < 0 || startingSlot >= 36) {
+            if (worthNext) {
+                clearInventoryOfWorth(client, player, 0, snapAim, false);
+                return;
+            }
             if (client.interactionManager != null) {
                 player.closeHandledScreen();
-                waitingForGUI = false;
-                justClearedInventory = true;
             }
+            waitingForGUI = false;
+            justClearedInventory = true;
             return;
+        }
+        if (snapAim && trashDropLocation != null) {
+            if (player.squaredDistanceTo(trashDropLocation.position) < 0.5) {
+                PlayerEntityL.setRotationVector(player, trashDropLocation.direction);
+                TickHelper.scheduleOnce(this, () -> {
+                    clearInventoryOfTrash(client, player, startingSlot, false, worthNext);
+                }, 1);
+                return;
+            }
         }
         TickHelper.scheduleOnce(this, () -> {
             if (client.interactionManager == null) return;
             for (int slot = startingSlot; slot < 36; slot++) {
                 ItemStack stack = player.getInventory().getStack(slot);
-                if (stack == ItemStack.EMPTY || isAGiftOfSomeSorts(stack) || slot == 8) continue;
+                if (stack == ItemStack.EMPTY || !itemIsTrash(stack) || slot == 8) continue;
                 player.swingHand(Hand.MAIN_HAND);
 
                 int actualSlot = slot < 9 ? slot + 36 : slot;
                 client.interactionManager.clickSlot(0, actualSlot, 1, SlotActionType.THROW, player);
-                clearInventory(client, player, slot + 1);
+                clearInventoryOfTrash(client, player, slot + 1, false, worthNext);
                 return;
             }
-            clearInventory(client, player, -1);
+            clearInventoryOfTrash(client, player, -1, false, worthNext);
+        }, 1);
+    }
+
+    private void clearInventoryOfWorth(@NotNull MinecraftClient client, @NotNull ClientPlayerEntity player, int startingSlot, boolean snapAim, boolean trashNext) {
+        if (startingSlot < 0 || startingSlot >= 36) {
+            if (trashNext) {
+                clearInventoryOfTrash(client, player, 0, snapAim, false);
+                return;
+            }
+            if (client.interactionManager != null) {
+                player.closeHandledScreen();
+            }
+            waitingForGUI = false;
+            justClearedInventory = true;
+            return;
+        }
+        if (snapAim && worthDropLocation != null) {
+            if (player.squaredDistanceTo(worthDropLocation.position) < 0.5) {
+                PlayerEntityL.setRotationVector(player, worthDropLocation.direction);
+                TickHelper.scheduleOnce(this, () -> {
+                    clearInventoryOfWorth(client, player, startingSlot, false, trashNext);
+                }, 1);
+                return;
+            }
+        }
+        TickHelper.scheduleOnce(this, () -> {
+            if (client.interactionManager == null) return;
+            for (int slot = startingSlot; slot < 36; slot++) {
+                ItemStack stack = player.getInventory().getStack(slot);
+                if (stack == ItemStack.EMPTY || !itemIsWorthSomething(stack) || slot == 8) continue;
+                player.swingHand(Hand.MAIN_HAND);
+
+                int actualSlot = slot < 9 ? slot + 36 : slot;
+                client.interactionManager.clickSlot(0, actualSlot, 1, SlotActionType.THROW, player);
+                clearInventoryOfWorth(client, player, slot + 1, false, trashNext);
+                return;
+            }
+            clearInventoryOfWorth(client, player, -1, false, trashNext);
         }, 1);
     }
 
@@ -118,7 +191,7 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
         if (waitingForGUI) return;
         if (clearInventoryNow.getKeybind().isPhysicallyPressed()) {
             waitingForGUI = true;
-            clearInventory(client, player, 0);
+            clearInventoryOfTrash(client, player, 0, true, false);
             return;
         }
         if (opener.getRawState()) {
@@ -138,7 +211,7 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
                 }
             }
         } else if (gifter.getRawState() && this.playerToGift != null) {
-            if (!RedGifter.isHoldingAGift()) {
+            if (!RedGifter.holdingGift()) {
                 int slot = nextSlotWithGifts(player);
                 if (justClearedInventory && slot != -1) {
                     justClearedInventory = false;
@@ -154,7 +227,7 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
 //                        perform sack check
                     } else {
                         waitingForGUI = true;
-                        clearInventory(client, player, 0);
+                        clearInventoryOfTrash(client, player, 0, true, true);
                     }
                     return;
                 } else if (slot < 9) {
@@ -198,5 +271,8 @@ public class RedGifter extends TickModule<ToggleWidget, Boolean> {
     @Override
     public boolean inValidGame() {
         return GameDetector.rootGame == GameDetector.ParentGame.SKYBLOCK;
+    }
+
+    private record ItemDropLocation(Vec3d position, Vec3d direction) {
     }
 }

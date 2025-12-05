@@ -254,7 +254,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
         if (waitingForGUI) return;
         if (clearInventoryNow.getKeybind().isPhysicallyPressed()) {
             waitingForGUI = true;
-            clearInventoryOfTrash(client, player, 0, true, true, false);
+            clearInventoryOfTrash(client, player, 0, true, true, true);
             return;
         }
         if (opener.getRawState()) {
@@ -316,7 +316,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
                                     player.closeHandledScreen();
                                 }
                                 waitingForGUI = false;
-                            }, 4);
+                            }, 20);
                         }
                     } else {
                         waitingForGUI = true;

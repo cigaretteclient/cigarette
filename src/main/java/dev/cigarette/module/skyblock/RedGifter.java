@@ -254,7 +254,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
         if (waitingForGUI) return;
         if (clearInventoryNow.getKeybind().isPhysicallyPressed()) {
             waitingForGUI = true;
-            clearInventoryOfTrash(client, player, 0, false, true, false);
+            clearInventoryOfTrash(client, player, 0, true, true, false);
             return;
         }
         if (opener.getRawState()) {
@@ -285,7 +285,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
                         Cigarette.CHAT_LOGGER.info("No more gifts to give, sack cycling is disabled.");
                         return;
                     }
-                    if (justClearedInventory) {
+                    if (justClearedInventory || !clearInventory.getRawState()) {
                         justClearedInventory = false;
                         boolean switchedToSack = this.switchToWinterSack(player);
                         if (switchedToSack) {
@@ -295,7 +295,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
                                 if (client.currentScreen != null && client.interactionManager != null) {
                                     Text title = client.currentScreen.getTitle();
                                     String titleString = TextL.toColorCodedString(title);
-                                    if (titleString.equals("Winter Sack")) {
+                                    if (titleString.equals("§rWinter Sack")) {
                                         for (Slot invSlot : player.currentScreenHandler.slots) {
                                             ItemStack stack = invSlot.getStack();
                                             if (!itemIsGift(stack)) continue;
@@ -310,6 +310,8 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
                                                 return;
                                             }
                                         }
+                                        playerToGift = null;
+                                        Cigarette.CHAT_LOGGER.info("No gifts found in Winter Sack, stopping.");
                                     }
                                     player.closeHandledScreen();
                                 }

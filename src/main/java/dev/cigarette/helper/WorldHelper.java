@@ -1,4 +1,4 @@
-package dev.cigarette.lib;
+package dev.cigarette.helper;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class WorldL {
+public class WorldHelper {
     public static List<AbstractClientPlayerEntity> getRealPlayers() {
         ClientPlayerEntity clientPlayer = MinecraftClient.getInstance().player;
         ClientWorld world = MinecraftClient.getInstance().world;

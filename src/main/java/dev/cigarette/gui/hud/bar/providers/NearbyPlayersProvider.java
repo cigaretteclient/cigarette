@@ -3,7 +3,7 @@ package dev.cigarette.gui.hud.bar.providers;
 import dev.cigarette.gui.hud.bar.api.BarWidget;
 import dev.cigarette.gui.hud.bar.api.BarWidgetProvider;
 import dev.cigarette.gui.hud.bar.widgets.EntityChipWidget;
-import dev.cigarette.lib.WorldL;
+import dev.cigarette.helper.WorldHelper;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
@@ -16,7 +16,7 @@ public class NearbyPlayersProvider implements BarWidgetProvider {
     @Override
     public void collect(MinecraftClient mc, ClientWorld world, TextRenderer tr, List<BarWidget> out) {
         if (mc == null || world == null || mc.player == null) return;
-        for (AbstractClientPlayerEntity p : WorldL.getRealPlayers()) {
+        for (AbstractClientPlayerEntity p : WorldHelper.getRealPlayers()) {
             if (p == null || p == mc.player) continue;
             if (p.isRemoved()) continue;
             if (mc.player.distanceTo(p) > 15.0f) continue;

@@ -4,7 +4,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import dev.cigarette.GameDetector;
 import dev.cigarette.agent.BedwarsAgent;
 import dev.cigarette.gui.widget.*;
-import dev.cigarette.lib.Renderer;
+import dev.cigarette.helper.RenderHelper;
 import dev.cigarette.module.RenderModule;
 import dev.cigarette.precomputed.PyramidQuadrant;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
@@ -27,7 +27,7 @@ import java.util.OptionalDouble;
 public class DefenseViewer extends RenderModule<ToggleWidget, Boolean> {
     public static final DefenseViewer INSTANCE = new DefenseViewer("bedwars.defenseesp", "Defense Viewer", "ESPs bed blocks and the defensive blocks around them.");
 
-    private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockesp", 1536, Renderer.BLOCK_ESP_PHASE, RenderLayer.MultiPhaseParameters.builder().lineWidth(new RenderPhase.LineWidth(OptionalDouble.of(1))).build(false));
+    private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockesp", 1536, RenderHelper.BLOCK_ESP_PHASE, RenderLayer.MultiPhaseParameters.builder().lineWidth(new RenderPhase.LineWidth(OptionalDouble.of(1))).build(false));
     private final HashSet<BlockPos> bedBlocks = new HashSet<>();
     private final HashMap<BlockPos, Integer> defensiveBlocks = new HashMap<>();
     private int layer = 0;
@@ -93,23 +93,23 @@ public class DefenseViewer extends RenderModule<ToggleWidget, Boolean> {
     protected void onWorldRender(WorldRenderContext ctx, @NotNull MatrixStack matrixStack) {
         matrixStack.push();
 
-        Matrix4f matrix = Renderer.getCameraTranslatedMatrix(matrixStack, ctx);
+        Matrix4f matrix = RenderHelper.getCameraTranslatedMatrix(matrixStack, ctx);
 
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
 
         if (enableBeds.getToggleState()) {
             for (BlockPos pos : bedBlocks) {
-                Renderer.drawYQuad(buffer, matrix, enableBeds.getStateARGB(), pos.getY() + 0.5f, pos.getX(), pos.getZ(), pos.getX() + 1f, pos.getZ() + 1f);
-                Renderer.drawYQuad(buffer, matrix, enableBeds.getStateARGB(), pos.getY(), pos.getX(), pos.getZ(), pos.getX() + 1f, pos.getZ() + 1f);
-                Renderer.drawXQuad(buffer, matrix, enableBeds.getStateARGB(), pos.getX(), pos.getY(), pos.getZ(), pos.getY() + 0.5f, pos.getZ() + 1f);
-                Renderer.drawXQuad(buffer, matrix, enableBeds.getStateARGB(), pos.getX() + 1f, pos.getY(), pos.getZ(), pos.getY() + 0.5f, pos.getZ() + 1f);
-                Renderer.drawZQuad(buffer, matrix, enableBeds.getStateARGB(), pos.getZ(), pos.getX(), pos.getY(), pos.getX() + 1f, pos.getY() + 0.5f);
-                Renderer.drawZQuad(buffer, matrix, enableBeds.getStateARGB(), pos.getZ() + 1f, pos.getX(), pos.getY(), pos.getX() + 1f, pos.getY() + 0.5f);
+                RenderHelper.drawYQuad(buffer, matrix, enableBeds.getStateARGB(), pos.getY() + 0.5f, pos.getX(), pos.getZ(), pos.getX() + 1f, pos.getZ() + 1f);
+                RenderHelper.drawYQuad(buffer, matrix, enableBeds.getStateARGB(), pos.getY(), pos.getX(), pos.getZ(), pos.getX() + 1f, pos.getZ() + 1f);
+                RenderHelper.drawXQuad(buffer, matrix, enableBeds.getStateARGB(), pos.getX(), pos.getY(), pos.getZ(), pos.getY() + 0.5f, pos.getZ() + 1f);
+                RenderHelper.drawXQuad(buffer, matrix, enableBeds.getStateARGB(), pos.getX() + 1f, pos.getY(), pos.getZ(), pos.getY() + 0.5f, pos.getZ() + 1f);
+                RenderHelper.drawZQuad(buffer, matrix, enableBeds.getStateARGB(), pos.getZ(), pos.getX(), pos.getY(), pos.getX() + 1f, pos.getY() + 0.5f);
+                RenderHelper.drawZQuad(buffer, matrix, enableBeds.getStateARGB(), pos.getZ() + 1f, pos.getX(), pos.getY(), pos.getX() + 1f, pos.getY() + 0.5f);
             }
         }
         for (Map.Entry<BlockPos, Integer> entry : defensiveBlocks.entrySet()) {
-            Renderer.drawBlock(buffer, matrix, entry.getValue(), entry.getKey());
+            RenderHelper.drawBlock(buffer, matrix, entry.getValue(), entry.getKey());
         }
 
         BuiltBuffer built = buffer.endNullable();

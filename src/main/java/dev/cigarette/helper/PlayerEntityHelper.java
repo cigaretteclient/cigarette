@@ -1,11 +1,9 @@
-package dev.cigarette.lib;
+package dev.cigarette.helper;
 
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.Vec3d;
-import org.jetbrains.annotations.Nullable;
 
-public class PlayerEntityL {
+public class PlayerEntityHelper {
     public static float[] getRotationVectorInDirection(Vec3d vector) {
         Vec3d normalized = vector.normalize();
         double pitchRadians = Math.asin(-normalized.y);

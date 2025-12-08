@@ -3,8 +3,8 @@ package dev.cigarette.agent;
 import dev.cigarette.GameDetector;
 import dev.cigarette.Language;
 import dev.cigarette.gui.widget.ToggleWidget;
-import dev.cigarette.lib.TextL;
-import dev.cigarette.lib.WorldL;
+import dev.cigarette.helper.TextHelper;
+import dev.cigarette.helper.WorldHelper;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
@@ -96,7 +96,7 @@ public class MurderMysteryAgent extends BaseAgent {
 
         for (Entity entity : world.getEntities()) {
             if (entity instanceof PlayerEntity entityPlayer) {
-                if (!WorldL.isRealPlayerByUsername(entityPlayer)) continue;
+                if (!WorldHelper.isRealPlayerByUsername(entityPlayer)) continue;
                 if (entityPlayer.getY() < 0) continue;
                 PersistentPlayer existingPlayer = this.getOrCreatePersistentPlayer(entityPlayer);
 
@@ -107,7 +107,7 @@ public class MurderMysteryAgent extends BaseAgent {
                     continue;
                 }
 
-                String itemName = TextL.toColorCodedString(item.getFormattedName());
+                String itemName = TextHelper.toColorCodedString(item.getFormattedName());
                 if (!itemName.startsWith("§r§a")) continue;
                 String knifeLang = itemName.substring(4);
                 for (String knife : knives) {

@@ -4,7 +4,7 @@ import dev.cigarette.GameDetector;
 import dev.cigarette.gui.hud.bar.BarDisplay;
 import dev.cigarette.gui.widget.TextWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
-import dev.cigarette.lib.Glow;
+import dev.cigarette.helper.GlowHelper;
 import dev.cigarette.module.TickModule;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -26,7 +26,7 @@ public class EntityESP extends TickModule<ToggleWidget, Boolean> {
     private final ToggleWidget enableEnderDragons = new ToggleWidget("Dragons", null).withDefaultState(true);
     private final ToggleWidget enableIronGolems = new ToggleWidget("Iron Golems", null).withDefaultState(true);
     private final ToggleWidget enableSilverfish = new ToggleWidget("Silverfish", null).withDefaultState(true);
-    private final Glow.Context glowContext = new Glow.Context();
+    private final GlowHelper.Context glowContext = new GlowHelper.Context();
 
     private EntityESP(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);

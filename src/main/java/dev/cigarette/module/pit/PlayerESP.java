@@ -2,8 +2,8 @@ package dev.cigarette.module.pit;
 
 import dev.cigarette.GameDetector;
 import dev.cigarette.gui.widget.ToggleWidget;
-import dev.cigarette.lib.Glow;
-import dev.cigarette.lib.WorldL;
+import dev.cigarette.helper.GlowHelper;
+import dev.cigarette.helper.WorldHelper;
 import dev.cigarette.module.TickModule;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -18,7 +18,7 @@ import java.util.UUID;
 public class PlayerESP extends TickModule<ToggleWidget, Boolean> {
     public static final PlayerESP INSTANCE = new PlayerESP("pit.playeresp", "PlayerESP", "Highlights all the players in the world by prestige color.");
 
-    private final Glow.Context glowContext = new Glow.Context();
+    private final GlowHelper.Context glowContext = new GlowHelper.Context();
 
     private PlayerESP(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
@@ -27,7 +27,7 @@ public class PlayerESP extends TickModule<ToggleWidget, Boolean> {
     @Override
     protected void onEnabledTick(MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
         this.glowContext.removeAll();
-        for (PlayerEntity playerEntity : WorldL.getRealPlayers()) {
+        for (PlayerEntity playerEntity : WorldHelper.getRealPlayers()) {
             UUID uuid = playerEntity.getUuid();
             Text displayName = playerEntity.getStyledDisplayName();
             if (displayName == null) continue;

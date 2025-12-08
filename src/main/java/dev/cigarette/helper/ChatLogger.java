@@ -1,4 +1,4 @@
-package dev.cigarette.lib;
+package dev.cigarette.helper;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;

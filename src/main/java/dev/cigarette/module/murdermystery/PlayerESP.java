@@ -6,7 +6,7 @@ import dev.cigarette.gui.hud.bar.providers.MurderMysteryProvider;
 import dev.cigarette.gui.widget.ColorDropdownWidget;
 import dev.cigarette.gui.widget.TextWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
-import dev.cigarette.lib.Glow;
+import dev.cigarette.helper.GlowHelper;
 import dev.cigarette.module.TickModule;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -18,7 +18,7 @@ import java.util.HashSet;
 public class PlayerESP extends TickModule<ToggleWidget, Boolean> {
     public static final PlayerESP INSTANCE = new PlayerESP("murdermystery.playeresp", "PlayerESP", "Highlights all the players in ESP.");
 
-    private final Glow.Context glowContext = new Glow.Context();
+    private final GlowHelper.Context glowContext = new GlowHelper.Context();
 
     private final ColorDropdownWidget<ToggleWidget, Boolean> innocent = ColorDropdownWidget.buildToggle("Innocents", "The glow color of innocent and unknown players.").withAlpha(false).withDefaultColor(0xFFFFFFFF).withDefaultState(true);
     private final ColorDropdownWidget<ToggleWidget, Boolean> detective = ColorDropdownWidget.buildToggle("Detective", "The glow color of the detective and bow holding players that aren't murderer.").withAlpha(false).withDefaultColor(0xFF00FF00).withDefaultState(true);

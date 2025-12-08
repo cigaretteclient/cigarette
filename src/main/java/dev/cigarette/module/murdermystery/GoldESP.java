@@ -4,7 +4,7 @@ import dev.cigarette.GameDetector;
 import dev.cigarette.agent.MurderMysteryAgent;
 import dev.cigarette.gui.widget.ColorDropdownWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
-import dev.cigarette.lib.Glow;
+import dev.cigarette.helper.GlowHelper;
 import dev.cigarette.module.TickModule;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -16,7 +16,7 @@ import java.util.HashSet;
 public class GoldESP extends TickModule<ToggleWidget, Boolean> {
     public static final GoldESP INSTANCE = new GoldESP("murdermystery.goldesp", "GoldESP", "Highlights all the gold ingots on the ground.");
 
-    private final Glow.Context glowContext = new Glow.Context();
+    private final GlowHelper.Context glowContext = new GlowHelper.Context();
 
     private GoldESP(String id, String name, String tooltip) {
         super(ColorDropdownWidget::module, id, name, tooltip);

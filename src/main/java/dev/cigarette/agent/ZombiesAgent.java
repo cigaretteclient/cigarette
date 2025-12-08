@@ -2,8 +2,8 @@ package dev.cigarette.agent;
 
 import dev.cigarette.GameDetector;
 import dev.cigarette.gui.widget.ToggleWidget;
-import dev.cigarette.lib.Raycast;
-import dev.cigarette.lib.TextL;
+import dev.cigarette.helper.RaycastHelper;
+import dev.cigarette.helper.TextHelper;
 import dev.cigarette.module.zombies.Aimbot;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -228,7 +228,7 @@ public class ZombiesAgent extends BaseAgent {
             if (ZombieType.from(zombie) == ZombieType.UNKNOWN) {
                 if (zombie instanceof ArmorStandEntity armorStandEntity) {
                     if (armorStandEntity.getCustomName() == null) continue;
-                    String name = TextL.toColorCodedString(armorStandEntity.getCustomName());
+                    String name = TextHelper.toColorCodedString(armorStandEntity.getCustomName());
 
                     Powerup.Type type;
                     switch (name) {
@@ -267,7 +267,7 @@ public class ZombiesAgent extends BaseAgent {
             Vec3d end = zombie.getEyePos().add(realVelocity);
 
             target.end = end;
-            Raycast.FirstBlock result = Raycast.firstBlockCollision(start, end, this::isNoClipBlock);
+            RaycastHelper.FirstBlock result = RaycastHelper.firstBlockCollision(start, end, this::isNoClipBlock);
 
             if ((result.hit() && result.whitelisted()) || result.missed()) {
                 target.canShoot = true;

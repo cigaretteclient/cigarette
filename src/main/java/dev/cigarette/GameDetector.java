@@ -1,6 +1,6 @@
 package dev.cigarette;
 
-import dev.cigarette.lib.ScoreboardL;
+import dev.cigarette.helper.ScoreboardHelper;
 import net.minecraft.client.MinecraftClient;
 import org.jetbrains.annotations.Nullable;
 
@@ -21,8 +21,8 @@ public class GameDetector {
         final String[] PIT_HEADER = Language.getPhraseFromAll(Language.Phrase.PIT_HEADER);
         final String[] ZOMBIES_HEADER = Language.getPhraseFromAll(Language.Phrase.ZOMBIES_HEADER);
 
-        String headerText = ScoreboardL.getUnformattedHeader(client);
-        String[] rowsText = ScoreboardL.getUnformattedRows(client);
+        String headerText = ScoreboardHelper.getUnformattedHeader(client);
+        String[] rowsText = ScoreboardHelper.getUnformattedRows(client);
 
         if (GameDetector.some(headerText, BEDWARS_HEADER)) {
             GameDetector.rootGame = ParentGame.BEDWARS;

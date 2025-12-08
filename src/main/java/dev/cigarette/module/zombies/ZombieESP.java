@@ -5,7 +5,7 @@ import dev.cigarette.agent.ZombiesAgent;
 import dev.cigarette.gui.widget.ColorDropdownWidget;
 import dev.cigarette.gui.widget.TextWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
-import dev.cigarette.lib.Glow;
+import dev.cigarette.helper.GlowHelper;
 import dev.cigarette.module.TickModule;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -17,7 +17,7 @@ import java.util.UUID;
 public class ZombieESP extends TickModule<ToggleWidget, Boolean> {
     public static final ZombieESP INSTANCE = new ZombieESP("zombies.zombieesp", "ZombieESP", "Highlights all the zombies in ESP.");
 
-    private final Glow.Context glowContext = new Glow.Context();
+    private final GlowHelper.Context glowContext = new GlowHelper.Context();
 
     private final ColorDropdownWidget<ToggleWidget, Boolean> enableZombies = ColorDropdownWidget.buildToggle("Zombies", null).withAlpha(false).withDefaultColor(0xFF2C936C).withDefaultState(true);
     private final ColorDropdownWidget<ToggleWidget, Boolean> enableSkeletons = ColorDropdownWidget.buildToggle("Skeletons", null).withAlpha(false).withDefaultColor(0xFFE0E0E0).withDefaultState(true);

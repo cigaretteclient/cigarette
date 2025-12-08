@@ -3,7 +3,7 @@ package dev.cigarette.gui.widget;
 import dev.cigarette.Cigarette;
 import dev.cigarette.gui.CigaretteScreen;
 import dev.cigarette.gui.RenderUtil;
-import dev.cigarette.lib.Color;
+import dev.cigarette.helper.ColorHelper;
 import dev.cigarette.module.BaseModule;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -136,7 +136,7 @@ public class ToggleWidget extends BaseWidget<Boolean> {
         float easedEnable = (float) Math.max(0.0, Math.min(1.0, enableT));
         int textColor = lerpColor(CigaretteScreen.PRIMARY_TEXT_COLOR, CigaretteScreen.ENABLED_COLOR, easedEnable);
 
-        int borderColor = Color.color(left, top);
+        int borderColor = ColorHelper.color(left, top);
         if (ticksOnHover > 0) {
             float raw = (float) ticksOnHover / MAX_HOVER_TICKS;
             float progress = (float) Math.max(0.0, Math.min(1.0, hovered ? CigaretteScreen.easeOutExpo(raw) : CigaretteScreen.easeInExpo(raw)));

@@ -2,7 +2,7 @@ package dev.cigarette.gui.widget;
 
 import dev.cigarette.Cigarette;
 import dev.cigarette.gui.CigaretteScreen;
-import dev.cigarette.lib.Color;
+import dev.cigarette.helper.ColorHelper;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.Text;
@@ -217,9 +217,9 @@ public class SliderWidget extends BaseWidget<Double> {
             context.fill(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR);
         }
 
-        int textColor = this.disabled ? Color.colorDarken(CigaretteScreen.PRIMARY_TEXT_COLOR, 0.4f) : CigaretteScreen.PRIMARY_TEXT_COLOR;
-        int primaryColor = this.disabled ? Color.colorDarken(CigaretteScreen.PRIMARY_COLOR, 0.4f) : CigaretteScreen.PRIMARY_COLOR;
-        int secondaryColor = this.disabled ? Color.colorDarken(CigaretteScreen.SECONDARY_COLOR, 0.4f) : CigaretteScreen.SECONDARY_COLOR;
+        int textColor = this.disabled ? ColorHelper.colorDarken(CigaretteScreen.PRIMARY_TEXT_COLOR, 0.4f) : CigaretteScreen.PRIMARY_TEXT_COLOR;
+        int primaryColor = this.disabled ? ColorHelper.colorDarken(CigaretteScreen.PRIMARY_COLOR, 0.4f) : CigaretteScreen.PRIMARY_COLOR;
+        int secondaryColor = this.disabled ? ColorHelper.colorDarken(CigaretteScreen.SECONDARY_COLOR, 0.4f) : CigaretteScreen.SECONDARY_COLOR;
 
         TextRenderer textRenderer = Cigarette.REGULAR;
         context.drawTextWithShadow(textRenderer, getMessage(), left + 4, top + 4, textColor);

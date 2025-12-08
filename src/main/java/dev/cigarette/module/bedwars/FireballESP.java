@@ -6,9 +6,9 @@ import dev.cigarette.gui.widget.BaseWidget;
 import dev.cigarette.gui.widget.ColorDropdownWidget;
 import dev.cigarette.gui.widget.TextWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
-import dev.cigarette.lib.Glow;
-import dev.cigarette.lib.Raycast;
-import dev.cigarette.lib.Renderer;
+import dev.cigarette.helper.GlowHelper;
+import dev.cigarette.helper.RaycastHelper;
+import dev.cigarette.helper.RenderHelper;
 import dev.cigarette.module.RenderModule;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.minecraft.block.ShapeContext;
@@ -33,10 +33,10 @@ import java.util.List;
 public class FireballESP extends RenderModule<ToggleWidget, Boolean> {
     public static final FireballESP INSTANCE = new FireballESP("bedwars.fireballesp", "FireballESP", "Displays the trajectory and blast radius of all fireballs.");
 
-    private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockespnophase", 1536, Renderer.BLOCK_ESP_NOPHASE, RenderLayer.MultiPhaseParameters.builder().build(false));
-    private static final RenderLayer RENDER_LAYER_SPHERE = RenderLayer.of("cigarette.triespnophase", 1536, Renderer.TRI_ESP_NOPHASE, RenderLayer.MultiPhaseParameters.builder().build(false));
+    private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockespnophase", 1536, RenderHelper.BLOCK_ESP_NOPHASE, RenderLayer.MultiPhaseParameters.builder().build(false));
+    private static final RenderLayer RENDER_LAYER_SPHERE = RenderLayer.of("cigarette.triespnophase", 1536, RenderHelper.TRI_ESP_NOPHASE, RenderLayer.MultiPhaseParameters.builder().build(false));
     private final HashSet<Fireball> fireballs = new HashSet<>();
-    private final Glow.Context glowContext = new Glow.Context();
+    private final GlowHelper.Context glowContext = new GlowHelper.Context();
 
     private final ColorDropdownWidget<ToggleWidget, Boolean> enableGlow = ColorDropdownWidget.buildToggle("Glowing", "Applies the glowing effect to the fireball entities").withAlpha(false).withDefaultColor(0xFFFF0000);
     private final ColorDropdownWidget<TextWidget, BaseWidget.Stateless> sphereColor = ColorDropdownWidget.buildText("Sphere Color", null).withDefaultColor(0x4FFF0000);
@@ -54,14 +54,14 @@ public class FireballESP extends RenderModule<ToggleWidget, Boolean> {
     protected void onWorldRender(WorldRenderContext ctx, @NotNull MatrixStack matrixStack) {
         matrixStack.push();
 
-        Matrix4f matrix = Renderer.getCameraTranslatedMatrix(matrixStack, ctx);
+        Matrix4f matrix = RenderHelper.getCameraTranslatedMatrix(matrixStack, ctx);
         Tessellator tessellator = Tessellator.getInstance();
 
         BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_COLOR);
 
         for (Fireball fireball : fireballs) {
             if (fireball.collisionNearPlayer && fireball.triangles != null) {
-                Renderer.drawSphere(buffer, matrix, sphereColor.getStateARGB(), fireball.triangles);
+                RenderHelper.drawSphere(buffer, matrix, sphereColor.getStateARGB(), fireball.triangles);
             }
         }
 
@@ -71,7 +71,7 @@ public class FireballESP extends RenderModule<ToggleWidget, Boolean> {
         buffer = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
 
         for (Fireball fireball : fireballs) {
-            Renderer.drawFakeLine(buffer, matrix, lineColor.getStateARGB(), fireball.collisionPathStart.toVector3f(), fireball.collisionPathEnd.toVector3f(), 0.1f);
+            RenderHelper.drawFakeLine(buffer, matrix, lineColor.getStateARGB(), fireball.collisionPathStart.toVector3f(), fireball.collisionPathEnd.toVector3f(), 0.1f);
         }
 
         build = buffer.endNullable();
@@ -91,7 +91,7 @@ public class FireballESP extends RenderModule<ToggleWidget, Boolean> {
             Vec3d start = entityfb.getPos();
             Vec3d end = start.add(velocity.multiply(1000));
 
-            HitResult result = Raycast.raycast(start, end, entityfb);
+            HitResult result = RaycastHelper.raycast(start, end, entityfb);
 
             Fireball fireball = null;
             switch (result.getType()) {
@@ -99,7 +99,7 @@ public class FireballESP extends RenderModule<ToggleWidget, Boolean> {
                     Vec3d collisionEnd = result.getPos();
                     double timeToCollision = start.distanceTo(collisionEnd) / velocity.length();
                     boolean nearPlayer = collisionEnd.distanceTo(player.getPos()) < 100;
-                    fireball = new Fireball(entityfb, timeToCollision, start, collisionEnd, nearPlayer, Renderer.calculateSphere(collisionEnd, 8.4f, player.getEyePos()));
+                    fireball = new Fireball(entityfb, timeToCollision, start, collisionEnd, nearPlayer, RenderHelper.calculateSphere(collisionEnd, 8.4f, player.getEyePos()));
                 }
                 case MISS -> {
                     fireball = new Fireball(entityfb, -1, start, end, false, null);
@@ -115,12 +115,12 @@ public class FireballESP extends RenderModule<ToggleWidget, Boolean> {
 
             Vec3d start = player.getEyePos();
             Vec3d end = start.add(camera.getRotationVector().multiply(1000));
-            HitResult result = Raycast.raycast(start, end, ShapeContext.absent());
+            HitResult result = RaycastHelper.raycast(start, end, ShapeContext.absent());
 
             switch (result.getType()) {
                 case BLOCK, ENTITY -> {
                     Vec3d collisionEnd = result.getPos();
-                    fireballs.add(new Fireball(null, -1, collisionEnd, collisionEnd, true, Renderer.calculateSphere(collisionEnd, 8.4f, player.getEyePos())));
+                    fireballs.add(new Fireball(null, -1, collisionEnd, collisionEnd, true, RenderHelper.calculateSphere(collisionEnd, 8.4f, player.getEyePos())));
                 }
             }
         }

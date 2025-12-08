@@ -4,8 +4,8 @@ import dev.cigarette.gui.CigaretteScreen;
 import dev.cigarette.gui.Scissor;
 import dev.cigarette.gui.hud.bar.api.BarWidget;
 import dev.cigarette.gui.hud.bar.api.BarWidgetRegistry;
-import dev.cigarette.lib.Color;
-import dev.cigarette.lib.Shape;
+import dev.cigarette.helper.ColorHelper;
+import dev.cigarette.helper.ShapeHelper;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -27,7 +27,7 @@ public class BarDisplay extends ClickableWidget {
 
     private final Map<String, AnimState> anim = new HashMap<>();
 
-    public static int BG_COLOR = Color.colorTransparentize(CigaretteScreen.PRIMARY_COLOR, 0.4f);
+    public static int BG_COLOR = ColorHelper.colorTransparentize(CigaretteScreen.PRIMARY_COLOR, 0.4f);
     public static int TARGET_ROW_HEIGHT = 24;
     public static int GLOBAL_PADDING = 6;
     public static int MAX_ROWS = 3;
@@ -193,7 +193,7 @@ public class BarDisplay extends ClickableWidget {
 
         Scissor.pushExclusive(context, x, y, x + width, y + height);
         int bgCol = BG_COLOR;
-        Shape.roundedRect(context, x, y, x + width, y + height, bgCol, 6);
+        ShapeHelper.roundedRect(context, x, y, x + width, y + height, bgCol, 6);
 
         int innerLeft = x + padX;
         int innerRight = x + width - padX;

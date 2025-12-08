@@ -5,9 +5,9 @@ import dev.cigarette.gui.widget.ColorDropdownWidget;
 import dev.cigarette.gui.widget.SliderWidget;
 import dev.cigarette.gui.widget.TextWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
-import dev.cigarette.lib.Glow;
-import dev.cigarette.lib.Raycast;
-import dev.cigarette.lib.Renderer;
+import dev.cigarette.helper.GlowHelper;
+import dev.cigarette.helper.RaycastHelper;
+import dev.cigarette.helper.RenderHelper;
 import dev.cigarette.module.RenderModule;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.minecraft.client.MinecraftClient;
@@ -34,9 +34,9 @@ import java.util.HashSet;
 public class ProjectileESP extends RenderModule<ToggleWidget, Boolean> {
     public static final ProjectileESP INSTANCE = new ProjectileESP("render.projectileesp", "ProjectileESP", "Displays the trajectory of all projectiles.");
 
-    private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockespnophase", 1536, Renderer.BLOCK_ESP_NOPHASE, RenderLayer.MultiPhaseParameters.builder().build(false));
+    private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockespnophase", 1536, RenderHelper.BLOCK_ESP_NOPHASE, RenderLayer.MultiPhaseParameters.builder().build(false));
     private final HashSet<Projectile> projectiles = new HashSet<>();
-    private final Glow.Context glowContext = new Glow.Context();
+    private final GlowHelper.Context glowContext = new GlowHelper.Context();
 
     private final ToggleWidget enableGlow = new ToggleWidget("Glowing", "Applies the glowing effect to the entities in the same color as the trajectory.").withDefaultState(true);
     private final ToggleWidget enablePrefire = new ToggleWidget("Show Prefire", "Shows trajectories while players are holding projectiles before they are shot.").withDefaultState(true);
@@ -65,19 +65,19 @@ public class ProjectileESP extends RenderModule<ToggleWidget, Boolean> {
     protected void onWorldRender(WorldRenderContext ctx, @NotNull MatrixStack matrixStack) {
         matrixStack.push();
 
-        Matrix4f matrix = Renderer.getCameraTranslatedMatrix(matrixStack, ctx);
+        Matrix4f matrix = RenderHelper.getCameraTranslatedMatrix(matrixStack, ctx);
         Tessellator tessellator = Tessellator.getInstance();
 
         BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
         for (Projectile projectile : projectiles) {
-            Raycast.SteppedTrajectory trajectory = projectile.trajectory;
+            RaycastHelper.SteppedTrajectory trajectory = projectile.trajectory;
 
             int collisionStep = trajectory.collisionStep != null ? trajectory.collisionStep : maxTicks.getRawState().intValue();
             Vec3d start = trajectory.steps[0];
             for (int tick = 1; tick < trajectory.steps.length; tick++) {
                 if (tick > collisionStep) break;
                 Vec3d end = trajectory.steps[tick];
-                Renderer.drawFakeLine(buffer, matrix, projectile.color, start.toVector3f(), end.toVector3f(), 0.1f);
+                RenderHelper.drawFakeLine(buffer, matrix, projectile.color, start.toVector3f(), end.toVector3f(), 0.1f);
                 start = end;
             }
         }
@@ -99,7 +99,7 @@ public class ProjectileESP extends RenderModule<ToggleWidget, Boolean> {
 
                 ItemStack holding = playerEntity.getMainHandStack();
                 if (holding.isOf(Items.BOW) || holding.isOf(Items.SNOWBALL) || holding.isOf(Items.EGG) || holding.isOf(Items.ENDER_PEARL)) {
-                    Raycast.SteppedTrajectory trajectory = Raycast.trajectory(playerEntity, holding, maxTicks.getRawState().intValue());
+                    RaycastHelper.SteppedTrajectory trajectory = RaycastHelper.trajectory(playerEntity, holding, maxTicks.getRawState().intValue());
                     if (trajectory == null) continue;
 
                     int color = 0xFFFFFFFF;
@@ -121,7 +121,7 @@ public class ProjectileESP extends RenderModule<ToggleWidget, Boolean> {
             if (entity instanceof SnowballEntity && !enableSnowballs.getToggleState()) continue;
             if (entity instanceof EggEntity && !enableEggs.getToggleState()) continue;
 
-            Raycast.SteppedTrajectory trajectory = Raycast.trajectory((ProjectileEntity) entity, maxTicks.getRawState().intValue());
+            RaycastHelper.SteppedTrajectory trajectory = RaycastHelper.trajectory((ProjectileEntity) entity, maxTicks.getRawState().intValue());
 
             int color = 0xFFFFFFFF;
             if (trajectory.collision instanceof EntityHitResult && customHitColor.getToggleState()) color = customHitColor.getStateARGB();
@@ -141,6 +141,6 @@ public class ProjectileESP extends RenderModule<ToggleWidget, Boolean> {
         this.glowContext.removeAll();
     }
 
-    private record Projectile(Entity entity, Raycast.SteppedTrajectory trajectory, int color) {
+    private record Projectile(Entity entity, RaycastHelper.SteppedTrajectory trajectory, int color) {
     }
 }

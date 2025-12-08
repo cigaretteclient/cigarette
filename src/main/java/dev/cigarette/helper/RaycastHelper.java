@@ -1,4 +1,4 @@
-package dev.cigarette.lib;
+package dev.cigarette.helper;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -25,7 +25,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Predicate;
 
-public class Raycast {
+public class RaycastHelper {
     private static final double ARROW_GRAVITY = -0.05;
     private static final double ITEM_GRAVITY = -0.03;
     private static final double DEFAULT_DRAG = 0.99;

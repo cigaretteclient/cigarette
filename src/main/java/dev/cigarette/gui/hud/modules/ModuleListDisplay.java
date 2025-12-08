@@ -3,7 +3,7 @@ package dev.cigarette.gui.hud.modules;
 import dev.cigarette.Cigarette;
 import dev.cigarette.gui.CategoryInstance;
 import dev.cigarette.gui.CigaretteScreen;
-import dev.cigarette.lib.Color;
+import dev.cigarette.helper.ColorHelper;
 import dev.cigarette.module.BaseModule;
 import dev.cigarette.module.ui.Watermark;
 import net.minecraft.client.MinecraftClient;
@@ -194,7 +194,7 @@ public class ModuleListDisplay extends ClickableWidget {
             }
 
             // int borderColor = scaleAlpha(0xFF000000 | (CigaretteScreen.PRIMARY_COLOR & 0x00FFFFFF), vis);
-            int borderColor = Color.colorVertical(bgTop, bgLeft);
+            int borderColor = ColorHelper.colorVertical(bgTop, bgLeft);
             int borderW = 2;
             int borderLeft = bgLeft;
             int borderRight = Math.min(bgRight, borderLeft + borderW);

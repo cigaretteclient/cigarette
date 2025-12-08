@@ -2,8 +2,8 @@ package dev.cigarette.gui.hud.bar.widgets;
 
 import dev.cigarette.gui.CigaretteScreen;
 import dev.cigarette.gui.hud.bar.BarDisplay;
-import dev.cigarette.lib.Color;
-import dev.cigarette.lib.Shape;
+import dev.cigarette.helper.ColorHelper;
+import dev.cigarette.helper.ShapeHelper;
 import dev.cigarette.gui.hud.bar.api.BarWidget;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
@@ -114,8 +114,8 @@ public class EntityChipWidget implements BarWidget {
         int borderW = 2;
         int bRight = Math.min(right, left + borderW);
         int borderColor = (iconColor != 0)
-                ? Color.scaleAlpha((iconColor & 0x00FFFFFF) | 0xFF000000, visibility)
-                : Color.scaleAlpha(Color.colorVertical(left, top), visibility);
+                ? ColorHelper.scaleAlpha((iconColor & 0x00FFFFFF) | 0xFF000000, visibility)
+                : ColorHelper.scaleAlpha(ColorHelper.colorVertical(left, top), visibility);
         if (left < bRight) ctx.fill(left, top, bRight, bottom, borderColor);
 
         int triSize = Math.min(10, height / 2);
@@ -126,8 +126,8 @@ public class EntityChipWidget implements BarWidget {
             float t = (float) Math.min(1.0, Math.abs(relDeg) / 180.0);
             int nearColor = CigaretteScreen.PRIMARY_COLOR;
             int farColor = CigaretteScreen.DARK_BACKGROUND_COLOR;
-            int lerped = Color.lerpColor(nearColor, farColor, t);
-            int triCol = Color.scaleAlpha(lerped, visibility);
+            int lerped = ColorHelper.lerpColor(nearColor, farColor, t);
+            int triCol = ColorHelper.scaleAlpha(lerped, visibility);
             double angleRad = Math.toRadians(relDeg) - Math.PI / 2.0;
             isoscelesTriangle(ctx, tx, ty, triSize, angleRad, triCol);
         }
@@ -137,7 +137,7 @@ public class EntityChipWidget implements BarWidget {
         boolean drewIcon = false;
         if (entity instanceof PlayerEntity player) {
             try {
-                Shape.userFaceTexture(ctx, iconLeft, iconTop, iconSize, iconSize, player);
+                ShapeHelper.userFaceTexture(ctx, iconLeft, iconTop, iconSize, iconSize, player);
                 drewIcon = true;
             } catch (Throwable ignored) {}
         } else if (entity instanceof LivingEntity living) {
@@ -150,19 +150,19 @@ public class EntityChipWidget implements BarWidget {
         }
         if (!drewIcon) {
             int iconCol = (iconColor == 0 ? 0xFFFFFFFF : iconColor);
-            iconCol = Color.scaleAlpha((iconCol & 0x00FFFFFF) | 0xFF000000, visibility);
+            iconCol = ColorHelper.scaleAlpha((iconCol & 0x00FFFFFF) | 0xFF000000, visibility);
             int cx2 = iconLeft + iconSize / 2;
             int cy2 = iconTop + iconSize / 2;
             int r2 = iconSize / 2 - 1;
             for (int i = 0; i < 2; i++) {
-                Shape.arc(ctx, cx2, cy2, r2 - i, 0, 360, iconCol);
+                ShapeHelper.arc(ctx, cx2, cy2, r2 - i, 0, 360, iconCol);
             }
             ctx.drawText(tr, "?", cx2 - tr.getWidth("?") / 2, cy2 - tr.fontHeight / 2, iconCol, false);
         }
 
         int textX = iconLeft + iconSize + padX;
         int textY = top + (height - tr.fontHeight) / 2;
-        int textColor = Color.scaleAlpha((CigaretteScreen.PRIMARY_TEXT_COLOR & 0x00FFFFFF) | 0xFF000000, visibility);
+        int textColor = ColorHelper.scaleAlpha((CigaretteScreen.PRIMARY_TEXT_COLOR & 0x00FFFFFF) | 0xFF000000, visibility);
         ctx.drawText(tr, label, textX, textY, textColor, true);
 
         float fade = 1f - Math.max(0f, Math.min(1f, visibility));
@@ -195,12 +195,12 @@ public class EntityChipWidget implements BarWidget {
             int barTop = top + height - Math.max(2, height / 6) - 2;
             int barHeight = Math.max(2, height / 6);
             if (textRight > textLeft) {
-                int bg = Color.scaleAlpha((barBgColor & 0x00FFFFFF) | 0xFF000000, visibility);
-                int fg = Color.scaleAlpha((barColor & 0x00FFFFFF) | 0xFF000000, visibility);
-                Shape.roundedRect(ctx, textLeft, barTop, textRight, barTop + barHeight, bg, 2);
+                int bg = ColorHelper.scaleAlpha((barBgColor & 0x00FFFFFF) | 0xFF000000, visibility);
+                int fg = ColorHelper.scaleAlpha((barColor & 0x00FFFFFF) | 0xFF000000, visibility);
+                ShapeHelper.roundedRect(ctx, textLeft, barTop, textRight, barTop + barHeight, bg, 2);
                 int fillRight = textLeft + Math.round((textRight - textLeft) * progress);
                 if (fillRight > textLeft) {
-                    Shape.roundedRect(ctx, textLeft, barTop, fillRight, barTop + barHeight, fg, 2);
+                    ShapeHelper.roundedRect(ctx, textLeft, barTop, fillRight, barTop + barHeight, fg, 2);
                 }
             }
         }

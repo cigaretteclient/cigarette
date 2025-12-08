@@ -1,4 +1,4 @@
-package dev.cigarette.lib;
+package dev.cigarette.helper;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.scoreboard.ScoreboardDisplaySlot;
@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collection;
 import java.util.HashMap;
 
-public class ScoreboardL {
+public class ScoreboardHelper {
     private static @Nullable ScoreboardObjective getHeader(MinecraftClient client) {
         if (client.world == null) return null;
         return client.world.getScoreboard().getObjectiveForSlot(ScoreboardDisplaySlot.SIDEBAR);
@@ -22,13 +22,13 @@ public class ScoreboardL {
     }
 
     public static String getUnformattedHeader(MinecraftClient client) {
-        ScoreboardObjective header = ScoreboardL.getHeader(client);
+        ScoreboardObjective header = ScoreboardHelper.getHeader(client);
         if (header == null) return "";
         return header.getDisplayName().getString();
     }
 
     public static String[] getUnformattedRows(MinecraftClient client) {
-        ScoreboardObjective header = ScoreboardL.getHeader(client);
+        ScoreboardObjective header = ScoreboardHelper.getHeader(client);
         if (header == null || client.world == null || client.player == null) return new String[]{};
 
         Collection<ScoreboardEntry> entries = client.world.getScoreboard().getScoreboardEntries(header);
@@ -38,7 +38,7 @@ public class ScoreboardL {
             if (team == null) continue;
             MutableText text = team.decorateName(entry.name());
             String displayText = text.getString();
-            rows.put(entry.value(), ScoreboardL.unformat(displayText));
+            rows.put(entry.value(), ScoreboardHelper.unformat(displayText));
         }
         return rows.values().toArray(new String[0]);
     }

@@ -1,4 +1,4 @@
-package dev.cigarette.lib;
+package dev.cigarette.helper;
 
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
@@ -21,7 +21,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class Renderer {
+public class RenderHelper {
     public static final RenderPipeline BLOCK_ESP_PHASE = RenderPipelines.register(RenderPipeline.builder(RenderPipelines.POSITION_COLOR_SNIPPET).withLocation("pipeline/cigarette.blockesp").withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.QUADS).withCull(false).withBlend(BlendFunction.TRANSLUCENT).withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST).build());
     public static final RenderPipeline BLOCK_ESP_NOPHASE = RenderPipelines.register(RenderPipeline.builder(RenderPipelines.POSITION_COLOR_SNIPPET).withLocation("pipeline/cigarette.blockespnophase").withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.QUADS).withCull(false).withBlend(BlendFunction.TRANSLUCENT).withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST).build());
 
@@ -209,11 +209,11 @@ public class Renderer {
     }
 
     public static void drawNorthBlockFace(BufferBuilder buffer, Matrix4f matrix, int argb, BlockPos pos) {
-        Renderer.drawZQuad(buffer, matrix, argb, pos.getZ(), pos.getX(), pos.getY(), pos.getX() + 1f, pos.getY() + 1f);
+        RenderHelper.drawZQuad(buffer, matrix, argb, pos.getZ(), pos.getX(), pos.getY(), pos.getX() + 1f, pos.getY() + 1f);
     }
 
     public static void drawSouthBlockFace(BufferBuilder buffer, Matrix4f matrix, int argb, BlockPos pos) {
-        Renderer.drawZQuad(buffer, matrix, argb, pos.getZ() + 1f, pos.getX(), pos.getY(), pos.getX() + 1f, pos.getY() + 1f);
+        RenderHelper.drawZQuad(buffer, matrix, argb, pos.getZ() + 1f, pos.getX(), pos.getY(), pos.getX() + 1f, pos.getY() + 1f);
     }
 
     public static void drawXQuad(BufferBuilder buffer, Matrix4f matrix, int argb, float x, float startY, float startZ, float endY, float endZ) {
@@ -224,11 +224,11 @@ public class Renderer {
     }
 
     public static void drawEastBlockFace(BufferBuilder buffer, Matrix4f matrix, int argb, BlockPos pos) {
-        Renderer.drawXQuad(buffer, matrix, argb, pos.getX() + 1f, pos.getY(), pos.getZ(), pos.getY() + 1f, pos.getZ() + 1f);
+        RenderHelper.drawXQuad(buffer, matrix, argb, pos.getX() + 1f, pos.getY(), pos.getZ(), pos.getY() + 1f, pos.getZ() + 1f);
     }
 
     public static void drawWestBlockFace(BufferBuilder buffer, Matrix4f matrix, int argb, BlockPos pos) {
-        Renderer.drawXQuad(buffer, matrix, argb, pos.getX(), pos.getY(), pos.getZ(), pos.getY() + 1f, pos.getZ() + 1f);
+        RenderHelper.drawXQuad(buffer, matrix, argb, pos.getX(), pos.getY(), pos.getZ(), pos.getY() + 1f, pos.getZ() + 1f);
     }
 
     public static void drawYQuad(BufferBuilder buffer, Matrix4f matrix, int argb, float y, float startX, float startZ, float endX, float endZ) {
@@ -239,10 +239,10 @@ public class Renderer {
     }
 
     public static void drawUpBlockFace(BufferBuilder buffer, Matrix4f matrix, int argb, BlockPos pos) {
-        Renderer.drawYQuad(buffer, matrix, argb, pos.getY() + 1, pos.getX(), pos.getZ(), pos.getX() + 1f, pos.getZ() + 1f);
+        RenderHelper.drawYQuad(buffer, matrix, argb, pos.getY() + 1, pos.getX(), pos.getZ(), pos.getX() + 1f, pos.getZ() + 1f);
     }
 
     public static void drawDownBlockFace(BufferBuilder buffer, Matrix4f matrix, int argb, BlockPos pos) {
-        Renderer.drawYQuad(buffer, matrix, argb, pos.getY(), pos.getX(), pos.getZ(), pos.getX() + 1f, pos.getZ() + 1f);
+        RenderHelper.drawYQuad(buffer, matrix, argb, pos.getY(), pos.getX(), pos.getZ(), pos.getX() + 1f, pos.getZ() + 1f);
     }
 }

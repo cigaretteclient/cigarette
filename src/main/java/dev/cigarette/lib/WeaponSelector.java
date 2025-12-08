@@ -1,6 +1,7 @@
 package dev.cigarette.lib;
 
 import dev.cigarette.agent.ZombiesAgent;
+import dev.cigarette.helper.TextHelper;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.item.Item;
@@ -98,7 +99,7 @@ public class WeaponSelector {
             double reloadTime = -1;
 
             for (Text line : tooltip) {
-                String text = TextL.toColorCodedString(line).replaceAll("§[a-zA-Z0-9]", "");
+                String text = TextHelper.toColorCodedString(line).replaceAll("§[a-zA-Z0-9]", "");
 
                 Matcher damageMatcher = DAMAGE_PATTERN.matcher(text);
                 if (damageMatcher.find()) {

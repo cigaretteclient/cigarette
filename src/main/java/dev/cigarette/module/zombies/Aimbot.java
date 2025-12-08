@@ -4,7 +4,7 @@ import dev.cigarette.GameDetector;
 import dev.cigarette.agent.ZombiesAgent;
 import dev.cigarette.gui.widget.SliderWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
-import dev.cigarette.lib.PlayerEntityL;
+import dev.cigarette.helper.PlayerEntityHelper;
 import dev.cigarette.lib.WeaponSelector;
 import dev.cigarette.mixin.ClientWorldAccessor;
 import dev.cigarette.module.TickModule;
@@ -15,7 +15,6 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.PendingUpdateManager;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.EntityPose;
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.util.Hand;
@@ -80,7 +79,7 @@ public class Aimbot extends TickModule<ToggleWidget, Boolean> {
             float aimPitch = (float) Math.toDegrees(Math.asin(-vector.y));
 
             if (!silentAim.getRawState()) {
-                PlayerEntityL.setRotationVector(player, vector);
+                PlayerEntityHelper.setRotationVector(player, vector);
             }
 
             ClientWorldAccessor clientWorldAccessor = (ClientWorldAccessor) world;

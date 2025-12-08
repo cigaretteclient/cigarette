@@ -2,7 +2,7 @@ package dev.cigarette.gui.widget;
 
 import dev.cigarette.gui.CigaretteScreen;
 import dev.cigarette.gui.Scissor;
-import dev.cigarette.lib.Shape;
+import dev.cigarette.helper.ShapeHelper;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import org.jetbrains.annotations.Nullable;
@@ -405,7 +405,7 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
                 }
                 int bottomRectTop = realBottomInt;
                 if (this.getEasedProgress() > 0.0 && showBottomRoundedRect) {
-                    Shape.roundedRect(context, left, bottomRectTop, right,
+                    ShapeHelper.roundedRect(context, left, bottomRectTop, right,
                             bottomRectTop + BOTTOM_ROUNDED_RECT_HEIGHT,
                             CigaretteScreen.BACKGROUND_COLOR, 5, false, true);
                 }

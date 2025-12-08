@@ -5,7 +5,7 @@ import dev.cigarette.gui.CigaretteScreen;
 import dev.cigarette.gui.hud.wmark.WatermarkDisplay;
 import dev.cigarette.gui.widget.ColorDropdownWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
-import dev.cigarette.lib.Color;
+import dev.cigarette.helper.ColorHelper;
 import dev.cigarette.module.RenderModule;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.minecraft.client.MinecraftClient;
@@ -20,7 +20,7 @@ public class Watermark extends RenderModule<ToggleWidget, Boolean> {
     private final ToggleWidget enableText = new ToggleWidget("Text", "Display text.").withDefaultState(true);
     private final ToggleWidget simplistic = new ToggleWidget("Simplistic", "A very simple watermark.").withDefaultState(false);
 
-    private final ColorDropdownWidget simpleBgColor = ColorDropdownWidget.buildToggle("Background Color", "The background color of the simplistic watermark.").withDefaultColor(Color.colorTransparentize(CigaretteScreen.PRIMARY_COLOR, 0.4f)).withDefaultState(true);
+    private final ColorDropdownWidget simpleBgColor = ColorDropdownWidget.buildToggle("Background Color", "The background color of the simplistic watermark.").withDefaultColor(ColorHelper.colorTransparentize(CigaretteScreen.PRIMARY_COLOR, 0.4f)).withDefaultState(true);
 
     private WatermarkDisplay display;
 
@@ -47,7 +47,7 @@ public class Watermark extends RenderModule<ToggleWidget, Boolean> {
         }
         WatermarkDisplay.TEXT_ENABLED = enableText.getRawState();
         WatermarkDisplay.SIMPLE_DISPLAY = simplistic.getRawState();
-        WatermarkDisplay.BG_COLOR = simpleBgColor.getToggleState() ? simpleBgColor.getStateARGB() : Color.colorTransparentize(CigaretteScreen.PRIMARY_COLOR, 0.4f);
+        WatermarkDisplay.BG_COLOR = simpleBgColor.getToggleState() ? simpleBgColor.getStateARGB() : ColorHelper.colorTransparentize(CigaretteScreen.PRIMARY_COLOR, 0.4f);
     }
 
     @Override

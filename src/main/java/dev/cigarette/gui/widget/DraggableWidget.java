@@ -2,8 +2,8 @@ package dev.cigarette.gui.widget;
 
 import dev.cigarette.Cigarette;
 import dev.cigarette.gui.CigaretteScreen;
-import dev.cigarette.lib.Color;
-import dev.cigarette.lib.Shape;
+import dev.cigarette.helper.ColorHelper;
+import dev.cigarette.helper.ShapeHelper;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -192,7 +192,7 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
     public void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left,
                        int top, int right, int bottom) {
         TextRenderer textRenderer = Cigarette.REGULAR;
-        int bgColor = Color.color(left, top);
+        int bgColor = ColorHelper.color(left, top);
         if (!this.expanded) {
             ticksOnCollapse = Math.min(ticksOnCollapse + 1, MAX_TICKS_ON_COLLAPSE);
         } else {
@@ -200,9 +200,9 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
         }
         double progress = ticksOnCollapse / (double) MAX_TICKS_ON_COLLAPSE;
         progress = CigaretteScreen.easeOutExpo(progress);
-        Shape.roundedRect(context, left, top, right, bottom, bgColor, 2, true, !this.expanded);
+        ShapeHelper.roundedRect(context, left, top, right, bottom, bgColor, 2, true, !this.expanded);
         if (this.expanded) {
-            int borderColor = Color.colorDarken(bgColor, 0.8f);
+            int borderColor = ColorHelper.colorDarken(bgColor, 0.8f);
             context.drawHorizontalLine(left, right - 1, bottom - 1, borderColor);
         }
         Text text = getMessage();

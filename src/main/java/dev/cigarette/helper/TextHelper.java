@@ -1,4 +1,4 @@
-package dev.cigarette.lib;
+package dev.cigarette.helper;
 
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
@@ -6,7 +6,7 @@ import net.minecraft.text.TextColor;
 
 import java.util.Optional;
 
-public class TextL {
+public class TextHelper {
     private static String styleToCodes(Style style) {
         StringBuilder builder = new StringBuilder();
         TextColor color = style.getColor();
@@ -44,7 +44,7 @@ public class TextL {
     public static String toColorCodedString(Text text) {
         StringBuilder builder = new StringBuilder();
         text.visit((style, text2) -> {
-            builder.append(TextL.styleToCodes(style));
+            builder.append(TextHelper.styleToCodes(style));
             builder.append(text2);
             return Optional.empty();
         }, text.getStyle());

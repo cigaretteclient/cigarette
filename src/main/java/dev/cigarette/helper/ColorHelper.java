@@ -1,9 +1,9 @@
-package dev.cigarette.lib;
+package dev.cigarette.helper;
 
 import dev.cigarette.gui.CigaretteScreen;
 import net.minecraft.client.MinecraftClient;
 
-public class Color {
+public class ColorHelper {
     public static int lerpColor(int color1, int color2, float t) {
         if (t < 0f)
             t = 0f;

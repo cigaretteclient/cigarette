@@ -1,9 +1,9 @@
-package dev.cigarette.lib;
+package dev.cigarette.helper;
 
 import java.util.HashMap;
 import java.util.UUID;
 
-public class Glow {
+public class GlowHelper {
     private static HashMap<UUID, Integer> UUID_COLORS = new HashMap<>();
 
     public static boolean hasGlow(UUID entityUUID) {
@@ -21,12 +21,12 @@ public class Glow {
 
         public void addGlow(UUID entityUUID, int color) {
             this.uuidColors.put(entityUUID, color);
-            Glow.UUID_COLORS.put(entityUUID, color);
+            GlowHelper.UUID_COLORS.put(entityUUID, color);
         }
 
         public void removeGlow(UUID entityUUID) {
             this.uuidColors.remove(entityUUID);
-            Glow.UUID_COLORS.remove(entityUUID);
+            GlowHelper.UUID_COLORS.remove(entityUUID);
         }
 
         public boolean hasGlow(UUID entityUUID) {
@@ -41,7 +41,7 @@ public class Glow {
 
         public void removeAll() {
             for (UUID entityUUID : uuidColors.keySet()) {
-                Glow.UUID_COLORS.remove(entityUUID);
+                GlowHelper.UUID_COLORS.remove(entityUUID);
             }
             uuidColors.clear();
         }

@@ -9,7 +9,7 @@ import dev.cigarette.config.FileSystem;
 import dev.cigarette.events.Events;
 import dev.cigarette.gui.CigaretteScreen;
 import dev.cigarette.gui.hud.notification.NotificationDisplay;
-import dev.cigarette.lib.ChatLogger;
+import dev.cigarette.helper.ChatLogger;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.HudLayerRegistrationCallback;

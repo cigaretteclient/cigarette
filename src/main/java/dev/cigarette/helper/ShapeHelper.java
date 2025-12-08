@@ -1,4 +1,4 @@
-package dev.cigarette.lib;
+package dev.cigarette.helper;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
@@ -7,7 +7,7 @@ import net.minecraft.client.util.SkinTextures;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Identifier;
 
-public class Shape {
+public class ShapeHelper {
     public static void pixelAt(DrawContext context, int x, int y, int color) {
         context.fill(x, y, x + 1, y + 1, color);
     }
@@ -82,7 +82,7 @@ public class Shape {
                 if (translucent && feather > 0.001f) {
                     int leftFeatherX = leftX - 1;
                     int rightFeatherX = rightX;
-                    int cEdge = Color.scaleAlpha(color, Math.max(0f, Math.min(1f, feather)));
+                    int cEdge = ColorHelper.scaleAlpha(color, Math.max(0f, Math.min(1f, feather)));
                     if (leftFeatherX >= left && leftFeatherX < right) {
                         context.fill(leftFeatherX, y, leftFeatherX + 1, y + 1, cEdge);
                     }
@@ -138,7 +138,7 @@ public class Shape {
                 if (translucent && feather > 0.001f) {
                     int leftFeatherX = leftX - 1;
                     int rightFeatherX = rightX;
-                    int cEdge = Color.scaleAlpha(color, Math.max(0f, Math.min(1f, feather)));
+                    int cEdge = ColorHelper.scaleAlpha(color, Math.max(0f, Math.min(1f, feather)));
                     if (leftFeatherX >= left && leftFeatherX < right) {
                         context.fill(leftFeatherX, y, leftFeatherX + 1, y + 1, cEdge);
                     }
@@ -211,14 +211,14 @@ public class Shape {
                 if (translucent) {
                     if (leftFeather > 0.001f) {
                         int lx = leftX - 1;
-                        int cEdge = Color.scaleAlpha(color, Math.max(0f, Math.min(1f, leftFeather)));
+                        int cEdge = ColorHelper.scaleAlpha(color, Math.max(0f, Math.min(1f, leftFeather)));
                         if (lx >= left && lx < right) {
                             context.fill(lx, y, lx + 1, y + 1, cEdge);
                         }
                     }
                     if (rightFeather > 0.001f) {
                         int rx = rightX;
-                        int cEdge = Color.scaleAlpha(color, Math.max(0f, Math.min(1f, rightFeather)));
+                        int cEdge = ColorHelper.scaleAlpha(color, Math.max(0f, Math.min(1f, rightFeather)));
                         if (rx >= left && rx < right) {
                             context.fill(rx, y, rx + 1, y + 1, cEdge);
                         }
@@ -314,14 +314,14 @@ public class Shape {
                 if (translucent) {
                     if (leftFeather > 0.001f) {
                         int lx = leftX - 1;
-                        int cEdge = Color.scaleAlpha(color, Math.max(0f, Math.min(1f, leftFeather)));
+                        int cEdge = ColorHelper.scaleAlpha(color, Math.max(0f, Math.min(1f, leftFeather)));
                         if (lx >= left && lx < right) {
                             context.fill(lx, y, lx + 1, y + 1, cEdge);
                         }
                     }
                     if (rightFeather > 0.001f) {
                         int rx = rightX;
-                        int cEdge = Color.scaleAlpha(color, Math.max(0f, Math.min(1f, rightFeather)));
+                        int cEdge = ColorHelper.scaleAlpha(color, Math.max(0f, Math.min(1f, rightFeather)));
                         if (rx >= left && rx < right) {
                             context.fill(rx, y, rx + 1, y + 1, cEdge);
                         }

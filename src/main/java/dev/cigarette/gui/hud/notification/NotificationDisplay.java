@@ -6,8 +6,8 @@ import java.util.List;
 import dev.cigarette.Cigarette;
 import dev.cigarette.gui.CigaretteScreen;
 import dev.cigarette.gui.hud.notification.internal.NotificationWithEasingProgress;
-import dev.cigarette.lib.Color;
-import dev.cigarette.lib.Shape;
+import dev.cigarette.helper.ColorHelper;
+import dev.cigarette.helper.ShapeHelper;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 
@@ -63,7 +63,7 @@ public class NotificationDisplay extends ClickableWidget {
 
         List<Integer> colors = new ArrayList<>();
         for (int i = 0; i < "cigarette".length(); i++) {
-            colors.add(Color.color(x + i * 10, y + 40));
+            colors.add(ColorHelper.color(x + i * 10, y + 40));
         }
         drawTextGradient(context, "cigarette", x, y + 40, colors.stream().mapToInt(i -> i).toArray());
     }
@@ -74,7 +74,7 @@ public class NotificationDisplay extends ClickableWidget {
                 Cigarette.LOGO_IDENTIFIER, x + 7, y, 0f, 0f, 30, 30, 30, 30);
         List<Integer> colors = new ArrayList<>();
         for (int i = 0; i < "cigarette".length(); i++) {
-            colors.add(Color.color((int) (x + i * 10 * gradientStaggerModifier),
+            colors.add(ColorHelper.color((int) (x + i * 10 * gradientStaggerModifier),
                     (int) (y + 40 * gradientStaggerModifier)));
         }
         drawTextGradient(context, "cigarette", x, y + 30, colors.stream().mapToInt(i -> i).toArray());
@@ -195,7 +195,7 @@ public class NotificationDisplay extends ClickableWidget {
                                     : notificationType.equals("error") ? 0xFFFF5C5C : 0xFF999999);
 
             int bg = CigaretteScreen.BACKGROUND_COLOR;
-            Shape.roundedRect(context, clampedLeft, clampedTop, clampedRight, clampedBottom, bg,
+            ShapeHelper.roundedRect(context, clampedLeft, clampedTop, clampedRight, clampedBottom, bg,
                     cornerRadius);
 
             float visibleStart = NotificationWithEasingProgress.APPEAR_TICKS;
@@ -225,7 +225,7 @@ public class NotificationDisplay extends ClickableWidget {
                         cornerRadius,
                         Math.min((barRight - barLeft) / 2, barHeight / 2)));
 
-                Shape.roundedRect(context,
+                ShapeHelper.roundedRect(context,
                         barLeft + 1, barTop, barRight, barBottom,
                         0xFF00FF00,
                         0,

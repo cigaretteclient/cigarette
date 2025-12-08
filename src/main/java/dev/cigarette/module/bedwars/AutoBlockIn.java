@@ -4,8 +4,8 @@ import dev.cigarette.GameDetector;
 import dev.cigarette.agent.BedwarsAgent;
 import dev.cigarette.gui.widget.*;
 import dev.cigarette.helper.KeybindHelper;
-import dev.cigarette.lib.PlayerEntityL;
-import dev.cigarette.lib.Raycast;
+import dev.cigarette.helper.PlayerEntityHelper;
+import dev.cigarette.helper.RaycastHelper;
 import dev.cigarette.module.TickModule;
 import dev.cigarette.precomputed.BlockIn;
 import net.minecraft.block.BlockState;
@@ -131,7 +131,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
             if (face == Direction.EAST && eye.getX() <= faceCenter.getX()) continue;
             if (face == Direction.WEST && eye.getX() >= faceCenter.getX()) continue;
 
-            HitResult res = Raycast.raycast(eye, faceCenter, ShapeContext.absent());
+            HitResult res = RaycastHelper.raycast(eye, faceCenter, ShapeContext.absent());
             if (res.getType() == BlockHitResult.Type.BLOCK) {
                 if (!((BlockHitResult) res).getBlockPos().equals(neighborPos)) continue;
             } else if (res.getType() == HitResult.Type.ENTITY) {
@@ -232,7 +232,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
             return;
         }
 
-        PlayerEntityL.setRotationVector(player, next.lookVector);
+        PlayerEntityHelper.setRotationVector(player, next.lookVector);
         KeybindHelper.KEY_USE_ITEM.press();
 
         int rand = variation.getRawState().intValue() > 0 ? (int) (Math.random() * variation.getRawState().intValue()) : 0;

@@ -21,11 +21,25 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Helper class for rendering 3D shapes in the world.
+ */
 public class RenderHelper {
+    /**
+     * Render pipeline for rendering quads with ESP effect (phase).
+     */
     public static final RenderPipeline BLOCK_ESP_PHASE = RenderPipelines.register(RenderPipeline.builder(RenderPipelines.POSITION_COLOR_SNIPPET).withLocation("pipeline/cigarette.blockesp").withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.QUADS).withCull(false).withBlend(BlendFunction.TRANSLUCENT).withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST).build());
+    /**
+     * Render pipeline for rendering quads with no ESP effect (no phase).
+     */
     public static final RenderPipeline BLOCK_ESP_NOPHASE = RenderPipelines.register(RenderPipeline.builder(RenderPipelines.POSITION_COLOR_SNIPPET).withLocation("pipeline/cigarette.blockespnophase").withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.QUADS).withCull(false).withBlend(BlendFunction.TRANSLUCENT).withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST).build());
-
+    /**
+     * Render pipeline for rendering triangles with ESP effect (phase).
+     */
     public static final RenderPipeline TRI_ESP_PHASE = RenderPipelines.register(RenderPipeline.builder(RenderPipelines.POSITION_COLOR_SNIPPET).withLocation("pipeline/cigarette.triesp").withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.TRIANGLES).withCull(false).withBlend(BlendFunction.TRANSLUCENT).withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST).build());
+    /**
+     * Render pipeline for rendering triangles with no ESP effect (no phase).
+     */
     public static final RenderPipeline TRI_ESP_NOPHASE = RenderPipelines.register(RenderPipeline.builder(RenderPipelines.POSITION_COLOR_SNIPPET).withLocation("pipeline/cigarette.triespnophase").withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.TRIANGLES).withCull(false).withBlend(BlendFunction.TRANSLUCENT).withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST).build());
 
     private static final int ICOSPHERE_REFINEMENT_STEPS = 4;
@@ -39,58 +53,47 @@ public class RenderHelper {
         // golden ratio
         double t = (1.0 + Math.sqrt(5.0)) / 2.0;
 
-        Vec3d[] vertices = {
-                new Vec3d(-1, t, 0).normalize(),
-                new Vec3d(1, t, 0).normalize(),
-                new Vec3d(-1, -t, 0).normalize(),
-                new Vec3d(1, -t, 0).normalize(),
-                
-                new Vec3d(0, -1, t).normalize(),
-                new Vec3d(0, 1, t).normalize(),
-                new Vec3d(0, -1, -t).normalize(),
-                new Vec3d(0, 1, -t).normalize(),
-                
-                new Vec3d(t, 0, -1).normalize(),
-                new Vec3d(t, 0, 1).normalize(),
-                new Vec3d(-t, 0, -1).normalize(),
-                new Vec3d(-t, 0, 1).normalize(),
-        };
-        
+        Vec3d[] vertices = {new Vec3d(-1, t, 0).normalize(), new Vec3d(1, t, 0).normalize(), new Vec3d(-1, -t, 0).normalize(), new Vec3d(1, -t, 0).normalize(),
+
+                new Vec3d(0, -1, t).normalize(), new Vec3d(0, 1, t).normalize(), new Vec3d(0, -1, -t).normalize(), new Vec3d(0, 1, -t).normalize(),
+
+                new Vec3d(t, 0, -1).normalize(), new Vec3d(t, 0, 1).normalize(), new Vec3d(-t, 0, -1).normalize(), new Vec3d(-t, 0, 1).normalize(),};
+
         List<Vec3d[]> triangles = new ArrayList<>();
 
-        triangles.add(new Vec3d[]{ vertices[0], vertices[11], vertices[5] });
-        triangles.add(new Vec3d[]{ vertices[0], vertices[5], vertices[1] });
-        triangles.add(new Vec3d[]{ vertices[0], vertices[1], vertices[7] });
-        triangles.add(new Vec3d[]{ vertices[0], vertices[7], vertices[10] });
-        triangles.add(new Vec3d[]{ vertices[0], vertices[10], vertices[11] });
+        triangles.add(new Vec3d[]{vertices[0], vertices[11], vertices[5]});
+        triangles.add(new Vec3d[]{vertices[0], vertices[5], vertices[1]});
+        triangles.add(new Vec3d[]{vertices[0], vertices[1], vertices[7]});
+        triangles.add(new Vec3d[]{vertices[0], vertices[7], vertices[10]});
+        triangles.add(new Vec3d[]{vertices[0], vertices[10], vertices[11]});
 
-        triangles.add(new Vec3d[]{ vertices[1], vertices[5], vertices[9] });
-        triangles.add(new Vec3d[]{ vertices[5], vertices[11], vertices[4] });
-        triangles.add(new Vec3d[]{ vertices[11], vertices[10], vertices[2] });
-        triangles.add(new Vec3d[]{ vertices[10], vertices[7], vertices[6] });
-        triangles.add(new Vec3d[]{ vertices[7], vertices[1], vertices[8] });
+        triangles.add(new Vec3d[]{vertices[1], vertices[5], vertices[9]});
+        triangles.add(new Vec3d[]{vertices[5], vertices[11], vertices[4]});
+        triangles.add(new Vec3d[]{vertices[11], vertices[10], vertices[2]});
+        triangles.add(new Vec3d[]{vertices[10], vertices[7], vertices[6]});
+        triangles.add(new Vec3d[]{vertices[7], vertices[1], vertices[8]});
 
-        triangles.add(new Vec3d[]{ vertices[3], vertices[9], vertices[4] });
-        triangles.add(new Vec3d[]{ vertices[3], vertices[4], vertices[2] });
-        triangles.add(new Vec3d[]{ vertices[3], vertices[2], vertices[6] });
-        triangles.add(new Vec3d[]{ vertices[3], vertices[6], vertices[8] });
-        triangles.add(new Vec3d[]{ vertices[3], vertices[8], vertices[9] });
+        triangles.add(new Vec3d[]{vertices[3], vertices[9], vertices[4]});
+        triangles.add(new Vec3d[]{vertices[3], vertices[4], vertices[2]});
+        triangles.add(new Vec3d[]{vertices[3], vertices[2], vertices[6]});
+        triangles.add(new Vec3d[]{vertices[3], vertices[6], vertices[8]});
+        triangles.add(new Vec3d[]{vertices[3], vertices[8], vertices[9]});
 
-        triangles.add(new Vec3d[]{ vertices[4], vertices[9], vertices[5] });
-        triangles.add(new Vec3d[]{ vertices[2], vertices[4], vertices[11] });
-        triangles.add(new Vec3d[]{ vertices[6], vertices[2], vertices[10] });
-        triangles.add(new Vec3d[]{ vertices[8], vertices[6], vertices[7] });
-        triangles.add(new Vec3d[]{ vertices[9], vertices[8], vertices[1] });
+        triangles.add(new Vec3d[]{vertices[4], vertices[9], vertices[5]});
+        triangles.add(new Vec3d[]{vertices[2], vertices[4], vertices[11]});
+        triangles.add(new Vec3d[]{vertices[6], vertices[2], vertices[10]});
+        triangles.add(new Vec3d[]{vertices[8], vertices[6], vertices[7]});
+        triangles.add(new Vec3d[]{vertices[9], vertices[8], vertices[1]});
 
         // step 2: refine to icosphere
 
         for (int i = 0; i < ICOSPHERE_REFINEMENT_STEPS; i++) {
             List<Vec3d[]> newTriangles = new ArrayList<>();
             for (Vec3d[] triangle : triangles) {
-                Vec3d[] mid = { triangle[0].add(triangle[1]).multiply(0.5).normalize(), triangle[1].add(triangle[2]).multiply(0.5).normalize(), triangle[2].add(triangle[0]).multiply(0.5).normalize() };
-                Vec3d[] t1 = { triangle[0], mid[0], mid[2] };
-                Vec3d[] t2 = { triangle[1], mid[1], mid[0] };
-                Vec3d[] t3 = { triangle[2], mid[2], mid[1] };
+                Vec3d[] mid = {triangle[0].add(triangle[1]).multiply(0.5).normalize(), triangle[1].add(triangle[2]).multiply(0.5).normalize(), triangle[2].add(triangle[0]).multiply(0.5).normalize()};
+                Vec3d[] t1 = {triangle[0], mid[0], mid[2]};
+                Vec3d[] t2 = {triangle[1], mid[1], mid[0]};
+                Vec3d[] t3 = {triangle[2], mid[2], mid[1]};
                 Collections.addAll(newTriangles, mid, t1, t2, t3);
             }
             triangles = newTriangles;
@@ -99,6 +102,13 @@ public class RenderHelper {
         SPHERE_TRIANGLES = triangles;
     }
 
+    /**
+     * Compute the camera-translated matrix from the given matrix stack and world render context.
+     *
+     * @param matrixStack The matrix stack to get the position matrix from.
+     * @param ctx         The world render context to get the camera position from.
+     * @return The camera-translated matrix.
+     */
     public static Matrix4f getCameraTranslatedMatrix(MatrixStack matrixStack, WorldRenderContext ctx) {
         Matrix4f matrix = matrixStack.peek().getPositionMatrix();
         Vec3d cam = ctx.camera().getPos();
@@ -106,6 +116,14 @@ public class RenderHelper {
         return matrix;
     }
 
+    /**
+     * Draws all six faces of a block at the given position.
+     *
+     * @param buffer The buffer to draw into.
+     * @param matrix The camera-translated matrix from {@link #getCameraTranslatedMatrix(MatrixStack, WorldRenderContext)}
+     * @param argb   The color in ARGB format.
+     * @param pos    The position of the block to draw at.
+     */
     public static void drawBlock(BufferBuilder buffer, Matrix4f matrix, int argb, BlockPos pos) {
         drawNorthBlockFace(buffer, matrix, argb, pos);
         drawSouthBlockFace(buffer, matrix, argb, pos);
@@ -115,6 +133,15 @@ public class RenderHelper {
         drawDownBlockFace(buffer, matrix, argb, pos);
     }
 
+    /**
+     * Draws a cube centered at the given position with a specified width.
+     *
+     * @param buffer The buffer to draw into.
+     * @param matrix The camera-translated matrix from {@link #getCameraTranslatedMatrix(MatrixStack, WorldRenderContext)}
+     * @param argb   The color in ARGB format.
+     * @param pos    The position of the cube center.
+     * @param width  The width of the cube.
+     */
     public static void drawCube(BufferBuilder buffer, Matrix4f matrix, int argb, Vec3d pos, float width) {
         float radius = width / 2;
         drawXQuad(buffer, matrix, argb, (float) pos.x - radius, (float) pos.y - radius, (float) pos.z - radius, (float) pos.y + radius, (float) pos.z + radius);
@@ -125,6 +152,14 @@ public class RenderHelper {
         drawZQuad(buffer, matrix, argb, (float) pos.z + radius, (float) pos.x - radius, (float) pos.y - radius, (float) pos.x + radius, (float) pos.y + radius);
     }
 
+    /**
+     * Draws a sphere from the given list of pre-translated triangles.
+     *
+     * @param buffer              The buffer to draw into.
+     * @param matrix              The camera-translated matrix from {@link #getCameraTranslatedMatrix(MatrixStack, WorldRenderContext)}
+     * @param argb                The color in ARGB format.
+     * @param translatedTriangles The list of pre-translated triangles that build up the sphere. Generated from {@link #calculateSphere(Vec3d, float, Vec3d)}.
+     */
     public static void drawSphere(BufferBuilder buffer, Matrix4f matrix, int argb, List<Vec3d[]> translatedTriangles) {
         for (Vec3d[] triangle : translatedTriangles) {
             for (Vec3d point : triangle) {
@@ -133,8 +168,16 @@ public class RenderHelper {
         }
     }
 
-    public static List<Vec3d[]> calculateSphere(Vec3d pos, float width, Vec3d camera) {
-        float radius = width / 2;
+    /**
+     * Computes the list of triangles that would make up a sphere at the given position with the specified diameter.
+     *
+     * @param pos      The center position of the sphere.
+     * @param diameter The diameter of the sphere.
+     * @param camera   The camera position for depth sorting.
+     * @return The list of triangles that make up the sphere, sorted by distance from the camera (farthest first).
+     */
+    public static List<Vec3d[]> calculateSphere(Vec3d pos, float diameter, Vec3d camera) {
+        float radius = diameter / 2;
         List<TriangleDistance> translatedTriangles = new ArrayList<>();
 
         for (Vec3d[] triangle : SPHERE_TRIANGLES) {
@@ -163,6 +206,16 @@ public class RenderHelper {
         }
     }
 
+    /**
+     * Draws a fake 3D line (a thin rectangular prism) between two points with the specified thickness.
+     *
+     * @param buffer    The buffer to draw into.
+     * @param matrix    The camera-translated matrix from {@link #getCameraTranslatedMatrix(MatrixStack, WorldRenderContext)}
+     * @param argb      The color in ARGB format.
+     * @param start     The starting point of the line.
+     * @param end       The ending point of the line.
+     * @param thickness The thickness of the line.
+     */
     public static void drawFakeLine(BufferBuilder buffer, Matrix4f matrix, int argb, Vector3f start, Vector3f end, float thickness) {
         buffer.vertex(matrix, start.x - thickness, start.y - thickness, start.z - thickness).color(argb);
         buffer.vertex(matrix, end.x - thickness, end.y - thickness, end.z - thickness).color(argb);
@@ -190,6 +243,15 @@ public class RenderHelper {
         buffer.vertex(matrix, end.x + thickness, end.y - thickness, end.z + thickness).color(argb);
     }
 
+    /**
+     * Draws a single face of a block at the given position in the specified direction.
+     *
+     * @param buffer    The buffer to draw into.
+     * @param matrix    The camera-translated matrix from {@link #getCameraTranslatedMatrix(MatrixStack, WorldRenderContext)}
+     * @param argb      The color in ARGB format.
+     * @param pos       The position of the block to draw at.
+     * @param direction The direction of the face to draw.
+     */
     public static void drawBlockFace(BufferBuilder buffer, Matrix4f matrix, int argb, BlockPos pos, Direction direction) {
         switch (direction) {
             case NORTH -> drawNorthBlockFace(buffer, matrix, argb, pos);
@@ -201,6 +263,18 @@ public class RenderHelper {
         }
     }
 
+    /**
+     * Draws a quad parallel to the Z plane.
+     *
+     * @param buffer The buffer to draw into.
+     * @param matrix The camera-translated matrix from {@link #getCameraTranslatedMatrix(MatrixStack, WorldRenderContext)}
+     * @param argb   The color in ARGB format.
+     * @param z      The Z coordinate of the quad.
+     * @param startX The starting X coordinate.
+     * @param startY The starting Y coordinate.
+     * @param endX   The ending X coordinate.
+     * @param endY   The ending Y coordinate.
+     */
     public static void drawZQuad(BufferBuilder buffer, Matrix4f matrix, int argb, float z, float startX, float startY, float endX, float endY) {
         buffer.vertex(matrix, startX, startY, z).color(argb);
         buffer.vertex(matrix, endX, startY, z).color(argb);
@@ -208,14 +282,42 @@ public class RenderHelper {
         buffer.vertex(matrix, startX, endY, z).color(argb);
     }
 
+    /**
+     * Draws the north face of a block at the given position. Equivalent to drawing a 1x1 quad the blocks Z coordinate.
+     *
+     * @param buffer The buffer to draw into.
+     * @param matrix The camera-translated matrix from {@link #getCameraTranslatedMatrix(MatrixStack, WorldRenderContext)}
+     * @param argb   The color in ARGB format.
+     * @param pos    The position of the block to draw at.
+     */
     public static void drawNorthBlockFace(BufferBuilder buffer, Matrix4f matrix, int argb, BlockPos pos) {
         RenderHelper.drawZQuad(buffer, matrix, argb, pos.getZ(), pos.getX(), pos.getY(), pos.getX() + 1f, pos.getY() + 1f);
     }
 
+    /**
+     * Draws the south face of a block at the given position. Equivalent to drawing a 1x1 quad at the blocks Z+1 coordinate.
+     *
+     * @param buffer The buffer to draw into.
+     * @param matrix The camera-translated matrix from {@link #getCameraTranslatedMatrix(MatrixStack, WorldRenderContext)}
+     * @param argb   The color in ARGB format.
+     * @param pos    The position of the block to draw at.
+     */
     public static void drawSouthBlockFace(BufferBuilder buffer, Matrix4f matrix, int argb, BlockPos pos) {
         RenderHelper.drawZQuad(buffer, matrix, argb, pos.getZ() + 1f, pos.getX(), pos.getY(), pos.getX() + 1f, pos.getY() + 1f);
     }
 
+    /**
+     * Draws a quad parallel to the X plane.
+     *
+     * @param buffer The buffer to draw into.
+     * @param matrix The camera-translated matrix from {@link #getCameraTranslatedMatrix(MatrixStack, WorldRenderContext)}
+     * @param argb   The color in ARGB format.
+     * @param x      The X coordinate of the quad.
+     * @param startY The starting Y coordinate.
+     * @param startZ The starting Z coordinate.
+     * @param endY   The ending Y coordinate.
+     * @param endZ   The ending Z coordinate.
+     */
     public static void drawXQuad(BufferBuilder buffer, Matrix4f matrix, int argb, float x, float startY, float startZ, float endY, float endZ) {
         buffer.vertex(matrix, x, startY, startZ).color(argb);
         buffer.vertex(matrix, x, endY, startZ).color(argb);
@@ -223,14 +325,42 @@ public class RenderHelper {
         buffer.vertex(matrix, x, startY, endZ).color(argb);
     }
 
+    /**
+     * Draws the east face of a block at the given position. Equivalent to drawing a 1x1 quad at the blocks X+1 coordinate.
+     *
+     * @param buffer The buffer to draw into.
+     * @param matrix The camera-translated matrix from {@link #getCameraTranslatedMatrix(MatrixStack, WorldRenderContext)}
+     * @param argb   The color in ARGB format.
+     * @param pos    The position of the block to draw at.
+     */
     public static void drawEastBlockFace(BufferBuilder buffer, Matrix4f matrix, int argb, BlockPos pos) {
         RenderHelper.drawXQuad(buffer, matrix, argb, pos.getX() + 1f, pos.getY(), pos.getZ(), pos.getY() + 1f, pos.getZ() + 1f);
     }
 
+    /**
+     * Draws the west face of a block at the given position. Equivalent to drawing a 1x1 quad at the blocks X coordinate.
+     *
+     * @param buffer The buffer to draw into.
+     * @param matrix The camera-translated matrix from {@link #getCameraTranslatedMatrix(MatrixStack, WorldRenderContext)}
+     * @param argb   The color in ARGB format.
+     * @param pos    The position of the block to draw at.
+     */
     public static void drawWestBlockFace(BufferBuilder buffer, Matrix4f matrix, int argb, BlockPos pos) {
         RenderHelper.drawXQuad(buffer, matrix, argb, pos.getX(), pos.getY(), pos.getZ(), pos.getY() + 1f, pos.getZ() + 1f);
     }
 
+    /**
+     * Draws the quad parallel to the Y plane.
+     *
+     * @param buffer The buffer to draw into.
+     * @param matrix The camera-translated matrix from {@link #getCameraTranslatedMatrix(MatrixStack, WorldRenderContext)}
+     * @param argb   The color in ARGB format.
+     * @param y      The Y coordinate of the quad.
+     * @param startX The starting X coordinate.
+     * @param startZ The starting Z coordinate.
+     * @param endX   The ending X coordinate.
+     * @param endZ   The ending Z coordinate.
+     */
     public static void drawYQuad(BufferBuilder buffer, Matrix4f matrix, int argb, float y, float startX, float startZ, float endX, float endZ) {
         buffer.vertex(matrix, startX, y, startZ).color(argb);
         buffer.vertex(matrix, endX, y, startZ).color(argb);
@@ -238,10 +368,26 @@ public class RenderHelper {
         buffer.vertex(matrix, startX, y, endZ).color(argb);
     }
 
+    /**
+     * Draws the up face of a block at the given position. Equivalent to drawing a 1x1 quad at the blocks Y+1 coordinate.
+     *
+     * @param buffer The buffer to draw into.
+     * @param matrix The camera-translated matrix from {@link #getCameraTranslatedMatrix(MatrixStack, WorldRenderContext)}
+     * @param argb   The color in ARGB format.
+     * @param pos    The position of the block to draw at.
+     */
     public static void drawUpBlockFace(BufferBuilder buffer, Matrix4f matrix, int argb, BlockPos pos) {
         RenderHelper.drawYQuad(buffer, matrix, argb, pos.getY() + 1, pos.getX(), pos.getZ(), pos.getX() + 1f, pos.getZ() + 1f);
     }
 
+    /**
+     * Draws the down face of a block at the given position. Equivalent to drawing a 1x1 quad at the blocks Y coordinate.
+     *
+     * @param buffer The buffer to draw into.
+     * @param matrix The camera-translated matrix from {@link #getCameraTranslatedMatrix(MatrixStack, WorldRenderContext)}
+     * @param argb   The color in ARGB format.
+     * @param pos    The position of the block to draw at.
+     */
     public static void drawDownBlockFace(BufferBuilder buffer, Matrix4f matrix, int argb, BlockPos pos) {
         RenderHelper.drawYQuad(buffer, matrix, argb, pos.getY(), pos.getX(), pos.getZ(), pos.getX() + 1f, pos.getZ() + 1f);
     }

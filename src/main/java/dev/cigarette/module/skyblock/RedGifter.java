@@ -181,9 +181,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
                 clearInventoryOfWorth(client, player, 0, false);
                 return;
             }
-            if (client.interactionManager != null) {
-                player.closeHandledScreen();
-            }
+            closeOpenedGUI(client, player);
             this.unblockNextTicks();
             return;
         }
@@ -220,9 +218,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
                 clearInventoryOfTrash(client, player, 0, false);
                 return;
             }
-            if (client.interactionManager != null) {
-                player.closeHandledScreen();
-            }
+            this.closeOpenedGUI(client, player);
             this.unblockNextTicks();
             return;
         }
@@ -260,6 +256,11 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
             if (stack.isEmpty()) emptySlots++;
         }
         return emptySlots < 4;
+    }
+
+    private void closeOpenedGUI(@NotNull MinecraftClient client, @NotNull ClientPlayerEntity player) {
+        if (client.currentScreen == null || client.interactionManager == null) return;
+        player.closeHandledScreen();
     }
 
     @Override
@@ -391,9 +392,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
         }
         client.interactionManager.clickSlot(0, slot, 0, SlotActionType.SWAP, player);
         TickHelper.scheduleOnce(this, () -> {
-            if (client.interactionManager != null) {
-                player.closeHandledScreen();
-            }
+            this.closeOpenedGUI(client, player);
             this.unblockNextTicks();
         }, 1);
     }
@@ -406,7 +405,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
      */
     private void refillFromStash(@NotNull MinecraftClient client, @NotNull ClientPlayerEntity player) {
         this.blockNextTicks();
-//        send '/viewstash material'
+        player.networkHandler.sendChatCommand("viewstash material");
         TickHelper.scheduleOnce(this, () -> {
             if (client.interactionManager == null) {
                 Cigarette.CHAT_LOGGER.error("Attempted to pull gifts from stash but the interaction manager did not exist.");
@@ -418,10 +417,11 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
                 Cigarette.CHAT_LOGGER.error("Attempted to pull gifts from stash but no GUI was opened.");
                 Cigarette.CHAT_LOGGER.info("Assuming stash is empty.");
                 stashMayHaveGifts = false;
+                this.unblockNextTicks();
                 return;
             }
             String guiTitle = TextL.toColorCodedString(gui.getTitle());
-            if (!guiTitle.equals("§rStash")) {
+            if (!guiTitle.equals("§rView Stash")) {
                 Cigarette.CHAT_LOGGER.error("Attempted to pull gifts from stash but an unknown GUI was opened.");
                 this.reset();
                 return;
@@ -432,9 +432,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
                 if (!itemIsGift(stack)) continue;
                 client.interactionManager.clickSlot(screenHandler.syncId, slot.id, 0, SlotActionType.PICKUP, player);
                 TickHelper.scheduleOnce(this, () -> {
-                    if (client.interactionManager != null && client.currentScreen != null) {
-                        player.closeHandledScreen();
-                    }
+                    this.closeOpenedGUI(client, player);
                     this.unblockNextTicks();
                 }, 1);
                 Cigarette.CHAT_LOGGER.info("Refilled from stash.");
@@ -443,6 +441,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
         }, 20);
         Cigarette.CHAT_LOGGER.error("Stash does not contain any gifts.");
         stashMayHaveGifts = false;
+        this.unblockNextTicks();
     }
 
     /**
@@ -487,9 +486,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
                     if (!line.contains("§e")) continue;
                     client.interactionManager.clickSlot(screenHandler.syncId, slot.id, 0, SlotActionType.PICKUP, player);
                     TickHelper.scheduleOnce(this, () -> {
-                        if (client.interactionManager != null && client.currentScreen != null) {
-                            player.closeHandledScreen();
-                        }
+                        this.closeOpenedGUI(client, player);
                         this.unblockNextTicks();
                     }, 1);
                     Cigarette.CHAT_LOGGER.info("Refilled from sacks.");
@@ -498,6 +495,8 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
             }
             Cigarette.CHAT_LOGGER.error("Sack does not contain any gifts.");
             stashMayHaveGifts = false;
+            this.closeOpenedGUI(client, player);
+            this.unblockNextTicks();
         }, 20);
     }
 

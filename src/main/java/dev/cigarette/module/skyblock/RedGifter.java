@@ -12,6 +12,7 @@ import dev.cigarette.lib.*;
 import dev.cigarette.module.RenderModule;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
@@ -19,7 +20,9 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.text.Text;
@@ -47,8 +50,9 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
     private final ToggleWidget setWorthLocation = new ToggleWidget("Set Worth", "Sets the worth drop location and look direction when clearing inventory.");
 
     public UUID playerToGift = null;
-    private boolean waitingForGUI = false;
-    private boolean justClearedInventory = false;
+    private boolean paused = false;
+    private boolean stashMayHaveGifts = true;
+    private boolean sacksMayHaveGifts = true;
     private @Nullable ItemDropLocation trashDropLocation = null;
     private @Nullable ItemDropLocation worthDropLocation = null;
 
@@ -100,6 +104,22 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
         });
     }
 
+    private void blockNextTicks() {
+        this.paused = true;
+    }
+
+    private void unblockNextTicks() {
+        this.paused = false;
+    }
+
+    private void reset() {
+        this.playerToGift = null;
+        this.paused = false;
+        this.stashMayHaveGifts = true;
+        this.sacksMayHaveGifts = true;
+        TickHelper.unschedule(this);
+    }
+
     public static boolean itemIsGift(ItemStack item) {
         String itemName = TextL.toColorCodedString(item.getName());
         return itemIsGift(itemName);
@@ -115,7 +135,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
     }
 
     public static boolean itemIsWorthSomething(String itemName) {
-        return itemName.endsWith("amond") || itemName.endsWith("Krampus Helmet") || itemName.endsWith("Winter Island") || itemName.endsWith("Cryopowder Shard") || itemName.endsWith("Snowman") || itemName.endsWith("Golden Gift") || itemName.endsWith("Holly Dye") || itemName.endsWith("Talisman");
+        return itemName.endsWith("Krampus Helmet") || itemName.endsWith("Winter Island") || itemName.endsWith("Cryopowder Shard") || itemName.endsWith("Snowman") || itemName.endsWith("Golden Gift") || itemName.endsWith("Holly Dye") || itemName.endsWith("Talisman");
     }
 
     public static boolean itemIsTrash(ItemStack item) {
@@ -155,6 +175,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
     }
 
     private void clearInventoryOfTrash(@NotNull MinecraftClient client, @NotNull ClientPlayerEntity player, int startingSlot, boolean snapAim, boolean worthNext, boolean worthNextSnapAim) {
+        this.blockNextTicks();
         if (startingSlot < 0 || startingSlot >= 36) {
             if (worthNext) {
                 clearInventoryOfWorth(client, player, 0, worthNextSnapAim, false, false);
@@ -163,8 +184,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
             if (client.interactionManager != null) {
                 player.closeHandledScreen();
             }
-            waitingForGUI = false;
-            justClearedInventory = true;
+            this.unblockNextTicks();
             return;
         }
         if (snapAim && trashDropLocation != null) {
@@ -193,6 +213,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
     }
 
     private void clearInventoryOfWorth(@NotNull MinecraftClient client, @NotNull ClientPlayerEntity player, int startingSlot, boolean snapAim, boolean trashNext, boolean trashNextSnapAim) {
+        this.blockNextTicks();
         if (startingSlot < 0 || startingSlot >= 36) {
             if (trashNext) {
                 clearInventoryOfTrash(client, player, 0, trashNextSnapAim, false, false);
@@ -201,8 +222,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
             if (client.interactionManager != null) {
                 player.closeHandledScreen();
             }
-            waitingForGUI = false;
-            justClearedInventory = true;
+            this.unblockNextTicks();
             return;
         }
         if (snapAim && worthDropLocation != null) {
@@ -230,6 +250,16 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
         }, 1);
     }
 
+    private boolean isInventoryPrettyMuchFull(@NotNull ClientPlayerEntity player) {
+        PlayerInventory inventory = player.getInventory();
+        int emptySlots = 0;
+        for (int i = 0; i < 36; i++) {
+            ItemStack stack = inventory.getStack(i);
+            if (stack.isEmpty()) emptySlots++;
+        }
+        return emptySlots < 4;
+    }
+
     @Override
     protected void onWorldRender(WorldRenderContext ctx, @NotNull MatrixStack matrixStack) {
         matrixStack.push();
@@ -254,111 +284,230 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
         matrixStack.pop();
     }
 
+    /**
+     * Looks at and opens any gifts around the player that say "CLICK TO OPEN".
+     *
+     * @param client The minecraft client.
+     * @param world The client world.
+     * @param player The client player.
+     */
+    private void openTick(@NotNull MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
+        for (Entity entity : world.getOtherEntities(player, player.getBoundingBox().expand(4))) {
+            if (!(entity instanceof ArmorStandEntity armorStand)) continue;
+
+            Text customName = armorStand.getCustomName();
+            if (customName == null) continue;
+
+            String name = TextL.toColorCodedString(customName);
+            if (!name.equals("§r§e§lCLICK TO OPEN")) continue;
+
+            PlayerEntityL.setRotationVector(player, armorStand.getPos().add(0, 1.5, 0).subtract(player.getEyePos()));
+            if (client.interactionManager != null) {
+                client.interactionManager.interactEntity(player, armorStand, Hand.MAIN_HAND);
+                client.interactionManager.interactEntity(player, armorStand, Hand.OFF_HAND);
+            }
+        }
+
+    }
+
+    /**
+     * Gifts the target player or triggers refills when none are found in the inventory.
+     *
+     * @param client The minecraft client.
+     * @param player The client player.
+     */
+    private void giftTick(@NotNull MinecraftClient client, @NotNull ClientPlayerEntity player) {
+        if (!RedGifter.holdingGift()) {
+            refillGifts(client, player);
+            return;
+        }
+        PlayerEntity targetPlayer = WorldL.getRealPlayerByUUID(this.playerToGift);
+        if (targetPlayer == null) {
+            Cigarette.CHAT_LOGGER.error("Target player no longer exists.");
+            this.reset();
+            return;
+        }
+        if (player.distanceTo(targetPlayer) > 3) {
+            Cigarette.CHAT_LOGGER.error("Target player is out of range.");
+            this.reset();
+            return;
+        }
+        PlayerEntityL.setRotationVector(player, targetPlayer.getPos().add(0, 1, 0).subtract(player.getEyePos()));
+        if (client.interactionManager == null) {
+            Cigarette.CHAT_LOGGER.error("Tried to use a gift but the interaction manager did not exist.");
+            this.reset();
+            return;
+        }
+        client.interactionManager.interactEntity(player, targetPlayer, Hand.MAIN_HAND);
+        client.interactionManager.interactEntity(player, targetPlayer, Hand.OFF_HAND);
+    }
+
+    /**
+     * Attempts to swap to the next stack of gifts, exploring the stash and a winter sack for more if enabled.
+     *
+     * @param client The minecraft client.
+     * @param player The client player.
+     */
+    private void refillGifts(@NotNull MinecraftClient client, @NotNull ClientPlayerEntity player) {
+        int slot = nextSlotWithGifts(player);
+        if (slot == -1) {
+            if (this.isInventoryPrettyMuchFull(player) && this.clearInventory.getRawState()) {
+                clearInventoryOfTrash(client, player, 0, true, true, true);
+                return;
+            }
+            if (cycleStash.getRawState() && stashMayHaveGifts) {
+                refillFromStash(client, player);
+                return;
+            } else if (cycleSacks.getRawState() && sacksMayHaveGifts) {
+                refillFromSacks(client, player);
+                return;
+            }
+        } else if (slot < 9) {
+            player.getInventory().setSelectedSlot(slot);
+            return;
+        } else if (cycleInventory.getRawState()) {
+            refillFromInventory(client, player, slot);
+            return;
+        }
+        Cigarette.CHAT_LOGGER.info("No more gifts to give.");
+        this.reset();
+    }
+
+    /**
+     * Forges packets to swap an inventory slot to the hotbar.
+     *
+     * @param client The minecraft client.
+     * @param player The client player.
+     * @param slot The slot in the inventory to swap into the hotbar.
+     */
+    private void refillFromInventory(@NotNull MinecraftClient client, @NotNull ClientPlayerEntity player, int slot) {
+        this.blockNextTicks();
+        if (client.interactionManager == null) {
+            Cigarette.CHAT_LOGGER.error("Attempted to swap gifts from inventory but the interaction manager did not exist.");
+            this.reset();
+            return;
+        }
+        client.interactionManager.clickSlot(0, slot, 0, SlotActionType.SWAP, player);
+        TickHelper.scheduleOnce(this, () -> {
+            if (client.interactionManager != null) {
+                player.closeHandledScreen();
+            }
+            this.unblockNextTicks();
+        }, 1);
+    }
+
+    /**
+     * Opens and pulls gifts out from the material stash.
+     *
+     * @param client The minecraft client.
+     * @param player The client player.
+     */
+    private void refillFromStash(@NotNull MinecraftClient client, @NotNull ClientPlayerEntity player) {
+        this.blockNextTicks();
+//        send '/viewstash material'
+        TickHelper.scheduleOnce(this, () -> {
+            if (client.interactionManager == null) {
+                Cigarette.CHAT_LOGGER.error("Attempted to pull gifts from stash but the interaction manager did not exist.");
+                this.reset();
+                return;
+            }
+            Screen gui = client.currentScreen;
+            if (gui == null) {
+                Cigarette.CHAT_LOGGER.error("Attempted to pull gifts from stash but no GUI was opened.");
+                Cigarette.CHAT_LOGGER.info("Assuming stash is empty.");
+                stashMayHaveGifts = false;
+                return;
+            }
+            String guiTitle = TextL.toColorCodedString(gui.getTitle());
+            if (!guiTitle.equals("§rStash")) {
+                Cigarette.CHAT_LOGGER.error("Attempted to pull gifts from stash but an unknown GUI was opened.");
+                this.reset();
+                return;
+            }
+            ScreenHandler screenHandler = player.currentScreenHandler;
+            for (Slot slot : screenHandler.slots) {
+                ItemStack stack = slot.getStack();
+                if (!itemIsGift(stack)) continue;
+                client.interactionManager.clickSlot(screenHandler.syncId, slot.id, 0, SlotActionType.PICKUP, player);
+                TickHelper.scheduleOnce(this, () -> {
+                    if (client.interactionManager != null && client.currentScreen != null) {
+                        player.closeHandledScreen();
+                    }
+                    this.unblockNextTicks();
+                }, 1);
+                Cigarette.CHAT_LOGGER.info("Refilled from stash.");
+                return;
+            }
+        }, 20);
+        Cigarette.CHAT_LOGGER.error("Stash does not contain any gifts.");
+        stashMayHaveGifts = false;
+    }
+
+    /**
+     * Opens and pulls gifts out from a winter sack.
+     *
+     * @param client The minecraft client.
+     * @param player The client player.
+     */
+    private void refillFromSacks(@NotNull MinecraftClient client, @NotNull ClientPlayerEntity player) {
+        this.blockNextTicks();
+        boolean switchedToSack = this.switchToWinterSack(player);
+        if (!switchedToSack) {
+            Cigarette.CHAT_LOGGER.error("Failed to switch to a winter sack. Make sure one is in the last hotbar slot.");
+            this.reset();
+            return;
+        }
+        KeybindHelper.KEY_USE_ITEM.holdForTicks(1);
+        TickHelper.scheduleOnce(this, () -> {
+            if (client.interactionManager == null) {
+                Cigarette.CHAT_LOGGER.error("Attempted to pull gifts from sacks but the interaction manager did not exist.");
+                this.reset();
+                return;
+            }
+            Screen gui = client.currentScreen;
+            if (gui == null) {
+                Cigarette.CHAT_LOGGER.error("Attempted to pull gifts from sacks but no GUI was opened.");
+                this.reset();
+                return;
+            }
+            String guiTitle = TextL.toColorCodedString(gui.getTitle());
+            if (!guiTitle.equals("§rWinter Sack")) {
+                Cigarette.CHAT_LOGGER.error("Attempted to pull gifts from sacks but an unknown GUI was opened.");
+                this.reset();
+                return;
+            }
+            ScreenHandler screenHandler = player.currentScreenHandler;
+            for (Slot slot : screenHandler.slots) {
+                ItemStack stack = slot.getStack();
+                if (!itemIsGift(stack)) continue;
+                for (String line : ItemStackL.getLoreLines(stack)) {
+                    if (!line.contains("Stored")) continue;
+                    if (!line.contains("§e")) continue;
+                    client.interactionManager.clickSlot(screenHandler.syncId, slot.id, 0, SlotActionType.PICKUP, player);
+                    TickHelper.scheduleOnce(this, () -> {
+                        if (client.interactionManager != null && client.currentScreen != null) {
+                            player.closeHandledScreen();
+                        }
+                        this.unblockNextTicks();
+                    }, 1);
+                    Cigarette.CHAT_LOGGER.info("Refilled from sacks.");
+                    return;
+                }
+            }
+            Cigarette.CHAT_LOGGER.error("Sack does not contain any gifts.");
+            stashMayHaveGifts = false;
+        }, 20);
+    }
+
     @Override
     protected void onEnabledTick(@NotNull MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
-        if (waitingForGUI) return;
+        if (this.paused) return;
         if (clearInventoryNow.getKeybind().isPhysicallyPressed()) {
-            waitingForGUI = true;
             clearInventoryOfTrash(client, player, 0, true, true, true);
             return;
         }
-        if (opener.getRawState()) {
-            for (Entity entity : world.getOtherEntities(player, player.getBoundingBox().expand(4))) {
-                if (!(entity instanceof ArmorStandEntity armorStand)) continue;
-
-                Text customName = armorStand.getCustomName();
-                if (customName == null) continue;
-
-                String name = TextL.toColorCodedString(customName);
-                if (!name.equals("§r§e§lCLICK TO OPEN")) continue;
-
-                PlayerEntityL.setRotationVector(player, armorStand.getPos().add(0, 1.5, 0).subtract(player.getEyePos()));
-                if (client.interactionManager != null) {
-                    client.interactionManager.interactEntity(player, armorStand, Hand.MAIN_HAND);
-                    client.interactionManager.interactEntity(player, armorStand, Hand.OFF_HAND);
-                }
-            }
-        } else if (gifter.getRawState() && this.playerToGift != null) {
-            if (!RedGifter.holdingGift()) {
-                int slot = nextSlotWithGifts(player);
-                if (justClearedInventory && slot != -1) {
-                    justClearedInventory = false;
-                }
-                if (slot == -1) {
-                    if (!cycleSacks.getRawState()) {
-                        this.playerToGift = null;
-                        Cigarette.CHAT_LOGGER.info("No more gifts to give, sack cycling is disabled.");
-                        return;
-                    }
-                    if (justClearedInventory || !clearInventory.getRawState()) {
-                        justClearedInventory = false;
-                        boolean switchedToSack = this.switchToWinterSack(player);
-                        if (switchedToSack) {
-                            waitingForGUI = true;
-                            KeybindHelper.KEY_USE_ITEM.holdForTicks(1);
-                            TickHelper.scheduleOnce(this, () -> {
-                                if (client.currentScreen != null && client.interactionManager != null) {
-                                    Text title = client.currentScreen.getTitle();
-                                    String titleString = TextL.toColorCodedString(title);
-                                    if (titleString.equals("§rWinter Sack")) {
-                                        for (Slot invSlot : player.currentScreenHandler.slots) {
-                                            ItemStack stack = invSlot.getStack();
-                                            if (!itemIsGift(stack)) continue;
-                                            for (String line : ItemStackL.getLoreLines(stack)) {
-                                                if (!line.contains("Stored")) continue;
-                                                if (!line.contains("§e")) continue;
-                                                client.interactionManager.clickSlot(player.currentScreenHandler.syncId, invSlot.id, 0, SlotActionType.PICKUP, player);
-                                                TickHelper.scheduleOnce(this, () -> {
-                                                    player.closeHandledScreen();
-                                                    waitingForGUI = false;
-                                                }, 1);
-                                                return;
-                                            }
-                                        }
-                                        playerToGift = null;
-                                        Cigarette.CHAT_LOGGER.info("No gifts found in Winter Sack, stopping.");
-                                    }
-                                    player.closeHandledScreen();
-                                }
-                                waitingForGUI = false;
-                            }, 20);
-                        }
-                    } else {
-                        waitingForGUI = true;
-                        clearInventoryOfTrash(client, player, 0, true, true, true);
-                    }
-                    return;
-                } else if (slot < 9) {
-                    player.getInventory().setSelectedSlot(slot);
-                } else {
-                    if (client.interactionManager == null || !cycleInventory.getRawState()) {
-                        this.playerToGift = null;
-                        Cigarette.CHAT_LOGGER.info("No more gifts to give, inventory cycling is disabled.");
-                        return;
-                    }
-                    client.interactionManager.clickSlot(0, slot, 0, SlotActionType.SWAP, player);
-                    waitingForGUI = true;
-                    TickHelper.scheduleOnce(this, () -> {
-                        if (client.interactionManager != null) {
-                            player.closeHandledScreen();
-                        }
-                        waitingForGUI = false;
-                    }, 1);
-                }
-                return;
-            }
-            PlayerEntity targetPlayer = WorldL.getRealPlayerByUUID(this.playerToGift);
-            if (targetPlayer == null || player.distanceTo(targetPlayer) > 3) {
-                this.playerToGift = null;
-                Cigarette.CHAT_LOGGER.info("Target player is out of range or no longer found.");
-                return;
-            }
-            PlayerEntityL.setRotationVector(player, targetPlayer.getPos().add(0, 1, 0).subtract(player.getEyePos()));
-            if (client.interactionManager != null) {
-                client.interactionManager.interactEntity(player, targetPlayer, Hand.MAIN_HAND);
-                client.interactionManager.interactEntity(player, targetPlayer, Hand.OFF_HAND);
-            }
-        }
+        if (opener.getRawState()) openTick(client, world, player);
+        else if (gifter.getRawState()) giftTick(client, player);
     }
 
     @Override

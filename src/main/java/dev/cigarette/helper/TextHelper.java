@@ -6,6 +6,9 @@ import net.minecraft.text.TextColor;
 
 import java.util.Optional;
 
+/**
+ * Helper class for handling annoying {@link Text} stuff.
+ */
 public class TextHelper {
     private static String styleToCodes(Style style) {
         StringBuilder builder = new StringBuilder();
@@ -41,6 +44,12 @@ public class TextHelper {
         return builder.toString();
     }
 
+    /**
+     * Converts a {@link Text} object to a 1.8.9-style string.
+     *
+     * @param text The text to convert.
+     * @return The color-coded string. Note that each block of styles will start with a ({@code §r}) including the start of the string.
+     */
     public static String toColorCodedString(Text text) {
         StringBuilder builder = new StringBuilder();
         text.visit((style, text2) -> {

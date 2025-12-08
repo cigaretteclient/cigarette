@@ -25,6 +25,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Predicate;
 
+/**
+ * Helper class for raycasting and projectile trajectory calculations.
+ */
 public class RaycastHelper {
     private static final double ARROW_GRAVITY = -0.05;
     private static final double ITEM_GRAVITY = -0.03;
@@ -33,22 +36,53 @@ public class RaycastHelper {
     private static final double FLUID_ITEM_DRAG = 0.8;
     private static final int MIN_PROJECTION_TICKS = 1;
 
+    /**
+     * {@return the hit result that would have occurred first between a block hit and an entity hit}
+     *
+     * @param blockResult  The block hit result.
+     * @param entityResult The entity hit result.
+     * @param source       The source position from which the raycast was performed.
+     */
     public static HitResult first(BlockHitResult blockResult, @Nullable EntityHitResult entityResult, Vec3d source) {
         return entityResult != null && entityResult.getPos().squaredDistanceTo(source) < blockResult.getPos().squaredDistanceTo(source) ? entityResult : blockResult;
     }
 
+    /**
+     * Performs a raycast between two points, checking for both block and entity collisions, returning the first to occur.
+     *
+     * @param start  The start position.
+     * @param end    The end position.
+     * @param entity The entity whose shape context will be used for block collisions and also ignored for entity collisions.
+     * @return The hit result (either block or entity) that occurs first.
+     */
     public static HitResult raycast(Vec3d start, Vec3d end, Entity entity) {
         BlockHitResult blockResult = raycastBlock(start, end, entity);
         EntityHitResult entityResult = raycastEntity(start, end, entity);
         return first(blockResult, entityResult, start);
     }
 
+    /**
+     * Performs a raycast between two points, checking for both block and entity collisions, returning the first to occur.
+     *
+     * @param start The start position.
+     * @param end   The end position.
+     * @param shape The shape context.
+     * @return The hit result (either block or entity) that occurs first.
+     */
     public static HitResult raycast(Vec3d start, Vec3d end, ShapeContext shape) {
         BlockHitResult blockResult = raycastBlock(start, end, shape);
         EntityHitResult entityResult = raycastEntity(start, end, null);
         return first(blockResult, entityResult, start);
     }
 
+    /**
+     * Performs a simple entity raycast between two points, excluding {@code excludedEntity} from the results.
+     *
+     * @param start          The start position.
+     * @param end            The end position.
+     * @param excludedEntity An excluded entity, or null to include all entities.
+     * @return The entity hit result.
+     */
     public static EntityHitResult raycastEntity(Vec3d start, Vec3d end, @Nullable Entity excludedEntity) {
         Entity cameraEntity = MinecraftClient.getInstance().cameraEntity;
         assert cameraEntity != null;
@@ -57,6 +91,14 @@ public class RaycastHelper {
         return ProjectileUtil.raycast(excludedEntity != null ? excludedEntity : cameraEntity, start, end, new Box(start, end).expand(3), EntityPredicates.CAN_HIT, distance);
     }
 
+    /**
+     * Performs a simple block raycast between two points.
+     *
+     * @param start The start position.
+     * @param end   The end position.
+     * @param shape The shape context.
+     * @return The block hit result.
+     */
     public static BlockHitResult raycastBlock(Vec3d start, Vec3d end, ShapeContext shape) {
         ClientWorld world = MinecraftClient.getInstance().world;
         assert world != null;
@@ -65,10 +107,26 @@ public class RaycastHelper {
         return world.raycast(ctx);
     }
 
+    /**
+     * Performs a simple block raycast between two points, using the entity's shape context for colliding with blocks.
+     *
+     * @param start  The start position.
+     * @param end    The end position.
+     * @param entity The entity whose shape context will be used.
+     * @return The block hit result.
+     */
     public static BlockHitResult raycastBlock(Vec3d start, Vec3d end, Entity entity) {
         return raycastBlock(start, end, ShapeContext.of(entity));
     }
 
+    /**
+     * Raycasts between two points, returning the first block hit and whether it is contained in the {@code whitelist} predicate.
+     *
+     * @param start     The start position.
+     * @param end       The end position.
+     * @param whitelist A predicate to test whether a block is whitelisted.
+     * @return A {@link FirstBlock} record containing information about the first block hit.
+     */
     public static FirstBlock firstBlockCollision(Vec3d start, Vec3d end, Predicate<BlockState> whitelist) {
         ClientWorld world = MinecraftClient.getInstance().world;
         assert world != null;
@@ -103,6 +161,14 @@ public class RaycastHelper {
         return new FirstBlock(hit, whitelisted, missed);
     }
 
+    /**
+     * Performs an entity collision check within a specified region.
+     *
+     * @param entity       The entity to exclude from the check, or null to include all entities, usually the source entity.
+     * @param entityRegion The region to search for entities.
+     * @param region       The region to check for intersections, usually the bounding box of the source entity.
+     * @return The entity hit result, or null if no entity intersects.
+     */
     public static @Nullable EntityHitResult withEntity(@Nullable Entity entity, Box entityRegion, Box region) {
         ClientWorld world = MinecraftClient.getInstance().world;
         assert world != null;
@@ -114,6 +180,14 @@ public class RaycastHelper {
         return null;
     }
 
+    /**
+     * Performs an entity collision check for {@code entity} at a specific position.
+     *
+     * @param entity   The entity to pull the bounding box from.
+     * @param position The position to check for collisions.
+     * @param padding  Padding to apply to the entity's bounding box to expand the search region.
+     * @return The entity hit result, or null if no entity intersects.
+     */
     public static @Nullable EntityHitResult withEntity(Entity entity, Vec3d position, double padding) {
         Box box = new Box(position.subtract(3), position.add(3));
         Box region = entity.getBoundingBox();
@@ -121,6 +195,13 @@ public class RaycastHelper {
         return withEntity(entity, box, region);
     }
 
+    /**
+     * Computes the {@link SteppedTrajectory} of a projectile entity over a specified number of {@code ticks}.
+     *
+     * @param entity The projectile entity.
+     * @param ticks  The number of ticks to project.
+     * @return The computed {@link SteppedTrajectory}.
+     */
     public static SteppedTrajectory trajectory(ProjectileEntity entity, int ticks) {
         ClientWorld world = MinecraftClient.getInstance().world;
         assert ticks > 0;
@@ -165,6 +246,14 @@ public class RaycastHelper {
         return trajectory;
     }
 
+    /**
+     * Computes the {@link SteppedTrajectory} of a projectile {@code item} that would be launched by the {@code player} over a specified number of {@code ticks}.
+     *
+     * @param player The player that would be launching the projectile.
+     * @param item   The projectile item.
+     * @param ticks  The number of ticks to project.
+     * @return The computed {@link SteppedTrajectory}, or null if there is immediate collision or if the projectile is a bow that is not being pulled.
+     */
     public static @Nullable SteppedTrajectory trajectory(PlayerEntity player, ItemStack item, int ticks) {
         ClientWorld world = MinecraftClient.getInstance().world;
         assert ticks > MIN_PROJECTION_TICKS;
@@ -213,6 +302,13 @@ public class RaycastHelper {
         return trajectory;
     }
 
+    /**
+     * Computes the velocity vector for a projectile launched by the {@code shooter} at the specified {@code speed}.
+     *
+     * @param shooter The entity launching the projectile.
+     * @param speed   The speed of the projectile.
+     * @return The velocity vector.
+     */
     private static Vec3d computeProjectileVelocity(Entity shooter, float speed) {
         float f = -MathHelper.sin(shooter.getYaw() * (float) (Math.PI / 180.0)) * MathHelper.cos(shooter.getPitch() * (float) (Math.PI / 180.0));
         float g = -MathHelper.sin((shooter.getPitch() + 0.0f) * (float) (Math.PI / 180.0));
@@ -221,6 +317,9 @@ public class RaycastHelper {
         return new Vec3d(f, g, h).normalize().multiply(speed).add(movement.x, shooter.isOnGround() ? 0.0 : movement.y, movement.z);
     }
 
+    /**
+     * A sequence of projectile positions over time, along with when (if any) collision occurs.
+     */
     public static class SteppedTrajectory {
         public final Vec3d[] steps;
         public @Nullable HitResult collision = null;

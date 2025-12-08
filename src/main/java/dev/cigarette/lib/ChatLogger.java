@@ -27,4 +27,12 @@ public class ChatLogger {
     public void info(String message) {
         this.info(Text.literal(message));
     }
+
+    public void error(MutableText message) {
+        this.send(this.header().append(message.withColor(0xFF0000)));
+    }
+
+    public void error(String message) {
+        this.error(Text.literal(message));
+    }
 }

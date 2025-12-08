@@ -49,11 +49,29 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
     private final ToggleWidget setTrashLocation = new ToggleWidget("Set Trash", "Sets the trash drop location and look direction when clearing inventory.");
     private final ToggleWidget setWorthLocation = new ToggleWidget("Set Worth", "Sets the worth drop location and look direction when clearing inventory.");
 
+    /**
+     * The target player to gift to.
+     */
     public UUID playerToGift = null;
+    /**
+     * Whether the module is currently paused (blocking ticks) due to scheduled tasks like refilling gifts from stash/sacks or clearing the inventory.
+     */
     private boolean paused = false;
+    /**
+     * Whether the stash may still contain gifts to refill from.
+     */
     private boolean stashMayHaveGifts = true;
+    /**
+     * Whether the sacks may still contain gifts to refill from.
+     */
     private boolean sacksMayHaveGifts = true;
+    /**
+     * The location and direction to drop trash items at when clearing the inventory.
+     */
     private @Nullable ItemDropLocation trashDropLocation = null;
+    /**
+     * The location and direction to drop worth items at when clearing the inventory.
+     */
     private @Nullable ItemDropLocation worthDropLocation = null;
 
     private RedGifter(String id, String name, String tooltip) {
@@ -104,14 +122,23 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
         });
     }
 
+    /**
+     * Blocks the next ticks from triggering anything.
+     */
     private void blockNextTicks() {
         this.paused = true;
     }
 
+    /**
+     * Unblocks the next ticks to allow them to trigger module events.
+     */
     private void unblockNextTicks() {
         this.paused = false;
     }
 
+    /**
+     * Resets the internal state of the module, clearing the target and any scheduled tasks.
+     */
     private void reset() {
         this.playerToGift = null;
         this.paused = false;
@@ -120,29 +147,57 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
         TickHelper.unschedule(this);
     }
 
+    /**
+     * {@return whether the provided item is a gift}
+     *
+     * @param item The item to check.
+     */
     public static boolean itemIsGift(ItemStack item) {
         String itemName = TextL.toColorCodedString(item.getName());
         return itemIsGift(itemName);
     }
 
+    /**
+     * {@return whether the provided item is a gift}
+     *
+     * @param itemName The name of the item to check.
+     */
     public static boolean itemIsGift(String itemName) {
         return itemName.endsWith("Red Gift") || itemName.endsWith("White Gift") || itemName.endsWith("Green Gift");
     }
 
+    /**
+     * {@return whether the provided item is a good drop from a gift}
+     *
+     * @param item The item to check.
+     */
     public static boolean itemIsWorthSomething(ItemStack item) {
         String itemName = TextL.toColorCodedString(item.getName());
         return itemIsWorthSomething(itemName);
     }
 
+    /**
+     * {@return whether the provided item is a good drop from a gift}
+     *
+     * @param itemName The name of the item to check.
+     */
     public static boolean itemIsWorthSomething(String itemName) {
         return itemName.endsWith("Krampus Helmet") || itemName.endsWith("Winter Island") || itemName.endsWith("Cryopowder Shard") || itemName.endsWith("Snowman") || itemName.endsWith("Golden Gift") || itemName.endsWith("Holly Dye") || itemName.endsWith("Talisman");
     }
 
+    /**
+     * {@return whether the provided item is trash (not a gift or a good drop)}
+     *
+     * @param item The item to check.
+     */
     public static boolean itemIsTrash(ItemStack item) {
         String itemName = TextL.toColorCodedString(item.getName());
         return !(itemIsGift(itemName) || itemIsWorthSomething(itemName));
     }
 
+    /**
+     * {@return whether the player is holding a gift in their main hand}
+     */
     public static boolean holdingGift() {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player != null) {
@@ -152,6 +207,11 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
         return false;
     }
 
+    /**
+     * {@return the next slot index containing gifts, 0-8 for hotbar, 9-35 for inventory, or -1 if none are found}
+     *
+     * @param player The player whose inventory to check.
+     */
     public static int nextSlotWithGifts(@NotNull ClientPlayerEntity player) {
         for (int i = 0; i < 36; i++) {
             ItemStack stack = player.getInventory().getStack(i);
@@ -162,6 +222,12 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
         return -1;
     }
 
+    /**
+     * Switches the player's selected hotbar slot to a winter sack if one exists in the hotbar.
+     *
+     * @param player The player whose hotbar to check and update.
+     * @return Whether a winter sack was found and switched to.
+     */
     private boolean switchToWinterSack(@NotNull ClientPlayerEntity player) {
         for (int i = 0; i < 9; i++) {
             ItemStack stack = player.getInventory().getStack(i);
@@ -174,6 +240,14 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
         return false;
     }
 
+    /**
+     * Clears the inventory of trash items (see {@link #itemIsTrash}), dropping them at the {@link #trashDropLocation} if set.
+     *
+     * @param client       The minecraft client.
+     * @param player       The client player.
+     * @param startingSlot The slot to start clearing from, 0-35, should always start at 0.
+     * @param worthNext    Whether to clear worth items next after trash is cleared.
+     */
     private void clearInventoryOfTrash(@NotNull MinecraftClient client, @NotNull ClientPlayerEntity player, int startingSlot, boolean worthNext) {
         this.blockNextTicks();
         if (startingSlot < 0 || startingSlot >= 36) {
@@ -211,6 +285,14 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
         }, 1);
     }
 
+    /**
+     * Clears the inventory of worth items (see {@link #itemIsWorthSomething(String)}, dropping them at {@link #worthDropLocation} if set.
+     *
+     * @param client       The minecraft client.
+     * @param player       The client player.
+     * @param startingSlot The slot to start clearing from, 0-35, should always start at 0.
+     * @param trashNext    Whether to clear trash items next after worth is cleared.
+     */
     private void clearInventoryOfWorth(@NotNull MinecraftClient client, @NotNull ClientPlayerEntity player, int startingSlot, boolean trashNext) {
         this.blockNextTicks();
         if (startingSlot < 0 || startingSlot >= 36) {
@@ -248,6 +330,11 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
         }, 1);
     }
 
+    /**
+     * {@return whether the player's inventory is almost full (less than 4 empty slots)}
+     *
+     * @param player The client player.
+     */
     private boolean isInventoryPrettyMuchFull(@NotNull ClientPlayerEntity player) {
         PlayerInventory inventory = player.getInventory();
         int emptySlots = 0;
@@ -258,6 +345,12 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
         return emptySlots < 4;
     }
 
+    /**
+     * Attempts to close any opened GUI. If a GUI is not opened, or the interaction manager does not exist, does nothing.
+     *
+     * @param client The minecraft client.
+     * @param player The client player.
+     */
     private void closeOpenedGUI(@NotNull MinecraftClient client, @NotNull ClientPlayerEntity player) {
         if (client.currentScreen == null || client.interactionManager == null) return;
         player.closeHandledScreen();

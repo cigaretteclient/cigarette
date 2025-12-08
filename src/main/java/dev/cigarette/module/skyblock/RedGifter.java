@@ -39,7 +39,8 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
     public final ToggleWidget gifter = new ToggleWidget("Run as Gifter", "Automatically gives red gifts to nearby players.").withDefaultState(false);
     public final ToggleWidget opener = new ToggleWidget("Run as Opener", "Automatically opens red gifts you receive.").withDefaultState(true);
     private final ToggleWidget cycleInventory = new ToggleWidget("Cycle Inventory", "Swap gifts from within your inventory into the hotbar to continue gifting.").withDefaultState(true);
-    private final ToggleWidget cycleSacks = new ToggleWidget("Cycle Sack", "Swap gifts from within your sacks into your inventory to continue gifting.").withDefaultState(false);
+    private final ToggleWidget cycleSacks = new ToggleWidget("Cycle Sack", "Pull gifts from within your sacks into your inventory to continue gifting.").withDefaultState(false);
+    private final ToggleWidget cycleStash = new ToggleWidget("Cycle Stash", "Pull gifts from within your stash into your inventory to continue gifting.").withDefaultState(false);
     private final ToggleWidget clearInventory = new ToggleWidget("Clear Inventory", "Automatically clears everything besides gifts from your inventory to refill from sacks.").withDefaultState(false);
     private final KeybindWidget clearInventoryNow = new KeybindWidget("Clear Now", "Clears non-gift drops and bad gift drops from your inventory when pressed.");
     private final ToggleWidget setTrashLocation = new ToggleWidget("Set Trash", "Sets the trash drop location and look direction when clearing inventory.");
@@ -54,11 +55,12 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
     private RedGifter(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
         TextWidget header = new TextWidget("Drop Locations").withUnderline();
-        this.setChildren(gifter, opener, cycleInventory, cycleSacks, clearInventory, clearInventoryNow, header, setTrashLocation, setWorthLocation);
+        this.setChildren(gifter, opener, cycleInventory, cycleSacks, cycleStash, clearInventory, clearInventoryNow, header, setTrashLocation, setWorthLocation);
         gifter.registerConfigKey(id + ".asgifter");
         opener.registerConfigKey(id + ".asopener");
         cycleInventory.registerConfigKey(id + ".cycleinventory");
         cycleSacks.registerConfigKey(id + ".cyclesacks");
+        cycleStash.registerConfigKey(id + ".cyclestash");
         clearInventory.registerConfigKey(id + ".clearinventory");
         clearInventoryNow.registerConfigKey(id + ".clearinventory.now");
         gifter.registerModuleCallback((Boolean state) -> {
@@ -73,6 +75,9 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
         });
         cycleSacks.registerModuleCallback((Boolean state) -> {
             if (state) cycleInventory.setRawState(true);
+        });
+        cycleStash.registerModuleCallback((Boolean state) -> {
+            if (state) clearInventory.setRawState(true);
         });
         clearInventory.registerModuleCallback((Boolean state) -> {
             if (state) cycleSacks.setRawState(true);

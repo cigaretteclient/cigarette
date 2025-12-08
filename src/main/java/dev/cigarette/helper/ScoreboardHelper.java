@@ -11,6 +11,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collection;
 import java.util.HashMap;
 
+/**
+ * Helper class for retrieving data from the scoreboard.
+ */
 public class ScoreboardHelper {
     private static @Nullable ScoreboardObjective getHeader(MinecraftClient client) {
         if (client.world == null) return null;
@@ -21,12 +24,22 @@ public class ScoreboardHelper {
         return text.replaceAll("§.", "");
     }
 
+    /**
+     * {@return the unformatted header of the scoreboard}
+     *
+     * @param client The Minecraft client instance.
+     */
     public static String getUnformattedHeader(MinecraftClient client) {
         ScoreboardObjective header = ScoreboardHelper.getHeader(client);
         if (header == null) return "";
         return header.getDisplayName().getString();
     }
 
+    /**
+     * {@return an array of unformatted rows from the scoreboard}
+     *
+     * @param client The Minecraft client instance.
+     */
     public static String[] getUnformattedRows(MinecraftClient client) {
         ScoreboardObjective header = ScoreboardHelper.getHeader(client);
         if (header == null || client.world == null || client.player == null) return new String[]{};

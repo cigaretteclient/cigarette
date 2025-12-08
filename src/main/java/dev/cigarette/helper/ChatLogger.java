@@ -6,6 +6,9 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
+/**
+ * Helper class for logging messages to the in-game chat.
+ */
 public class ChatLogger {
     private void send(Text text) {
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
@@ -20,10 +23,20 @@ public class ChatLogger {
         return text;
     }
 
+    /**
+     * Sends an info message to the player in chat.
+     *
+     * @param message The message to send.
+     */
     public void info(MutableText message) {
         this.send(this.header().append(message.withColor(0xD16100)));
     }
 
+    /**
+     * Sends an info message to the player in chat.
+     *
+     * @param message The message to send.
+     */
     public void info(String message) {
         this.info(Text.literal(message));
     }

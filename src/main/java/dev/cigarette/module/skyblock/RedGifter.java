@@ -174,11 +174,11 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
         return false;
     }
 
-    private void clearInventoryOfTrash(@NotNull MinecraftClient client, @NotNull ClientPlayerEntity player, int startingSlot, boolean snapAim, boolean worthNext, boolean worthNextSnapAim) {
+    private void clearInventoryOfTrash(@NotNull MinecraftClient client, @NotNull ClientPlayerEntity player, int startingSlot, boolean worthNext) {
         this.blockNextTicks();
         if (startingSlot < 0 || startingSlot >= 36) {
             if (worthNext) {
-                clearInventoryOfWorth(client, player, 0, worthNextSnapAim, false, false);
+                clearInventoryOfWorth(client, player, 0, false);
                 return;
             }
             if (client.interactionManager != null) {
@@ -187,36 +187,37 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
             this.unblockNextTicks();
             return;
         }
-        if (snapAim && trashDropLocation != null) {
-            if (player.squaredDistanceTo(trashDropLocation.position) < 0.5) {
-                PlayerEntityL.setRotationVector(player, trashDropLocation.direction);
-                TickHelper.scheduleOnce(this, () -> {
-                    clearInventoryOfTrash(client, player, startingSlot, false, worthNext, worthNextSnapAim);
-                }, 1);
-                return;
-            }
+        if (trashDropLocation != null && player.squaredDistanceTo(trashDropLocation.position) < 0.5) {
+            PlayerEntityL.setRotationVector(player, trashDropLocation.direction);
+            TickHelper.scheduleOnce(this, () -> clearInventoryOfTrash(client, player, startingSlot, worthNext), 1);
+            return;
         }
         TickHelper.scheduleOnce(this, () -> {
-            if (client.interactionManager == null) return;
-            for (int slot = startingSlot; slot < 36; slot++) {
-                ItemStack stack = player.getInventory().getStack(slot);
-                if (stack == ItemStack.EMPTY || !itemIsTrash(stack) || slot == 7 || slot == 8) continue;
-                player.swingHand(Hand.MAIN_HAND);
-
-                int actualSlot = slot < 9 ? slot + 36 : slot;
-                client.interactionManager.clickSlot(0, actualSlot, 1, SlotActionType.THROW, player);
-                clearInventoryOfTrash(client, player, slot + 1, false, worthNext, worthNextSnapAim);
+            if (client.interactionManager == null) {
+                Cigarette.CHAT_LOGGER.error("Tried to clear inventory but the interaction manager did not exist.");
+                this.reset();
                 return;
             }
-            clearInventoryOfTrash(client, player, -1, false, worthNext, worthNextSnapAim);
+            for (int slot = startingSlot; slot < 36; slot++) {
+                int actualSlot = slot < 9 ? slot + 36 : slot;
+                ItemStack stack = player.getInventory().getStack(slot);
+                if (stack == ItemStack.EMPTY || !itemIsTrash(stack) || slot == 7 || slot == 8) continue;
+
+                player.swingHand(Hand.MAIN_HAND);
+                client.interactionManager.clickSlot(0, actualSlot, 1, SlotActionType.THROW, player);
+
+                clearInventoryOfTrash(client, player, slot + 1, worthNext);
+                return;
+            }
+            clearInventoryOfTrash(client, player, -1, worthNext);
         }, 1);
     }
 
-    private void clearInventoryOfWorth(@NotNull MinecraftClient client, @NotNull ClientPlayerEntity player, int startingSlot, boolean snapAim, boolean trashNext, boolean trashNextSnapAim) {
+    private void clearInventoryOfWorth(@NotNull MinecraftClient client, @NotNull ClientPlayerEntity player, int startingSlot, boolean trashNext) {
         this.blockNextTicks();
         if (startingSlot < 0 || startingSlot >= 36) {
             if (trashNext) {
-                clearInventoryOfTrash(client, player, 0, trashNextSnapAim, false, false);
+                clearInventoryOfTrash(client, player, 0, false);
                 return;
             }
             if (client.interactionManager != null) {
@@ -225,28 +226,29 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
             this.unblockNextTicks();
             return;
         }
-        if (snapAim && worthDropLocation != null) {
-            if (player.squaredDistanceTo(worthDropLocation.position) < 0.5) {
-                PlayerEntityL.setRotationVector(player, worthDropLocation.direction);
-                TickHelper.scheduleOnce(this, () -> {
-                    clearInventoryOfWorth(client, player, startingSlot, false, trashNext, trashNextSnapAim);
-                }, 1);
-                return;
-            }
+        if (worthDropLocation != null && player.squaredDistanceTo(worthDropLocation.position) < 0.5) {
+            PlayerEntityL.setRotationVector(player, worthDropLocation.direction);
+            TickHelper.scheduleOnce(this, () -> clearInventoryOfWorth(client, player, startingSlot, trashNext), 1);
+            return;
         }
         TickHelper.scheduleOnce(this, () -> {
-            if (client.interactionManager == null) return;
-            for (int slot = startingSlot; slot < 36; slot++) {
-                ItemStack stack = player.getInventory().getStack(slot);
-                if (stack == ItemStack.EMPTY || !itemIsWorthSomething(stack) || slot == 7 || slot == 8) continue;
-                player.swingHand(Hand.MAIN_HAND);
-
-                int actualSlot = slot < 9 ? slot + 36 : slot;
-                client.interactionManager.clickSlot(0, actualSlot, 1, SlotActionType.THROW, player);
-                clearInventoryOfWorth(client, player, slot + 1, false, trashNext, trashNextSnapAim);
+            if (client.interactionManager == null) {
+                Cigarette.CHAT_LOGGER.error("Tried to clear inventory but the interaction manager did not exist.");
+                this.reset();
                 return;
             }
-            clearInventoryOfWorth(client, player, -1, false, trashNext, trashNextSnapAim);
+            for (int slot = startingSlot; slot < 36; slot++) {
+                int actualSlot = slot < 9 ? slot + 36 : slot;
+                ItemStack stack = player.getInventory().getStack(slot);
+                if (stack == ItemStack.EMPTY || !itemIsWorthSomething(stack) || slot == 7 || slot == 8) continue;
+
+                player.swingHand(Hand.MAIN_HAND);
+                client.interactionManager.clickSlot(0, actualSlot, 1, SlotActionType.THROW, player);
+
+                clearInventoryOfWorth(client, player, slot + 1, trashNext);
+                return;
+            }
+            clearInventoryOfWorth(client, player, -1, trashNext);
         }, 1);
     }
 
@@ -288,7 +290,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
      * Looks at and opens any gifts around the player that say "CLICK TO OPEN".
      *
      * @param client The minecraft client.
-     * @param world The client world.
+     * @param world  The client world.
      * @param player The client player.
      */
     private void openTick(@NotNull MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
@@ -352,7 +354,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
         int slot = nextSlotWithGifts(player);
         if (slot == -1) {
             if (this.isInventoryPrettyMuchFull(player) && this.clearInventory.getRawState()) {
-                clearInventoryOfTrash(client, player, 0, true, true, true);
+                clearInventoryOfTrash(client, player, 0, true);
                 return;
             }
             if (cycleStash.getRawState() && stashMayHaveGifts) {
@@ -378,7 +380,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
      *
      * @param client The minecraft client.
      * @param player The client player.
-     * @param slot The slot in the inventory to swap into the hotbar.
+     * @param slot   The slot in the inventory to swap into the hotbar.
      */
     private void refillFromInventory(@NotNull MinecraftClient client, @NotNull ClientPlayerEntity player, int slot) {
         this.blockNextTicks();
@@ -503,7 +505,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
     protected void onEnabledTick(@NotNull MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
         if (this.paused) return;
         if (clearInventoryNow.getKeybind().isPhysicallyPressed()) {
-            clearInventoryOfTrash(client, player, 0, true, true, true);
+            clearInventoryOfTrash(client, player, 0, true);
             return;
         }
         if (opener.getRawState()) openTick(client, world, player);

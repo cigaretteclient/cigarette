@@ -99,7 +99,7 @@ public class WeaponSelector {
             double reloadTime = -1;
 
             for (Text line : tooltip) {
-                String text = TextHelper.toColorCodedString(line).replaceAll("§[a-zA-Z0-9]", "");
+                String text = TextHelper.toUnformattedString(line);
 
                 Matcher damageMatcher = DAMAGE_PATTERN.matcher(text);
                 if (damageMatcher.find()) {

@@ -59,4 +59,19 @@ public class TextHelper {
         }, text.getStyle());
         return builder.toString();
     }
+
+    /**
+     * Converts a {@link Text} object to a plain string without any formatting.
+     *
+     * @param text The text to convert.
+     * @return The unformatted string.
+     */
+    public static String toUnformattedString(Text text) {
+        StringBuilder builder = new StringBuilder();
+        text.visit((style, text2) -> {
+            builder.append(text2);
+            return Optional.empty();
+        }, text.getStyle());
+        return builder.toString();
+    }
 }

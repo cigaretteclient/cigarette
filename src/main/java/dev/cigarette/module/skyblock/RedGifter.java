@@ -38,10 +38,10 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
 
     public final ToggleWidget gifter = new ToggleWidget("Run as Gifter", "Automatically gives red gifts to nearby players.").withDefaultState(false);
     public final ToggleWidget opener = new ToggleWidget("Run as Opener", "Automatically opens red gifts you receive.").withDefaultState(true);
-    private final ToggleWidget cycleInventory = new ToggleWidget("Cycle Inventory", "Swap gifts from within your inventory into the hotbar to continue gifting.").withDefaultState(true);
-    private final ToggleWidget cycleSacks = new ToggleWidget("Cycle Sack", "Pull gifts from within your sacks into your inventory to continue gifting.").withDefaultState(false);
-    private final ToggleWidget cycleStash = new ToggleWidget("Cycle Stash", "Pull gifts from within your stash into your inventory to continue gifting.").withDefaultState(false);
-    private final ToggleWidget clearInventory = new ToggleWidget("Clear Inventory", "Automatically clears everything besides gifts from your inventory to refill from sacks.").withDefaultState(false);
+    private final ToggleWidget cycleInventory = new ToggleWidget("From Inventory", "Swap gifts from within your inventory into the hotbar to continue gifting.").withDefaultState(true);
+    private final ToggleWidget cycleSacks = new ToggleWidget("From Sack", "Pull gifts from within your sacks into your inventory to continue gifting. Requires a winter sack in the hotbar. Use slot 8 to prevent the sack from being thrown out.").withDefaultState(false);
+    private final ToggleWidget cycleStash = new ToggleWidget("From Stash", "Pull gifts from within your stash into your inventory to continue gifting.").withDefaultState(false);
+    private final ToggleWidget clearInventory = new ToggleWidget("Clear Inventory", "Automatically clears everything besides gifts from your inventory and stash.").withDefaultState(false);
     private final KeybindWidget clearInventoryNow = new KeybindWidget("Clear Now", "Clears non-gift drops and bad gift drops from your inventory when pressed.");
     private final KeybindWidget stop = new KeybindWidget("Stop Gifting", "Stops the gifter module when pressed.");
     private final ToggleWidget setTrashLocation = new ToggleWidget("Set Trash", "Sets the trash drop location and look direction when clearing inventory.");
@@ -88,7 +88,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
         dropLocations.setHeader(new TextWidget("Drop Locations", "Configure drop locations for clearing inventory."));
         dropLocations.setChildren(setWorthLocation, setTrashLocation, clearLocations);
 
-        this.setChildren(gifter, opener, clearInventory, clearInventoryNow, cycleOptions, dropLocations);
+        this.setChildren(gifter, opener, stop, clearInventory, clearInventoryNow, snapOnOpenPlace, cycleOptions, dropLocations);
         gifter.registerConfigKey(id + ".asgifter");
         opener.registerConfigKey(id + ".asopener");
         stop.registerConfigKey(id + ".stop");

@@ -81,9 +81,11 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
     private RedGifter(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
 
-        DropdownWidget<ToggleWidget, BaseWidget.Stateless> cycleOptions = new DropdownWidget<>("Refill Options", "Configure how to refill gifts when gifting.");
+        DropdownWidget<TextWidget, BaseWidget.Stateless> cycleOptions = new DropdownWidget<>("Refill Options", "Configure how to refill gifts when gifting.");
+        cycleOptions.setHeader(new TextWidget("Refill Options", "Configure how to refill gifts when gifting."));
         cycleOptions.setChildren(cycleInventory, cycleSacks, cycleStash);
-        DropdownWidget<ToggleWidget, BaseWidget.Stateless> dropLocations = new DropdownWidget<>("Drop Locations", "Configure drop locations for clearing inventory.");
+        DropdownWidget<TextWidget, BaseWidget.Stateless> dropLocations = new DropdownWidget<>("Drop Locations", "Configure drop locations for clearing inventory.");
+        dropLocations.setHeader(new TextWidget("Drop Locations", "Configure drop locations for clearing inventory."));
         dropLocations.setChildren(setWorthLocation, setTrashLocation, clearLocations);
 
         this.setChildren(gifter, opener, clearInventory, clearInventoryNow, cycleOptions, dropLocations);

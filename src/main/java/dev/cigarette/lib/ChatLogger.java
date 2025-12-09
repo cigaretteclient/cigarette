@@ -28,6 +28,14 @@ public class ChatLogger {
         this.info(Text.literal(message));
     }
 
+    public void warning(MutableText message) {
+        this.send(this.header().append(message.withColor(0xFFFF00)));
+    }
+
+    public void warning(String message) {
+        this.warning(Text.literal(message));
+    }
+
     public void error(MutableText message) {
         this.send(this.header().append(message.withColor(0xFF0000)));
     }

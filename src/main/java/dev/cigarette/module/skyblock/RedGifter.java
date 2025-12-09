@@ -607,7 +607,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
                 }
             }
             Cigarette.CHAT_LOGGER.error("Sack does not contain any gifts.");
-            stashMayHaveGifts = false;
+            sacksMayHaveGifts = false;
             this.closeOpenedGUI(client, player);
             this.unblockNextTicks();
         }, 20);

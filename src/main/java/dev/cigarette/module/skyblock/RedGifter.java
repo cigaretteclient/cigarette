@@ -390,6 +390,10 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
      * @param player The client player.
      */
     private void openTick(@NotNull MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
+        if (this.clearInventory.getRawState() && this.isInventoryPrettyMuchFull(player)) {
+            clearInventoryOfTrash(client, player, 0, true);
+            return;
+        }
         for (Entity entity : world.getOtherEntities(player, player.getBoundingBox().expand(4))) {
             if (!(entity instanceof ArmorStandEntity armorStand)) continue;
 

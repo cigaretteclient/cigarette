@@ -64,6 +64,9 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
      * Whether the sacks may still contain gifts to refill from.
      */
     private boolean sacksMayHaveGifts = true;
+    /**
+     * Whether the stash may still contain items to clear out.
+     */
     private boolean stashMayHaveItems = true;
     /**
      * The location and direction to drop trash items at when clearing the inventory.
@@ -232,6 +235,11 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
         return false;
     }
 
+    /**
+     * {@return the number of empty slots in the player's inventory}
+     *
+     * @param player The client player.
+     */
     private int emptySlots(@NotNull ClientPlayerEntity player) {
         int emptySlots = 0;
         for (int i = 0; i < 36; i++) {

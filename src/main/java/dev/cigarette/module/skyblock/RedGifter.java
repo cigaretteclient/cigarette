@@ -65,6 +65,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
      * Whether the sacks may still contain gifts to refill from.
      */
     private boolean sacksMayHaveGifts = true;
+    private boolean stashMayHaveItems = true;
     /**
      * The location and direction to drop trash items at when clearing the inventory.
      */
@@ -135,6 +136,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
         this.paused = false;
         this.stashMayHaveGifts = true;
         this.sacksMayHaveGifts = true;
+        this.stashMayHaveItems = true;
         TickHelper.unschedule(this);
     }
 
@@ -229,6 +231,15 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
             }
         }
         return false;
+    }
+
+    private int emptySlots(@NotNull ClientPlayerEntity player) {
+        int emptySlots = 0;
+        for (int i = 0; i < 36; i++) {
+            ItemStack stack = player.getInventory().getStack(i);
+            if (stack.isEmpty()) emptySlots++;
+        }
+        return emptySlots;
     }
 
     /**
@@ -408,6 +419,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
             refillGifts(client, player);
             return;
         }
+        this.stashMayHaveItems = true;
         PlayerEntity targetPlayer = WorldL.getRealPlayerByUUID(this.playerToGift);
         if (targetPlayer == null) {
             Cigarette.CHAT_LOGGER.error("Target player no longer exists.");
@@ -438,9 +450,26 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
     private void refillGifts(@NotNull MinecraftClient client, @NotNull ClientPlayerEntity player) {
         int slot = nextSlotWithGifts(player);
         if (slot == -1) {
-            if (this.isInventoryPrettyMuchFull(player) && this.clearInventory.getRawState()) {
-                clearInventoryOfTrash(client, player, 0, true);
-                return;
+            if (this.clearInventory.getRawState()) {
+                if (this.stashMayHaveItems) {
+                    this.blockNextTicks();
+                    int beforeEmpty = this.emptySlots(player);
+                    player.networkHandler.sendChatCommand("pickupstash");
+                    TickHelper.scheduleOnce(this, () -> {
+                        int afterEmpty = this.emptySlots(player);
+                        if (afterEmpty >= beforeEmpty) {
+                            Cigarette.CHAT_LOGGER.info("Stash appears to be empty or inventory could not be filled.");
+                            stashMayHaveItems = false;
+                            this.unblockNextTicks();
+                            return;
+                        }
+                        clearInventoryOfTrash(client, player, 0, true);
+                    }, 5);
+                    return;
+                } else if (this.isInventoryPrettyMuchFull(player)) {
+                    clearInventoryOfTrash(client, player, 0, true);
+                    return;
+                }
             }
             if (cycleStash.getRawState() && stashMayHaveGifts) {
                 refillFromStash(client, player);

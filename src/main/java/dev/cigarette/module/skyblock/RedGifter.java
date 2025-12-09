@@ -464,7 +464,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
                             return;
                         }
                         clearInventoryOfTrash(client, player, 0, true);
-                    }, 20);
+                    }, 40);
                     return;
                 } else if (this.isInventoryPrettyMuchFull(player)) {
                     clearInventoryOfTrash(client, player, 0, true);

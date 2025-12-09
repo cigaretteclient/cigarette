@@ -95,15 +95,6 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
                 gifter.setRawState(!state);
             }
         });
-        cycleSacks.registerModuleCallback((Boolean state) -> {
-            if (state) cycleInventory.setRawState(true);
-        });
-        cycleStash.registerModuleCallback((Boolean state) -> {
-            if (state) clearInventory.setRawState(true);
-        });
-        clearInventory.registerModuleCallback((Boolean state) -> {
-            if (state) cycleSacks.setRawState(true);
-        });
         setTrashLocation.registerModuleCallback((Boolean state) -> {
             if (!state) return;
             ClientPlayerEntity player = MinecraftClient.getInstance().player;

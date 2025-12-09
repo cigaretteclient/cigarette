@@ -250,7 +250,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
             this.unblockNextTicks();
             return;
         }
-        if (trashDropLocation != null && player.squaredDistanceTo(trashDropLocation.position) < 0.5) {
+        if (trashDropLocation != null && player.squaredDistanceTo(trashDropLocation.position) < 0.5 && PlayerEntityL.angleBetween(player.getRotationVector(), trashDropLocation.direction) > 10) {
             PlayerEntityL.setRotationVector(player, trashDropLocation.direction);
             TickHelper.scheduleOnce(this, () -> clearInventoryOfTrash(client, player, startingSlot, worthNext), 1);
             return;
@@ -295,7 +295,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
             this.unblockNextTicks();
             return;
         }
-        if (worthDropLocation != null && player.squaredDistanceTo(worthDropLocation.position) < 0.5) {
+        if (worthDropLocation != null && player.squaredDistanceTo(worthDropLocation.position) < 0.5 && PlayerEntityL.angleBetween(player.getRotationVector(), worthDropLocation.direction) > 10) {
             PlayerEntityL.setRotationVector(player, worthDropLocation.direction);
             TickHelper.scheduleOnce(this, () -> clearInventoryOfWorth(client, player, startingSlot, trashNext), 1);
             return;

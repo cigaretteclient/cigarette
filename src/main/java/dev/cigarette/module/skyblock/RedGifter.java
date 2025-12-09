@@ -6,7 +6,6 @@ import dev.cigarette.GameDetector;
 import dev.cigarette.gui.widget.KeybindWidget;
 import dev.cigarette.gui.widget.TextWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
-import dev.cigarette.helper.KeybindHelper;
 import dev.cigarette.helper.TickHelper;
 import dev.cigarette.lib.*;
 import dev.cigarette.module.RenderModule;
@@ -575,7 +574,12 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
             this.reset();
             return;
         }
-        KeybindHelper.KEY_USE_ITEM.holdForTicks(1);
+        if (client.interactionManager == null) {
+            Cigarette.CHAT_LOGGER.error("Attempted to use a winter sack but the interaction manager did not exist.");
+            this.reset();
+            return;
+        }
+        client.interactionManager.interactItem(player, Hand.MAIN_HAND);
         TickHelper.scheduleOnce(this, () -> {
             if (client.interactionManager == null) {
                 Cigarette.CHAT_LOGGER.error("Attempted to pull gifts from sacks but the interaction manager did not exist.");

@@ -457,14 +457,14 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
                     player.networkHandler.sendChatCommand("pickupstash");
                     TickHelper.scheduleOnce(this, () -> {
                         int afterEmpty = this.emptySlots(player);
-                        if (afterEmpty >= beforeEmpty) {
-                            Cigarette.CHAT_LOGGER.info("Stash appears to be empty or inventory could not be filled.");
+                        if (afterEmpty >= beforeEmpty && !this.isInventoryPrettyMuchFull(player)) {
+                            Cigarette.CHAT_LOGGER.info("Stash appears to be empty.");
                             stashMayHaveItems = false;
                             this.unblockNextTicks();
                             return;
                         }
                         clearInventoryOfTrash(client, player, 0, true);
-                    }, 5);
+                    }, 20);
                     return;
                 } else if (this.isInventoryPrettyMuchFull(player)) {
                     clearInventoryOfTrash(client, player, 0, true);

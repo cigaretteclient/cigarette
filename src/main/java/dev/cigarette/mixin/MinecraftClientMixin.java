@@ -1,5 +1,6 @@
 package dev.cigarette.mixin;
 
+import dev.cigarette.Cigarette;
 import dev.cigarette.lib.WorldL;
 import dev.cigarette.module.skyblock.RedGifter;
 import net.minecraft.client.MinecraftClient;
@@ -31,6 +32,9 @@ public class MinecraftClientMixin {
             if (target instanceof PlayerEntity && WorldL.isRealPlayer((PlayerEntity) target)) {
                 ci.cancel();
                 RedGifter.INSTANCE.playerToGift = ((PlayerEntity) target).getGameProfile().getId();
+                if(RedGifter.INSTANCE.trashDropLocation == null || RedGifter.INSTANCE.worthDropLocation == null) {
+                    Cigarette.CHAT_LOGGER.warning("Missing drop locations, dropping may get mixed.");
+                }
             }
         }
     }

@@ -3,9 +3,7 @@ package dev.cigarette.module.skyblock;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import dev.cigarette.Cigarette;
 import dev.cigarette.GameDetector;
-import dev.cigarette.gui.widget.KeybindWidget;
-import dev.cigarette.gui.widget.TextWidget;
-import dev.cigarette.gui.widget.ToggleWidget;
+import dev.cigarette.gui.widget.*;
 import dev.cigarette.helper.TickHelper;
 import dev.cigarette.lib.*;
 import dev.cigarette.module.RenderModule;
@@ -45,8 +43,11 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
     private final ToggleWidget cycleStash = new ToggleWidget("Cycle Stash", "Pull gifts from within your stash into your inventory to continue gifting.").withDefaultState(false);
     private final ToggleWidget clearInventory = new ToggleWidget("Clear Inventory", "Automatically clears everything besides gifts from your inventory to refill from sacks.").withDefaultState(false);
     private final KeybindWidget clearInventoryNow = new KeybindWidget("Clear Now", "Clears non-gift drops and bad gift drops from your inventory when pressed.");
+    private final KeybindWidget stop = new KeybindWidget("Stop Gifting", "Stops the gifter module when pressed.");
     private final ToggleWidget setTrashLocation = new ToggleWidget("Set Trash", "Sets the trash drop location and look direction when clearing inventory.");
     private final ToggleWidget setWorthLocation = new ToggleWidget("Set Worth", "Sets the worth drop location and look direction when clearing inventory.");
+    private final ToggleWidget clearLocations = new ToggleWidget("Clear Locations", "Clears the saved drop locations.");
+    private final ToggleWidget snapOnOpenPlace = new ToggleWidget("Snap on Open/Place", "Snaps your head to gifts or target players when opening or placing gifts.").withDefaultState(true);
 
     /**
      * The target player to gift to.
@@ -71,23 +72,30 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
     /**
      * The location and direction to drop trash items at when clearing the inventory.
      */
-    private @Nullable ItemDropLocation trashDropLocation = null;
+    public @Nullable ItemDropLocation trashDropLocation = null;
     /**
      * The location and direction to drop worth items at when clearing the inventory.
      */
-    private @Nullable ItemDropLocation worthDropLocation = null;
+    public @Nullable ItemDropLocation worthDropLocation = null;
 
     private RedGifter(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
-        TextWidget header = new TextWidget("Drop Locations").withUnderline();
-        this.setChildren(gifter, opener, cycleInventory, cycleSacks, cycleStash, clearInventory, clearInventoryNow, header, setTrashLocation, setWorthLocation);
+
+        DropdownWidget<ToggleWidget, BaseWidget.Stateless> cycleOptions = new DropdownWidget<>("Refill Options", "Configure how to refill gifts when gifting.");
+        cycleOptions.setChildren(cycleInventory, cycleSacks, cycleStash);
+        DropdownWidget<ToggleWidget, BaseWidget.Stateless> dropLocations = new DropdownWidget<>("Drop Locations", "Configure drop locations for clearing inventory.");
+        dropLocations.setChildren(setWorthLocation, setTrashLocation, clearLocations);
+
+        this.setChildren(gifter, opener, clearInventory, clearInventoryNow, cycleOptions, dropLocations);
         gifter.registerConfigKey(id + ".asgifter");
         opener.registerConfigKey(id + ".asopener");
+        stop.registerConfigKey(id + ".stop");
         cycleInventory.registerConfigKey(id + ".cycleinventory");
         cycleSacks.registerConfigKey(id + ".cyclesacks");
         cycleStash.registerConfigKey(id + ".cyclestash");
         clearInventory.registerConfigKey(id + ".clearinventory");
         clearInventoryNow.registerConfigKey(id + ".clearinventory.now");
+        snapOnOpenPlace.registerConfigKey(id + ".snaponopenplace");
         gifter.registerModuleCallback((Boolean state) -> {
             if (opener.getRawState() == state) {
                 opener.setRawState(!state);
@@ -113,6 +121,12 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
                 worthDropLocation = new ItemDropLocation(player.getPos(), player.getRotationVector());
             }
             setWorthLocation.setRawState(false);
+        });
+        clearLocations.registerModuleCallback((Boolean state) -> {
+            if (!state) return;
+            trashDropLocation = null;
+            worthDropLocation = null;
+            clearLocations.setRawState(false);
         });
     }
 
@@ -410,7 +424,9 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
             String name = TextL.toColorCodedString(customName);
             if (!name.equals("§r§e§lCLICK TO OPEN")) continue;
 
-            PlayerEntityL.setRotationVector(player, armorStand.getPos().add(0, 1.5, 0).subtract(player.getEyePos()));
+            if (snapOnOpenPlace.getRawState()) {
+                PlayerEntityL.setRotationVector(player, armorStand.getPos().add(0, 1.5, 0).subtract(player.getEyePos()));
+            }
             if (client.interactionManager != null) {
                 client.interactionManager.interactEntity(player, armorStand, Hand.MAIN_HAND);
                 client.interactionManager.interactEntity(player, armorStand, Hand.OFF_HAND);
@@ -442,7 +458,9 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
             this.reset();
             return;
         }
-        PlayerEntityL.setRotationVector(player, targetPlayer.getPos().add(0, 1, 0).subtract(player.getEyePos()));
+        if (snapOnOpenPlace.getRawState()) {
+            PlayerEntityL.setRotationVector(player, targetPlayer.getPos().add(0, 1, 0).subtract(player.getEyePos()));
+        }
         if (client.interactionManager == null) {
             Cigarette.CHAT_LOGGER.error("Tried to use a gift but the interaction manager did not exist.");
             this.reset();
@@ -632,6 +650,11 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
     @Override
     protected void onEnabledTick(@NotNull MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
         if (this.paused) return;
+        if (stop.getKeybind().isPhysicallyPressed()) {
+            Cigarette.CHAT_LOGGER.info("Force stopping gifter.");
+            this.reset();
+            return;
+        }
         if (clearInventoryNow.getKeybind().isPhysicallyPressed()) {
             clearInventoryOfTrash(client, player, 0, true);
             return;
@@ -650,7 +673,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
         return GameDetector.rootGame == GameDetector.ParentGame.SKYBLOCK;
     }
 
-    private record ItemDropLocation(Vec3d position, Vec3d direction) {
+    public record ItemDropLocation(Vec3d position, Vec3d direction) {
         public ItemDropLocation(Vec3d position, Vec3d direction) {
             this.position = new Vec3d(position.x, position.y, position.z);
             this.direction = new Vec3d(direction.x, direction.y, direction.z).normalize();

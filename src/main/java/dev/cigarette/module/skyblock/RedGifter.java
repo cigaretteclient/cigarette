@@ -592,7 +592,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
             return;
         }
         if (opener.getRawState()) openTick(client, world, player);
-        else if (gifter.getRawState()) giftTick(client, player);
+        else if (gifter.getRawState() && this.playerToGift != null) giftTick(client, player);
     }
 
     @Override

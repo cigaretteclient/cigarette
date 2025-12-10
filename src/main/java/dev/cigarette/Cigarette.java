@@ -1,5 +1,6 @@
 package dev.cigarette;
 
+import com.mojang.brigadier.arguments.StringArgumentType;
 import dev.cigarette.agent.BedwarsAgent;
 import dev.cigarette.agent.DevWidget;
 import dev.cigarette.agent.MurderMysteryAgent;
@@ -10,7 +11,10 @@ import dev.cigarette.events.Events;
 import dev.cigarette.gui.CigaretteScreen;
 import dev.cigarette.gui.hud.notification.NotificationDisplay;
 import dev.cigarette.lib.ChatLogger;
+import dev.cigarette.lib.VersionManager;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.HudLayerRegistrationCallback;
 import net.fabricmc.fabric.api.client.rendering.v1.IdentifiedLayer;
@@ -61,6 +65,28 @@ public class Cigarette implements ModInitializer {
     public void onInitialize() {
         FileSystem.loadConfig();
 
+        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> dispatcher.register(ClientCommandManager.literal("cigarette-version")
+                .then(ClientCommandManager.literal("update")
+                        .executes((ctx) -> {
+                            VersionManager.update("", false);
+                            return 1;
+                        })
+                                .then(ClientCommandManager.argument("target", StringArgumentType.string())
+                                        .executes((ctx) -> {
+                                            VersionManager.update(ctx.getArgument("target", String.class), false);
+                                            return 1;
+                                        })))
+                .then(ClientCommandManager.literal("mc-update")
+                        .executes((ctx) -> {
+                            VersionManager.update("", true);
+                            return 1;
+                        })
+                        .then(ClientCommandManager.argument("target", StringArgumentType.string())
+                                .executes((ctx) -> {
+                                    VersionManager.update(ctx.getArgument("target", String.class), true);
+                                    return 1;
+                                })))));
+
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (client.currentScreen instanceof TitleScreen) {
                 if (addedNotificationDisplay)
@@ -71,28 +97,28 @@ public class Cigarette implements ModInitializer {
             }
         });
 
-    HudLayerRegistrationCallback.EVENT
-        .register(layeredDrawer -> layeredDrawer.attachLayerAfter(IdentifiedLayer.MISC_OVERLAYS,
-            Identifier.of("cigarette", "hud_after_misc_overlays"), (drawContext, tickDelta) -> {
-                Mouse m = MinecraftClient.getInstance().mouse;
-                Window w = MinecraftClient.getInstance().getWindow();
-                for (Pair<Vector4f, ClickableWidget> pair : HUD_ELEMENTS) {
-                Vector4f dimensions = pair.getLeft();
-                ClickableWidget widget = pair.getRight();
-                int x = (int) dimensions.x;
-                int y = (int) dimensions.y;
-                int width = (int) dimensions.z;
-                int height = (int) dimensions.w;
-                widget.setDimensions(width, height);
-                widget.setPosition(x, y);
-                widget.render(drawContext, (int) m.getScaledX(w), (int) m.getScaledY(w),
-                    tickDelta.getDynamicDeltaTicks());
-                }
-                if (NOTIFICATION_DISPLAY != null) {
-                NOTIFICATION_DISPLAY.render(drawContext, (int) m.getScaledX(w), (int) m.getScaledY(w),
-                    tickDelta.getDynamicDeltaTicks());
-                }
-            }));
+        HudLayerRegistrationCallback.EVENT
+            .register(layeredDrawer -> layeredDrawer.attachLayerAfter(IdentifiedLayer.MISC_OVERLAYS,
+                Identifier.of("cigarette", "hud_after_misc_overlays"), (drawContext, tickDelta) -> {
+                    Mouse m = MinecraftClient.getInstance().mouse;
+                    Window w = MinecraftClient.getInstance().getWindow();
+                    for (Pair<Vector4f, ClickableWidget> pair : HUD_ELEMENTS) {
+                    Vector4f dimensions = pair.getLeft();
+                    ClickableWidget widget = pair.getRight();
+                    int x = (int) dimensions.x;
+                    int y = (int) dimensions.y;
+                    int width = (int) dimensions.z;
+                    int height = (int) dimensions.w;
+                    widget.setDimensions(width, height);
+                    widget.setPosition(x, y);
+                    widget.render(drawContext, (int) m.getScaledX(w), (int) m.getScaledY(w),
+                        tickDelta.getDynamicDeltaTicks());
+                    }
+                    if (NOTIFICATION_DISPLAY != null) {
+                    NOTIFICATION_DISPLAY.render(drawContext, (int) m.getScaledX(w), (int) m.getScaledY(w),
+                        tickDelta.getDynamicDeltaTicks());
+                    }
+                }));
     }
 
     public static TextRenderer getTr(boolean bold) throws IOException {

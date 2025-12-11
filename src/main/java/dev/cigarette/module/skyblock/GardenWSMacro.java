@@ -20,6 +20,7 @@ public class GardenWSMacro extends TickModule<ToggleWidget, Boolean> {
     private final KeybindWidget toggle = new KeybindWidget("Toggle Keybind", "A keybind to toggle the macro.");
     private final ToggleWidget sendLogs = new ToggleWidget("Send Chat Logs", "Sends chat logs when switching directions.").withDefaultState(true);
     private final SliderWidget switchDelay = new SliderWidget("Switch Delay", "The delay (in ticks) between switching directions once the player stops moving.").withBounds(0, 0, 40);
+    private final ToggleWidget holdLeftClick = new ToggleWidget("Hold Left Click", "Holds left click while the macro is running.").withDefaultState(true);
 
     private boolean running = false;
     private boolean isForward = false;
@@ -28,9 +29,10 @@ public class GardenWSMacro extends TickModule<ToggleWidget, Boolean> {
 
     private GardenWSMacro(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
-        this.setChildren(toggle, switchDelay, sendLogs);
+        this.setChildren(toggle, switchDelay, holdLeftClick, sendLogs);
         toggle.registerConfigKey(id + ".toggle");
         switchDelay.registerConfigKey(id + ".switchdelay");
+        holdLeftClick.registerConfigKey(id + ".holdleftclick");
         sendLogs.registerConfigKey(id + ".sendlogs");
     }
 
@@ -41,6 +43,7 @@ public class GardenWSMacro extends TickModule<ToggleWidget, Boolean> {
             wasPaused = false;
             Cigarette.CHAT_LOGGER.info("Garden WS Macro " + (running ? "Enabled" : "Disabled") + ".");
             if (!running) {
+                KeybindHelper.KEY_ATTACK.release();
                 KeybindHelper.KEY_MOVE_FORWARD.release();
                 KeybindHelper.KEY_MOVE_BACK.release();
             } else {
@@ -52,7 +55,9 @@ public class GardenWSMacro extends TickModule<ToggleWidget, Boolean> {
         Vec3d vel = player.getVelocity();
         double speed = Math.sqrt(vel.x * vel.x + vel.z * vel.z);
         if (speed == 0) {
-            if (sendLogs.getRawState()) Cigarette.CHAT_LOGGER.info("Switching macro direction.");
+            if (sendLogs.getRawState()) {
+                Cigarette.CHAT_LOGGER.info("Switching macro direction.");
+            }
             if (switchDelay.getRawState() > 0 && !wasPaused) {
                 paused = true;
                 TickHelper.scheduleOnce(this, () -> {
@@ -63,6 +68,9 @@ public class GardenWSMacro extends TickModule<ToggleWidget, Boolean> {
             }
             wasPaused = false;
             isForward = !isForward;
+            if (holdLeftClick.getRawState()) {
+                KeybindHelper.KEY_ATTACK.hold();
+            }
             if (isForward) {
                 KeybindHelper.KEY_MOVE_BACK.release();
                 KeybindHelper.KEY_MOVE_FORWARD.hold(true);

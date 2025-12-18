@@ -1,9 +1,11 @@
 package dev.cigarette.helper;
 
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.Pair;
 
 import java.util.HashMap;
+import java.util.Set;
 
 /**
  * Helper class for scheduling events to occur in the future.
@@ -45,19 +47,23 @@ public class TickHelper {
         return onceActions.get(key).getLeft();
     }
 
-    static {
-        ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (onceActions.isEmpty()) return;
-            for (Object key : onceActions.keySet()) {
-                Pair<Integer, Runnable> action = onceActions.get(key);
-                int remainingTicks = action.getLeft() - 1;
-                if (remainingTicks <= 0) {
-                    onceActions.remove(key);
-                    action.getRight().run();
-                    continue;
-                }
-                action.setLeft(remainingTicks);
+    private static void tick(MinecraftClient client) {
+        if (onceActions.isEmpty()) return;
+        Set<Object> keys = onceActions.keySet();
+        for (Object key : keys.toArray()) {
+            if (!onceActions.containsKey(key)) continue;
+            Pair<Integer, Runnable> action = onceActions.get(key);
+            int remainingTicks = action.getLeft() - 1;
+            if (remainingTicks <= 0) {
+                onceActions.remove(key);
+                action.getRight().run();
+                continue;
             }
-        });
+            action.setLeft(remainingTicks);
+        }
+    }
+
+    static {
+        ClientTickEvents.END_CLIENT_TICK.register(TickHelper::tick);
     }
 }

@@ -10,7 +10,8 @@
     "PlayerEntityMixin",
     "PropertyMixin",
     "ScoreboardMixin",
-    "ClientConnectionMixin"
+    "ClientConnectionMixin",
+    "MinecraftClientMixin"
   ],
   "injectors": {
     "defaultRequire": 1

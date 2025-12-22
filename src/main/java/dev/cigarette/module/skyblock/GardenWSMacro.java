@@ -206,7 +206,6 @@ public class GardenWSMacro extends TickModule<ToggleWidget, Boolean> {
         double speed = Math.sqrt(vel.x * vel.x + vel.z * vel.z);
         if (speed == 0 && ++ticksSinceSwitch > switchCooldown.getRawState()) {
             ticksSinceSwitch = 0;
-            this.releaseAllKeys();
 
             if (warpToSpawnOnIce.getRawState() && world.getBlockState(player.getBlockPos().down()).getBlock().getDefaultState().isOf(Blocks.PACKED_ICE)) {
                 if (sendLogs.getRawState()) Cigarette.CHAT_LOGGER.info("Warping to Garden spawn.");
@@ -231,6 +230,8 @@ public class GardenWSMacro extends TickModule<ToggleWidget, Boolean> {
             }
             wasPaused = false;
             isPrimary = !isPrimary;
+
+            this.releaseAllKeys();
 
             ToggleWidget forward = isPrimary ? dir1Forward : dir2Forward;
             SliderWidget forwardDelay = isPrimary ? dir1ForwardDelay : dir2ForwardDelay;

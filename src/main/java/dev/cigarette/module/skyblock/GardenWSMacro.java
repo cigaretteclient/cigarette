@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class GardenWSMacro extends TickModule<ToggleWidget, Boolean> {
     public static final GardenWSMacro INSTANCE = new GardenWSMacro("skyblock.gardenwsmacro", "Garden WS Macro", "Swaps between holding W and S while farming.");
-    private static final int MAX_TICK_DELAY = 80;
+    private static final int MAX_TICK_DELAY = 400;
 
     private final KeybindWidget toggle = new KeybindWidget("Toggle Keybind", "A keybind to toggle the macro.");
     private final ToggleWidget sendLogs = new ToggleWidget("Send Chat Logs", "Sends chat logs when switching directions.").withDefaultState(true);

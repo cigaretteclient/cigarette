@@ -19,6 +19,7 @@ public class GardenWSMacro extends TickModule<ToggleWidget, Boolean> {
     private final KeybindWidget toggle = new KeybindWidget("Toggle Keybind", "A keybind to toggle the macro.");
     private final ToggleWidget sendLogs = new ToggleWidget("Send Chat Logs", "Sends chat logs when switching directions.").withDefaultState(true);
     private final SliderWidget switchDelay = new SliderWidget("Switch Delay", "The delay (in ticks) between switching directions once the player stops moving.").withBounds(0, 0, MAX_TICK_DELAY);
+    private final SliderWidget switchCooldown = new SliderWidget("Switch Cooldown", "The cooldown (in ticks) after switching directions before another switch can occur.").withBounds(0, 0, MAX_TICK_DELAY);
 
     private final ToggleWidget dir1Forward = new ToggleWidget("Hold Forward", "Move forward.").withDefaultState(true);
     private final SliderWidget dir1ForwardDelay = new SliderWidget("On Delay", "The delay (in ticks) before moving forward.").withBounds(0, 0, MAX_TICK_DELAY);
@@ -56,6 +57,7 @@ public class GardenWSMacro extends TickModule<ToggleWidget, Boolean> {
     private boolean isPrimary = false;
     private boolean paused = false;
     private boolean wasPaused = false;
+    private int ticksSinceSwitch = 0;
 
     private GardenWSMacro(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
@@ -129,9 +131,10 @@ public class GardenWSMacro extends TickModule<ToggleWidget, Boolean> {
         dir1Config.setChildren(initialForward, initialBackward, initialLeft, initialRight, initialHoldLeft);
         dir2Config.setChildren(altForward, altBackward, altLeft, altRight, altHoldLeft);
 
-        this.setChildren(toggle, switchDelay, sendLogs, dir1Config, dir2Config);
+        this.setChildren(toggle, switchDelay, switchCooldown, sendLogs, dir1Config, dir2Config);
         toggle.registerConfigKey(id + ".toggle");
         switchDelay.registerConfigKey(id + ".switchdelay");
+        switchCooldown.registerConfigKey(id + ".switchcooldown");
         sendLogs.registerConfigKey(id + ".sendlogs");
     }
 
@@ -161,6 +164,7 @@ public class GardenWSMacro extends TickModule<ToggleWidget, Boolean> {
         this.releaseAllKeys();
         isPrimary = true;
         paused = false;
+        ticksSinceSwitch = 0;
     }
 
     private void releaseAllKeys() {
@@ -180,6 +184,7 @@ public class GardenWSMacro extends TickModule<ToggleWidget, Boolean> {
             if (!running) {
                 this.reset();
             } else {
+                ticksSinceSwitch = switchCooldown.getRawState().intValue();
                 isPrimary = false;
             }
             return;
@@ -187,7 +192,8 @@ public class GardenWSMacro extends TickModule<ToggleWidget, Boolean> {
         if (!running || paused) return;
         Vec3d vel = player.getVelocity();
         double speed = Math.sqrt(vel.x * vel.x + vel.z * vel.z);
-        if (speed == 0) {
+        if (speed == 0 && ++ticksSinceSwitch > switchCooldown.getRawState()) {
+            ticksSinceSwitch = 0;
             if (sendLogs.getRawState()) {
                 Cigarette.CHAT_LOGGER.info("Switching macro direction.");
             }

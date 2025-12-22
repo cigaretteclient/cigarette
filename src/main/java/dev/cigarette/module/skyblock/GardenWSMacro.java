@@ -6,6 +6,7 @@ import dev.cigarette.gui.widget.*;
 import dev.cigarette.helper.KeybindHelper;
 import dev.cigarette.helper.TickHelper;
 import dev.cigarette.module.TickModule;
+import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
@@ -20,6 +21,8 @@ public class GardenWSMacro extends TickModule<ToggleWidget, Boolean> {
     private final ToggleWidget sendLogs = new ToggleWidget("Send Chat Logs", "Sends chat logs when switching directions.").withDefaultState(true);
     private final SliderWidget switchDelay = new SliderWidget("Switch Delay", "The delay (in ticks) between switching directions once the player stops moving.").withBounds(0, 0, MAX_TICK_DELAY);
     private final SliderWidget switchCooldown = new SliderWidget("Switch Cooldown", "The cooldown (in ticks) after switching directions before another switch can occur.").withBounds(0, 0, MAX_TICK_DELAY);
+    private final ToggleWidget warpToSpawn = new ToggleWidget("Warp to Spawn", "Automatically warp to garden spawn when enabling the macro.").withDefaultState(false);
+    private final ToggleWidget warpToSpawnOnIce = new ToggleWidget("Ice to Spawn", "Warp to garden spawn when macro stops on packed ice.").withDefaultState(false);
 
     private final ToggleWidget dir1Forward = new ToggleWidget("Hold Forward", "Move forward.").withDefaultState(true);
     private final SliderWidget dir1ForwardDelay = new SliderWidget("On Delay", "The delay (in ticks) before moving forward.").withBounds(0, 0, MAX_TICK_DELAY);
@@ -131,10 +134,12 @@ public class GardenWSMacro extends TickModule<ToggleWidget, Boolean> {
         dir1Config.setChildren(initialForward, initialBackward, initialLeft, initialRight, initialHoldLeft);
         dir2Config.setChildren(altForward, altBackward, altLeft, altRight, altHoldLeft);
 
-        this.setChildren(toggle, switchDelay, switchCooldown, sendLogs, dir1Config, dir2Config);
+        this.setChildren(toggle, switchDelay, switchCooldown, warpToSpawn, warpToSpawnOnIce, sendLogs, dir1Config, dir2Config);
         toggle.registerConfigKey(id + ".toggle");
         switchDelay.registerConfigKey(id + ".switchdelay");
         switchCooldown.registerConfigKey(id + ".switchcooldown");
+        warpToSpawn.registerConfigKey(id + ".warptospawn");
+        warpToSpawnOnIce.registerConfigKey(id + ".warptospawn.onice");
         sendLogs.registerConfigKey(id + ".sendlogs");
     }
 
@@ -186,6 +191,13 @@ public class GardenWSMacro extends TickModule<ToggleWidget, Boolean> {
             } else {
                 ticksSinceSwitch = switchCooldown.getRawState().intValue();
                 isPrimary = false;
+                if (warpToSpawn.getRawState()) {
+                    player.networkHandler.sendChatCommand("warp garden");
+                    paused = true;
+                    TickHelper.scheduleOnce(this, () -> {
+                        paused = false;
+                    }, 20);
+                }
             }
             return;
         }
@@ -194,9 +206,21 @@ public class GardenWSMacro extends TickModule<ToggleWidget, Boolean> {
         double speed = Math.sqrt(vel.x * vel.x + vel.z * vel.z);
         if (speed == 0 && ++ticksSinceSwitch > switchCooldown.getRawState()) {
             ticksSinceSwitch = 0;
-            if (sendLogs.getRawState()) {
-                Cigarette.CHAT_LOGGER.info("Switching macro direction.");
+            this.releaseAllKeys();
+
+            if (warpToSpawnOnIce.getRawState() && world.getBlockState(player.getBlockPos().down()).getBlock().getDefaultState().isOf(Blocks.PACKED_ICE)) {
+                if (sendLogs.getRawState()) Cigarette.CHAT_LOGGER.info("Warping to Garden spawn.");
+                player.networkHandler.sendChatCommand("warp garden");
+                paused = true;
+                isPrimary = false;
+                TickHelper.scheduleOnce(this, () -> {
+                    paused = false;
+                }, 20);
+                return;
             }
+
+            if (sendLogs.getRawState()) Cigarette.CHAT_LOGGER.info("Switching macro direction.");
+
             if (switchDelay.getRawState() > 0 && !wasPaused) {
                 paused = true;
                 TickHelper.scheduleOnce(this, () -> {
@@ -223,8 +247,6 @@ public class GardenWSMacro extends TickModule<ToggleWidget, Boolean> {
             ToggleWidget holdLeft = isPrimary ? dir1HoldLeft : dir2HoldLeft;
             SliderWidget holdLeftDelay = isPrimary ? dir1HoldLeftDelay : dir2HoldLeftDelay;
             SliderWidget holdLeftOffDelay = isPrimary ? dir1HoldLeftOffDelay : dir2HoldLeftOffDelay;
-
-            this.releaseAllKeys();
 
             if (forwardDelay.getRawState() == 0) KeybindHelper.KEY_MOVE_FORWARD.hold(forward.getRawState());
             else TickHelper.scheduleOnce(forwardDelay, () -> KeybindHelper.KEY_MOVE_FORWARD.hold(forward.getRawState()), forwardDelay.getRawState().intValue());

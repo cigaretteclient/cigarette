@@ -229,6 +229,8 @@ public class GardenWSMacro extends TickModule<ToggleWidget, Boolean> {
             if (warpToSpawnOnIce.getRawState() && world.getBlockState(player.getBlockPos().down()).getBlock().getDefaultState().isOf(Blocks.PACKED_ICE)) {
                 if (sendLogs.getRawState()) Cigarette.CHAT_LOGGER.info("Warping to Garden spawn.");
                 player.networkHandler.sendChatCommand("warp garden");
+                this.reset();
+                running = true;
                 didWarp = true;
                 paused = true;
                 isPrimary = false;

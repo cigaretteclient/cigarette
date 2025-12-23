@@ -60,7 +60,9 @@ public class GardenWSMacro extends TickModule<ToggleWidget, Boolean> {
     private boolean isPrimary = false;
     private boolean paused = false;
     private boolean wasPaused = false;
+    private boolean didWarp = false;
     private int ticksSinceSwitch = 0;
+    private Vec3d lastPos = Vec3d.ZERO;
 
     private GardenWSMacro(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
@@ -169,6 +171,7 @@ public class GardenWSMacro extends TickModule<ToggleWidget, Boolean> {
         this.releaseAllKeys();
         isPrimary = true;
         paused = false;
+        running = false;
         ticksSinceSwitch = 0;
     }
 
@@ -191,8 +194,10 @@ public class GardenWSMacro extends TickModule<ToggleWidget, Boolean> {
             } else {
                 ticksSinceSwitch = switchCooldown.getRawState().intValue();
                 isPrimary = false;
+                lastPos = player.getPos();
                 if (warpToSpawn.getRawState()) {
                     player.networkHandler.sendChatCommand("warp garden");
+                    didWarp = true;
                     paused = true;
                     TickHelper.scheduleOnce(this, () -> {
                         paused = false;
@@ -201,7 +206,21 @@ public class GardenWSMacro extends TickModule<ToggleWidget, Boolean> {
             }
             return;
         }
-        if (!running || paused) return;
+        if (!running) {
+            return;
+        } else {
+            Vec3d diff = player.getPos().subtract(lastPos);
+            if (diff.lengthSquared() > 1 && !didWarp) {
+                this.reset();
+                if (sendLogs.getRawState()) {
+                    Cigarette.CHAT_LOGGER.error("Player position updated too much, turning off macro.");
+                }
+                return;
+            }
+            lastPos = player.getPos();
+        }
+        if (paused) return;
+        didWarp = false;
         Vec3d vel = player.getVelocity();
         double speed = Math.sqrt(vel.x * vel.x + vel.z * vel.z);
         if (speed == 0 && ++ticksSinceSwitch > switchCooldown.getRawState()) {
@@ -210,6 +229,7 @@ public class GardenWSMacro extends TickModule<ToggleWidget, Boolean> {
             if (warpToSpawnOnIce.getRawState() && world.getBlockState(player.getBlockPos().down()).getBlock().getDefaultState().isOf(Blocks.PACKED_ICE)) {
                 if (sendLogs.getRawState()) Cigarette.CHAT_LOGGER.info("Warping to Garden spawn.");
                 player.networkHandler.sendChatCommand("warp garden");
+                didWarp = true;
                 paused = true;
                 isPrimary = false;
                 TickHelper.scheduleOnce(this, () -> {

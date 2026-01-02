@@ -14,6 +14,7 @@ import dev.cigarette.module.keybind.VClip;
 import dev.cigarette.module.murdermystery.GoldESP;
 import dev.cigarette.module.murdermystery.PlayerESP;
 import dev.cigarette.module.render.ProjectileESP;
+import dev.cigarette.module.skyblock.GardenWSMacro;
 import dev.cigarette.module.skyblock.RedGifter;
 import dev.cigarette.module.ui.*;
 import dev.cigarette.module.zombies.Aimbot;
@@ -75,7 +76,7 @@ public class Config {
         cfg.putModules("Render", dev.cigarette.module.render.PlayerESP.INSTANCE, ProjectileESP.INSTANCE);
         cfg.putModules("UI", GUI.INSTANCE, ModuleList.INSTANCE, Notifications.INSTANCE, TargetHUD.INSTANCE, Watermark.INSTANCE);
         cfg.putModules("Zombies", Aimbot.INSTANCE, PowerupESP.INSTANCE, ReviveAura.INSTANCE, ZombieESP.INSTANCE);
-        cfg.putModules("Skyblock", RedGifter.INSTANCE);
+        cfg.putModules("Skyblock", RedGifter.INSTANCE, GardenWSMacro.INSTANCE);
         cfg.putModules("Pit", dev.cigarette.module.pit.PlayerESP.INSTANCE);
         if (Cigarette.IN_DEV_ENVIRONMENT) {
             cfg.putCategory("Agents", DevWidget.CATEGORY_INSTANCE);

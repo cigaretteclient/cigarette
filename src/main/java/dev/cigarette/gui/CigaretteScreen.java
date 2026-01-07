@@ -7,9 +7,11 @@ import dev.cigarette.gui.widget.KeybindWidget;
 import dev.cigarette.gui.widget.ScrollableWidget;
 import dev.cigarette.gui.widget.ToggleKeybindWidget;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
@@ -127,9 +129,9 @@ public class CigaretteScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(Click click, boolean doubled) {
         for (BaseWidget<?> child : priority) {
-            boolean handled = child.mouseClicked(mouseX, mouseY, button);
+            boolean handled = child.mouseClicked(click, doubled);
             if (handled) {
                 priority.remove(child);
                 priority.addFirst(child);
@@ -153,17 +155,17 @@ public class CigaretteScreen extends Screen {
     }
 
     @Override
-    public boolean mouseDragged(double x, double y, int button, double deltaX, double deltaY) {
+    public boolean mouseDragged(Click click, double offsetX, double offsetY) {
         for (Element child : this.children()) {
-            child.mouseDragged(x, y, button, deltaX, deltaY);
+            child.mouseDragged(click, offsetX, offsetY);
         }
         return false;
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(Click click) {
         for (BaseWidget<?> child : priority) {
-            if (child.mouseReleased(mouseX, mouseY, button)) {
+            if (child.mouseReleased(click)) {
                 return true;
             }
         }
@@ -192,12 +194,12 @@ public class CigaretteScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyInput input) {
         if (CigaretteScreen.bindingKey != null) {
-            CigaretteScreen.bindingKey.keyPressed(keyCode, scanCode, modifiers);
+            CigaretteScreen.bindingKey.keyPressed(input);
             return true;
         }
-        switch (keyCode) {
+        switch (input.getKeycode()) {
             case GLFW.GLFW_KEY_ESCAPE, GLFW.GLFW_KEY_RIGHT_SHIFT -> this.close();
         }
         return true;
@@ -205,7 +207,7 @@ public class CigaretteScreen extends Screen {
 
     /**
      * {@return whether the provided widget can be hovered} If so, that widget is set as the hovered widget.
-     * <p>A widget must call {@link BaseWidget#captureHover() captureHover()} to be hoverable.</p>
+     * <p>A widget must call {@link BaseWidget#captureHover()} captureHover()} to be hoverable.</p>
      *
      * @param obj The widget to check if it can be hovered
      */
@@ -246,11 +248,11 @@ public class CigaretteScreen extends Screen {
             boolean animActive = elapsedClose < totalAnim;
             double remaining = Math.max(0.0, Math.min(totalAnim, totalAnim - elapsedClose));
 
-            context.getMatrices().push();
+            context.getMatrices().pushMatrix();
             for (int i = 0; i < priority.size(); i++) {
                 BaseWidget<?> widget = priority.get(i);
 
-                context.getMatrices().push();
+                context.getMatrices().pushMatrix();
                 context.getMatrices().translate(0, 0, priority.size() - i);
 
                 double normalizedPos = 0.0;

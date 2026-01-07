@@ -31,7 +31,7 @@ public class MinecraftClientMixin {
             Entity target = ((EntityHitResult) this.crosshairTarget).getEntity();
             if (target instanceof PlayerEntity && WorldL.isRealPlayer((PlayerEntity) target)) {
                 ci.cancel();
-                RedGifter.INSTANCE.playerToGift = ((PlayerEntity) target).getGameProfile().getId();
+                RedGifter.INSTANCE.playerToGift = ((PlayerEntity) target).getGameProfile().id();
                 if(RedGifter.INSTANCE.trashDropLocation == null || RedGifter.INSTANCE.worthDropLocation == null) {
                     Cigarette.CHAT_LOGGER.warning("Missing drop locations, dropping may get mixed.");
                 }

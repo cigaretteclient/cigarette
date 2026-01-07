@@ -194,7 +194,7 @@ public class GardenWSMacro extends TickModule<ToggleWidget, Boolean> {
             } else {
                 ticksSinceSwitch = switchCooldown.getRawState().intValue();
                 isPrimary = false;
-                lastPos = player.getPos();
+                lastPos = player.getEntityPos();
                 if (warpToSpawn.getRawState()) {
                     player.networkHandler.sendChatCommand("warp garden");
                     didWarp = true;
@@ -209,7 +209,7 @@ public class GardenWSMacro extends TickModule<ToggleWidget, Boolean> {
         if (!running) {
             return;
         }
-        Vec3d diff = player.getPos().subtract(lastPos);
+        Vec3d diff = player.getEntityPos().subtract(lastPos);
         if (diff.lengthSquared() > 2 && !didWarp) {
             this.reset();
             if (sendLogs.getRawState()) {
@@ -217,7 +217,7 @@ public class GardenWSMacro extends TickModule<ToggleWidget, Boolean> {
             }
             return;
         }
-        lastPos = player.getPos();
+        lastPos = player.getEntityPos();
 
         if (paused) return;
         didWarp = false;

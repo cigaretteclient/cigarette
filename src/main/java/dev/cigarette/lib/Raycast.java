@@ -50,7 +50,7 @@ public class Raycast {
     }
 
     public static EntityHitResult raycastEntity(Vec3d start, Vec3d end, @Nullable Entity excludedEntity) {
-        Entity cameraEntity = MinecraftClient.getInstance().cameraEntity;
+        Entity cameraEntity = MinecraftClient.getInstance().getCameraEntity();
         assert cameraEntity != null;
 
         double distance = start.distanceTo(end);
@@ -129,7 +129,7 @@ public class Raycast {
         boolean isArrow = entity instanceof PersistentProjectileEntity;
         SteppedTrajectory trajectory = new SteppedTrajectory(ticks);
 
-        Vec3d previousPosition = entity.getPos();
+        Vec3d previousPosition = entity.getEntityPos();
         Vec3d previousVelocity = entity.getVelocity();
         trajectory.steps[0] = previousPosition;
 

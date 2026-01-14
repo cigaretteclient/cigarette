@@ -9,7 +9,7 @@ import dev.cigarette.lib.Glow;
 import dev.cigarette.lib.Raycast;
 import dev.cigarette.lib.Renderer;
 import dev.cigarette.module.RenderModule;
-import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.*;
@@ -35,7 +35,16 @@ public class ProjectileESP extends RenderModule<ToggleWidget, Boolean> {
     public static final ProjectileESP INSTANCE = new ProjectileESP("render.projectileesp", "ProjectileESP", "Displays the trajectory of all projectiles.");
 
     // private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockespnophase", 1536, Renderer.BLOCK_ESP_NOPHASE, RenderLayer.MultiPhaseParameters.builder().build(false));
-    private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockespnophase", RenderSetup.builder(Renderer.BLOCK_ESP_NOPHASE).build());
+    private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockespnophase",
+        1536,
+        Renderer.BLOCK_ESP_NOPHASE,
+        RenderLayer.MultiPhaseParameters.builder()
+            .layering(RenderPhase.VIEW_OFFSET_Z_LAYERING)
+            .target(RenderPhase.MAIN_TARGET)
+            .lineWidth(RenderPhase.FULL_LINE_WIDTH)
+            .texture(RenderPhase.NO_TEXTURE)
+            .build(false)
+    );
     private final HashSet<Projectile> projectiles = new HashSet<>();
     private final Glow.Context glowContext = new Glow.Context();
 

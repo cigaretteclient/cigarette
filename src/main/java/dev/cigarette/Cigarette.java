@@ -16,19 +16,25 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
-import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
+import net.fabricmc.fabric.api.client.rendering.v1.HudLayerRegistrationCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.LayeredDrawer;
+import net.minecraft.client.gui.LayeredDrawer.Layer;
 import net.minecraft.client.gui.screen.TitleScreen;
+import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.util.Window;
+import net.minecraft.inventory.Inventory;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import org.joml.Vector4f;
 import org.slf4j.Logger;
+import net.fabricmc.fabric.api.renderer.v1.render.RenderLayerHelper;
+import net.fabricmc.fabric.api.client.rendering.v1.IdentifiedLayer;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
@@ -54,7 +60,8 @@ public class Cigarette implements ModInitializer {
     public static TextRenderer REGULAR;
 
     public static void registerHudElement(ClickableWidget widget) {
-        HUD_ELEMENTS.add(new Pair<Vector4f, ClickableWidget>(new Vector4f(widget.getX(), widget.getY(), widget.getWidth(), widget.getHeight()), widget));
+        HUD_ELEMENTS.add(new Pair<Vector4f, ClickableWidget>(
+                new Vector4f(widget.getX(), widget.getY(), widget.getWidth(), widget.getHeight()), widget));
     }
 
     public static void unregisterHudElement(ClickableWidget widget) {
@@ -65,27 +72,28 @@ public class Cigarette implements ModInitializer {
     public void onInitialize() {
         FileSystem.loadConfig();
 
-        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> dispatcher.register(ClientCommandManager.literal("cigarette-version")
-                .then(ClientCommandManager.literal("update")
-                        .executes((ctx) -> {
-                            VersionManager.update("", false);
-                            return 1;
-                        })
+        ClientCommandRegistrationCallback.EVENT.register((dispatcher,
+                registryAccess) -> dispatcher.register(ClientCommandManager.literal("cigarette-version")
+                        .then(ClientCommandManager.literal("update")
+                                .executes((ctx) -> {
+                                    VersionManager.update("", false);
+                                    return 1;
+                                })
                                 .then(ClientCommandManager.argument("target", StringArgumentType.string())
                                         .executes((ctx) -> {
                                             VersionManager.update(ctx.getArgument("target", String.class), false);
                                             return 1;
                                         })))
-                .then(ClientCommandManager.literal("mc-update")
-                        .executes((ctx) -> {
-                            VersionManager.update("", true);
-                            return 1;
-                        })
-                        .then(ClientCommandManager.argument("target", StringArgumentType.string())
+                        .then(ClientCommandManager.literal("mc-update")
                                 .executes((ctx) -> {
-                                    VersionManager.update(ctx.getArgument("target", String.class), true);
+                                    VersionManager.update("", true);
                                     return 1;
-                                })))));
+                                })
+                                .then(ClientCommandManager.argument("target", StringArgumentType.string())
+                                        .executes((ctx) -> {
+                                            VersionManager.update(ctx.getArgument("target", String.class), true);
+                                            return 1;
+                                        })))));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (client.currentScreen instanceof TitleScreen) {
@@ -97,26 +105,33 @@ public class Cigarette implements ModInitializer {
             }
         });
 
-        HudElementRegistry.attachElementAfter(VanillaHudElements.MISC_OVERLAYS,
-                Identifier.of("cigarette", "hud_after_misc_overlays"), (drawContext, tickDelta) -> {
-                    Mouse m = MinecraftClient.getInstance().mouse;
-                    Window w = MinecraftClient.getInstance().getWindow();
-                    for (Pair<Vector4f, ClickableWidget> pair : HUD_ELEMENTS) {
-                    Vector4f dimensions = pair.getLeft();
-                    ClickableWidget widget = pair.getRight();
-                    int x = (int) dimensions.x;
-                    int y = (int) dimensions.y;
-                    int width = (int) dimensions.z;
-                    int height = (int) dimensions.w;
-                    widget.setDimensions(width, height);
-                    widget.setPosition(x, y);
-                    widget.render(drawContext, (int) m.getScaledX(w), (int) m.getScaledY(w),
-                        tickDelta.getDynamicDeltaTicks());
-                    }
-                    if (NOTIFICATION_DISPLAY != null) {
-                    NOTIFICATION_DISPLAY.render(drawContext, (int) m.getScaledX(w), (int) m.getScaledY(w),
-                        tickDelta.getDynamicDeltaTicks());
-                    }
+        HudLayerRegistrationCallback.EVENT.register(Identifier.of(MOD_ID, "notification_display"),
+                (hudLayerManager) -> {
+                    hudLayerManager.attachLayerAfter(IdentifiedLayer.CHAT,
+                            Identifier.of(MOD_ID, "notification_display"), (drawContext, tickDelta) -> {
+                                if (NOTIFICATION_DISPLAY == null) {
+                                    NOTIFICATION_DISPLAY = new NotificationDisplay();
+                                }
+                                Mouse m = MinecraftClient.getInstance().mouse;
+                                Window w = MinecraftClient.getInstance().getWindow();
+                                for (Pair<Vector4f, ClickableWidget> pair : HUD_ELEMENTS) {
+                                    Vector4f dimensions = pair.getLeft();
+                                    ClickableWidget widget = pair.getRight();
+                                    int x = (int) dimensions.x;
+                                    int y = (int) dimensions.y;
+                                    int width = (int) dimensions.z;
+                                    int height = (int) dimensions.w;
+                                    widget.setDimensions(width, height);
+                                    widget.setPosition(x, y);
+                                    widget.render(drawContext, (int) m.getScaledX(w), (int) m.getScaledY(w),
+                                            tickDelta.getDynamicDeltaTicks());
+                                }
+                                if (NOTIFICATION_DISPLAY != null) {
+                                    NOTIFICATION_DISPLAY.render(drawContext, (int) m.getScaledX(w),
+                                            (int) m.getScaledY(w),
+                                            tickDelta.getDynamicDeltaTicks());
+                                }
+                            });
                 });
     }
 
@@ -124,15 +139,16 @@ public class Cigarette implements ModInitializer {
         // MinecraftClient mc = MinecraftClient.getInstance();
         // List<Font.FontFilterPair> fontPairs = new ArrayList<>();
         // TrueTypeFontLoader loader = new TrueTypeFontLoader(
-        //         Identifier.of("cigarette", (bold ? "bold" : "regular") + ".ttf"),
-        //         11,
-        //         11,
-        //         TrueTypeFontLoader.Shift.NONE,
-        //         "");
+        // Identifier.of("cigarette", (bold ? "bold" : "regular") + ".ttf"),
+        // 11,
+        // 11,
+        // TrueTypeFontLoader.Shift.NONE,
+        // "");
         // FontLoader.Loadable loadable = loader.build().orThrow();
         // Font font = loadable.load(mc.getResourceManager());
         // fontPairs.add(new Font.FontFilterPair(font, FilterMap.NO_FILTER));
-        // FontStorage storage = new FontStorage(mc.getTextureManager(), Identifier.of("cigarette", "tr"));
+        // FontStorage storage = new FontStorage(mc.getTextureManager(),
+        // Identifier.of("cigarette", "tr"));
         // storage.setFonts(fontPairs, java.util.Collections.emptySet());
         // return new TextRenderer(id -> storage, true);
         return MinecraftClient.getInstance().textRenderer;

@@ -6,7 +6,7 @@ import dev.cigarette.agent.ZombiesAgent;
 import dev.cigarette.gui.widget.ToggleWidget;
 import dev.cigarette.lib.Renderer;
 import dev.cigarette.module.RenderModule;
-import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.RenderLayer;
@@ -23,7 +23,16 @@ public class PowerupESP extends RenderModule<ToggleWidget, Boolean> {
     public static final PowerupESP INSTANCE = new PowerupESP("zombies.powerupesp", "ItemESP", "Places ESP boxes around dropped powerups and the lucky chest.");
 
 //    private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockesp", 1536, Renderer.BLOCK_ESP_PHASE, RenderLayers.MultiPhaseParameters.builder().lineWidth(new RenderPhase.LineWidth(OptionalDouble.of(1))).build(false));
-    private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockesp", RenderSetup.builder(Renderer.BLOCK_ESP_PHASE).build());
+    private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockesp",
+        1536,
+        Renderer.BLOCK_ESP_PHASE,
+        RenderLayer.MultiPhaseParameters.builder()
+            .layering(RenderPhase.VIEW_OFFSET_Z_LAYERING)
+            .target(RenderPhase.MAIN_TARGET)
+            .lineWidth(RenderPhase.FULL_LINE_WIDTH)
+            .texture(RenderPhase.NO_TEXTURE)
+            .build(false)
+    );
     private PowerupESP(String id, String name, String tooltip) {
         super(ToggleWidget::module, id, name, tooltip);
     }

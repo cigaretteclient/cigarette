@@ -47,7 +47,7 @@ public class ClientConnectionMixin {
     private static final String[] S2C_BLACKLIST = {};
 
     @Inject(method = "sendInternal", at = @At("HEAD"), cancellable = true)
-    private void sendInternal(Packet<?> packet, @org.jspecify.annotations.Nullable ChannelFutureListener listener, boolean flush, CallbackInfo ci) {
+    private void sendInternal(Packet<?> packet, @Nullable ChannelFutureListener listener, boolean flush, CallbackInfo ci) {
         if (!Cigarette.IN_DEV_ENVIRONMENT || !DevWidget.c2sPacketLogging.getRawState()) return;
         String type = packet.getPacketType().toString();
         for (String blacklisted : C2S_LOG_BLACKLIST) {

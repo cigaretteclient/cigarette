@@ -10,7 +10,7 @@ import dev.cigarette.lib.Glow;
 import dev.cigarette.lib.Raycast;
 import dev.cigarette.lib.Renderer;
 import dev.cigarette.module.RenderModule;
-import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -33,8 +33,39 @@ import java.util.List;
 public class FireballESP extends RenderModule<ToggleWidget, Boolean> {
     public static final FireballESP INSTANCE = new FireballESP("bedwars.fireballesp", "FireballESP", "Displays the trajectory and blast radius of all fireballs.");
 
-    private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockespnophase", RenderSetup.builder(Renderer.BLOCK_ESP_NOPHASE).build());
-    private static final RenderLayer RENDER_LAYER_SPHERE = RenderLayer.of("cigarette.triespnophase", RenderSetup.builder(Renderer.TRI_ESP_NOPHASE).build());
+    /*
+    
+    private static final RenderLayer RENDER_LAYER = RenderLayer.of(
+        "cigarette.blockesp", 
+        1536,
+        Renderer.BLOCK_ESP_PHASE,
+        RenderLayer.MultiPhaseParameters.builder()
+            .layering(RenderPhase.VIEW_OFFSET_Z_LAYERING) 
+            .target(RenderPhase.MAIN_TARGET)
+            .lineWidth(RenderPhase.FULL_LINE_WIDTH)
+            .texture(RenderPhase.NO_TEXTURE)
+            .build(false)
+    ); */
+    private static final RenderLayer RENDER_LAYER = RenderLayer.of(
+        "cigarette.block_esp_nophase",
+        1536,
+        Renderer.BLOCK_ESP_NOPHASE,
+        RenderLayer.MultiPhaseParameters.builder()
+            .layering(RenderPhase.VIEW_OFFSET_Z_LAYERING)
+            .target(RenderPhase.MAIN_TARGET)
+            .lineWidth(RenderPhase.FULL_LINE_WIDTH)
+            .texture(RenderPhase.NO_TEXTURE)
+            .build(false)
+    );
+    private static final RenderLayer RENDER_LAYER_SPHERE = RenderLayer.of("cigarette.triespnophase",
+        1536,
+        Renderer.TRI_ESP_NOPHASE,
+        RenderLayer.MultiPhaseParameters.builder()
+            .layering(RenderPhase.VIEW_OFFSET_Z_LAYERING)
+            .target(RenderPhase.MAIN_TARGET)
+            .texture(RenderPhase.NO_TEXTURE)
+            .build(false)
+    );
     private final HashSet<Fireball> fireballs = new HashSet<>();
     private final Glow.Context glowContext = new Glow.Context();
 
@@ -88,7 +119,7 @@ public class FireballESP extends RenderModule<ToggleWidget, Boolean> {
             if (!(entity instanceof FireballEntity entityfb)) continue;
 
             Vec3d velocity = entityfb.getVelocity();
-            Vec3d start = entityfb.getEntityPos();
+            Vec3d start = entityfb.getPos();
             Vec3d end = start.add(velocity.multiply(1000));
 
             HitResult result = Raycast.raycast(start, end, entityfb);
@@ -98,7 +129,7 @@ public class FireballESP extends RenderModule<ToggleWidget, Boolean> {
                 case BLOCK, ENTITY -> {
                     Vec3d collisionEnd = result.getPos();
                     double timeToCollision = start.distanceTo(collisionEnd) / velocity.length();
-                    boolean nearPlayer = collisionEnd.distanceTo(player.getEntityPos()) < 100;
+                    boolean nearPlayer = collisionEnd.distanceTo(player.getPos()) < 100;
                     fireball = new Fireball(entityfb, timeToCollision, start, collisionEnd, nearPlayer, Renderer.calculateSphere(collisionEnd, 8.4f, player.getEyePos()));
                 }
                 case MISS -> {

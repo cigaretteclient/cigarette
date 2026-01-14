@@ -4,7 +4,8 @@ import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.DepthTestFunction;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
+
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.VertexFormats;
@@ -101,7 +102,7 @@ public class Renderer {
 
     public static Matrix4f getCameraTranslatedMatrix(MatrixStack matrixStack, WorldRenderContext ctx) {
         Matrix4f matrix = matrixStack.peek().getPositionMatrix();
-        Vec3d cam = ctx.worldState().cameraRenderState.pos;
+        Vec3d cam = ctx.camera().getPos();
         matrix.translate((float) -cam.x, (float) -cam.y, (float) -cam.z);
         return matrix;
     }

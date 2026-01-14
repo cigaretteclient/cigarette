@@ -19,7 +19,7 @@ public class PlayerEntityMixin {
         PlayerEntity thisEntity = (PlayerEntity) (Object) this;
 
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
-        if (player != null && thisEntity.getGameProfile().id().equals(player.getGameProfile().id()) && player.isOnGround()) {
+        if (player != null && thisEntity.getGameProfile().getId().equals(player.getGameProfile().getId()) && player.isOnGround()) {
             player.jump();
         }
     }

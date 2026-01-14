@@ -5,8 +5,8 @@ import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.util.DefaultSkinHelper;
+import net.minecraft.client.util.SkinTextures;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.SkinTextures;
 import net.minecraft.util.Identifier;
 
 public class Shape {
@@ -359,16 +359,15 @@ public class Shape {
     }
 
     public static void userFaceTexture(DrawContext context, int x, int y, int w, int h, PlayerEntity player) {
-        SkinTextures t = MinecraftClient.getInstance().getSkinProvider().supplySkinTextures(player.getGameProfile(), false).get();
-        Identifier text = t.body().texturePath();
+        SkinTextures t = MinecraftClient.getInstance().getSkinProvider().getSkinTextures(player.getGameProfile());
+        Identifier text = t.texture();
         if (text != null) {
-            // Correct UVs: face is at (8,8) size 8x8 on a 64x64 skin
             int texW = 64, texH = 64;
             int u = 8, v = 8, faceW = 8, faceH = 8;
             context.drawTexture(
-                RenderPipelines.GUI_TEXTURED,
+                RenderLayer::getGuiTextured,
                 text,
-                x, y, u, v, w, h, faceW, faceH,
+                x, y, (float) u, (float) v, w, h, faceW, faceH,
                 texW, texH
             );
         }

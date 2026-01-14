@@ -7,7 +7,6 @@ import dev.cigarette.helper.keybind.MinecraftKeybind;
 import dev.cigarette.helper.keybind.VirtualKeybind;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.input.KeyInput;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import org.jetbrains.annotations.Nullable;
@@ -112,7 +111,7 @@ public class KeybindHelper {
         if (CigaretteScreen.bindingKey != null) {
             switch (action) {
                 case GLFW.GLFW_PRESS -> CigaretteScreen.bindingKey.keyPressed(key, scancode, modifiers);
-                case GLFW.GLFW_RELEASE -> CigaretteScreen.bindingKey.keyReleased(new KeyInput(key, scancode, modifiers));
+                case GLFW.GLFW_RELEASE -> CigaretteScreen.bindingKey.keyReleased(key, scancode, modifiers);
             }
         } else {
             if (action == GLFW.GLFW_PRESS && (key == GLFW.GLFW_KEY_ESCAPE || KEY_TOGGLE_GUI.isOf(key, scancode))) {

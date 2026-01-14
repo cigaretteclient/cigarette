@@ -7,11 +7,12 @@ import dev.cigarette.gui.widget.KeybindWidget;
 import dev.cigarette.gui.widget.ScrollableWidget;
 import dev.cigarette.gui.widget.ToggleKeybindWidget;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.Click;
+import net.minecraft.client.input.Input;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.input.KeyInput;
+import net.minecraft.client.input.KeyboardInput;
+import net.minecraft.text.ClickEvent;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
@@ -129,9 +130,9 @@ public class CigaretteScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(Click click, boolean doubled) {
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
         for (BaseWidget<?> child : priority) {
-            boolean handled = child.mouseClicked(click, doubled);
+            boolean handled = child.mouseClicked(mouseX, mouseY, button);
             if (handled) {
                 priority.remove(child);
                 priority.addFirst(child);
@@ -141,7 +142,6 @@ public class CigaretteScreen extends Screen {
         return false;
     }
 
-    @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
         for (BaseWidget<?> child : priority) {
             boolean handled = child.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
@@ -155,17 +155,20 @@ public class CigaretteScreen extends Screen {
     }
 
     @Override
-    public boolean mouseDragged(Click click, double offsetX, double offsetY) {
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+        double offsetX = mouseX - deltaX;
+        double offsetY = mouseY - deltaY;
         for (Element child : this.children()) {
-            child.mouseDragged(click, offsetX, offsetY);
+            child.mouseDragged(mouseX, mouseY, button, offsetX, offsetY);
         }
         return false;
     }
 
     @Override
-    public boolean mouseReleased(Click click) {
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
         for (BaseWidget<?> child : priority) {
-            if (child.mouseReleased(click)) {
+            if (child.mouseReleased(mouseX, mouseY, button)) {
+                priority.remove(child);
                 return true;
             }
         }
@@ -194,12 +197,12 @@ public class CigaretteScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(KeyInput input) {
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (CigaretteScreen.bindingKey != null) {
-            CigaretteScreen.bindingKey.keyPressed(input);
+            CigaretteScreen.bindingKey.keyPressed(keyCode, scanCode, modifiers);
             return true;
         }
-        switch (input.getKeycode()) {
+        switch (keyCode) {
             case GLFW.GLFW_KEY_ESCAPE, GLFW.GLFW_KEY_RIGHT_SHIFT -> this.close();
         }
         return true;
@@ -248,11 +251,11 @@ public class CigaretteScreen extends Screen {
             boolean animActive = elapsedClose < totalAnim;
             double remaining = Math.max(0.0, Math.min(totalAnim, totalAnim - elapsedClose));
 
-            context.getMatrices().pushMatrix();
+            context.getMatrices().push();
             for (int i = 0; i < priority.size(); i++) {
                 BaseWidget<?> widget = priority.get(i);
 
-                context.getMatrices().pushMatrix();
+                context.getMatrices().push();
                 context.getMatrices().translate(0, 0, priority.size() - i);
 
                 double normalizedPos = 0.0;

@@ -40,7 +40,7 @@ public class WorldL {
 
     public static @Nullable PlayerEntity getRealPlayerByUUID(UUID uuid) {
         for (AbstractClientPlayerEntity player : getRealPlayers()) {
-            if (player.getGameProfile().id().equals(uuid)) {
+            if (player.getGameProfile().getId().equals(uuid)) {
                 return player;
             }
         }
@@ -64,7 +64,7 @@ public class WorldL {
         if (networkHandler == null) return false;
 
         for (PlayerListEntry entry : networkHandler.getPlayerList()) {
-            if (!Objects.equals(entry.getProfile().name(), player.getNameForScoreboard())) continue;
+            if (!Objects.equals(entry.getProfile().getName(), player.getNameForScoreboard())) continue;
             if (entry.getLatency() <= 0) continue;
             return true;
         }

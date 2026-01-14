@@ -10,7 +10,7 @@ import dev.cigarette.lib.Color;
 import dev.cigarette.lib.Shape;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
-
+import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.widget.ClickableWidget;
@@ -58,7 +58,7 @@ public class NotificationDisplay extends ClickableWidget {
 
     public static void imageRender(DrawContext context, int x, int y) {
         context.drawTexture(
-                RenderLayer::getGuiTextured,
+                RenderPipelines.GUI_TEXTURED,
                 Cigarette.LOGO_IDENTIFIER, x + 7, y, 0f, 0f, 30, 30, 30, 30);
 
         List<Integer> colors = new ArrayList<>();
@@ -70,7 +70,7 @@ public class NotificationDisplay extends ClickableWidget {
 
     public static void imageRender(DrawContext context, int x, int y, double gradientStaggerModifier) {
         context.drawTexture(
-                RenderLayer::getGuiTextured,
+                RenderPipelines.GUI_TEXTURED,
                 Cigarette.LOGO_IDENTIFIER, x + 7, y, 0f, 0f, 30, 30, 30, 30);
         List<Integer> colors = new ArrayList<>();
         for (int i = 0; i < "cigarette".length(); i++) {

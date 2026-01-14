@@ -79,7 +79,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
         running = true;
         hasJumped = false;
         originalPos = player.getBlockPos();
-        originalPosVec = player.getPos();
+        originalPosVec = player.getEntityPos();
         originalYaw = player.getYaw();
         originalPitch = player.getPitch();
     }
@@ -219,7 +219,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
 
         NextVector next = getNextBlockPlaceVector(world, player);
         if (next == null || (previousVector != null && previousVector.equals(next.lookVector))) {
-            if (jumpEnabled.getRawState() && player.getPos().getY() > originalPosVec.getY()) {
+            if (jumpEnabled.getRawState() && player.getEntityPos().getY() > originalPosVec.getY()) {
                 return;
             }
             disableAndSwitch(player);
@@ -239,7 +239,7 @@ public class AutoBlockIn extends TickModule<ToggleWidget, Boolean> {
         cooldownTicks = 16 - speed.getRawState().intValue() + rand;
 
         if (jumpEnabled.getRawState() && !hasJumped && !next.aboveHead) {
-            if (world.getBlockState(BlockPos.ofFloored(player.getPos().add(0, 2, 0))).isAir()) {
+            if (world.getBlockState(BlockPos.ofFloored(player.getEntityPos().add(0, 2, 0))).isAir()) {
                 KeybindHelper.KEY_JUMP.holdForTicks(1);
                 hasJumped = true;
             }

@@ -8,7 +8,7 @@ import dev.cigarette.gui.widget.*;
 import dev.cigarette.helper.TickHelper;
 import dev.cigarette.lib.*;
 import dev.cigarette.module.RenderModule;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
+import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -36,14 +36,8 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
     public static final RedGifter INSTANCE = new RedGifter("skyblock.redgifter", "Auto Red Gifter", "Automatically gives and opens red gifts.");
 
     private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockespnophase",
-        1536,
-        Renderer.BLOCK_ESP_NOPHASE,
-        RenderLayer.MultiPhaseParameters.builder()
-            .layering(RenderPhase.VIEW_OFFSET_Z_LAYERING)
-            .target(RenderPhase.MAIN_TARGET)
-            .lineWidth(RenderPhase.FULL_LINE_WIDTH)
-            .texture(RenderPhase.NO_TEXTURE)
-            .build(false)
+        RenderSetup.builder(Renderer.BLOCK_ESP_NOPHASE)
+            .build()
     );
 
     public final ToggleWidget gifter = new ToggleWidget("Run as Gifter", "Automatically gives red gifts to nearby players.").withDefaultState(false);
@@ -122,7 +116,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
             if (!state) return;
             ClientPlayerEntity player = MinecraftClient.getInstance().player;
             if (player != null) {
-                trashDropLocation = new ItemDropLocation(player.getPos(), player.getRotationVector());
+                trashDropLocation = new ItemDropLocation(player.getEntityPos(), player.getRotationVector());
                 FileSystem.updateState(id + ".trashDropLocation", trashDropLocation.toString());
             }
             setTrashLocation.setRawState(false);
@@ -131,7 +125,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
             if (!state) return;
             ClientPlayerEntity player = MinecraftClient.getInstance().player;
             if (player != null) {
-                worthDropLocation = new ItemDropLocation(player.getPos(), player.getRotationVector());
+                worthDropLocation = new ItemDropLocation(player.getEntityPos(), player.getRotationVector());
                 FileSystem.updateState(id + ".worthDropLocation", worthDropLocation.toString());
             }
             setWorthLocation.setRawState(false);
@@ -405,11 +399,11 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
 
         BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
 
-        if (trashDropLocation != null && !trashDropLocation.position.isInRange(ctx.camera().getPos(), 3)) {
+        if (trashDropLocation != null && !trashDropLocation.position.isInRange(ctx.gameRenderer().getCamera().getCameraPos(), 3)) {
             Renderer.drawCube(buffer, matrix, 0x80FF0000, trashDropLocation.position.add(0, 1.7, 0), 0.6f);
             Renderer.drawFakeLine(buffer, matrix, 0x80FF0000, trashDropLocation.position.add(0, 1.7, 0).toVector3f(), trashDropLocation.position.add(trashDropLocation.direction.multiply(2)).add(0, 1.7, 0).toVector3f(), 0.05f);
         }
-        if (worthDropLocation != null && !worthDropLocation.position.isInRange(ctx.camera().getPos(), 3)) {
+        if (worthDropLocation != null && !worthDropLocation.position.isInRange(ctx.gameRenderer().getCamera().getCameraPos(), 3)) {
             Renderer.drawCube(buffer, matrix, 0x8000FF00, worthDropLocation.position.add(0, 1.7, 0), 0.6f);
             Renderer.drawFakeLine(buffer, matrix, 0x8000FF00, worthDropLocation.position.add(0, 1.7, 0).toVector3f(), worthDropLocation.position.add(worthDropLocation.direction.multiply(2)).add(0, 1.7, 0).toVector3f(), 0.05f);
         }
@@ -442,7 +436,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
             if (!name.equals("§r§e§lCLICK TO OPEN")) continue;
 
             if (snapOnOpenPlace.getRawState()) {
-                PlayerEntityL.setRotationVector(player, armorStand.getPos().add(0, 1.5, 0).subtract(player.getEyePos()));
+                PlayerEntityL.setRotationVector(player, armorStand.getEntityPos().add(0, 1.5, 0).subtract(player.getEyePos()));
             }
             if (client.interactionManager != null) {
                 client.interactionManager.interactEntity(player, armorStand, Hand.MAIN_HAND);
@@ -476,7 +470,7 @@ public class RedGifter extends RenderModule<ToggleWidget, Boolean> {
             return;
         }
         if (snapOnOpenPlace.getRawState()) {
-            PlayerEntityL.setRotationVector(player, targetPlayer.getPos().add(0, 1, 0).subtract(player.getEyePos()));
+            PlayerEntityL.setRotationVector(player, targetPlayer.getEntityPos().add(0, 1, 0).subtract(player.getEyePos()));
         }
         if (client.interactionManager == null) {
             Cigarette.CHAT_LOGGER.error("Tried to use a gift but the interaction manager did not exist.");

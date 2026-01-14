@@ -3,6 +3,8 @@ package dev.cigarette.gui.widget;
 import dev.cigarette.Cigarette;
 import dev.cigarette.gui.CigaretteScreen;
 import dev.cigarette.gui.Scissor;
+import net.minecraft.client.gl.RenderPipelines;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderLayer;
 import org.jetbrains.annotations.Nullable;
@@ -145,12 +147,15 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType>
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(Click mouseInput, boolean doubled) {
+        double mouseX = mouseInput.x();
+        double mouseY = mouseInput.y();
+        int button = mouseInput.button();
         if (isMouseOver(mouseX, mouseY)) {
             this.setFocused();
             if (this.header == null)
                 return false;
-            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && this.header.mouseClicked(mouseX, mouseY, button)) {
+            if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && this.header.mouseClicked(mouseInput, doubled)) {
                 return true;
             }
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT || button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
@@ -165,25 +170,28 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType>
             }
             return true;
         }
-        boolean captured = dropdownVisible && super.mouseClicked(mouseX, mouseY, button);
+        boolean captured = dropdownVisible && super.mouseClicked(mouseInput, doubled);
         this.setFocused(captured);
         this.dropdownVisible = captured;
         return captured;
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(Click mouseInput) {
+        double mouseX = mouseInput.x();
+        double mouseY = mouseInput.y();
+        int button = mouseInput.button();
         if (this.header != null)
-            this.header.mouseReleased(mouseX, mouseY, button);
-        super.mouseReleased(mouseX, mouseY, button);
+            this.header.mouseReleased(mouseInput);
+        super.mouseReleased(mouseInput);
         return false;
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+    public boolean mouseDragged(Click mouseInput, double deltaX, double deltaY) {
         if (this.header != null)
-            this.header.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
-        super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+            this.header.mouseDragged(mouseInput, deltaX, deltaY);
+        super.mouseDragged(mouseInput, deltaX, deltaY);
         return false;
     }
 
@@ -269,7 +277,7 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType>
             int scissorRight = right + containerW;
             int scissorBottom = scissorTop + visibleHeight;
 
-            context.getMatrices().push();
+            context.getMatrices().pushMatrix();
             Scissor.pushExclusive(context, scissorLeft, scissorTop, scissorRight, scissorBottom);
 
             this.container.withXY(right + childLeftOffset, top + animOffset)
@@ -277,7 +285,7 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType>
                     .renderWidget(context, mouseX, mouseY, deltaTicks);
 
             Scissor.popExclusive();
-            context.getMatrices().pop();
+            context.getMatrices().popMatrix();
         }
     }
 
@@ -292,16 +300,16 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType>
      * @param angle   The rotation of the texture
      */
     public static void cigaretteOnlyAt(DrawContext context, int x, int y, int w, int h, int angle) {
-        context.getMatrices().push();
+        context.getMatrices().pushMatrix();
         float cx = x + w / 2f;
         float cy = y + h / 2f;
-        context.getMatrices().translate(cx, cy, 0);
-        context.getMatrices().multiply(new Quaternionf().rotateZ((float) Math.toRadians(angle)));
+        context.getMatrices().translate(cx, cy);
+        context.getMatrices().rotate((float)Math.toRadians(angle));
         context.drawTexture(
-                RenderLayer::getGuiTextured,
+                RenderPipelines.GUI_TEXTURED,
                 Cigarette.LOGO_IDENTIFIER,
                 Math.round(-w / 2f), Math.round(-h / 2f),
                 0f, 0f, w, h, w, h);
-        context.getMatrices().pop();
+        context.getMatrices().popMatrix();
     }
 }

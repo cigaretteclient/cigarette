@@ -7,7 +7,7 @@ import dev.cigarette.gui.widget.ColorDropdownWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
 import dev.cigarette.lib.Color;
 import dev.cigarette.module.RenderModule;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
+import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.util.math.MatrixStack;
@@ -36,9 +36,6 @@ public class Watermark extends RenderModule<ToggleWidget, Boolean> {
     }
 
     @Override
-    protected void onWorldRender(WorldRenderContext ctx, @NotNull MatrixStack matrixStack) {}
-
-    @Override
     protected void onEnabledTick(MinecraftClient client, @NotNull ClientWorld world,
             @NotNull ClientPlayerEntity player) {
         if (display == null) {
@@ -57,4 +54,8 @@ public class Watermark extends RenderModule<ToggleWidget, Boolean> {
             display = null;
         }
     }
+
+	@Override
+	protected void onWorldRender(WorldRenderContext ctx, @NotNull MatrixStack matrixStack) {
+	}
 }

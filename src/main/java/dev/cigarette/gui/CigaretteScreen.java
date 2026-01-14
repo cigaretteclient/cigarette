@@ -6,15 +6,18 @@ import dev.cigarette.gui.widget.BaseWidget;
 import dev.cigarette.gui.widget.KeybindWidget;
 import dev.cigarette.gui.widget.ScrollableWidget;
 import dev.cigarette.gui.widget.ToggleKeybindWidget;
+import dev.cigarette.module.ui.GUI;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.input.Input;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.client.input.KeyboardInput;
-import net.minecraft.text.ClickEvent;
+import net.minecraft.client.input.MouseInput;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix3x2f;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Stack;
@@ -129,10 +132,14 @@ public class CigaretteScreen extends Screen {
         this.openStartNanos = System.nanoTime();
     }
 
+    Element getParent() {
+        return this.parent;
+    }
+
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(Click mouseInput, boolean doubled) {
         for (BaseWidget<?> child : priority) {
-            boolean handled = child.mouseClicked(mouseX, mouseY, button);
+            boolean handled = child.mouseClicked(mouseInput, doubled);
             if (handled) {
                 priority.remove(child);
                 priority.addFirst(child);
@@ -155,19 +162,26 @@ public class CigaretteScreen extends Screen {
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+    public boolean mouseDragged(Click mouseInput, double deltaX, double deltaY) {
+        double mouseX = mouseInput.x();
+        double mouseY = mouseInput.y();
         double offsetX = mouseX - deltaX;
         double offsetY = mouseY - deltaY;
-        for (Element child : this.children()) {
-            child.mouseDragged(mouseX, mouseY, button, offsetX, offsetY);
+        for (BaseWidget<?> child : priority) {
+            boolean handled = child.mouseDragged(mouseInput, offsetX, offsetY);
+            if (handled) {
+                priority.remove(child);
+                priority.addFirst(child);
+                return true;
+            }
         }
         return false;
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(Click mouseInput) {
         for (BaseWidget<?> child : priority) {
-            if (child.mouseReleased(mouseX, mouseY, button)) {
+            if (child.mouseReleased(mouseInput)) {
                 priority.remove(child);
                 return true;
             }
@@ -197,12 +211,12 @@ public class CigaretteScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyInput keyInput) {
         if (CigaretteScreen.bindingKey != null) {
-            CigaretteScreen.bindingKey.keyPressed(keyCode, scanCode, modifiers);
+            CigaretteScreen.bindingKey.keyPressed(keyInput);
             return true;
         }
-        switch (keyCode) {
+        switch (keyInput.getKeycode()) {
             case GLFW.GLFW_KEY_ESCAPE, GLFW.GLFW_KEY_RIGHT_SHIFT -> this.close();
         }
         return true;
@@ -220,6 +234,51 @@ public class CigaretteScreen extends Screen {
             return true;
         }
         return hoverHandled == obj;
+    }
+
+    /**
+     * Renders the background and border for a widget with gradient coloring.
+     *
+     * @param context The draw context
+     * @param widget The widget to render background for
+     */
+    private static void renderWidgetBackgroundAndBorder(DrawContext context, BaseWidget<?> widget) {
+        GUI gui = GUI.INSTANCE;
+        
+        int left = widget.getX();
+        int top = widget.getY();
+        int right = widget.getX() + widget.getWidth();
+        int bottom = widget.getY() + widget.getHeight();
+        
+        if (left < 0 || top < 0 || right < 0 || bottom < 0) return;
+
+        MinecraftClient mc = MinecraftClient.getInstance();
+        int scrW = mc.getWindow().getScaledWidth();
+
+        // Calculate gradient position
+        double widgetCenterX = left + (widget.getWidth() / 2.0);
+        double normalizedPos = scrW > 0 ? widgetCenterX / scrW : 0.5;
+        
+        // Get gradient colors for left and right edges
+        int colorLeft = gui.getGradientColor(normalizedPos - 0.1);
+        int colorRight = gui.getGradientColor(normalizedPos + 0.1);
+        
+        // Draw gradient background with rounded corners
+        int radius = 4;
+        drawGradientRoundedRect(context, left, top, right, bottom, radius, colorLeft, colorRight);
+        
+        // Draw bright saturated border
+        int borderColor = gui.getGradientColor(normalizedPos);
+        // Increase saturation and brightness of border
+        double hue = dev.cigarette.gui.widget.ColorWheelWidget.rgbToHue(borderColor);
+        int brightBorder = dev.cigarette.gui.widget.ColorWheelWidget.hslToRgb(hue, 100, 60);
+        
+        drawRoundedBorder(context, left, top, right, bottom, radius, 2, brightBorder);
+        
+        // For ScrollableWidget (category headers), add shadow
+        if (widget instanceof ScrollableWidget<?>) {
+            drawRoundedShadow(context, left, top, right, bottom, radius, 4);
+        }
     }
 
     /**
@@ -251,12 +310,12 @@ public class CigaretteScreen extends Screen {
             boolean animActive = elapsedClose < totalAnim;
             double remaining = Math.max(0.0, Math.min(totalAnim, totalAnim - elapsedClose));
 
-            context.getMatrices().push();
+            context.getMatrices().pushMatrix();
             for (int i = 0; i < priority.size(); i++) {
                 BaseWidget<?> widget = priority.get(i);
 
-                context.getMatrices().push();
-                context.getMatrices().translate(0, 0, priority.size() - i);
+                context.getMatrices().pushMatrix();
+                context.getMatrices().translate(0.0f, 0.0f, new Matrix3x2f().setTranslation(0.0f, 0.0f));
 
                 double normalizedPos = 0.0;
                 try {
@@ -292,19 +351,23 @@ public class CigaretteScreen extends Screen {
                     double dx = magnitude * nx;
                     double dy = magnitude * ny;
                     if (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01) {
-                        context.getMatrices().translate((float) dx, (float) dy, 0);
+                        context.getMatrices().translate((float) dx, (float) dy);
                     }
                 } catch (Exception ignore) {
                     double dx = (1.0 - eased) * OPEN_DISTANCE_PX;
                     if (dx > 0.01)
-                        context.getMatrices().translate(dx, 0, 0);
+                        context.getMatrices().translate((float) dx, 0);
                 }
 
-                context.getMatrices().scale((float) eased, (float) eased, 1.0f);
+                context.getMatrices().scale((float) eased, (float) eased);
+                
+                // Render gradient background and border
+                renderWidgetBackgroundAndBorder(context, widget);
+                
                 widget._render(context, mouseX, mouseY, deltaTicks);
-                context.getMatrices().pop();
+                context.getMatrices().popMatrix();
             }
-            context.getMatrices().pop();
+            context.getMatrices().popMatrix();
 
             if (!animActive) {
                 this.closing = false;
@@ -330,8 +393,8 @@ public class CigaretteScreen extends Screen {
                     }
                 }
             }
-            context.getMatrices().push();
-            context.getMatrices().translate(0, 0, priority.size() - i);
+            context.getMatrices().pushMatrix();
+            context.getMatrices().translate(0.0f, 0.0f, new Matrix3x2f().setTranslation(0.0f, 0.0f));
             if (begin && animActive) {
                 double totalStagger = Math.max(0, categoryCount - 1) * OPEN_STAGGER_S;
 
@@ -366,18 +429,22 @@ public class CigaretteScreen extends Screen {
                     double dx = magnitude * nx;
                     double dy = magnitude * ny;
                     if (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01) {
-                        context.getMatrices().translate((float) dx, (float) dy, 0);
+                        context.getMatrices().translate((float) dx, (float) dy);
                     }
                 } catch (Exception ignore) {
                     double dx = (1.0 - eased) * OPEN_DISTANCE_PX;
                     if (dx > 0.01)
-                        context.getMatrices().translate(dx, 0, 0);
+                        context.getMatrices().translate((float) dx, 0);
                 }
 
-                context.getMatrices().scale((float) eased, (float) eased, 1.0f);
+                context.getMatrices().scale((float) eased, (float) eased);
             }
+            
+            // Render gradient background and border
+            renderWidgetBackgroundAndBorder(context, widget);
+            
             widget._render(context, mouseX, mouseY, deltaTicks);
-            context.getMatrices().pop();
+            context.getMatrices().popMatrix();
         }
         if (begin && !animActive)
             begin = false;
@@ -421,5 +488,221 @@ public class CigaretteScreen extends Screen {
         if (t <= 0.0)
             return 0.0;
         return Math.pow(2.0, 10.0 * (t - 1.0));
+    }
+
+    /**
+     * Gets the gradient color for a widget based on its position on screen.
+     *
+     * @param widget The widget to get the gradient color for
+     * @param isHeader Whether this is a header element (lighter)
+     * @return The gradient color in ARGB format
+     */
+    public static int getGradientColorForWidget(BaseWidget<?> widget, boolean isHeader) {
+        GUI gui = GUI.INSTANCE;
+        MinecraftClient mc = MinecraftClient.getInstance();
+        int scrW = mc.getWindow().getScaledWidth();
+        
+        double widgetCenterX = widget.getX() + (widget.getWidth() / 2.0);
+        double normalizedPos = scrW > 0 ? widgetCenterX / scrW : 0.5;
+        
+        int baseColor = gui.getGradientColor(normalizedPos);
+        
+        if (isHeader) {
+            // Make header lighter by adjusting lightness
+            double hue = dev.cigarette.gui.widget.ColorWheelWidget.rgbToHue(baseColor);
+            double[] sl = dev.cigarette.gui.widget.ColorWheelWidget.rgbToSaturationLightness(baseColor);
+            double lighterLightness = Math.min(100, sl[1] + 20);
+            return dev.cigarette.gui.widget.ColorWheelWidget.hslToRgb(hue, sl[0], lighterLightness);
+        }
+        
+        return baseColor;
+    }
+
+    /**
+     * Renders a rounded rectangle with anti-aliasing.
+     *
+     * @param context The draw context
+     * @param left The left edge
+     * @param top The top edge
+     * @param right The right edge
+     * @param bottom The bottom edge
+     * @param radius The corner radius
+     * @param color The fill color
+     */
+    public static void drawRoundedRect(DrawContext context, int left, int top, int right, int bottom, int radius, int color) {
+        int width = right - left;
+        int height = bottom - top;
+        radius = Math.min(radius, Math.min(width, height) / 2);
+
+        if (radius <= 0) {
+            context.fill(left, top, right, bottom, color);
+            return;
+        }
+
+        // Fill center area
+        context.fill(left + radius, top, right - radius, bottom, color);
+        context.fill(left, top + radius, right, bottom - radius, color);
+
+        // Draw corners with smooth curves
+        drawQuadrant(context, left + radius, top + radius, radius, color, 0); // Top-left
+        drawQuadrant(context, right - radius, top + radius, radius, color, 1); // Top-right
+        drawQuadrant(context, left + radius, bottom - radius, radius, color, 2); // Bottom-left
+        drawQuadrant(context, right - radius, bottom - radius, radius, color, 3); // Bottom-right
+    }
+
+    /**
+     * Draws a quadrant of a circle for rounded corners.
+     *
+     * @param context The draw context
+     * @param centerX Center X of the quadrant
+     * @param centerY Center Y of the quadrant
+     * @param radius Radius of the circle
+     * @param color Color to draw
+     * @param quadrant 0=top-left, 1=top-right, 2=bottom-left, 3=bottom-right
+     */
+    private static void drawQuadrant(DrawContext context, int centerX, int centerY, int radius, int color, int quadrant) {
+        for (int i = 0; i <= radius; i++) {
+            double angle = Math.acos((double) i / radius);
+            int offset = (int) Math.round(radius * Math.sin(angle));
+
+            if (quadrant == 0 || quadrant == 2) {
+                context.fill(centerX - radius, centerY + (quadrant == 2 ? offset : -offset), centerX - i, centerY + (quadrant == 2 ? radius : -radius), color);
+            } else {
+                context.fill(centerX + i, centerY + (quadrant == 3 ? offset : -offset), centerX + radius, centerY + (quadrant == 3 ? radius : -radius), color);
+            }
+        }
+    }
+
+    /**
+     * Renders a rounded rectangle border with anti-aliasing.
+     *
+     * @param context The draw context
+     * @param left The left edge
+     * @param top The top edge
+     * @param right The right edge
+     * @param bottom The bottom edge
+     * @param radius The corner radius
+     * @param borderWidth The border width
+     * @param color The border color
+     */
+    public static void drawRoundedBorder(DrawContext context, int left, int top, int right, int bottom, int radius, int borderWidth, int color) {
+        // Draw horizontal lines
+        context.fill(left + radius, top, right - radius, top + borderWidth, color);
+        context.fill(left + radius, bottom - borderWidth, right - radius, bottom, color);
+
+        // Draw vertical lines
+        context.fill(left, top + radius, left + borderWidth, bottom - radius, color);
+        context.fill(right - borderWidth, top + radius, right, bottom - radius, color);
+
+        // Draw corner borders
+        drawQuadrantBorder(context, left + radius, top + radius, radius, borderWidth, color, 0);
+        drawQuadrantBorder(context, right - radius, top + radius, radius, borderWidth, color, 1);
+        drawQuadrantBorder(context, left + radius, bottom - radius, radius, borderWidth, color, 2);
+        drawQuadrantBorder(context, right - radius, bottom - radius, radius, borderWidth, color, 3);
+    }
+
+    /**
+     * Draws a quadrant border for rounded corners.
+     */
+    private static void drawQuadrantBorder(DrawContext context, int centerX, int centerY, int radius, int borderWidth, int color, int quadrant) {
+        for (int i = 0; i < radius; i++) {
+            for (int j = 0; j < borderWidth; j++) {
+                double angle = Math.acos((double) (i + j) / (radius + borderWidth));
+                int offset = (int) Math.round((radius + borderWidth) * Math.sin(angle));
+
+                if (quadrant == 0) {
+                    context.fill(centerX - i - j - 1, centerY - offset, centerX - i - j, centerY - offset + 1, color);
+                } else if (quadrant == 1) {
+                    context.fill(centerX + i + j, centerY - offset, centerX + i + j + 1, centerY - offset + 1, color);
+                } else if (quadrant == 2) {
+                    context.fill(centerX - i - j - 1, centerY + offset, centerX - i - j, centerY + offset + 1, color);
+                } else {
+                    context.fill(centerX + i + j, centerY + offset, centerX + i + j + 1, centerY + offset + 1, color);
+                }
+            }
+        }
+    }
+
+    /**
+     * Renders a shadow under a rounded rectangle.
+     *
+     * @param context The draw context
+     * @param left The left edge
+     * @param top The top edge
+     * @param right The right edge
+     * @param bottom The bottom edge
+     * @param radius The corner radius
+     * @param shadowSize The size of the shadow
+     */
+    public static void drawRoundedShadow(DrawContext context, int left, int top, int right, int bottom, int radius, int shadowSize) {
+        // Draw shadow with gradient alpha
+        for (int i = 0; i < shadowSize; i++) {
+            float alpha = (1.0f - (i / (float) shadowSize)) * 0.3f;
+
+            int shadowTop = bottom + i;
+            int shadowLeft = left - (shadowSize - i);
+            int shadowRight = right + (shadowSize - i);
+            int shadowBottom = bottom + i + 1;
+
+            // Simple shadow - just draw underneath
+            int finalShadowAlpha = ((int) (alpha * 255)) << 24;
+            context.fill(shadowLeft, shadowTop, shadowRight, shadowBottom, finalShadowAlpha | 0x000000);
+        }
+    }
+
+    /**
+     * Renders a gradient-filled rounded rectangle.
+     *
+     * @param context The draw context
+     * @param left The left edge
+     * @param top The top edge
+     * @param right The right edge
+     * @param bottom The bottom edge
+     * @param radius The corner radius
+     * @param color1 The left gradient color
+     * @param color2 The right gradient color
+     */
+    public static void drawGradientRoundedRect(DrawContext context, int left, int top, int right, int bottom, int radius, int color1, int color2) {
+        int width = right - left;
+        
+        // Draw gradient line by line
+        for (int x = 0; x < width; x++) {
+            double t = width > 0 ? x / (double) width : 0;
+            int color = lerpColorSmooth(color1, color2, t);
+            
+            // Draw vertical line with rounded corners
+            if (x < radius || x >= width - radius) {
+                // Near corners, draw with varying heights
+                double cornerProgress = x < radius ? x / (double) radius : (width - x) / (double) radius;
+                int offset = (int) (radius * (1.0 - Math.sqrt(1.0 - cornerProgress * cornerProgress)));
+                context.fill(left + x, top + offset, left + x + 1, bottom - offset, color);
+            } else {
+                context.fill(left + x, top, left + x + 1, bottom, color);
+            }
+        }
+    }
+
+    /**
+     * Linearly interpolates between two colors.
+     */
+    private static int lerpColorSmooth(int color1, int color2, double t) {
+        t = Math.max(0, Math.min(1, t));
+        
+        int a1 = (color1 >> 24) & 0xFF;
+        int r1 = (color1 >> 16) & 0xFF;
+        int g1 = (color1 >> 8) & 0xFF;
+        int b1 = color1 & 0xFF;
+        
+        int a2 = (color2 >> 24) & 0xFF;
+        int r2 = (color2 >> 16) & 0xFF;
+        int g2 = (color2 >> 8) & 0xFF;
+        int b2 = color2 & 0xFF;
+        
+        int a = (int) (a1 + (a2 - a1) * t);
+        int r = (int) (r1 + (r2 - r1) * t);
+        int g = (int) (g1 + (g2 - g1) * t);
+        int b = (int) (b1 + (b2 - b1) * t);
+        
+        return (a << 24) | (r << 16) | (g << 8) | b;
     }
 }

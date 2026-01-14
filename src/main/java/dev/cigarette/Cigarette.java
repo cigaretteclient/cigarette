@@ -16,14 +16,14 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.rendering.v1.HudLayerRegistrationCallback;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.LayeredDrawer;
-import net.minecraft.client.gui.LayeredDrawer.Layer;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.client.gui.widget.ClickableWidget;
@@ -34,7 +34,8 @@ import net.minecraft.util.Pair;
 import org.joml.Vector4f;
 import org.slf4j.Logger;
 import net.fabricmc.fabric.api.renderer.v1.render.RenderLayerHelper;
-import net.fabricmc.fabric.api.client.rendering.v1.IdentifiedLayer;
+import net.fabricmc.fabric.impl.client.rendering.hud.HudLayer;
+
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
@@ -105,13 +106,13 @@ public class Cigarette implements ModInitializer {
             }
         });
 
-        HudLayerRegistrationCallback.EVENT.register(Identifier.of(MOD_ID, "notification_display"),
-                (hudLayerManager) -> {
-                    hudLayerManager.attachLayerAfter(IdentifiedLayer.CHAT,
-                            Identifier.of(MOD_ID, "notification_display"), (drawContext, tickDelta) -> {
+        HudElementRegistry.attachElementAfter(VanillaHudElements.CHAT, Identifier.of(MOD_ID, "hud_elements"),
+        new HudElement() {
+            public void render(net.minecraft.client.gui.DrawContext context, net.minecraft.client.render.RenderTickCounter tickCounter) {
                                 if (NOTIFICATION_DISPLAY == null) {
                                     NOTIFICATION_DISPLAY = new NotificationDisplay();
                                 }
+                                float tickDelta = tickCounter.getDynamicDeltaTicks();
                                 Mouse m = MinecraftClient.getInstance().mouse;
                                 Window w = MinecraftClient.getInstance().getWindow();
                                 for (Pair<Vector4f, ClickableWidget> pair : HUD_ELEMENTS) {
@@ -123,16 +124,17 @@ public class Cigarette implements ModInitializer {
                                     int height = (int) dimensions.w;
                                     widget.setDimensions(width, height);
                                     widget.setPosition(x, y);
-                                    widget.render(drawContext, (int) m.getScaledX(w), (int) m.getScaledY(w),
-                                            tickDelta.getDynamicDeltaTicks());
+                                    widget.render(context, (int) m.getScaledX(w), (int) m.getScaledY(w),
+                                            tickDelta);
                                 }
                                 if (NOTIFICATION_DISPLAY != null) {
-                                    NOTIFICATION_DISPLAY.render(drawContext, (int) m.getScaledX(w),
+                                    NOTIFICATION_DISPLAY.render(context, (int) m.getScaledX(w),
                                             (int) m.getScaledY(w),
-                                            tickDelta.getDynamicDeltaTicks());
+                                            tickDelta);
                                 }
-                            });
-                });
+                            }
+        });
+
     }
 
     public static TextRenderer getTr(boolean bold) throws IOException {

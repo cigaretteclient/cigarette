@@ -3,6 +3,7 @@ package dev.cigarette.gui.widget;
 import dev.cigarette.config.FileSystem;
 import dev.cigarette.gui.CigaretteScreen;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.ScreenRect;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.tooltip.TooltipState;
@@ -263,7 +264,7 @@ public abstract class BaseWidget<StateType> extends ClickableWidget {
         if (!this.visible) return;
         this.hovered = captureHover && isMouseOver(mouseX, mouseY) && CigaretteScreen.isHoverable(this);
         this.render(context, this.hovered, mouseX, mouseY, deltaTicks, getX(), getY(), getRight(), getBottom());
-        if (this.hovered) this.tooltip.render(true, this.isFocused(), this.getNavigationFocus());
+        if (this.hovered) this.tooltip.render(context, mouseX, mouseY, true, true, new ScreenRect(getX(), getY(), getWidth(), getHeight()));
     }
 
     /**

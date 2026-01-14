@@ -4,6 +4,7 @@ import dev.cigarette.Cigarette;
 import dev.cigarette.gui.CigaretteScreen;
 import dev.cigarette.lib.Color;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
@@ -167,7 +168,9 @@ public class SliderWidget extends BaseWidget<Double> {
      * @return Whether this widget handled the click
      */
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(Click mouseInput, boolean doubled) {
+        double mouseX = mouseInput.x();
+        double mouseY = mouseInput.y();
         if (this.disabled) return false;
         if (!isMouseOver(mouseX, mouseY)) return false;
         this.dragging = true;
@@ -186,7 +189,8 @@ public class SliderWidget extends BaseWidget<Double> {
      * @return Whether this widget handled the drag
      */
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double ignored, double ignored_) {
+    public boolean mouseDragged(Click mouseInput, double ignored, double ignored_) {
+        double mouseX = mouseInput.x();
         if (this.disabled) return false;
         if (!dragging) return false;
         this.setStateFromDrag(mouseX);
@@ -203,7 +207,7 @@ public class SliderWidget extends BaseWidget<Double> {
      * @return {@code false}
      */
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(Click mouseInput) {
         if (this.disabled) return false;
         dragging = false;
         return false;

@@ -1,12 +1,18 @@
 package dev.cigarette.gui.widget;
 
+import dev.cigarette.Cigarette;
 import dev.cigarette.gui.CigaretteScreen;
 import dev.cigarette.gui.Scissor;
 import dev.cigarette.lib.Shape;
+import net.minecraft.client.gl.RenderPipelines;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ClickableWidget;
+import net.minecraft.client.render.RenderLayer;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
+
+import com.mojang.blaze3d.pipeline.RenderPipeline;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -290,32 +296,38 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(Click mouseInput, boolean doubled) {
+        double mouseX = mouseInput.x();
+        double mouseY = mouseInput.y();
+        int button = mouseInput.button();
 
-        boolean wasHandled = this.header != null && this.header.mouseClicked(mouseX, mouseY, button);
+        boolean wasHandled = this.header != null && this.header.mouseClicked(mouseInput, doubled);
         if (wasHandled) {
             super.unfocus();
             return true;
         }
-        return this.expanded && super.mouseClicked(mouseX, mouseY, button);
+        return this.expanded && super.mouseClicked(mouseInput, doubled);
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(Click mouseInput) {
 
         if (header != null) {
-            boolean handled = this.header.mouseReleased(mouseX, mouseY, button);
+            boolean handled = this.header.mouseReleased(mouseInput);
             if (handled) {
                 return true;
             }
         }
-        return super.mouseReleased(mouseX, mouseY, button);
+        return super.mouseReleased(mouseInput);
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        return (this.header != null && this.header.mouseDragged(mouseX, mouseY, button, deltaX, deltaY))
-                || (this.expanded && super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY));
+    public boolean mouseDragged(Click mouseInput, double deltaX, double deltaY) {
+        double mouseX = mouseInput.x();
+        double mouseY = mouseInput.y();
+        int button = mouseInput.button();
+        return (this.header != null && this.header.mouseDragged(mouseInput, deltaX, deltaY))
+                || (this.expanded && super.mouseDragged(mouseInput, deltaX, deltaY));
     }
 
     @Override
@@ -346,7 +358,7 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
     @Override
     public void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left,
                        int top, int right, int bottom) {
-        context.getMatrices().push();
+        context.getMatrices().pushMatrix();
 
         Collection<BaseWidget<?>> localChildren = this.children.values();
         int childCount = localChildren.size();
@@ -414,7 +426,53 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
         }
         if (header != null) {
             header.renderWidget(context, mouseX, mouseY, deltaTicks);
+            
+            // Render logo in top-left of header
+            int headerHeight = getHeaderHeight();
+            int logoSize = 16;
+            int logoPadding = 4;
+            int logoX = left + logoPadding;
+            int logoY = top + (headerHeight - logoSize) / 2;
+            
+            context.getMatrices().pushMatrix();
+            context.getMatrices().translate(logoX, logoY);
+            context.drawTexture(RenderPipelines.GUI_TEXTURED, Cigarette.LOGO_IDENTIFIER, 0, 0, 0.0f, 0.0f, logoSize, logoSize, logoSize, logoSize);
+            context.getMatrices().popMatrix();
+            
+            // Draw satin effect (soft inner shadow at top)
+            drawSatinEffect(context, left, top, right, top + headerHeight, false);
         }
-        context.getMatrices().pop();
+        context.getMatrices().popMatrix();
+    }
+
+    /**
+     * Draws a satin effect (soft inner shadow) at the top of a region for depth perception.
+     *
+     * @param context The draw context
+     * @param left Left edge
+     * @param top Top edge
+     * @param right Right edge
+     * @param bottom Bottom edge (for the effect area)
+     * @param isBottom Whether to draw at the bottom instead of top
+     */
+    private static void drawSatinEffect(DrawContext context, int left, int top, int right, int bottom, boolean isBottom) {
+        int effectHeight = 3;
+        if (bottom - top < effectHeight) return;
+        
+        if (isBottom) {
+            // Draw subtle dark shadow at bottom for depth
+            for (int i = 0; i < effectHeight; i++) {
+                float alpha = (1.0f - (i / (float) effectHeight)) * 0.20f;
+                int shadowColor = ((int) (alpha * 255)) << 24; // Black shadow
+                context.fill(left, bottom - effectHeight + i, right, bottom - effectHeight + i + 1, shadowColor);
+            }
+        } else {
+            // Draw subtle white highlight at top for satin effect
+            for (int i = 0; i < effectHeight; i++) {
+                float alpha = (1.0f - (i / (float) effectHeight)) * 0.15f;
+                int shadowColor = ((int) (alpha * 255)) << 24 | 0xFFFFFF;
+                context.fill(left, top + i, right, top + i + 1, shadowColor);
+            }
+        }
     }
 }

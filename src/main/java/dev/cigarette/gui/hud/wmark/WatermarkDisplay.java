@@ -7,7 +7,7 @@ import dev.cigarette.lib.Shape;
 import dev.cigarette.gui.hud.notification.NotificationDisplay;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
-
+import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.widget.ClickableWidget;
@@ -47,13 +47,13 @@ public class WatermarkDisplay extends ClickableWidget {
                 int logoY = y + Math.max(0, (boxHeight - logoSize) / 2);
                 int logoX = x + padLeft;
 
-                context.getMatrices().push();
-                context.getMatrices().translate(logoX, logoY, 0);
+                context.getMatrices().pushMatrix();
+                context.getMatrices().translate(logoX, logoY);
                 float s = 24f / 30f;
-                context.getMatrices().scale(s, s, 1f);
-                context.drawTexture(RenderLayer::getGuiTextured, Cigarette.LOGO_IDENTIFIER, 0, 0, 0f, 0f, 30, 30, 30,
+                context.getMatrices().scale(s, s);
+                context.drawTexture(RenderPipelines.GUI_TEXTURED, Cigarette.LOGO_IDENTIFIER, 0, 0, 0f, 0f, 30, 30, 30,
                         30);
-                context.getMatrices().pop();
+                context.getMatrices().popMatrix();
 
                 int textY = y + Math.max(0, (boxHeight - tr.fontHeight) / 2);
                 int textX = x + padLeft + logoSize + spacing;
@@ -65,20 +65,20 @@ public class WatermarkDisplay extends ClickableWidget {
                 int logoY = y + Math.max(0, (boxSize - logoSize) / 2);
                 int logoX = x + Math.max(0, (boxSize - logoSize) / 2);
 
-                context.getMatrices().push();
-                context.getMatrices().translate(logoX, logoY, 0);
+                context.getMatrices().pushMatrix();
+                context.getMatrices().translate(logoX, logoY);
                 float s = 24f / 30f;
-                context.getMatrices().scale(s, s, 1f);
-                context.drawTexture(RenderLayer::getGuiTextured, Cigarette.LOGO_IDENTIFIER, 0, 0, 0f, 0f, 30, 30, 30,
+                context.getMatrices().scale(s, s);
+                context.drawTexture(RenderPipelines.GUI_TEXTURED, Cigarette.LOGO_IDENTIFIER, 0, 0, 0f, 0f, 30, 30, 30,
                         30);
-                context.getMatrices().pop();
+                context.getMatrices().popMatrix();
             }
         } else {
             if (textEnabled) {
                 NotificationDisplay.imageRender(context, x, y);
             } else {
                 int logoY = y + 5;
-                context.drawTexture(RenderLayer::getGuiTextured, Cigarette.LOGO_IDENTIFIER, x + 7, logoY, 0f, 0f, 30,
+                context.drawTexture(RenderPipelines.GUI_TEXTURED, Cigarette.LOGO_IDENTIFIER, x + 7, logoY, 0f, 0f, 30,
                         30, 30, 30);
             }
         }

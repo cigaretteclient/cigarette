@@ -4,8 +4,10 @@ import dev.cigarette.Cigarette;
 import dev.cigarette.gui.CigaretteScreen;
 import dev.cigarette.gui.RenderUtil;
 import dev.cigarette.lib.Color;
+import dev.cigarette.lib.Renderer;
 import dev.cigarette.module.BaseModule;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
@@ -108,7 +110,10 @@ public class ToggleWidget extends BaseWidget<Boolean> {
      * @return Whether this widget handled the click
      */
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(Click mouseInput, boolean doubled) {
+        double mouseX = mouseInput.x();
+        double mouseY = mouseInput.y();
+        double button = mouseInput.button();
         if (!isMouseOver(mouseX, mouseY)) return false;
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             this.setRawState(!this.getRawState());
@@ -161,7 +166,10 @@ public class ToggleWidget extends BaseWidget<Boolean> {
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        public boolean mouseClicked(Click mouseInput, boolean doubled) {
+            double mouseX = mouseInput.x();
+            double mouseY = mouseInput.y();
+            double button = mouseInput.button();
             if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT && isMouseOver(mouseX, mouseY)) {
                 this.setFocused();
                 return true;
@@ -169,14 +177,19 @@ public class ToggleWidget extends BaseWidget<Boolean> {
             return false;
         }
 
+        private int modifyOpacity(int color, float factor) {
+            // e.g. 0x80FFFFFF
+            int a = (color >> 24) & 0xFF;
+            a = Math.min(255, Math.max(0, Math.round(a * factor)));
+            return (a << 24) | (color & 0x00FFFFFF);
+        }
+
         @Override
         protected void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left, int top, int right, int bottom) {
             this.hovered = false;
             TextRenderer textRenderer = Cigarette.REGULAR;
             context.fill(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR);
-            RenderUtil.pushOpacity(0.5f);
-            context.drawTextWithShadow(textRenderer, getMessage(), left + 4, top + height / 3, CigaretteScreen.PRIMARY_TEXT_COLOR);
-            RenderUtil.popOpacity();
+            context.drawTextWithShadow(textRenderer, getMessage(), left + 4, top + height / 3, modifyOpacity(CigaretteScreen.PRIMARY_TEXT_COLOR, 0.5f));
         }
     }
 }

@@ -23,7 +23,7 @@ import static dev.cigarette.Cigarette.MOD_ID;
 
 public class VersionManager {
     private static final String FORGEJO_API = "https://git.okr765.com/api/v1/repos/cigarette/client";
-    private static final String MC_VERSION = SharedConstants.getGameVersion().getName();
+    private static final String MC_VERSION = SharedConstants.getGameVersion().name();
     private static final String DISABLED_FILENAME = "cigarette-old.disabled.autoupdate";
 
     private static boolean updated = false;

@@ -38,7 +38,7 @@ public class BedwarsProvider implements BarWidgetProvider {
         if (entity instanceof IronGolemEntity) {
             ClientWorld world = MinecraftClient.getInstance().world;
             if (world != null) {
-                Box box = Box.of(entity.getPos(), 0, 2.2, 0);
+                Box box = Box.of(entity.getEntityPos(), 0, 2.2, 0);
                 for (Entity target : world.getOtherEntities(entity, box)) {
                     if (!(target instanceof ArmorStandEntity)) continue;
                     Text standDisplayName = target.getDisplayName();

@@ -1,12 +1,15 @@
 package dev.cigarette.lib;
 
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.util.DefaultSkinHelper;
-import net.minecraft.client.util.SkinTextures;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.SkinTextures;
 import net.minecraft.util.Identifier;
 
 public class Shape {
@@ -359,17 +362,19 @@ public class Shape {
     }
 
     public static void userFaceTexture(DrawContext context, int x, int y, int w, int h, PlayerEntity player) {
-        SkinTextures t = MinecraftClient.getInstance().getSkinProvider().getSkinTextures(player.getGameProfile());
-        Identifier text = t.texture();
-        if (text != null) {
-            int texW = 64, texH = 64;
-            int u = 8, v = 8, faceW = 8, faceH = 8;
-            context.drawTexture(
-                RenderLayer::getGuiTextured,
-                text,
-                x, y, (float) u, (float) v, w, h, faceW, faceH,
-                texW, texH
-            );
-        }
+        CompletableFuture<Optional<SkinTextures>> t = MinecraftClient.getInstance().getSkinProvider().fetchSkinTextures(player.getGameProfile());
+        t.thenAcceptAsync(skinTexturesOpt -> {
+            Identifier text;
+            if (skinTexturesOpt.isPresent()) {
+                SkinTextures skinTextures = skinTexturesOpt.get();
+                text = skinTextures.body().id();
+                if (text == null) {
+                    text = DefaultSkinHelper.getTexture();
+                }
+            } else {
+                text = DefaultSkinHelper.getTexture();
+            }
+            context.drawTexture(RenderPipelines.GUI_TEXTURED, text, x, y, 32, 32, w, h, 32, 32, 64, 64);
+        }, MinecraftClient.getInstance());
     }
 }

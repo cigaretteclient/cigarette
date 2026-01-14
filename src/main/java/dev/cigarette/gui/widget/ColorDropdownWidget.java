@@ -16,17 +16,17 @@ public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType
      */
     private final ColorSquareWidget colorSquare = new ColorSquareWidget();
     /**
-     * The slider that controls the red content in the color.
+     * The color wheel widget for hue selection.
      */
-    private final SliderWidget sliderRed = new SliderWidget("Red").withBounds(0, 255, 255);
+    private final ColorWheelWidget colorWheel = new ColorWheelWidget();
     /**
-     * The slider that controls the green content in the color.
+     * The slider that controls the saturation of the color.
      */
-    private final SliderWidget sliderGreen = new SliderWidget("Green").withBounds(0, 255, 255);
+    private final SliderWidget sliderSaturation = new SliderWidget("Saturation").withBounds(0, 50, 100);
     /**
-     * The slider that controls the blue content in the color.
+     * The slider that controls the lightness of the color.
      */
-    private final SliderWidget sliderBlue = new SliderWidget("Blue").withBounds(0, 255, 255);
+    private final SliderWidget sliderLightness = new SliderWidget("Lightness").withBounds(0, 50, 100);
     /**
      * The slider that controls the alpha content in the color.
      */
@@ -87,10 +87,16 @@ public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType
      */
     public ColorDropdownWidget<Widget, StateType> withDefaultColor(int argb) {
         this.colorSquare.withDefault(argb);
+        this.colorWheel.withDefault(argb);
+        
+        double[] sl = ColorWheelWidget.rgbToSaturationLightness(argb);
+        sliderSaturation.withDefault(sl[0]);
+        sliderLightness.withDefault(sl[1]);
         sliderAlpha.withDefault((double) ((argb >> 24) & 0xFF));
-        sliderRed.withDefault((double) ((argb >> 16) & 0xFF));
-        sliderGreen.withDefault((double) ((argb >> 8) & 0xFF));
-        sliderBlue.withDefault((double) (argb & 0xFF));
+        
+        this.colorWheel.setSaturation(sl[0]);
+        this.colorWheel.setLightness(sl[1]);
+        
         return this;
     }
 
@@ -123,23 +129,30 @@ public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType
      * @return This widget for method chaining
      */
     private ColorDropdownWidget<Widget, StateType> attachChildren() {
-        this.container.setChildren(this.sliderRed, this.sliderGreen, this.sliderBlue, this.sliderAlpha);
-        this.sliderRed.stateCallback = ((newColor -> {
-            int red = (int) (double) newColor;
-            this.colorSquare.setRawState((this.colorSquare.getRawState() & 0xFF00FFFF) + (red << 16));
-        }));
-        this.sliderGreen.stateCallback = ((newColor -> {
-            int green = (int) (double) newColor;
-            this.colorSquare.setRawState((this.colorSquare.getRawState() & 0xFFFF00FF) + (green << 8));
-        }));
-        this.sliderBlue.stateCallback = ((newColor -> {
-            int blue = (int) (double) newColor;
-            this.colorSquare.setRawState((this.colorSquare.getRawState() & 0xFFFFFF00) + blue);
-        }));
-        this.sliderAlpha.stateCallback = ((newColor -> {
-            int alpha = (int) (double) newColor;
-            this.colorSquare.setRawState((alpha << 24) + (this.colorSquare.getRawState() & 0xFFFFFF));
-        }));
+        this.container.setChildren(this.colorWheel, this.sliderSaturation, this.sliderLightness, this.sliderAlpha);
+        
+        this.colorWheel.stateCallback = (newColor -> {
+            int alpha = (int) (double) sliderAlpha.getRawState();
+            this.colorSquare.setRawState((alpha << 24) | (newColor & 0xFFFFFF));
+        });
+        
+        this.sliderSaturation.stateCallback = (newSat -> {
+            this.colorWheel.setSaturation(newSat);
+            int alpha = (int) (double) sliderAlpha.getRawState();
+            this.colorSquare.setRawState((alpha << 24) | (this.colorWheel.getRawState() & 0xFFFFFF));
+        });
+        
+        this.sliderLightness.stateCallback = (newLight -> {
+            this.colorWheel.setLightness(newLight);
+            int alpha = (int) (double) sliderAlpha.getRawState();
+            this.colorSquare.setRawState((alpha << 24) | (this.colorWheel.getRawState() & 0xFFFFFF));
+        });
+        
+        this.sliderAlpha.stateCallback = (newAlpha -> {
+            int alpha = (int) (double) newAlpha;
+            this.colorSquare.setRawState((alpha << 24) | (this.colorWheel.getRawState() & 0xFFFFFF));
+        });
+        
         return this;
     }
 
@@ -198,5 +211,6 @@ public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType
     protected void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left, int top, int right, int bottom) {
         super.render(context, hovered, mouseX, mouseY, deltaTicks, left, top, right, bottom);
         this.colorSquare.render(context, hovered, mouseX, mouseY, deltaTicks, left, top, right, bottom);
+        this.colorWheel.render(context, hovered, mouseX, mouseY, deltaTicks, left, top, right, bottom);
     }
 }

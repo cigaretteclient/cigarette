@@ -3,7 +3,7 @@ package dev.cigarette.module.zombies;
 import dev.cigarette.GameDetector;
 import dev.cigarette.gui.widget.ToggleWidget;
 import dev.cigarette.module.RenderModule;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
+import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.OtherClientPlayerEntity;
@@ -85,7 +85,7 @@ public class ReviveAura extends RenderModule<ToggleWidget, Boolean> {
         for (Entity nearbyEntity : world.getEntities()) {
             if (nearbyEntity instanceof ArmorStandEntity armorStand) {
                 if (armorStand.getCustomName() != null && armorStand.getCustomName().getSiblings().getFirst().getString().contains("REVIVING...")) {
-                    // A downed player is in a "laying down" pose. Their origin (getPos()) is at their feet.
+                    // A downed player is in a "laying down" pose. Their origin (getEntityPos()) is at their feet.
                     // The "REVIVING..." text appears over their torso, which is offset from the origin
                     // based on the direction they are facing (yaw). We must calculate this offset.
                     final double offsetDistance = 0.9; // Approximate distance from origin to torso for a downed player model.

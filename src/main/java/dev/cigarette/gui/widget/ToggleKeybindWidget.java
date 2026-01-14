@@ -1,6 +1,7 @@
 package dev.cigarette.gui.widget;
 
 import dev.cigarette.module.BaseModule;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
@@ -90,12 +91,15 @@ public class ToggleKeybindWidget extends ToggleWidget {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(Click mouseInput, boolean doubled) {
+        double mouseX = mouseInput.x();
+        double mouseY = mouseInput.y();
+        int button = mouseInput.button();
         if (!isMouseOver(mouseX, mouseY)) return false;
         System.out.println("click button=" + button);
         switch (button) {
             case GLFW.GLFW_MOUSE_BUTTON_LEFT -> {
-                super.mouseClicked(mouseX, mouseY, button);
+                super.mouseClicked(mouseInput, doubled);
             }
             case GLFW.GLFW_MOUSE_BUTTON_MIDDLE, GLFW.GLFW_MOUSE_BUTTON_RIGHT -> {
                 System.out.println("right click passed");

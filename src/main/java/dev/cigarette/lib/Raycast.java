@@ -129,7 +129,7 @@ public class Raycast {
         boolean isArrow = entity instanceof PersistentProjectileEntity;
         SteppedTrajectory trajectory = new SteppedTrajectory(ticks);
 
-        Vec3d previousPosition = entity.getPos();
+        Vec3d previousPosition = entity.getEntityPos();
         Vec3d previousVelocity = entity.getVelocity();
         trajectory.steps[0] = previousPosition;
 

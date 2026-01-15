@@ -15,7 +15,7 @@ public class ToggleKeybindWidget extends ToggleWidget {
     /**
      * The {@link KeybindWidget} for handling configuration of the keybind.
      */
-    protected KeybindWidget widget;
+    public KeybindWidget widget;
 
     /**
      * Creates a widget that stores a keybind and can be toggled.

@@ -12,8 +12,24 @@ import org.jetbrains.annotations.NotNull;
 public class GUI extends RenderModule<ToggleWidget, Boolean> {
     public static final GUI INSTANCE = new GUI("ui.gui", "GUI", "ClickGUI settings.");
 
+    /**
+     * Whether to use the alternate GUI layout (sidebar + right panel).
+     * False = classic ClickGUI, True = alternate layout.
+     */
+    private final ToggleWidget alternateLayoutToggle = new ToggleWidget("Alternate Layout", "Use sidebar + right panel layout instead of classic ClickGUI.")
+        .withDefaultState(false);
+
     private GUI(String id, String name, String tooltip) {
         super(ToggleWidget.ToggleWidgetDisabled::module, id, name, tooltip);
+        this.setChildren(alternateLayoutToggle);
+        alternateLayoutToggle.registerConfigKey("gui.alternate.layout");
+    }
+
+    /**
+     * Returns whether the alternate GUI layout is enabled.
+     */
+    public boolean isAlternateLayoutEnabled() {
+        return alternateLayoutToggle.getRawState();
     }
 
     @Override

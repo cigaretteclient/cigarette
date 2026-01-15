@@ -1,6 +1,8 @@
 package dev.cigarette.gui;
 
 import dev.cigarette.Cigarette;
+import dev.cigarette.gui.ColorScheme;
+import dev.cigarette.gui.GradientRenderer;
 import dev.cigarette.gui.hud.notification.NotificationDisplay;
 import dev.cigarette.gui.widget.BaseWidget;
 import dev.cigarette.gui.widget.KeybindWidget;
@@ -75,15 +77,15 @@ public class CigaretteScreen extends Screen {
     /**
      * The length of the opening animation in seconds.
      */
-    private static final double OPEN_DURATION_S = 0.4;
-    private static final double OPEN_STAGGER_S = 0.06;
+    private static final double OPEN_DURATION_S = 0.2;
+    private static final double OPEN_STAGGER_S = 0.03;
     private static final int OPEN_DISTANCE_PX = 24;
 
     /**
      * The length of the closing animation as a multiplier of {@link #OPEN_DURATION_S}.
      */
-    private static final double CLOSE_DURATION_FACTOR = 0.6;
-    private static final double CLOSE_STAGGER_FACTOR = 0.6;
+    private static final double CLOSE_DURATION_FACTOR = 0.8;
+    private static final double CLOSE_STAGGER_FACTOR = 0.8;
     /**
      * The total number of categories in the GUI.
      */
@@ -233,6 +235,18 @@ public class CigaretteScreen extends Screen {
         MinecraftClient mc = MinecraftClient.getInstance();
         int scrW = mc.getWindow().getScaledWidth();
         int scrH = mc.getWindow().getScaledHeight();
+
+        // Render animated background wave gradient
+        int[] bgGradient = ColorScheme.getBackgroundGradient();
+        GradientRenderer.renderHorizontalWaveGradient(
+            context,
+            0, 0, scrW, scrH,
+            bgGradient[0], bgGradient[1],
+            ColorScheme.getWaveWavelength(),
+            ColorScheme.getWaveSpeed() * 0.5f, // Slower for background
+            ColorScheme.getWaveAmplitude() * 0.3f, // Subtle for background
+            0.0f
+        );
 
         NotificationDisplay.imageRender(context, scrW - 60, scrH - 70, 0.8);
 

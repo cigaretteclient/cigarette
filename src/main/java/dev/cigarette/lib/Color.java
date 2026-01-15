@@ -92,4 +92,76 @@ public class Color {
         int bg = lerpColor(CigaretteScreen.PRIMARY_COLOR, 0xFF020618, (float) pingpong);
         return bg;
     }
+
+    /**
+     * Converts HSL to RGB.
+     * @param hue 0-360
+     * @param saturation 0-100
+     * @param lightness 0-100
+     * @return ARGB int
+     */
+    public static int hslToRgb(double hue, double saturation, double lightness) {
+        double h = hue / 360.0;
+        double s = saturation / 100.0;
+        double l = lightness / 100.0;
+
+        double r, g, b;
+        if (s == 0) {
+            r = g = b = l;
+        } else {
+            double q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+            double p = 2 * l - q;
+            r = hueToRgb(p, q, h + 1.0/3.0);
+            g = hueToRgb(p, q, h);
+            b = hueToRgb(p, q, h - 1.0/3.0);
+        }
+
+        int ri = (int) Math.round(r * 255);
+        int gi = (int) Math.round(g * 255);
+        int bi = (int) Math.round(b * 255);
+
+        return 0xFF000000 | (ri << 16) | (gi << 8) | bi;
+    }
+
+    private static double hueToRgb(double p, double q, double t) {
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        if (t < 1.0/6.0) return p + (q - p) * 6 * t;
+        if (t < 1.0/2.0) return q;
+        if (t < 2.0/3.0) return p + (q - p) * (2.0/3.0 - t) * 6;
+        return p;
+    }
+
+    /**
+     * Converts RGB to HSL.
+     * @param rgb ARGB int
+     * @return double[] {hue 0-360, saturation 0-100, lightness 0-100}
+     */
+    public static double[] rgbToHsl(int rgb) {
+        double r = ((rgb >> 16) & 0xFF) / 255.0;
+        double g = ((rgb >> 8) & 0xFF) / 255.0;
+        double b = (rgb & 0xFF) / 255.0;
+
+        double max = Math.max(r, Math.max(g, b));
+        double min = Math.min(r, Math.min(g, b));
+        double diff = max - min;
+
+        double h, s, l = (max + min) / 2;
+
+        if (diff == 0) {
+            h = s = 0;
+        } else {
+            s = l > 0.5 ? diff / (2 - max - min) : diff / (max + min);
+            if (max == r) {
+                h = (g - b) / diff + (g < b ? 6 : 0);
+            } else if (max == g) {
+                h = (b - r) / diff + 2;
+            } else {
+                h = (r - g) / diff + 4;
+            }
+            h /= 6;
+        }
+
+        return new double[]{h * 360, s * 100, l * 100};
+    }
 }

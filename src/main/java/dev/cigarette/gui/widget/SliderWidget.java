@@ -26,11 +26,11 @@ public class SliderWidget extends BaseWidget<Double> {
     /**
      * The maximum value this slider can hold.
      */
-    private double maxState = 0;
+    public double maxState = 0;
     /**
      * The minimum value this slider can hold.
      */
-    private double minState = 0;
+    public double minState = 0;
     /**
      * The number of decimal places to include when getting this widgets state.
      */

@@ -2,10 +2,13 @@ package dev.cigarette.gui.widget;
 
 import dev.cigarette.Cigarette;
 import dev.cigarette.gui.CigaretteScreen;
+import dev.cigarette.gui.ColorScheme;
+import dev.cigarette.gui.GradientRenderer;
 import dev.cigarette.lib.Color;
 import dev.cigarette.lib.Shape;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.Text;
@@ -197,7 +200,7 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
     public void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left,
                        int top, int right, int bottom) {
         TextRenderer textRenderer = Cigarette.REGULAR;
-        int bgColor = Color.color(left, top);
+
         if (!this.expanded) {
             ticksOnCollapse = Math.min(ticksOnCollapse + 1, MAX_TICKS_ON_COLLAPSE);
         } else {
@@ -205,11 +208,60 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
         }
         double progress = ticksOnCollapse / (double) MAX_TICKS_ON_COLLAPSE;
         progress = CigaretteScreen.easeOutExpo(progress);
-        Shape.roundedRect(context, left, top, right, bottom, bgColor, 2, true, !this.expanded);
-        if (this.expanded) {
-            int borderColor = Color.colorDarken(bgColor, 0.8f);
-            context.drawHorizontalLine(left, right - 1, bottom - 1, borderColor);
+
+        // Render gradient background with proper rounded corners
+        // Use horizontal animated gradient that goes smoothly left-to-right across the screen
+        int[] gradient = ColorScheme.getCategoryHeaderGradient();
+        
+        context.getMatrices().pushMatrix();
+        
+        // Draw the entire gradient background with wave animation
+        GradientRenderer.renderHorizontalWaveGradient(
+            context, left, top, right, bottom,
+            gradient[0], gradient[1],
+            ColorScheme.getWaveWavelength(),
+            ColorScheme.getWaveSpeed(),
+            ColorScheme.getWaveAmplitude() * 0.3f, // Reduce amplitude for subtler effect
+            0.0f);
+        
+        // Apply rounded corners by masking the corners with background color
+        int cornerRadius = 4;
+        int height = bottom - top;
+        
+        // Top corners
+        for (int y = 0; y < cornerRadius; y++) {
+            int dy = cornerRadius - 1 - y;
+            int dx = (int) Math.floor(Math.sqrt((double) cornerRadius * cornerRadius - (double) dy * dy));
+            int inset = cornerRadius - dx;
+            if (inset > 0) {
+                // Use the primary gradient color for corner blending
+                context.fill(left, top + y, left + inset, top + y + 1, gradient[0]);
+                context.fill(right - inset, top + y, right, top + y + 1, gradient[0]);
+            }
         }
+        
+        // Bottom corners (only if collapsed)
+        if (!this.expanded) {
+            for (int y = height - cornerRadius; y < height; y++) {
+                int dy = y - (height - cornerRadius);
+                int dx = (int) Math.floor(Math.sqrt((double) cornerRadius * cornerRadius - (double) dy * dy));
+                int inset = cornerRadius - dx;
+                if (inset > 0) {
+                    // Use the primary gradient color for corner blending
+                    context.fill(left, top + y, left + inset, top + y + 1, gradient[0]);
+                    context.fill(right - inset, top + y, right, top + y + 1, gradient[0]);
+                }
+            }
+        }
+        
+        context.getMatrices().popMatrix();
+        GradientRenderer.renderSatinOverlay(context, left, top, right, bottom);
+
+        // Draw logo
+        context.drawTexture(RenderPipelines.GUI_TEXTURED, Cigarette.LOGO_IDENTIFIER,
+                left + 4, top + 4, 0, 0, 12, 12, 12, 12);
+
+        // Draw text
         Text text = getMessage();
         int textWidth = textRenderer.getWidth(text);
         int horizontalMargin = (width - textWidth) / 2;

@@ -7,6 +7,9 @@ import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderLayer;
+
+import java.util.Map;
+
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3x2f;
 import org.joml.Matrix3x2fStack;
@@ -86,6 +89,17 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType>
         this.withDefault(new BaseWidget.Stateless());
         this.container = new ScrollableWidget<>(0, 0, false);
         super.children.put("0", this.container);
+    }
+
+    public Map<String, BaseWidget<?>> getChildren() {
+        return this.container.children;
+    }
+
+    /**
+     * Returns whether the dropdown is currently visible/expanded.
+     */
+    public boolean isExpanded() {
+        return this.dropdownVisible;
     }
 
     /**

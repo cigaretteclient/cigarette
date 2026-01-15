@@ -165,6 +165,14 @@ public class KeybindWidget extends BaseWidget<Integer> {
         context.drawTextWithShadow(textRenderer, value, right - textRenderer.getWidth(value) - 4, top + height / 3, CigaretteScreen.SECONDARY_COLOR);
     }
 
+    public String toString() {
+        if (utilKey == InputUtil.UNKNOWN_KEY) {
+            return "None";
+        }
+        String keyName = utilKey.getLocalizedText().getLiteralString();
+        return Objects.requireNonNullElse(keyName, "???");
+    }
+
     @Override
     public void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left, int top, int right, int bottom) {
         context.fill(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR);

@@ -103,4 +103,30 @@ public class Scissor {
             next.apply();
         }
     }
+
+    public static void pushInclusive(DrawContext context, int left, int top, int right, int bottom) {
+        Bound bound = new Bound(context, left, top, right, bottom);
+
+        if (!exclusiveScissors.isEmpty()) {
+            Bound previous = exclusiveScissors.peek();
+            // Calculate intersection
+            int newLeft = Math.max(previous.left, bound.left);
+            int newTop = Math.max(previous.top, bound.top);
+            int newRight = Math.min(previous.right, bound.right);
+            int newBottom = Math.min(previous.bottom, bound.bottom);
+            previous.remove();
+            bound = new Bound(context, newLeft, newTop, newRight, newBottom);
+        }
+    }
+
+    public static void popInclusive() {
+        if (exclusiveScissors.isEmpty()) return;
+        Bound latest = exclusiveScissors.pop();
+        latest.remove();
+
+        if (!exclusiveScissors.isEmpty()) {
+            Bound next = exclusiveScissors.peek();
+            next.apply();
+        }
+    }
 }

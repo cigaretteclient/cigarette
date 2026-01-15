@@ -2,12 +2,15 @@ package dev.cigarette.helper;
 
 import dev.cigarette.Cigarette;
 import dev.cigarette.gui.CigaretteScreen;
+import dev.cigarette.gui.AlternateClickGUI;
+import dev.cigarette.module.ui.GUI;
 import dev.cigarette.helper.keybind.InputBlocker;
 import dev.cigarette.helper.keybind.MinecraftKeybind;
 import dev.cigarette.helper.keybind.VirtualKeybind;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.input.KeyInput;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import org.jetbrains.annotations.Nullable;
@@ -173,8 +176,16 @@ public class KeybindHelper {
             keybind.physicalAction(action);
         }
         if (action == GLFW.GLFW_PRESS && KEY_TOGGLE_GUI.isOf(key, scancode)) {
-            Cigarette.SCREEN.setParent(client.currentScreen);
-            client.setScreen(Cigarette.SCREEN);
+            Screen screenToShow;
+            if (GUI.INSTANCE.isAlternateLayoutEnabled()) {
+                AlternateClickGUI alternateGui = new AlternateClickGUI();
+                alternateGui.setParent(client.currentScreen);
+                screenToShow = alternateGui;
+            } else {
+                Cigarette.SCREEN.setParent(client.currentScreen);
+                screenToShow = Cigarette.SCREEN;
+            }
+            client.setScreen(screenToShow);
             return true;
         }
         for (VirtualKeybind binding : customBinds) {

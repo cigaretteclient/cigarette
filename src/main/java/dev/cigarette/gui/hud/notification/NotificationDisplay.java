@@ -5,6 +5,8 @@ import java.util.List;
 
 import dev.cigarette.Cigarette;
 import dev.cigarette.gui.CigaretteScreen;
+import dev.cigarette.gui.ColorScheme;
+import dev.cigarette.gui.GradientRenderer;
 import dev.cigarette.gui.hud.notification.internal.NotificationWithEasingProgress;
 import dev.cigarette.lib.Color;
 import dev.cigarette.lib.Shape;
@@ -194,8 +196,21 @@ public class NotificationDisplay extends ClickableWidget {
                             : notificationType.equals("warning") ? 0xFFFFA500
                                     : notificationType.equals("error") ? 0xFFFF5C5C : 0xFF999999);
 
-            int bg = CigaretteScreen.BACKGROUND_COLOR;
-            Shape.roundedRect(context, clampedLeft, clampedTop, clampedRight, clampedBottom, bg,
+            // Render gradient background based on notification type
+            int[] bgGradient = ColorScheme.getGradientForType(notificationType);
+                GradientRenderer.renderVerticalWaveGradient(
+                    context,
+                    clampedLeft, clampedTop, clampedRight, clampedBottom,
+                    bgGradient[0], bgGradient[1],
+                    ColorScheme.getWaveWavelength(),
+                    ColorScheme.getWaveSpeed(),
+                    ColorScheme.getWaveAmplitude(),
+                    0.25f * i);
+            // Satin overlay for a subtle sheen
+            GradientRenderer.renderSatinOverlay(context, clampedLeft, clampedTop, clampedRight, clampedBottom);
+            
+            // Draw rounded rectangle outline with anti-aliasing
+            Shape.roundedRect(context, clampedLeft, clampedTop, clampedRight, clampedBottom, bgGradient[1],
                     cornerRadius);
 
             float visibleStart = NotificationWithEasingProgress.APPEAR_TICKS;
@@ -268,6 +283,8 @@ public class NotificationDisplay extends ClickableWidget {
             String msgStr = n.getNotification().getMessage();
             String titleTrim = titleStr;
             String msgTrim = msgStr;
+            
+            // Draw text with anti-aliasing enabled
             context.drawText(boldTextRenderer, titleTrim, contentLeft - 3, clampedTop + 8,
                     CigaretteScreen.PRIMARY_TEXT_COLOR, true);
             context.drawText(regularTextRenderer, msgTrim, contentLeft - 3, clampedTop + 23,

@@ -4,6 +4,8 @@ import dev.cigarette.module.BaseModule;
 import net.minecraft.client.gui.DrawContext;
 import org.jetbrains.annotations.Nullable;
 
+import dev.cigarette.lib.Color;
+
 /**
  * An extension on {@link DropdownWidget} pre-made for color configuration.
  *
@@ -16,17 +18,9 @@ public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType
      */
     private final ColorSquareWidget colorSquare = new ColorSquareWidget();
     /**
-     * The slider that controls the red content in the color.
+     * The color wheel for adjusting hue, saturation, and lightness.
      */
-    private final SliderWidget sliderRed = new SliderWidget("Red").withBounds(0, 255, 255);
-    /**
-     * The slider that controls the green content in the color.
-     */
-    private final SliderWidget sliderGreen = new SliderWidget("Green").withBounds(0, 255, 255);
-    /**
-     * The slider that controls the blue content in the color.
-     */
-    private final SliderWidget sliderBlue = new SliderWidget("Blue").withBounds(0, 255, 255);
+    private final ColorWheelWidget colorWheel = new ColorWheelWidget("Color");
     /**
      * The slider that controls the alpha content in the color.
      */
@@ -51,6 +45,13 @@ public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType
      */
     public int getStateRGB() {
         return this.colorSquare.getRawState() & 0xFFFFFF;
+    }
+
+    /**
+     * {@return the color square widget for direct access}
+     */
+    public ColorSquareWidget getColorSquare() {
+        return this.colorSquare;
     }
 
     /**
@@ -86,11 +87,9 @@ public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType
      * @return This widget for method chaining
      */
     public ColorDropdownWidget<Widget, StateType> withDefaultColor(int argb) {
-        this.colorSquare.withDefault(argb);
+        double[] hsl = Color.rgbToHsl(argb);
+        colorWheel.setHSL(hsl[0], hsl[1], hsl[2]);
         sliderAlpha.withDefault((double) ((argb >> 24) & 0xFF));
-        sliderRed.withDefault((double) ((argb >> 16) & 0xFF));
-        sliderGreen.withDefault((double) ((argb >> 8) & 0xFF));
-        sliderBlue.withDefault((double) (argb & 0xFF));
         return this;
     }
 
@@ -123,23 +122,17 @@ public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType
      * @return This widget for method chaining
      */
     private ColorDropdownWidget<Widget, StateType> attachChildren() {
-        this.container.setChildren(this.sliderRed, this.sliderGreen, this.sliderBlue, this.sliderAlpha);
-        this.sliderRed.stateCallback = ((newColor -> {
-            int red = (int) (double) newColor;
-            this.colorSquare.setRawState((this.colorSquare.getRawState() & 0xFF00FFFF) + (red << 16));
-        }));
-        this.sliderGreen.stateCallback = ((newColor -> {
-            int green = (int) (double) newColor;
-            this.colorSquare.setRawState((this.colorSquare.getRawState() & 0xFFFF00FF) + (green << 8));
-        }));
-        this.sliderBlue.stateCallback = ((newColor -> {
-            int blue = (int) (double) newColor;
-            this.colorSquare.setRawState((this.colorSquare.getRawState() & 0xFFFFFF00) + blue);
-        }));
-        this.sliderAlpha.stateCallback = ((newColor -> {
-            int alpha = (int) (double) newColor;
-            this.colorSquare.setRawState((alpha << 24) + (this.colorSquare.getRawState() & 0xFFFFFF));
-        }));
+        this.container.setChildren(this.colorWheel, this.sliderAlpha);
+        this.colorWheel.setColorCallback((argb) -> {
+            int alpha = (int) (double) this.sliderAlpha.getRawState();
+            int finalArgb = (alpha << 24) | (argb & 0xFFFFFF);
+            this.colorSquare.setRawState(finalArgb);
+        });
+        this.sliderAlpha.stateCallback = ((newAlpha) -> {
+            int alpha = (int) (double) newAlpha;
+            int rgb = this.colorSquare.getRawState() & 0xFFFFFF;
+            this.colorSquare.setRawState((alpha << 24) | rgb);
+        });
         return this;
     }
 
@@ -190,7 +183,11 @@ public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType
         this.header.registerConfigKey(key);
         this.colorSquare.registerConfigKeyAnd(key + ".color", loadedState -> {
             if (!(loadedState instanceof Integer integerState)) return;
-            this.withDefaultColor(integerState);
+            double[] hsl = Color.rgbToHsl(integerState);
+            colorWheel.setHSL(hsl[0], hsl[1], hsl[2]);
+            int alpha = (integerState >> 24) & 0xFF;
+            sliderAlpha.setRawState((double) alpha);
+            this.colorSquare.setRawState(integerState);
         });
     }
 

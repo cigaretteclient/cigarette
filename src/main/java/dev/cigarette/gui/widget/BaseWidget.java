@@ -60,6 +60,14 @@ public abstract class BaseWidget<StateType> extends ClickableWidget {
     protected @Nullable Consumer<StateType> moduleCallback = null;
 
     /**
+     * Set the state callback for this widget.
+     * @param callback The callback to trigger when the state changes
+     */
+    public void setStateCallback(Consumer<StateType> callback) {
+        this.stateCallback = callback;
+    }
+
+    /**
      * Create a basic widget that holds custom state and saves/loads it from the cigarette config.
      *
      * @param message The text to display when this widget is rendered
@@ -276,7 +284,7 @@ public abstract class BaseWidget<StateType> extends ClickableWidget {
      * @param deltaTicks The delta ticks to pass through
      */
     @Override
-    protected void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
+    public void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
         this._render(context, mouseX, mouseY, deltaTicks);
     }
 

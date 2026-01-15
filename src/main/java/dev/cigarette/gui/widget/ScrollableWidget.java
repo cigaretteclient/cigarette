@@ -32,6 +32,10 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
      */
     private static final int DEFAULT_HEIGHT = 200;
     /**
+     * The default row height when a child does not specify its own height.
+     */
+    private static final int DEFAULT_ROW_HEIGHT = 20;
+    /**
      * The default scrollbar width of this widget.
      */
     private static final int DEFAULT_SCROLLBAR_WIDTH = 3;
@@ -42,7 +46,7 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
     /**
      * The height of each row inside this widget.
      */
-    private final int rowHeight = 20;
+    private final int rowHeight = DEFAULT_ROW_HEIGHT;
     /**
      * Whether this widget is supposed to be scrollable or not.
      */
@@ -134,6 +138,30 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
     }
 
     @Override
+    public void setWidth(int width) {
+        super.setWidth(width);
+        if (this.header != null) {
+            this.header.setWidth(width);
+        }
+        updateChildrenSizing();
+    }
+
+    @Override
+    public void setHeight(int height) {
+        super.setHeight(height);
+        updateChildrenSizing();
+    }
+
+    @Override
+    public void setDimensions(int width, int height) {
+        super.setDimensions(width, height);
+        if (this.header != null) {
+            this.header.setWidth(width);
+        }
+        updateChildrenSizing();
+    }
+
+    @Override
     public BaseWidget<BaseWidget.Stateless> withXY(int x, int y) {
         if (this.header != null) this.header.withXY(x, y);
         super.withXY(x, y);
@@ -144,8 +172,10 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
      * {@return whether the container should be scrollable} Updates {@link #shouldScroll}.
      */
     private boolean updateShouldScroll() {
-        this.shouldScroll = ((children == null ? 0 : children.size()) + (header != null ? 1 : 0))
-                * rowHeight > this.height;
+        int headerHeight = getHeaderHeight();
+        int contentHeight = getChildrenContentHeight();
+        int available = Math.max(0, this.height - headerHeight);
+        this.shouldScroll = contentHeight > available;
         return this.shouldScroll;
     }
 
@@ -207,6 +237,16 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
     }
 
     /**
+     * Gets the header text, if set.
+     */
+    public @Nullable String getHeaderName() {
+        if (this.header == null) {
+            return null;
+        }
+        return this.header.getMessage().getString();
+    }
+
+    /**
      * Sets all the children width and heights. This also triggers {@link #updateShouldScroll()} to set whether there needs to be a scrollbar.
      *
      * @return This widget for method chaining
@@ -214,11 +254,18 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
     private ScrollableWidget<Widgets> updateChildrenSizing() {
         if (this.children != null) {
             int rightMargin = this.updateShouldScroll() ? DEFAULT_SCROLLBAR_WIDTH : 0;
+            int availableWidth = Math.max(0, width - rightMargin);
+
             for (ClickableWidget child : children.values()) {
                 if (child == null)
                     continue;
-                child.setHeight(rowHeight);
-                child.setWidth(width - rightMargin);
+
+                int desiredHeight = child.getHeight() > 0 ? child.getHeight() : rowHeight;
+                child.setHeight(desiredHeight);
+
+                int desiredWidth = child.getWidth() > 0 ? Math.min(child.getWidth(), availableWidth) : availableWidth;
+                child.setWidth(desiredWidth);
+
                 if (this.shouldScroll && child instanceof PassthroughWidget<?, ?> widget) {
                     widget.childLeftOffset = DEFAULT_SCROLLBAR_WIDTH;
                 }
@@ -255,6 +302,18 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
         this.ticksOnOpen = expanded ? 0 : MAX_TICKS_ON_OPEN;
     }
 
+    private int getChildrenContentHeight() {
+        int heightSum = 0;
+        if (this.children != null) {
+            for (BaseWidget<?> child : this.children.values()) {
+                if (child == null) continue;
+                int h = child.getHeight();
+                heightSum += h > 0 ? h : rowHeight;
+            }
+        }
+        return heightSum;
+    }
+
     @Override
     public void unfocus() {
         if (this.header != null)
@@ -276,7 +335,7 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
     private int getVisibleBottom(int top, int bottom) {
         int headerHeight = getHeaderHeight();
         int areaHeight = Math.max(0, bottom - top - headerHeight);
-        int contentHeight = (children == null ? 0 : children.size() * rowHeight);
+        int contentHeight = getChildrenContentHeight();
         int maxVisible = Math.min(areaHeight, contentHeight);
 
         double eased = getEasedProgress();
@@ -325,12 +384,11 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
             int bottom = top + this.height;
             int headerHeight = getHeaderHeight();
             int areaHeight = Math.max(0, bottom - top - headerHeight);
+            int contentHeight = getChildrenContentHeight();
             double eased = getEasedProgress();
             int animatedArea = this.expanded
-                    ? (int) Math.ceil(eased * areaHeight)
-                    : (int) Math.floor(eased * areaHeight);
-            int rowCount = (children == null ? 0 : children.size());
-            int contentHeight = rowCount * rowHeight;
+                ? (int) Math.ceil(eased * areaHeight)
+                : (int) Math.floor(eased * areaHeight);
             int maxScroll = Math.max(0, contentHeight - animatedArea);
             scrollPosition = Math.max(0,
                     Math.min(scrollPosition - verticalAmount * VERTICAL_SCROLL_MULTIPLIER, maxScroll));
@@ -366,12 +424,12 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
             }
 
             boolean hasHeader = header != null;
-            int hasHeaderInt = hasHeader ? 1 : 0;
             int headerHeight = getHeaderHeight();
             int realTop = top + headerHeight;
 
             int realBottomInt = getVisibleBottom(top, bottom);
             int realHeight = Math.max(0, realBottomInt - realTop);
+            int contentHeight = getChildrenContentHeight();
 
             if (!(!this.expanded && this.ticksOnOpen == 0)) {
                 int scissorRight = right + 3;
@@ -380,16 +438,15 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
                         ? realBottomInt + (showBottomRoundedRect ? BOTTOM_ROUNDED_RECT_HEIGHT : 0) + 3
                         : realBottomInt;
                 Scissor.pushExclusive(context, left, scissorTop, scissorRight, scissorBottom);
-                int index = -1;
+                int yCursor = top - (int) scrollPosition + headerHeight;
                 for (BaseWidget<?> child : localChildren) {
-                    index++;
                     if (child == null)
                         continue;
-                    child.withXY(left, top - (int) scrollPosition + (index + hasHeaderInt) * rowHeight)
-                            .renderWidget(context, mouseX, mouseY, deltaTicks);
+                    int childHeight = Math.max(1, child.getHeight());
+                    child.withXY(left, yCursor).renderWidget(context, mouseX, mouseY, deltaTicks);
+                    yCursor += childHeight;
                 }
 
-                int contentHeight = childCount * rowHeight;
                 int overflowHeight = Math.max(0, contentHeight - realHeight);
                 if (overflowHeight > 0 && this.expanded && this.ticksOnOpen == MAX_TICKS_ON_OPEN) {
                     context.fill(right - DEFAULT_SCROLLBAR_WIDTH, realTop, right, realBottomInt,
@@ -411,8 +468,10 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
                 }
                 Scissor.popExclusive();
             }
-        }
-        if (header != null) {
+            if (header != null) {
+                header.renderWidget(context, mouseX, mouseY, deltaTicks);
+            }
+        } else if (header != null) {
             header.renderWidget(context, mouseX, mouseY, deltaTicks);
         }
         context.getMatrices().popMatrix();

@@ -3,7 +3,10 @@ package dev.cigarette.gui.hud.modules;
 import dev.cigarette.Cigarette;
 import dev.cigarette.gui.CategoryInstance;
 import dev.cigarette.gui.CigaretteScreen;
+import dev.cigarette.gui.ColorScheme;
+import dev.cigarette.gui.GradientRenderer;
 import dev.cigarette.lib.Color;
+import dev.cigarette.lib.Shape;
 import dev.cigarette.module.BaseModule;
 import dev.cigarette.module.ui.Watermark;
 import net.minecraft.client.MinecraftClient;
@@ -188,18 +191,44 @@ public class ModuleListDisplay extends ClickableWidget {
                 bgLeft = widgetLeft;
             if (bgRight > widgetRight)
                 bgRight = widgetRight;
-            int bgColor = scaleAlpha(baseBg, vis);
             if (bgLeft < bgRight) {
-                context.fill(bgLeft, bgTop, bgRight, bgBottom, bgColor);
+                // Use horizontal gradient similar to ClickGUI headers
+                int[] gradient = ColorScheme.getCategoryHeaderGradient();
+                
+                // Calculate animated colors for smooth gradient based on position
+                float time = GradientRenderer.getGlobalTimeSeconds() * ColorScheme.getWaveSpeed();
+                float animFactor = (float) Math.sin(time * Math.PI + i * 0.15f) * 0.5f + 0.5f;
+                animFactor = animFactor * Math.min(1.0f, ColorScheme.getWaveAmplitude());
+                
+                int animatedLeft = scaleAlpha(gradient[0], vis);
+                int animatedRight = scaleAlpha(gradient[1], vis);
+                
+                // Apply animation to create smooth wave effect
+                animatedLeft = Color.lerpColor(animatedLeft, animatedRight, animFactor * 0.3f);
+                animatedRight = Color.lerpColor(animatedRight, animatedLeft, animFactor * 0.3f);
+                
+                // Render horizontal gradient background
+                GradientRenderer.renderHorizontalGradient(context, bgLeft, bgTop, bgRight, bgBottom, animatedLeft, animatedRight);
             }
 
-            // int borderColor = scaleAlpha(0xFF000000 | (CigaretteScreen.PRIMARY_COLOR & 0x00FFFFFF), vis);
-            int borderColor = Color.colorVertical(bgTop, bgLeft);
-            int borderW = 2;
-            int borderLeft = bgLeft;
-            int borderRight = Math.min(bgRight, borderLeft + borderW);
-            if (borderLeft < borderRight) {
-                context.fill(borderLeft, bgTop, borderRight, bgBottom, borderColor);
+            // Draw rounded animated border on the side
+            int borderRadius = 2;
+            int borderThickness = 3;
+            
+            // Calculate animated border color based on position and time
+            float time = GradientRenderer.getGlobalTimeSeconds() * ColorScheme.getWaveSpeed() * 2.0f;
+            float borderAnim = (float) Math.sin(time + i * 0.2f) * 0.5f + 0.5f;
+            int[] gradient = ColorScheme.getCategoryHeaderGradient();
+            int borderColor = Color.lerpColor(gradient[0], gradient[1], borderAnim);
+            borderColor = scaleAlpha(borderColor, vis);
+            
+            // Draw rounded border on the appropriate side based on alignment
+            if (doFlip) {
+                // Left side border
+                Shape.roundedRect(context, bgLeft - borderThickness, bgTop, bgLeft, bgBottom, borderColor, borderRadius);
+            } else {
+                // Right side border  
+                Shape.roundedRect(context, bgRight, bgTop, bgRight + borderThickness, bgBottom, borderColor, borderRadius);
             }
 
             context.drawText(tr, name, drawX, lineY, textColor, true);

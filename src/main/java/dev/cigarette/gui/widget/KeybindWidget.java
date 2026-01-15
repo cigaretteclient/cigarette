@@ -6,7 +6,9 @@ import dev.cigarette.helper.KeybindHelper;
 import dev.cigarette.helper.keybind.VirtualKeybind;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
@@ -40,7 +42,8 @@ public class KeybindWidget extends BaseWidget<Integer> {
      * @return This widget for method chaining
      */
     public KeybindWidget withDefaultKey(int key) {
-        utilKey = InputUtil.fromKeyCode(key, 0);
+        KeyInput in = new KeyInput(key, 0, 0);
+        utilKey = InputUtil.fromKeyCode(in);
         keyBinding.setDefaultKey(key);
         keyBinding.setKey(key);
         super.withDefault(key);
@@ -48,7 +51,7 @@ public class KeybindWidget extends BaseWidget<Integer> {
     }
 
     public void setBoundKey(int key) {
-        utilKey = key == GLFW.GLFW_KEY_UNKNOWN ? InputUtil.UNKNOWN_KEY : InputUtil.fromKeyCode(key, 0);
+        utilKey = key == GLFW.GLFW_KEY_UNKNOWN ? InputUtil.UNKNOWN_KEY : InputUtil.fromKeyCode(new KeyInput(key, 0, 0));
         keyBinding.setKey(key);
         this.setRawState(key);
     }
@@ -105,7 +108,10 @@ public class KeybindWidget extends BaseWidget<Integer> {
      * @return Whether this widget handled the click
      */
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(Click click, boolean doubled) {
+        double mouseX = click.x();
+        double mouseY = click.y();
+        int button = click.button();
         if (isMouseOver(mouseX, mouseY)) {
             if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 toggleBinding();
@@ -124,7 +130,8 @@ public class KeybindWidget extends BaseWidget<Integer> {
      * @return Whether this widget handled the key press
      */
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyInput keyInput) {
+        int keyCode = keyInput.getKeycode();
         if (!isBinding()) return false;
         if (keyCode == GLFW.GLFW_KEY_ESCAPE || keyCode == GLFW.GLFW_KEY_RIGHT_SHIFT) {
             this.setBoundKey(GLFW.GLFW_KEY_UNKNOWN);

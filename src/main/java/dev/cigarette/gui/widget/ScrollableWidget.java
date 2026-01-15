@@ -3,6 +3,7 @@ package dev.cigarette.gui.widget;
 import dev.cigarette.gui.CigaretteScreen;
 import dev.cigarette.gui.Scissor;
 import dev.cigarette.lib.Shape;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import org.jetbrains.annotations.Nullable;
@@ -290,32 +291,31 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-
-        boolean wasHandled = this.header != null && this.header.mouseClicked(mouseX, mouseY, button);
+    public boolean mouseClicked(Click click, boolean doubled) {
+        boolean wasHandled = this.header != null && this.header.mouseClicked(click, doubled);
         if (wasHandled) {
             super.unfocus();
             return true;
         }
-        return this.expanded && super.mouseClicked(mouseX, mouseY, button);
+        return this.expanded && super.mouseClicked(click, doubled);
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(Click click) {
 
         if (header != null) {
-            boolean handled = this.header.mouseReleased(mouseX, mouseY, button);
+            boolean handled = this.header.mouseReleased(click);
             if (handled) {
                 return true;
             }
         }
-        return super.mouseReleased(mouseX, mouseY, button);
+        return super.mouseReleased(click);
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        return (this.header != null && this.header.mouseDragged(mouseX, mouseY, button, deltaX, deltaY))
-                || (this.expanded && super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY));
+    public boolean mouseDragged(Click click, double deltaX, double deltaY) {
+        return (this.header != null && this.header.mouseDragged(click, deltaX, deltaY))
+                || (this.expanded && super.mouseDragged(click, deltaX, deltaY));
     }
 
     @Override
@@ -346,7 +346,7 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
     @Override
     public void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left,
                        int top, int right, int bottom) {
-        context.getMatrices().push();
+        context.getMatrices().pushMatrix();
 
         Collection<BaseWidget<?>> localChildren = this.children.values();
         int childCount = localChildren.size();
@@ -415,6 +415,6 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
         if (header != null) {
             header.renderWidget(context, mouseX, mouseY, deltaTicks);
         }
-        context.getMatrices().pop();
+        context.getMatrices().popMatrix();
     }
 }

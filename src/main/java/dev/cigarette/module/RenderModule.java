@@ -2,8 +2,8 @@ package dev.cigarette.module;
 
 import dev.cigarette.Cigarette;
 import dev.cigarette.gui.widget.BaseWidget;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
+import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.minecraft.client.util.math.MatrixStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -14,8 +14,8 @@ public abstract class RenderModule<Widget extends BaseWidget<Boolean>, Boolean> 
         WorldRenderEvents.BEFORE_DEBUG_RENDER.register(ctx -> {
             if (!this.getRawState()) return;
             if (!this._inValidGame()) return;
-            MatrixStack matrixStack = ctx.matrixStack();
-            if (matrixStack == null) return;
+            MatrixStack matrixStack = ctx.matrices();
+            if(matrixStack == null) return;
             this.onWorldRender(ctx, matrixStack);
         });
     }

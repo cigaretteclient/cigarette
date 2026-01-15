@@ -263,7 +263,7 @@ public abstract class BaseWidget<StateType> extends ClickableWidget {
         if (!this.visible) return;
         this.hovered = captureHover && isMouseOver(mouseX, mouseY) && CigaretteScreen.isHoverable(this);
         this.render(context, this.hovered, mouseX, mouseY, deltaTicks, getX(), getY(), getRight(), getBottom());
-        if (this.hovered) this.tooltip.render(true, this.isFocused(), this.getNavigationFocus());
+        if (this.hovered) this.tooltip.render(context, mouseX, mouseY, true, this.isFocused(), this.getNavigationFocus());
     }
 
     /**

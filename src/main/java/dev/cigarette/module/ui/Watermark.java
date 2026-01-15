@@ -7,7 +7,7 @@ import dev.cigarette.gui.widget.ColorDropdownWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
 import dev.cigarette.lib.Color;
 import dev.cigarette.module.RenderModule;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
+import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.util.math.MatrixStack;

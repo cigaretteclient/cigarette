@@ -6,6 +6,7 @@ import dev.cigarette.gui.RenderUtil;
 import dev.cigarette.lib.Color;
 import dev.cigarette.module.BaseModule;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
@@ -108,9 +109,9 @@ public class ToggleWidget extends BaseWidget<Boolean> {
      * @return Whether this widget handled the click
      */
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (!isMouseOver(mouseX, mouseY)) return false;
-        if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+    public boolean mouseClicked(Click click, boolean doubled) {
+        if (!isMouseOver(click.x(), click.y())) return false;
+        if (click.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             this.setRawState(!this.getRawState());
         }
         this.setFocused();
@@ -161,8 +162,8 @@ public class ToggleWidget extends BaseWidget<Boolean> {
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT && isMouseOver(mouseX, mouseY)) {
+        public boolean mouseClicked(Click click, boolean doubled) {
+            if (click.button() == GLFW.GLFW_MOUSE_BUTTON_RIGHT && isMouseOver(click.x(), click.y())) {
                 this.setFocused();
                 return true;
             }
@@ -174,9 +175,7 @@ public class ToggleWidget extends BaseWidget<Boolean> {
             this.hovered = false;
             TextRenderer textRenderer = Cigarette.REGULAR;
             context.fill(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR);
-            RenderUtil.pushOpacity(0.5f);
-            context.drawTextWithShadow(textRenderer, getMessage(), left + 4, top + height / 3, CigaretteScreen.PRIMARY_TEXT_COLOR);
-            RenderUtil.popOpacity();
+            context.drawTextWithShadow(textRenderer, getMessage(), left + 4, top + height / 3, RenderUtil.modifyOpacity(CigaretteScreen.PRIMARY_TEXT_COLOR, 0.5f));
         }
     }
 }

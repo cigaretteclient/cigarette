@@ -7,7 +7,7 @@ import dev.cigarette.gui.widget.*;
 import dev.cigarette.lib.Renderer;
 import dev.cigarette.module.RenderModule;
 import dev.cigarette.precomputed.PyramidQuadrant;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
+import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -27,7 +27,7 @@ import java.util.OptionalDouble;
 public class DefenseViewer extends RenderModule<ToggleWidget, Boolean> {
     public static final DefenseViewer INSTANCE = new DefenseViewer("bedwars.defenseesp", "Defense Viewer", "ESPs bed blocks and the defensive blocks around them.");
 
-    private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockesp", 1536, Renderer.BLOCK_ESP_PHASE, RenderLayer.MultiPhaseParameters.builder().lineWidth(new RenderPhase.LineWidth(OptionalDouble.of(1))).build(false));
+    private static final RenderLayer RENDER_LAYER = RenderLayer.of("cigarette.blockesp", RenderSetup.builder(Renderer.BLOCK_ESP_PHASE).build());
     private final HashSet<BlockPos> bedBlocks = new HashSet<>();
     private final HashMap<BlockPos, Integer> defensiveBlocks = new HashMap<>();
     private int layer = 0;
@@ -123,7 +123,7 @@ public class DefenseViewer extends RenderModule<ToggleWidget, Boolean> {
         this.defensiveBlocks.clear();
         HashSet<BedwarsAgent.PersistentBed> beds = BedwarsAgent.getVisibleBeds();
         for (BedwarsAgent.PersistentBed bed : beds) {
-            boolean playerClose = bed.head().isWithinDistance(player.getPos(), bedDistance.getRawState());
+            boolean playerClose = bed.head().isWithinDistance(player.getEntityPos(), bedDistance.getRawState());
             if (playerClose) {
                 bedBlocks.add(bed.head());
                 bedBlocks.add(bed.foot());

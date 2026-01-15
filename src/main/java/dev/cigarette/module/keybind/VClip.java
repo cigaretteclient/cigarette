@@ -24,7 +24,7 @@ public class VClip extends TickModule<ToggleWidget, Boolean> {
     @Override
     protected void onEnabledTick(MinecraftClient client, @NotNull ClientWorld world, @NotNull ClientPlayerEntity player) {
         while (keybind.getKeybind().wasPhysicallyPressed()) {
-            Vec3d pos = player.getPos();
+            Vec3d pos = player.getEntityPos();
             BlockPos blockPos = player.getBlockPos();
             for (int offset = 3; offset < 6; offset++) {
                 if (!world.getBlockState(blockPos.add(0, -1 * offset, 0)).isAir()) continue;

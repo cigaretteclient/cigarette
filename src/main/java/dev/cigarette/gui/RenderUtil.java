@@ -8,21 +8,14 @@ import com.mojang.blaze3d.systems.RenderSystem;
 public final class RenderUtil {
     private RenderUtil() {}
 
-    /**
-     * Set the opacity of the renderer.
-     *
-     * @param alpha The opacity to set, between 0 and 1
-     */
-    public static void pushOpacity(float alpha) {
-        if (alpha < 0f) alpha = 0f;
-        if (alpha > 1f) alpha = 1f;
-        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, alpha);
-    }
+    // 0xAARRGGBB
+    public static int modifyOpacity(int color, float opacity) {
+        int a = (color >> 24) & 0xFF;
+        int r = (color >> 16) & 0xFF;
+        int g = (color >> 8) & 0xFF;
+        int b = color & 0xFF;
 
-    /**
-     * Reset the opacity of the renderer.
-     */
-    public static void popOpacity() {
-        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+        int newA = Math.round(a * opacity);
+        return (newA << 24) | (r << 16) | (g << 8) | b;
     }
 }

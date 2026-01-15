@@ -16,8 +16,8 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.rendering.v1.HudLayerRegistrationCallback;
-import net.fabricmc.fabric.api.client.rendering.v1.IdentifiedLayer;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
@@ -97,8 +97,7 @@ public class Cigarette implements ModInitializer {
             }
         });
 
-        HudLayerRegistrationCallback.EVENT
-            .register(layeredDrawer -> layeredDrawer.attachLayerAfter(IdentifiedLayer.MISC_OVERLAYS,
+        HudElementRegistry.attachElementAfter(VanillaHudElements.MISC_OVERLAYS,
                 Identifier.of("cigarette", "hud_after_misc_overlays"), (drawContext, tickDelta) -> {
                     Mouse m = MinecraftClient.getInstance().mouse;
                     Window w = MinecraftClient.getInstance().getWindow();
@@ -118,7 +117,7 @@ public class Cigarette implements ModInitializer {
                     NOTIFICATION_DISPLAY.render(drawContext, (int) m.getScaledX(w), (int) m.getScaledY(w),
                         tickDelta.getDynamicDeltaTicks());
                     }
-                }));
+                });
     }
 
     public static TextRenderer getTr(boolean bold) throws IOException {

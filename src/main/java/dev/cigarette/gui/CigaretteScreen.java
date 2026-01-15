@@ -7,11 +7,14 @@ import dev.cigarette.gui.widget.KeybindWidget;
 import dev.cigarette.gui.widget.ScrollableWidget;
 import dev.cigarette.gui.widget.ToggleKeybindWidget;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix3x2f;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Stack;
@@ -127,9 +130,9 @@ public class CigaretteScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(Click click, boolean doubled) {
         for (BaseWidget<?> child : priority) {
-            boolean handled = child.mouseClicked(mouseX, mouseY, button);
+            boolean handled = child.mouseClicked(click, doubled);
             if (handled) {
                 priority.remove(child);
                 priority.addFirst(child);
@@ -153,17 +156,17 @@ public class CigaretteScreen extends Screen {
     }
 
     @Override
-    public boolean mouseDragged(double x, double y, int button, double deltaX, double deltaY) {
+    public boolean mouseDragged(Click click, double offsetX, double offsetY) {
         for (Element child : this.children()) {
-            child.mouseDragged(x, y, button, deltaX, deltaY);
+            child.mouseDragged(click, offsetX, offsetY);
         }
         return false;
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(Click click) {
         for (BaseWidget<?> child : priority) {
-            if (child.mouseReleased(mouseX, mouseY, button)) {
+            if (child.mouseReleased(click)) {
                 return true;
             }
         }
@@ -192,12 +195,12 @@ public class CigaretteScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyInput input) {
         if (CigaretteScreen.bindingKey != null) {
-            CigaretteScreen.bindingKey.keyPressed(keyCode, scanCode, modifiers);
+            CigaretteScreen.bindingKey.keyPressed(input);
             return true;
         }
-        switch (keyCode) {
+        switch (input.getKeycode()) {
             case GLFW.GLFW_KEY_ESCAPE, GLFW.GLFW_KEY_RIGHT_SHIFT -> this.close();
         }
         return true;
@@ -205,7 +208,7 @@ public class CigaretteScreen extends Screen {
 
     /**
      * {@return whether the provided widget can be hovered} If so, that widget is set as the hovered widget.
-     * <p>A widget must call {@link BaseWidget#captureHover() captureHover()} to be hoverable.</p>
+     * <p>A widget must call {@link BaseWidget#captureHover()} captureHover()} to be hoverable.</p>
      *
      * @param obj The widget to check if it can be hovered
      */
@@ -227,8 +230,6 @@ public class CigaretteScreen extends Screen {
      */
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
-        this.renderBackground(context, mouseX, mouseY, deltaTicks);
-
         MinecraftClient mc = MinecraftClient.getInstance();
         int scrW = mc.getWindow().getScaledWidth();
         int scrH = mc.getWindow().getScaledHeight();
@@ -246,12 +247,12 @@ public class CigaretteScreen extends Screen {
             boolean animActive = elapsedClose < totalAnim;
             double remaining = Math.max(0.0, Math.min(totalAnim, totalAnim - elapsedClose));
 
-            context.getMatrices().push();
-            for (int i = 0; i < priority.size(); i++) {
+            context.getMatrices().pushMatrix();
+            for (int i = priority.size() - 1; i >= 0; i--) {
                 BaseWidget<?> widget = priority.get(i);
 
-                context.getMatrices().push();
-                context.getMatrices().translate(0, 0, priority.size() - i);
+                context.getMatrices().pushMatrix();
+                context.getMatrices().translate(0.0f, 0.0f, new Matrix3x2f().translation(0.0f, (float) (priority.size() - i)));
 
                 double normalizedPos = 0.0;
                 try {
@@ -287,19 +288,19 @@ public class CigaretteScreen extends Screen {
                     double dx = magnitude * nx;
                     double dy = magnitude * ny;
                     if (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01) {
-                        context.getMatrices().translate((float) dx, (float) dy, 0);
+                        context.getMatrices().translate((float) dx, (float) dy);
                     }
                 } catch (Exception ignore) {
                     double dx = (1.0 - eased) * OPEN_DISTANCE_PX;
                     if (dx > 0.01)
-                        context.getMatrices().translate(dx, 0, 0);
+                        context.getMatrices().translate((float) dx, 0.0f);
                 }
 
-                context.getMatrices().scale((float) eased, (float) eased, 1.0f);
+                context.getMatrices().scale((float) eased, (float) eased);
                 widget._render(context, mouseX, mouseY, deltaTicks);
-                context.getMatrices().pop();
+                context.getMatrices().popMatrix();
             }
-            context.getMatrices().pop();
+            context.getMatrices().popMatrix();
 
             if (!animActive) {
                 this.closing = false;
@@ -315,7 +316,7 @@ public class CigaretteScreen extends Screen {
             double totalAnim = (Math.max(0, categoryCount - 1)) * OPEN_STAGGER_S + OPEN_DURATION_S;
             animActive = elapsed < totalAnim;
         }
-        for (int i = 0; i < priority.size(); i++) {
+        for (int i = priority.size() - 1; i >= 0; i--) {
             BaseWidget<?> widget = priority.get(i);
             if (widget instanceof ScrollableWidget<?> sw) {
                 for (CategoryInstance categoryInstance : Cigarette.CONFIG.CATEGORIES.values()) {
@@ -325,8 +326,8 @@ public class CigaretteScreen extends Screen {
                     }
                 }
             }
-            context.getMatrices().push();
-            context.getMatrices().translate(0, 0, priority.size() - i);
+            context.getMatrices().pushMatrix();
+            context.getMatrices().translate(0.0f, 0.0f, new Matrix3x2f().translation(0.0f, (float) (priority.size() - i)));
             if (begin && animActive) {
                 double totalStagger = Math.max(0, categoryCount - 1) * OPEN_STAGGER_S;
 
@@ -361,18 +362,18 @@ public class CigaretteScreen extends Screen {
                     double dx = magnitude * nx;
                     double dy = magnitude * ny;
                     if (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01) {
-                        context.getMatrices().translate((float) dx, (float) dy, 0);
+                        context.getMatrices().translate((float) dx, (float) dy);
                     }
                 } catch (Exception ignore) {
                     double dx = (1.0 - eased) * OPEN_DISTANCE_PX;
                     if (dx > 0.01)
-                        context.getMatrices().translate(dx, 0, 0);
+                        context.getMatrices().translate((float) dx, 0.0f);
                 }
 
-                context.getMatrices().scale((float) eased, (float) eased, 1.0f);
+                context.getMatrices().scale((float) eased, (float) eased);
             }
             widget._render(context, mouseX, mouseY, deltaTicks);
-            context.getMatrices().pop();
+            context.getMatrices().popMatrix();
         }
         if (begin && !animActive)
             begin = false;

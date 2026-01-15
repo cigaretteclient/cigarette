@@ -1,6 +1,9 @@
 package dev.cigarette.helper.keybind;
 
 import dev.cigarette.helper.TickHelper;
+import net.minecraft.client.gui.Click;
+import net.minecraft.client.input.KeyInput;
+import net.minecraft.client.input.MouseInput;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import org.jetbrains.annotations.NotNull;
@@ -171,18 +174,18 @@ public class MinecraftKeybind extends VirtualKeybind {
     public boolean equals(Object o) {
         if (!(o instanceof MinecraftKeybind other) || this.minecraftBinding == null) return false;
         if (other.minecraftBinding == null) return false;
-        return this.minecraftBinding.getTranslationKey().equals(other.minecraftBinding.getTranslationKey());
+        return this.minecraftBinding.getBoundKeyTranslationKey().equals(other.minecraftBinding.getBoundKeyTranslationKey());
     }
 
     @Override
     public boolean isOf(int key, int scancode) {
         if (this.minecraftBinding == null) return false;
-        return this.minecraftBinding.matchesKey(key, scancode);
+        return this.minecraftBinding.matchesKey(new KeyInput(key, scancode,0));
     }
 
     @Override
     public boolean isOfMouse(int button) {
         if (this.minecraftBinding == null) return false;
-        return this.minecraftBinding.matchesMouse(button);
+        return this.minecraftBinding.matchesMouse(new Click(0, 0, new MouseInput(button, 0)));
     }
 }

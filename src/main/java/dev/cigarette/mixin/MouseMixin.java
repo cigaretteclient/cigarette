@@ -3,6 +3,7 @@ package dev.cigarette.mixin;
 import dev.cigarette.helper.KeybindHelper;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
+import net.minecraft.client.input.MouseInput;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -18,19 +19,19 @@ public class MouseMixin {
     }
 
     @Inject(method = "onMouseButton", at = @At("HEAD"), cancellable = true)
-    private void onMouseButton(long window, int button, int action, int mods, CallbackInfo ci) {
+    private void onMouseButton(long window, MouseInput input, int action, CallbackInfo ci) {
         MinecraftClient client = MinecraftClient.getInstance();
         if (window != client.getWindow().getHandle()) {
             ci.cancel();
             return;
         }
         if (client.currentScreen == null) {
-            if (KeybindHelper.handleBlockedMouseInputs(client, button, action, mods) || KeybindHelper.handleCustomMouse(client, button, action, mods)) {
+            if (KeybindHelper.handleBlockedMouseInputs(client, input.button(), action, input.modifiers()) || KeybindHelper.handleCustomMouse(client, input.button(), action, input.modifiers())) {
                 ci.cancel();
                 return;
             }
         } else if (action == GLFW.GLFW_RELEASE) {
-            KeybindHelper.handleCustomMouse(client, button, action, mods);
+            KeybindHelper.handleCustomMouse(client, input.button(), action, input.modifiers());
         }
     }
 }

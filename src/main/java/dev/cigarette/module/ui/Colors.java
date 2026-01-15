@@ -17,71 +17,71 @@ public class Colors extends RenderModule<ToggleWidget, Boolean> {
     public static final Colors INSTANCE = new Colors("ui.colors", "Colors", "Customize GUI color scheme.");
 
     // Primary gradient
-    private final ColorDropdownWidget<ToggleWidget, Boolean> primaryStart = ColorDropdownWidget.buildToggle("Primary Start", null)
+    public final ColorDropdownWidget<ToggleWidget, Boolean> primaryStart = ColorDropdownWidget.buildToggle("Primary Start", null)
         .withAlpha(true).withDefaultColor(ColorScheme.getGradientPrimaryStart()).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> primaryEnd = ColorDropdownWidget.buildToggle("Primary End", null)
+    public final ColorDropdownWidget<ToggleWidget, Boolean> primaryEnd = ColorDropdownWidget.buildToggle("Primary End", null)
         .withAlpha(true).withDefaultColor(ColorScheme.getGradientPrimaryEnd()).withDefaultState(true);
 
     // Secondary gradient
-    private final ColorDropdownWidget<ToggleWidget, Boolean> secondaryStart = ColorDropdownWidget.buildToggle("Secondary Start", null)
+    public final ColorDropdownWidget<ToggleWidget, Boolean> secondaryStart = ColorDropdownWidget.buildToggle("Secondary Start", null)
         .withAlpha(true).withDefaultColor(ColorScheme.getGradientSecondaryStart()).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> secondaryEnd = ColorDropdownWidget.buildToggle("Secondary End", null)
+    public final ColorDropdownWidget<ToggleWidget, Boolean> secondaryEnd = ColorDropdownWidget.buildToggle("Secondary End", null)
         .withAlpha(true).withDefaultColor(ColorScheme.getGradientSecondaryEnd()).withDefaultState(true);
 
     // Background gradient
-    private final ColorDropdownWidget<ToggleWidget, Boolean> bgStart = ColorDropdownWidget.buildToggle("Background Start", null)
+    public final ColorDropdownWidget<ToggleWidget, Boolean> bgStart = ColorDropdownWidget.buildToggle("Background Start", null)
         .withAlpha(true).withDefaultColor(ColorScheme.getGradientBgStart()).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> bgEnd = ColorDropdownWidget.buildToggle("Background End", null)
+    public final ColorDropdownWidget<ToggleWidget, Boolean> bgEnd = ColorDropdownWidget.buildToggle("Background End", null)
         .withAlpha(true).withDefaultColor(ColorScheme.getGradientBgEnd()).withDefaultState(true);
 
     // Accent gradient
-    private final ColorDropdownWidget<ToggleWidget, Boolean> accentStart = ColorDropdownWidget.buildToggle("Accent Start", null)
+    public final ColorDropdownWidget<ToggleWidget, Boolean> accentStart = ColorDropdownWidget.buildToggle("Accent Start", null)
         .withAlpha(true).withDefaultColor(ColorScheme.getGradientAccentStart()).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> accentEnd = ColorDropdownWidget.buildToggle("Accent End", null)
+    public final ColorDropdownWidget<ToggleWidget, Boolean> accentEnd = ColorDropdownWidget.buildToggle("Accent End", null)
         .withAlpha(true).withDefaultColor(ColorScheme.getGradientAccentEnd()).withDefaultState(true);
 
     // Success gradient
-    private final ColorDropdownWidget<ToggleWidget, Boolean> successStart = ColorDropdownWidget.buildToggle("Success Start", null)
+    public final ColorDropdownWidget<ToggleWidget, Boolean> successStart = ColorDropdownWidget.buildToggle("Success Start", null)
         .withAlpha(true).withDefaultColor(ColorScheme.getGradientSuccessStart()).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> successEnd = ColorDropdownWidget.buildToggle("Success End", null)
+    public final ColorDropdownWidget<ToggleWidget, Boolean> successEnd = ColorDropdownWidget.buildToggle("Success End", null)
         .withAlpha(true).withDefaultColor(ColorScheme.getGradientSuccessEnd()).withDefaultState(true);
 
     // Warning gradient
-    private final ColorDropdownWidget<ToggleWidget, Boolean> warningStart = ColorDropdownWidget.buildToggle("Warning Start", null)
+    public final ColorDropdownWidget<ToggleWidget, Boolean> warningStart = ColorDropdownWidget.buildToggle("Warning Start", null)
         .withAlpha(true).withDefaultColor(ColorScheme.getGradientWarningStart()).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> warningEnd = ColorDropdownWidget.buildToggle("Warning End", null)
+    public final ColorDropdownWidget<ToggleWidget, Boolean> warningEnd = ColorDropdownWidget.buildToggle("Warning End", null)
         .withAlpha(true).withDefaultColor(ColorScheme.getGradientWarningEnd()).withDefaultState(true);
 
     // Error gradient
-    private final ColorDropdownWidget<ToggleWidget, Boolean> errorStart = ColorDropdownWidget.buildToggle("Error Start", null)
+    public final ColorDropdownWidget<ToggleWidget, Boolean> errorStart = ColorDropdownWidget.buildToggle("Error Start", null)
         .withAlpha(true).withDefaultColor(ColorScheme.getGradientErrorStart()).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> errorEnd = ColorDropdownWidget.buildToggle("Error End", null)
+    public final ColorDropdownWidget<ToggleWidget, Boolean> errorEnd = ColorDropdownWidget.buildToggle("Error End", null)
         .withAlpha(true).withDefaultColor(ColorScheme.getGradientErrorEnd()).withDefaultState(true);
 
     // Info gradient
-    private final ColorDropdownWidget<ToggleWidget, Boolean> infoStart = ColorDropdownWidget.buildToggle("Info Start", null)
+    public final ColorDropdownWidget<ToggleWidget, Boolean> infoStart = ColorDropdownWidget.buildToggle("Info Start", null)
         .withAlpha(true).withDefaultColor(ColorScheme.getGradientInfoStart()).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> infoEnd = ColorDropdownWidget.buildToggle("Info End", null)
+    public final ColorDropdownWidget<ToggleWidget, Boolean> infoEnd = ColorDropdownWidget.buildToggle("Info End", null)
         .withAlpha(true).withDefaultColor(ColorScheme.getGradientInfoEnd()).withDefaultState(true);
 
     // Dark gradient
-    private final ColorDropdownWidget<ToggleWidget, Boolean> darkStart = ColorDropdownWidget.buildToggle("Dark Start", null)
+    public final ColorDropdownWidget<ToggleWidget, Boolean> darkStart = ColorDropdownWidget.buildToggle("Dark Start", null)
         .withAlpha(true).withDefaultColor(ColorScheme.getGradientDarkStart()).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> darkEnd = ColorDropdownWidget.buildToggle("Dark End", null)
+    public final ColorDropdownWidget<ToggleWidget, Boolean> darkEnd = ColorDropdownWidget.buildToggle("Dark End", null)
         .withAlpha(true).withDefaultColor(ColorScheme.getGradientDarkEnd()).withDefaultState(true);
 
     // Light gradient
-    private final ColorDropdownWidget<ToggleWidget, Boolean> lightStart = ColorDropdownWidget.buildToggle("Light Start", null)
+    public final ColorDropdownWidget<ToggleWidget, Boolean> lightStart = ColorDropdownWidget.buildToggle("Light Start", null)
         .withAlpha(true).withDefaultColor(ColorScheme.getGradientLightStart()).withDefaultState(true);
-    private final ColorDropdownWidget<ToggleWidget, Boolean> lightEnd = ColorDropdownWidget.buildToggle("Light End", null)
+    public final ColorDropdownWidget<ToggleWidget, Boolean> lightEnd = ColorDropdownWidget.buildToggle("Light End", null)
         .withAlpha(true).withDefaultColor(ColorScheme.getGradientLightEnd()).withDefaultState(true);
 
     // Wave settings
-    private final SliderWidget waveWavelength = new SliderWidget("Wave Wavelength", "The wavelength of the gradient").withBounds(20f, ColorScheme.getWaveWavelength(), 100f).withAccuracy(1);
+    public final SliderWidget waveWavelength = new SliderWidget("Wave Wavelength", "The wavelength of the gradient").withBounds(20f, ColorScheme.getWaveWavelength(), 100f).withAccuracy(1);
 
-    private final SliderWidget waveSpeed = new SliderWidget("Wave Speed", "The speed of the color wave effect.").withBounds(0f, ColorScheme.getWaveSpeed(), 5f).withAccuracy(2);
+    public final SliderWidget waveSpeed = new SliderWidget("Wave Speed", "The speed of the color wave effect.").withBounds(0f, ColorScheme.getWaveSpeed(), 5f).withAccuracy(2);
 
-    private final SliderWidget waveAmplitude = new SliderWidget("Wave Amplitude", "The amplitude of the color wave effect.").withBounds(0f, ColorScheme.getWaveAmplitude(), 1f).withAccuracy(2);
+    public final SliderWidget waveAmplitude = new SliderWidget("Wave Amplitude", "The amplitude of the color wave effect.").withBounds(0f, ColorScheme.getWaveAmplitude(), 1f).withAccuracy(2);
 
     private Colors(String id, String name, String tooltip) {
         super(ToggleWidget.ToggleWidgetDisabled::module, id, name, tooltip);

@@ -1,12 +1,18 @@
 package dev.cigarette.gui.widget;
 
+import dev.cigarette.Cigarette;
 import dev.cigarette.gui.CigaretteScreen;
 import dev.cigarette.gui.Scissor;
+import dev.cigarette.lib.Color;
 import dev.cigarette.lib.Shape;
+import dev.cigarette.module.ui.Colors;
 import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import org.jetbrains.annotations.Nullable;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gl.RenderPipelines;
+
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Collection;
@@ -83,6 +89,13 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
      * Whether to show the bottom rounding effect or not.
      */
     private boolean showBottomRoundedRect = true;
+    /**
+     * Cached gradient colors for performance.
+     */
+    private int cachedColorLeft = -1;
+    private int cachedColorRight = -1;
+    private double lastGradientPosition = -1.0;
+    private long lastGradientUpdate = 0;
 
     /**
      * Creates a widget that renders children in a scrollable window.
@@ -189,6 +202,7 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
     public final ScrollableWidget<Widgets> setChildren(@Nullable Widgets... children) {
         for (Widgets widget : children) {
             if (widget == null) continue;
+            widget.drawBackground = false; // Children in scrollable containers don't draw their own backgrounds
             String name = Objects.requireNonNullElse(widget.getMessage(), widget.hashCode()).toString();
             this.children.put(name, widget);
         }
@@ -219,9 +233,9 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
             return updateChildrenSizing();
         }
         this.header = new DraggableWidget(getX(), getY(), width, rowHeight, headerText);
+        this.header.drawBackground = false; // Background rendered by parent in batched mode
         this.header.onDrag((newX, newY, deltaX, deltaY) -> {
-            setX(newX);
-            setY(newY);
+            withXY(newX, newY);
         });
         this.header.onClick((mouseX, mouseY, button) -> {
             if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
@@ -401,10 +415,101 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
         return start + (end - start) * t;
     }
 
+    /**
+     * Returns the header widget for external access.
+     */
+    public @Nullable DraggableWidget getHeader() {
+        return this.header;
+    }
+    
+    /**
+     * Renders only the background for batched rendering optimization.
+     */
+    public void renderBackgroundOnly(DrawContext context) {
+        int left = this.getX();
+        int top = this.getY();
+        int right = left + this.getWidth();
+        int bottom = top + this.getHeight();
+        renderCategoryBackground(context, left, top, right, bottom);
+    }
+    
+    /**
+     * Renders only the header background for batched rendering optimization.
+     */
+    public void renderHeaderBackgroundOnly(DrawContext context) {
+        if (header == null) return;
+        int left = header.getX();
+        int top = header.getY();
+        int right = left + header.getWidth();
+        int bottom = top + header.getHeight();
+        
+        // Render header background with gradient
+        dev.cigarette.module.ui.GUI gui = dev.cigarette.module.ui.GUI.INSTANCE;
+        MinecraftClient mc = MinecraftClient.getInstance();
+        int scrW = mc.getWindow().getScaledWidth();
+        double widgetCenterX = left + ((right - left) / 2.0);
+        double normalizedPos = scrW > 0 ? widgetCenterX / scrW : 0.5;
+        int colorLeft = Color.lerpColor(Colors.INSTANCE.primaryStart.getStateRGBA(), Colors.INSTANCE.primaryEnd.getStateRGBA(), (float)(normalizedPos - 0.1));
+        int colorRight = Color.lerpColor(Colors.INSTANCE.primaryStart.getStateRGBA(), Colors.INSTANCE.primaryEnd.getStateRGBA(), (float)(normalizedPos + 0.1));
+        CigaretteScreen.drawGradientRoundedRect(context, left, top, right, bottom, 2, colorLeft, colorRight);
+    }
+    
+    /**
+     * Renders the background and border for this category widget with proper height calculation.
+     */
+    private void renderCategoryBackground(DrawContext context, int left, int top, int right, int bottom) {
+        // Calculate the actual visible bottom based on expanded state
+        int visibleBottom = getVisibleBottom(top, bottom);
+        int actualBottom = visibleBottom;
+        
+        // Add header height to the visible area
+        int headerHeight = getHeaderHeight();
+        if (headerHeight > 0) {
+            actualBottom = visibleBottom;
+        }
+        
+        if (left < 0 || top < 0 || right < 0 || actualBottom < 0 || actualBottom <= top) return;
+
+        dev.cigarette.module.ui.GUI gui = dev.cigarette.module.ui.GUI.INSTANCE;
+        int radius = 4;
+        
+        // Fast path: if gradients disabled, use solid color
+        if (!gui.isGradientEnabled()) {
+            CigaretteScreen.drawRoundedRect(context, left, top, right, actualBottom, radius, CigaretteScreen.BACKGROUND_COLOR);
+            return;
+        }
+
+        net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
+        int scrW = mc.getWindow().getScaledWidth();
+
+        // Calculate gradient position
+        double widgetCenterX = left + ((right - left) / 2.0);
+        double normalizedPos = scrW > 0 ? widgetCenterX / scrW : 0.5;
+        
+        // Cache gradient colors to avoid recalculating every frame (update every 100ms or when position changes significantly)
+        long currentTime = System.currentTimeMillis();
+        boolean needsUpdate = (currentTime - lastGradientUpdate > 100) || 
+                             Math.abs(normalizedPos - lastGradientPosition) > 0.02 ||
+                             cachedColorLeft == -1;
+        
+        if (needsUpdate) {
+            int colorLerpLeft = Color.lerpColor(Colors.INSTANCE.primaryStart.getStateRGBA(), Colors.INSTANCE.primaryEnd.getStateRGBA(), (float)(normalizedPos - 0.1));
+            int colorLerpRight = Color.lerpColor(Colors.INSTANCE.primaryStart.getStateRGBA(), Colors.INSTANCE.primaryEnd.getStateRGBA(), (float)(normalizedPos + 0.1));
+            lastGradientPosition = normalizedPos;
+            lastGradientUpdate = currentTime;
+        }
+        
+        // Draw gradient background with rounded corners
+        CigaretteScreen.drawGradientRoundedRect(context, left, top, right, actualBottom, radius, cachedColorLeft, cachedColorRight);
+    }
+
     @Override
     public void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left,
                        int top, int right, int bottom) {
         context.getMatrices().pushMatrix();
+
+        // Render background inline for performance
+        renderCategoryBackground(context, left, top, right, bottom);
 
         Collection<BaseWidget<?>> localChildren = this.children.values();
         int childCount = localChildren.size();
@@ -432,11 +537,13 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
             int contentHeight = getChildrenContentHeight();
 
             if (!(!this.expanded && this.ticksOnOpen == 0)) {
-                int scissorRight = right + 3;
+                // Add margin to prevent clipping rounded corners (radius is 4-5px)
+                int margin = 6;
+                int scissorRight = right + margin;
                 int scissorTop = Math.max(0, realTop);
                 int scissorBottom = this.expanded
-                        ? realBottomInt + (showBottomRoundedRect ? BOTTOM_ROUNDED_RECT_HEIGHT : 0) + 3
-                        : realBottomInt;
+                        ? realBottomInt + (showBottomRoundedRect ? BOTTOM_ROUNDED_RECT_HEIGHT : 0) + margin
+                        : realBottomInt + margin;
                 Scissor.pushExclusive(context, left, scissorTop, scissorRight, scissorBottom);
                 int yCursor = top - (int) scrollPosition + headerHeight;
                 for (BaseWidget<?> child : localChildren) {
@@ -447,16 +554,18 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
                     yCursor += childHeight;
                 }
 
+                // Only render scrollbar when fully expanded and content overflows
+                contentHeight = childCount * rowHeight;
                 int overflowHeight = Math.max(0, contentHeight - realHeight);
                 if (overflowHeight > 0 && this.expanded && this.ticksOnOpen == MAX_TICKS_ON_OPEN) {
-                    context.fill(right - DEFAULT_SCROLLBAR_WIDTH, realTop, right, realBottomInt,
+                    int scrollBarLeft = right - DEFAULT_SCROLLBAR_WIDTH;
+                    context.fill(scrollBarLeft, realTop, right, realBottomInt,
                             CigaretteScreen.BACKGROUND_COLOR);
                     int track = Math.max(1, realHeight);
-                    int knobHeight = Math.max(10, (int) Math.round((track * (double) track) / (double) contentHeight));
+                    int knobHeight = Math.max(10, (track * track) / contentHeight);
                     int maxKnobTravel = track - knobHeight;
-                    int knobTop = (int) Math
-                            .round((scrollPosition / (double) overflowHeight) * Math.max(0, maxKnobTravel));
-                    context.fill(right - DEFAULT_SCROLLBAR_WIDTH, realTop + knobTop, right,
+                    int knobTop = maxKnobTravel > 0 ? (int)((scrollPosition * maxKnobTravel) / overflowHeight) : 0;
+                    context.fill(scrollBarLeft, realTop + knobTop, right,
                             realTop + knobTop + knobHeight,
                             CigaretteScreen.SECONDARY_COLOR);
                 }
@@ -473,6 +582,15 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
             }
         } else if (header != null) {
             header.renderWidget(context, mouseX, mouseY, deltaTicks);
+            
+            // Render logo in top-left of header without extra matrix operations
+            int headerHeight = getHeaderHeight();
+            int logoSize = 16;
+            int logoPadding = 4;
+            int logoX = left + logoPadding;
+            int logoY = top + (headerHeight - logoSize) / 2;
+            
+            context.drawTexture(RenderPipelines.GUI_TEXTURED, Cigarette.LOGO_IDENTIFIER, logoX, logoY, 0.0f, 0.0f, logoSize, logoSize, logoSize, logoSize);
         }
         context.getMatrices().popMatrix();
     }

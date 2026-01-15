@@ -195,24 +195,26 @@ public class DropdownWidget<Widget extends BaseWidget<?>, StateType>
     }
 
     @Override
-    public boolean mouseReleased(Click click) {
+    public boolean mouseReleased(Click mouseInput) {
         if (this.header != null)
-            this.header.mouseReleased(click);
-        super.mouseReleased(click);
+            this.header.mouseReleased(mouseInput);
+        if (this.container != null && dropdownVisible)
+            this.container.mouseReleased(mouseInput);
         return false;
     }
 
     @Override
-    public boolean mouseDragged(Click click, double deltaX, double deltaY) {
+    public boolean mouseDragged(Click mouseInput, double deltaX, double deltaY) {
         if (this.header != null)
-            this.header.mouseDragged(click, deltaX, deltaY);
-        super.mouseDragged(click, deltaX, deltaY);
+            this.header.mouseDragged(mouseInput, deltaX, deltaY);
+        if (this.container != null && dropdownVisible)
+            this.container.mouseDragged(mouseInput, deltaX, deltaY);
         return false;
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
-        return dropdownVisible && super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
+        return dropdownVisible && this.container != null && this.container.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }
 
     @Override

@@ -92,7 +92,9 @@ public class TextWidget extends BaseWidget<BaseWidget.Stateless> {
 
     @Override
     protected void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left, int top, int right, int bottom) {
-        context.fill(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR);
+        if (drawBackground) {
+            context.fill(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR);
+        }
 
         TextRenderer textRenderer = Cigarette.REGULAR;
         if (this.centered) {

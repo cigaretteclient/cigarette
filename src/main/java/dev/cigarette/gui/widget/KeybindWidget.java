@@ -175,7 +175,9 @@ public class KeybindWidget extends BaseWidget<Integer> {
 
     @Override
     public void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left, int top, int right, int bottom) {
-        context.fill(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR);
+        if (drawBackground) {
+            context.fill(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR);
+        }
         context.drawTextWithShadow(Cigarette.REGULAR, getMessage(), left + 4, top + height / 3, CigaretteScreen.PRIMARY_TEXT_COLOR);
         this.renderKeyText(context, top, right);
     }

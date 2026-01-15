@@ -4,6 +4,8 @@ import dev.cigarette.helper.KeybindHelper;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.input.MouseInput;
+import net.minecraft.client.input.MouseInput.MouseAction;
+
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -19,7 +21,9 @@ public class MouseMixin {
     }
 
     @Inject(method = "onMouseButton", at = @At("HEAD"), cancellable = true)
-    private void onMouseButton(long window, MouseInput input, int action, CallbackInfo ci) {
+    private void onMouseButton(long window, MouseInput input, @MouseAction int action, CallbackInfo ci) {
+        int button = input.button();
+        int mods = input.modifiers();
         MinecraftClient client = MinecraftClient.getInstance();
         if (window != client.getWindow().getHandle()) {
             ci.cancel();

@@ -68,6 +68,14 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
      * The max number of ticks the collapse animation lasts.
      */
     private static final int MAX_TICKS_ON_COLLAPSE = 10;
+    
+    /**
+     * Cached gradient colors for performance.
+     */
+    private int cachedColorLeft = -1;
+    private int cachedColorRight = -1;
+    private double lastGradientPosition = -1.0;
+    private long lastGradientUpdate = 0;
 
     /**
      * Creates a widget that can be dragged and clicked.
@@ -200,7 +208,6 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
     public void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left,
                        int top, int right, int bottom) {
         TextRenderer textRenderer = Cigarette.REGULAR;
-
         if (!this.expanded) {
             ticksOnCollapse = Math.min(ticksOnCollapse + 1, MAX_TICKS_ON_COLLAPSE);
         } else {
@@ -268,5 +275,71 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
         int verticalMargin = (height - textRenderer.fontHeight) / 2;
         context.drawText(textRenderer, text, left + horizontalMargin, top + verticalMargin + 1,
                 CigaretteScreen.PRIMARY_TEXT_COLOR, false);
+    }
+    
+    /**
+     * Renders a diagonal wave pattern overlay on the header background.
+     */
+    private void renderDiagonalWave(DrawContext context, int left, int top, int right, int bottom, double normalizedPos) {
+        dev.cigarette.module.ui.GUI gui = dev.cigarette.module.ui.GUI.INSTANCE;
+        int width = right - left;
+        int height = bottom - top;
+        
+        // Create scissor region for the header area
+        dev.cigarette.gui.Scissor.pushExclusive(context, left, top, right, bottom);
+        
+        // Render diagonal lines with gradient colors
+        int lineSpacing = 6; // Reduced spacing for better coverage
+        int lineThickness = 3; // Increased thickness to eliminate gaps
+        
+        for (int offset = -width; offset < width + height; offset += lineSpacing) {
+            int startX = left + offset;
+            int startY = top;
+            int endX = startX + height;
+            int endY = bottom;
+            
+            // Calculate gradient position along the diagonal
+            double linePos = (double) offset / (width + height);
+            double gradientPos = (linePos + normalizedPos) % 1.0;
+            if (gradientPos < 0) gradientPos += 1.0;
+
+            double colorPos = gradientPos * (gui.isGradientEnabled() ? 2.0 : 1.0);
+            int[] gradient = ColorScheme.getCategoryHeaderGradient();
+            int lineColor = Color.lerpColor(gradient[0], gradient[1], (float) colorPos);
+            
+            // Add slight transparency for wave effect
+            lineColor = (lineColor & 0x00FFFFFF) | (0x80 << 24);
+            
+            // Draw the diagonal line
+            drawDiagonalLine(context, startX, startY, endX, endY, lineThickness, lineColor);
+        }
+        
+        dev.cigarette.gui.Scissor.popExclusive();
+    }
+    
+    /**
+     * Draws a diagonal line between two points with given thickness.
+     */
+    private void drawDiagonalLine(DrawContext context, int startX, int startY, int endX, int endY, int thickness, int color) {
+        int dx = endX - startX;
+        int dy = endY - startY;
+        int steps = Math.max(Math.abs(dx), Math.abs(dy));
+        
+        if (steps == 0) return;
+        
+        double xIncrement = (double) dx / steps;
+        double yIncrement = (double) dy / steps;
+        
+        for (int i = 0; i <= steps; i++) {
+            int x = startX + (int) Math.round(i * xIncrement);
+            int y = startY + (int) Math.round(i * yIncrement);
+            
+            // Draw a small square for thickness
+            for (int tx = -thickness/2; tx <= thickness/2; tx++) {
+                for (int ty = -thickness/2; ty <= thickness/2; ty++) {
+                    context.fill(x + tx, y + ty, x + tx + 1, y + ty + 1, color);
+                }
+            }
+        }
     }
 }

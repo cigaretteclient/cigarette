@@ -2,7 +2,9 @@ package dev.cigarette.gui.widget;
 
 import dev.cigarette.config.FileSystem;
 import dev.cigarette.gui.CigaretteScreen;
+import dev.cigarette.mixin.ClickableWidgetAccessor;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.ScreenRect;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.tooltip.TooltipState;
@@ -43,9 +45,9 @@ public abstract class BaseWidget<StateType> extends ClickableWidget {
      */
     protected String configKey;
     /**
-     * The tooltip state of this widget.
+     * Whether this widget should draw its background. Set to false when in containers.
      */
-    private final TooltipState tooltip = new TooltipState();
+    protected boolean drawBackground = true;
     /**
      * A callback triggered when the state changes. For registered widgets, this is used to write the new state to the config.
      */
@@ -218,7 +220,7 @@ public abstract class BaseWidget<StateType> extends ClickableWidget {
      */
     @Override
     public void setTooltip(Tooltip tooltip) {
-        this.tooltip.setTooltip(tooltip);
+        super.setTooltip(tooltip);
     }
 
     /**
@@ -271,7 +273,7 @@ public abstract class BaseWidget<StateType> extends ClickableWidget {
         if (!this.visible) return;
         this.hovered = captureHover && isMouseOver(mouseX, mouseY) && CigaretteScreen.isHoverable(this);
         this.render(context, this.hovered, mouseX, mouseY, deltaTicks, getX(), getY(), getRight(), getBottom());
-        if (this.hovered) this.tooltip.render(context, mouseX, mouseY, true, this.isFocused(), this.getNavigationFocus());
+        if (this.hovered) ((ClickableWidgetAccessor) this).getTooltip().render(context, mouseX, mouseY, true, true, new ScreenRect(getX(), getY(), getWidth(), getHeight()));
     }
 
     /**

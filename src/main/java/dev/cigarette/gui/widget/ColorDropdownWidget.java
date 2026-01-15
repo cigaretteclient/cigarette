@@ -194,6 +194,7 @@ public class ColorDropdownWidget<Widget extends BaseWidget<StateType>, StateType
     @Override
     protected void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left, int top, int right, int bottom) {
         super.render(context, hovered, mouseX, mouseY, deltaTicks, left, top, right, bottom);
+        // Color square renders in the header, wheel and sliders render in dropdown container
         this.colorSquare.render(context, hovered, mouseX, mouseY, deltaTicks, left, top, right, bottom);
     }
 }

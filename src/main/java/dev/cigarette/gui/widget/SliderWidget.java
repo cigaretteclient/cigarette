@@ -214,10 +214,12 @@ public class SliderWidget extends BaseWidget<Double> {
 
     @Override
     protected void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left, int top, int right, int bottom) {
-        if (hovered) {
-            context.fillGradient(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR, CigaretteScreen.DARK_BACKGROUND_COLOR);
-        } else {
-            context.fill(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR);
+        if (drawBackground) {
+            if (hovered) {
+                context.fillGradient(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR, CigaretteScreen.DARK_BACKGROUND_COLOR);
+            } else {
+                context.fill(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR);
+            }
         }
 
         int textColor = this.disabled ? Color.colorDarken(CigaretteScreen.PRIMARY_TEXT_COLOR, 0.4f) : CigaretteScreen.PRIMARY_TEXT_COLOR;

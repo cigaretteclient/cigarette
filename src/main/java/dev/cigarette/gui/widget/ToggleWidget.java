@@ -120,12 +120,21 @@ public class ToggleWidget extends BaseWidget<Boolean> {
 
     @Override
     protected void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left, int top, int right, int bottom) {
-        if (hovered) {
-            ticksOnHover = Math.min(++ticksOnHover, MAX_HOVER_TICKS);
-            context.fillGradient(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR, CigaretteScreen.DARK_BACKGROUND_COLOR);
+        if (drawBackground) {
+            if (hovered) {
+                ticksOnHover = Math.min(++ticksOnHover, MAX_HOVER_TICKS);
+                context.fillGradient(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR, CigaretteScreen.DARK_BACKGROUND_COLOR);
+            } else {
+                ticksOnHover = Math.max(--ticksOnHover, 0);
+                context.fill(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR);
+            }
         } else {
-            ticksOnHover = Math.max(--ticksOnHover, 0);
-            context.fill(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR);
+            // Still update hover ticks for animation even without background
+            if (hovered) {
+                ticksOnHover = Math.min(++ticksOnHover, MAX_HOVER_TICKS);
+            } else {
+                ticksOnHover = Math.max(--ticksOnHover, 0);
+            }
         }
 
         if (this.getRawState()) {
@@ -174,7 +183,9 @@ public class ToggleWidget extends BaseWidget<Boolean> {
         protected void render(DrawContext context, boolean hovered, int mouseX, int mouseY, float deltaTicks, int left, int top, int right, int bottom) {
             this.hovered = false;
             TextRenderer textRenderer = Cigarette.REGULAR;
-            context.fill(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR);
+            if (drawBackground) {
+                context.fill(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR);
+            }
             context.drawTextWithShadow(textRenderer, getMessage(), left + 4, top + height / 3, RenderUtil.modifyOpacity(CigaretteScreen.PRIMARY_TEXT_COLOR, 0.5f));
         }
     }

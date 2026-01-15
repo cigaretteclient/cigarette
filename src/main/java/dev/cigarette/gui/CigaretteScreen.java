@@ -14,10 +14,16 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.input.KeyInput;
+import net.minecraft.client.input.KeyboardInput;
+import net.minecraft.client.input.MouseInput;
+import net.minecraft.client.render.BufferBuilder;
+import net.minecraft.client.render.BuiltBuffer;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3x2f;
 import org.lwjgl.glfw.GLFW;
+
+import com.mojang.blaze3d.vertex.VertexFormat.DrawMode;
 
 import java.util.Stack;
 
@@ -39,7 +45,8 @@ public class CigaretteScreen extends Screen {
      */
     public static final int BACKGROUND_COLOR = 0xFF1A1A1A;
     /**
-     * Dark background color usually used in gradients with {@link #BACKGROUND_COLOR}. (Black)
+     * Dark background color usually used in gradients with
+     * {@link #BACKGROUND_COLOR}. (Black)
      */
     public static final int DARK_BACKGROUND_COLOR = 0xFF000000;
     /**
@@ -51,7 +58,9 @@ public class CigaretteScreen extends Screen {
      */
     public static @Nullable Object hoverHandled = null;
     /**
-     * An ordered list of the widgets on the screen. Ordered by time of focus descending. Event propagation starts with the most recent focused to the last focused.
+     * An ordered list of the widgets on the screen. Ordered by time of focus
+     * descending. Event propagation starts with the most recent focused to the last
+     * focused.
      */
     private final Stack<BaseWidget<?>> priority = new Stack<>();
     /**
@@ -82,7 +91,8 @@ public class CigaretteScreen extends Screen {
     private static final int OPEN_DISTANCE_PX = 24;
 
     /**
-     * The length of the closing animation as a multiplier of {@link #OPEN_DURATION_S}.
+     * The length of the closing animation as a multiplier of
+     * {@link #OPEN_DURATION_S}.
      */
     private static final double CLOSE_DURATION_FACTOR = 0.8;
     private static final double CLOSE_STAGGER_FACTOR = 0.8;
@@ -91,9 +101,18 @@ public class CigaretteScreen extends Screen {
      */
     private int categoryCount = 0;
     /**
-     * Reference to a {@link KeybindWidget} or {@link ToggleKeybindWidget} that is actively listening for keys to bind.
+     * Reference to a {@link KeybindWidget} or {@link ToggleKeybindWidget} that is
+     * actively listening for keys to bind.
      */
     public static @Nullable KeybindWidget bindingKey = null;
+    /**
+     * Shared buffer builder for batched rendering operations
+     */
+    private static @Nullable net.minecraft.client.render.BufferBuilder batchedBuffer = null;
+    /**
+     * Whether we're currently in a batched rendering context
+     */
+    private static boolean inBatchedContext = false;
 
     public CigaretteScreen() {
         super(Text.literal("Cigarette Client"));
@@ -209,8 +228,12 @@ public class CigaretteScreen extends Screen {
     }
 
     /**
-     * {@return whether the provided widget can be hovered} If so, that widget is set as the hovered widget.
-     * <p>A widget must call {@link BaseWidget#captureHover()} captureHover()} to be hoverable.</p>
+     * {@return whether the provided widget can be hovered} If so, that widget is
+     * set as the hovered widget.
+     * <p>
+     * A widget must call {@link BaseWidget#captureHover()} captureHover()} to be
+     * hoverable.
+     * </p>
      *
      * @param obj The widget to check if it can be hovered
      */
@@ -223,7 +246,13 @@ public class CigaretteScreen extends Screen {
     }
 
     /**
+<<<<<<< Updated upstream
      * Replaces the built-in {@link Screen#render(DrawContext, int, int, float) Screen.render()} method. Handles animations and category rendering for the GUI.
+=======
+     * Replaces the built-in {@link Screen#render(DrawContext, int, int, float)
+     * Screen.render()} method. Handles animations and category rendering for the
+     * GUI.
+>>>>>>> Stashed changes
      *
      * @param context    The current draw context
      * @param mouseX     Current mouse X position
@@ -232,6 +261,9 @@ public class CigaretteScreen extends Screen {
      */
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
+        // this.renderBackground(context, mouseX, mouseY, deltaTicks); // Removed to
+        // prevent multiple blur applications per frame
+
         MinecraftClient mc = MinecraftClient.getInstance();
         int scrW = mc.getWindow().getScaledWidth();
         int scrH = mc.getWindow().getScaledHeight();
@@ -251,115 +283,65 @@ public class CigaretteScreen extends Screen {
         NotificationDisplay.imageRender(context, scrW - 60, scrH - 70, 0.8);
 
         CigaretteScreen.hoverHandled = null;
+        
+        // Determine animation state
+        boolean animActive = false;
+        double elapsed = 0.0;
+        double easeProgress = 1.0;
 
-        if (closing) {
-            double elapsedClose = (System.nanoTime() - closeStartNanos) / 1_000_000_000.0;
-
+        if (begin) {
+            // Opening animation
+            elapsed = (System.nanoTime() - openStartNanos) / 1_000_000_000.0;
+            double totalAnim = (Math.max(0, categoryCount - 1)) * OPEN_STAGGER_S + OPEN_DURATION_S;
+            animActive = elapsed < totalAnim;
+            easeProgress = animActive ? 1.0 : 1.0; // Will be computed per-widget
+        } else if (closing) {
+            // Closing animation
+            elapsed = (System.nanoTime() - closeStartNanos) / 1_000_000_000.0;
             double closeDuration = OPEN_DURATION_S * CLOSE_DURATION_FACTOR;
             double closeStagger = OPEN_STAGGER_S * CLOSE_STAGGER_FACTOR;
             double totalAnim = (Math.max(0, categoryCount - 1)) * closeStagger + closeDuration;
-            boolean animActive = elapsedClose < totalAnim;
-            double remaining = Math.max(0.0, Math.min(totalAnim, totalAnim - elapsedClose));
-
-            context.getMatrices().pushMatrix();
-            for (int i = 0; i < priority.size(); i++) {
-                BaseWidget<?> widget = priority.get(i);
-
-                context.getMatrices().pushMatrix();
-                context.getMatrices().translate(0.0f, 0.0f, new Matrix3x2f().translation(0.0f, (float) (priority.size() - i)));
-
-                double normalizedPos = 0.0;
-                try {
-                    double widgetCenterX = widget.getX() + (widget.getWidth() / 2.0);
-                    double widgetCenterY = widget.getY() + (widget.getHeight() / 2.0);
-                    double nx = scrW > 0 ? widgetCenterX / (double) scrW : 0.0;
-                    double ny = scrH > 0 ? widgetCenterY / (double) scrH : 0.0;
-                    normalizedPos = Math.max(0.0, Math.min(1.0, (nx + ny) * 0.5));
-                } catch (Exception ignore) {
-                    normalizedPos = Math.max(0.0, Math.min(1.0, i / (double) Math.max(1, priority.size())));
-                }
-
-                double totalStagger = Math.max(0, categoryCount - 1) * closeStagger;
-                double startDelay = normalizedPos * totalStagger;
-
-                double t = Math.max(0.0, Math.min(1.0, (remaining - startDelay) / closeDuration));
-
-                double eased = easeIn(t);
-
-                try {
-                    double widgetCenterX = widget.getX() + (widget.getWidth() / 2.0);
-                    double widgetCenterY = widget.getY() + (widget.getHeight() / 2.0);
-                    double nx = 0.0;
-                    double ny = 0.0;
-                    if (scrW > 0)
-                        nx = (widgetCenterX - (scrW / 2.0)) / (scrW / 2.0);
-                    if (scrH > 0)
-                        ny = (widgetCenterY - (scrH / 2.0)) / (scrH / 2.0);
-                    nx = Math.max(-1.0, Math.min(1.0, nx));
-                    ny = Math.max(-1.0, Math.min(1.0, ny));
-
-                    double magnitude = (1.0 - eased) * OPEN_DISTANCE_PX;
-                    double dx = magnitude * nx;
-                    double dy = magnitude * ny;
-                    if (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01) {
-                        context.getMatrices().translate((float) dx, (float) dy);
-                    }
-                } catch (Exception ignore) {
-                    double dx = (1.0 - eased) * OPEN_DISTANCE_PX;
-                    if (dx > 0.01)
-                        context.getMatrices().translate((float) dx, 0.0f);
-                }
-
-                context.getMatrices().scale((float) eased, (float) eased);
-                widget._render(context, mouseX, mouseY, deltaTicks);
-                context.getMatrices().popMatrix();
-            }
-            context.getMatrices().popMatrix();
+            animActive = elapsed < totalAnim;
 
             if (!animActive) {
                 this.closing = false;
                 assert client != null;
                 client.setScreen(parent);
+                return;
             }
-            return;
         }
-        boolean animActive = false;
-        double elapsed = 0.0;
-        if (begin) {
-            elapsed = (System.nanoTime() - openStartNanos) / 1_000_000_000.0;
-            double totalAnim = (Math.max(0, categoryCount - 1)) * OPEN_STAGGER_S + OPEN_DURATION_S;
-            animActive = elapsed < totalAnim;
-        }
+
+        // Render all widgets with proper animation
+        context.getMatrices().pushMatrix();
+        
+        // Render widgets (backgrounds are now rendered inline for better performance)
         for (int i = 0; i < priority.size(); i++) {
             BaseWidget<?> widget = priority.get(i);
-            if (widget instanceof ScrollableWidget<?> sw) {
-                for (CategoryInstance categoryInstance : Cigarette.CONFIG.CATEGORIES.values()) {
-                    if (categoryInstance.widget == sw) {
-                        sw.expanded = categoryInstance.expanded;
-                        break;
-                    }
-                }
-            }
+
             context.getMatrices().pushMatrix();
-            context.getMatrices().translate(0.0f, 0.0f, new Matrix3x2f().translation(0.0f, (float) (priority.size() - i)));
-            if (begin && animActive) {
-                double totalStagger = Math.max(0, categoryCount - 1) * OPEN_STAGGER_S;
 
-                double normalizedPos = 0.0;
-                try {
-                    double widgetCenterX = widget.getX() + (widget.getWidth() / 2.0);
-                    double widgetCenterY = widget.getY() + (widget.getHeight() / 2.0);
-                    double nx = scrW > 0 ? widgetCenterX / (double) scrW : 0.0;
-                    double ny = scrH > 0 ? widgetCenterY / (double) scrH : 0.0;
-                    normalizedPos = Math.max(0.0, Math.min(1.0, (nx + ny) * 0.5));
-                } catch (Exception ignore) {
-                    normalizedPos = Math.max(0.0, Math.min(1.0, i / (double) Math.max(1, priority.size())));
-                }
+            // Compute animation progress for this widget
+            double normalizedPos = 0.0;
+            try {
+                double widgetCenterX = widget.getX() + (widget.getWidth() / 2.0);
+                double widgetCenterY = widget.getY() + (widget.getHeight() / 2.0);
+                double nx = scrW > 0 ? widgetCenterX / (double) scrW : 0.0;
+                double ny = scrH > 0 ? widgetCenterY / (double) scrH : 0.0;
+                normalizedPos = Math.max(0.0, Math.min(1.0, (nx + ny) * 0.5));
+            } catch (Exception ignore) {
+                normalizedPos = Math.max(0.0, Math.min(1.0, i / (double) Math.max(1, priority.size())));
+            }
 
-                double startDelay = normalizedPos * totalStagger;
-                double t = Math.max(0.0, Math.min(1.0, (elapsed - startDelay) / OPEN_DURATION_S));
-                double eased = easeOut(t);
+            double staggerFactor = begin ? OPEN_STAGGER_S : (OPEN_STAGGER_S * CLOSE_STAGGER_FACTOR);
+            double totalStagger = Math.max(0, categoryCount - 1) * staggerFactor;
+            double startDelay = normalizedPos * totalStagger;
 
+            double animDuration = begin ? OPEN_DURATION_S : (OPEN_DURATION_S * CLOSE_DURATION_FACTOR);
+            double t = Math.max(0.0, Math.min(1.0, (elapsed - startDelay) / animDuration));
+            double eased = begin ? easeOut(t) : easeIn(t);
+
+            // Apply transformations only during animation
+            if ((begin || closing) && animActive) {
                 try {
                     double widgetCenterX = widget.getX() + (widget.getWidth() / 2.0);
                     double widgetCenterY = widget.getY() + (widget.getHeight() / 2.0);
@@ -384,11 +366,31 @@ public class CigaretteScreen extends Screen {
                         context.getMatrices().translate((float) dx, 0.0f);
                 }
 
+                // Center scaling on widget position
+                double widgetCenterX = widget.getX() + (widget.getWidth() / 2.0);
+                double widgetCenterY = widget.getY() + (widget.getHeight() / 2.0);
+                context.getMatrices().translate((float) widgetCenterX, (float) widgetCenterY);
                 context.getMatrices().scale((float) eased, (float) eased);
+                context.getMatrices().translate((float) -widgetCenterX, (float) -widgetCenterY);
             }
-            widget._render(context, mouseX, mouseY, deltaTicks);
+
+            // Transform mouse coordinates to account for scaling
+            double transformedMouseX = mouseX;
+            double transformedMouseY = mouseY;
+            if ((begin || closing) && animActive && eased != 1.0) {
+                double widgetCenterX = widget.getX() + (widget.getWidth() / 2.0);
+                double widgetCenterY = widget.getY() + (widget.getHeight() / 2.0);
+                // Reverse the scaling transformation on mouse coordinates
+                double scaleFactor = 1.0 / eased;
+                transformedMouseX = widgetCenterX + (mouseX - widgetCenterX) * scaleFactor;
+                transformedMouseY = widgetCenterY + (mouseY - widgetCenterY) * scaleFactor;
+            }
+
+            widget._render(context, (int) transformedMouseX, (int) transformedMouseY, deltaTicks);
             context.getMatrices().popMatrix();
         }
+        context.getMatrices().popMatrix();
+
         if (begin && !animActive)
             begin = false;
 

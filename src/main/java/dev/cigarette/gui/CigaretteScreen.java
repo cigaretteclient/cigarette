@@ -8,7 +8,9 @@ import dev.cigarette.gui.widget.BaseWidget;
 import dev.cigarette.gui.widget.KeybindWidget;
 import dev.cigarette.gui.widget.ScrollableWidget;
 import dev.cigarette.gui.widget.ToggleKeybindWidget;
+import dev.cigarette.lib.Color;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
@@ -17,6 +19,10 @@ import net.minecraft.client.input.KeyInput;
 import net.minecraft.client.input.KeyboardInput;
 import net.minecraft.client.input.MouseInput;
 import net.minecraft.client.render.BufferBuilder;
+import net.minecraft.client.render.Tessellator;
+import net.minecraft.client.render.VertexFormats;
+import net.minecraft.client.render.GameRenderer;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.render.BuiltBuffer;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
@@ -433,5 +439,81 @@ public class CigaretteScreen extends Screen {
         if (t <= 0.0)
             return 0.0;
         return Math.pow(2.0, 10.0 * (t - 1.0));
+    }
+
+    public static void drawGradientRoundedRect(DrawContext context, int left, int top, int right, int bottom, int radius,
+            int colorLeft, int colorRight) {
+        if (radius <= 0) {
+            context.fillGradient(left, top, right, bottom, colorLeft, colorRight);
+            return;
+        }
+        // Draw the four sides with gradient
+        context.fillGradient(left + radius, top, right - radius, top + radius, colorLeft, colorRight); // top
+        context.fillGradient(left + radius, bottom - radius, right - radius, bottom, colorLeft, colorRight); // bottom
+        // For left and right, since horizontal gradient, left is colorLeft, right is colorRight
+        context.fill(left, top + radius, left + radius, bottom - radius, colorLeft); // left
+        context.fill(right - radius, top + radius, right, bottom - radius, colorRight); // right
+        // Center
+        context.fillGradient(left + radius, top + radius, right - radius, bottom - radius, colorLeft, colorRight);
+        // Corners
+        drawQuarterCircle(context, left + radius, top + radius, radius, colorLeft, 90, 180); // top-left
+        drawQuarterCircle(context, right - radius, top + radius, radius, colorRight, 0, 90); // top-right
+        drawQuarterCircle(context, left + radius, bottom - radius, radius, colorLeft, 180, 270); // bottom-left
+        drawQuarterCircle(context, right - radius, bottom - radius, radius, colorRight, 270, 360); // bottom-right
+    }
+
+    public static void drawRoundedRect(DrawContext context, int left, int top, int right, int bottom, int radius,
+            int backgroundColor) {
+        if (radius <= 0) {
+            context.fill(left, top, right, bottom, backgroundColor);
+            return;
+        }
+        // Draw the four sides
+        context.fill(left + radius, top, right - radius, top + radius, backgroundColor); // top
+        context.fill(left + radius, bottom - radius, right - radius, bottom, backgroundColor); // bottom
+        context.fill(left, top + radius, left + radius, bottom - radius, backgroundColor); // left
+        context.fill(right - radius, top + radius, right, bottom - radius, backgroundColor); // right
+        // Draw the center
+        context.fill(left + radius, top + radius, right - radius, bottom - radius, backgroundColor);
+        // Draw the corners with circles
+        drawQuarterCircle(context, left + radius, top + radius, radius, backgroundColor, 90, 180); // top-left
+        drawQuarterCircle(context, right - radius, top + radius, radius, backgroundColor, 0, 90); // top-right
+        drawQuarterCircle(context, left + radius, bottom - radius, radius, backgroundColor, 180, 270); // bottom-left
+        drawQuarterCircle(context, right - radius, bottom - radius, radius, backgroundColor, 270, 360); // bottom-right
+    }
+
+    private static void drawLine(DrawContext context, int x1, int y1, int x2, int y2, int color) {
+        float a = (float) (color >> 24 & 0xFF) / 255.0f;
+        float r = (float) (color >> 16 & 0xFF) / 255.0f;
+        float g = (float) (color >> 8 & 0xFF) / 255.0f;
+        float b = (float) (color & 0xFF) / 255.0f;
+        // Manually render line with Bresenham's algorithm
+        int dx = Math.abs(x2 - x1);
+        int dy = Math.abs(y2 - y1);
+        int sx = x1 < x2 ? 1 : -1;
+        int sy = y1 < y2 ? 1 : -1;
+        int err = dx - dy;
+        while (true) {
+            context.fill(x1, y1, x1 + 1, y1 + 1, Color.rgba((int)r, (int)g, (int)b, (int)a));
+            if (x1 == x2 && y1 == y2) break;
+            int err2 = 2 * err;
+            if (err2 > -dy) {
+                err -= dy;
+                x1 += sx;
+            }
+            if (err2 < dx) {
+                err += dx;
+                y1 += sy;
+            }
+        }
+    }
+
+    private static void drawQuarterCircle(DrawContext context, int centerX, int centerY, int radius, int color, int startAngle, int endAngle) {
+        for (int angle = startAngle; angle < endAngle; angle++) {
+            double rad = Math.toRadians(angle);
+            int x = centerX + (int) (radius * Math.cos(rad));
+            int y = centerY + (int) (radius * Math.sin(rad));
+            drawLine(context, centerX, centerY, x, y, color);
+        }
     }
 }

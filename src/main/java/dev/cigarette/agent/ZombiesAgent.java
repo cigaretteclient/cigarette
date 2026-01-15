@@ -61,12 +61,12 @@ public class ZombiesAgent extends BaseAgent {
         ZombiesAgent.ZombieTarget bestTarget = null;
         double minTimeToPlayer = Double.MAX_VALUE;
 
-        Vec3d playerPos = player.getPos();
+        Vec3d playerPos = player.getEntityPos();
 
         for (ZombiesAgent.ZombieTarget zombie : zombies) {
             if (!zombie.canShoot) continue;
 
-            Vec3d zombiePos = zombie.entity.getPos();
+            Vec3d zombiePos = zombie.entity.getEntityPos();
             double distance = playerPos.distanceTo(zombiePos);
 
             Vec3d velocity = velocities.getOrDefault(zombie.uuid, Vec3d.ZERO);
@@ -75,7 +75,7 @@ public class ZombiesAgent extends BaseAgent {
 
             if (speedTowardsPlayer <= 0.1) {
                 // Use distance as a fallback metric for stationary or retreating targets
-                if (bestTarget == null || distance < playerPos.distanceTo(bestTarget.entity.getPos())) {
+                if (bestTarget == null || distance < playerPos.distanceTo(bestTarget.entity.getEntityPos())) {
                     bestTarget = zombie;
                 }
                 continue;
@@ -94,10 +94,10 @@ public class ZombiesAgent extends BaseAgent {
 
     private Vec3d calculatePredictedPosition(ZombiesAgent.ZombieTarget zombie, ClientPlayerEntity player) {
         if (!Aimbot.INSTANCE.predictiveAim.getRawState()) {
-            return zombie.entity.getPos().subtract(player.getPos().add(0, player.getEyeHeight(EntityPose.STANDING), 0));
+            return zombie.entity.getEntityPos().subtract(player.getEntityPos().add(0, player.getEyeHeight(EntityPose.STANDING), 0));
         }
 
-        Vec3d currentPos = zombie.entity.getPos();
+        Vec3d currentPos = zombie.entity.getEntityPos();
         Vec3d playerPos = player.getEyePos();
         Vec3d currentVelocity = velocities.getOrDefault(zombie.uuid, Vec3d.ZERO);
         Vec3d pathDirection = getPathfindingDirection(zombie, currentPos, playerPos, currentVelocity);
@@ -154,7 +154,7 @@ public class ZombiesAgent extends BaseAgent {
 
         for (ZombiesAgent.ZombieTarget zombie : zombies) {
             UUID zombieId = zombie.uuid;
-            Vec3d currentPos = zombie.entity.getPos();
+            Vec3d currentPos = zombie.entity.getEntityPos();
             Vec3d lastPos = lastPositions.get(zombieId);
 
             if (lastPos != null) {
@@ -242,7 +242,7 @@ public class ZombiesAgent extends BaseAgent {
                             continue;
                         }
                     }
-                    Powerup.create(armorStandEntity, armorStandEntity.getPos(), type);
+                    Powerup.create(armorStandEntity, armorStandEntity.getEntityPos(), type);
                 }
                 continue;
             }
@@ -255,9 +255,9 @@ public class ZombiesAgent extends BaseAgent {
                 target.ticksSinceRotation++;
             }
 
-            Vec3d start = player.getPos().add(0, player.getEyeHeight(EntityPose.STANDING), 0);
+            Vec3d start = player.getEntityPos().add(0, player.getEyeHeight(EntityPose.STANDING), 0);
 
-            Vec3d instantVelocity = zombie.getPos().subtract(zombie.lastX, zombie.lastY, zombie.lastZ);
+            Vec3d instantVelocity = zombie.getEntityPos().subtract(zombie.lastX, zombie.lastY, zombie.lastZ);
 
             double xVelocity = instantVelocity.x * Aimbot.INSTANCE.predictionTicks.getRawState().intValue();
             double yVelocity = instantVelocity.y > LivingEntity.GRAVITY ? 0 : instantVelocity.y * (instantVelocity.y > 0 ? 1 : Aimbot.INSTANCE.predictionTicks.getRawState().intValue());
@@ -338,7 +338,7 @@ public class ZombiesAgent extends BaseAgent {
         }
 
         public Vec3d getDirectionVector(Entity player) {
-            return this.getEndVec().subtract(player.getPos().add(0, player.getEyeHeight(EntityPose.STANDING), 0));
+            return this.getEndVec().subtract(player.getEntityPos().add(0, player.getEyeHeight(EntityPose.STANDING), 0));
         }
     }
 

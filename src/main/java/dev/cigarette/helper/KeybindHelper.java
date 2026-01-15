@@ -111,7 +111,7 @@ public class KeybindHelper {
         if (!(client.currentScreen instanceof CigaretteScreen)) return false;
         if (CigaretteScreen.bindingKey != null) {
             switch (action) {
-                case GLFW.GLFW_PRESS -> CigaretteScreen.bindingKey.keyPressed(key, scancode, modifiers);
+                case GLFW.GLFW_PRESS -> CigaretteScreen.bindingKey.keyPressed(new KeyInput(key, scancode, modifiers));
                 case GLFW.GLFW_RELEASE -> CigaretteScreen.bindingKey.keyReleased(new KeyInput(key, scancode, modifiers));
             }
         } else {

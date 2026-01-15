@@ -1,6 +1,10 @@
 package dev.cigarette.gui.widget;
 
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.Element;
+import net.minecraft.client.input.CharInput;
+import net.minecraft.client.input.KeyInput;
+
 import org.jetbrains.annotations.Nullable;
 
 import java.util.LinkedHashMap;
@@ -100,7 +104,7 @@ public abstract class PassthroughWidget<ChildType extends BaseWidget<?>, StateTy
      * @return Whether a child handled the click
      */
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(Click click, boolean doubled) {
         if (children.isEmpty()) return false;
         boolean wasHandled = false;
         for (BaseWidget<?> child : children.values()) {
@@ -109,7 +113,7 @@ public abstract class PassthroughWidget<ChildType extends BaseWidget<?>, StateTy
                 child.unfocus();
                 continue;
             }
-            wasHandled = child.mouseClicked(mouseX, mouseY, button);
+            wasHandled = child.mouseClicked(click, doubled);
             if (!wasHandled) child.unfocus();
             else child.setFocused();
         }
@@ -125,11 +129,11 @@ public abstract class PassthroughWidget<ChildType extends BaseWidget<?>, StateTy
      * @return {@code false}
      */
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(Click click) {
         if (children.isEmpty()) return false;
         for (Element child : children.values()) {
             if (child == null) continue;
-            child.mouseReleased(mouseX, mouseY, button);
+            child.mouseReleased(click);
         }
         return false;
     }
@@ -145,11 +149,11 @@ public abstract class PassthroughWidget<ChildType extends BaseWidget<?>, StateTy
      * @return {@code false}
      */
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+    public boolean mouseDragged(Click click, double deltaX, double deltaY) {
         if (children.isEmpty()) return false;
         for (Element child : children.values()) {
             if (child == null) continue;
-            child.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+            child.mouseDragged(click, deltaX, deltaY);
         }
         return false;
     }
@@ -185,11 +189,11 @@ public abstract class PassthroughWidget<ChildType extends BaseWidget<?>, StateTy
      * @return Whether a child handled the key press
      */
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyInput keyInput) {
         if (children.isEmpty()) return false;
         for (Element child : children.values()) {
             if (child == null) continue;
-            boolean handled = child.keyPressed(keyCode, scanCode, modifiers);
+            boolean handled = child.keyPressed(keyInput);
             if (handled) return true;
         }
         return false;
@@ -205,11 +209,11 @@ public abstract class PassthroughWidget<ChildType extends BaseWidget<?>, StateTy
      * @return Whether a child handled the key release
      */
     @Override
-    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+    public boolean keyReleased(KeyInput keyInput) {
         if (children.isEmpty()) return false;
         for (Element child : children.values()) {
             if (child == null) continue;
-            boolean handled = child.keyReleased(keyCode, scanCode, modifiers);
+            boolean handled = child.keyReleased(keyInput);
             if (handled) return true;
         }
         return false;
@@ -224,11 +228,11 @@ public abstract class PassthroughWidget<ChildType extends BaseWidget<?>, StateTy
      * @return Whether a child handled the char type
      */
     @Override
-    public boolean charTyped(char chr, int modifiers) {
+    public boolean charTyped(CharInput charInput) {
         if (children.isEmpty()) return false;
         for (Element child : children.values()) {
             if (child == null) continue;
-            boolean handled = child.charTyped(chr, modifiers);
+            boolean handled = child.charTyped(charInput);
             if (handled) return true;
         }
         return false;

@@ -6,6 +6,7 @@ import dev.cigarette.lib.Color;
 import dev.cigarette.lib.Shape;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
@@ -92,13 +93,15 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
     /**
      * Captures a mouse click to initiate dragging and trigger click callbacks.
      *
-     * @param mouseX the X coordinate of the mouse
-     * @param mouseY the Y coordinate of the mouse
-     * @param button the mouse button number
+     * @param click the Click object containing mouse coordinates and button information
+     * @param doubled whether the click was a double click
      * @return Whether this widget handled the click
      */
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(Click click, boolean doubled) {
+        double mouseX = click.x();
+        double mouseY = click.y();
+        int button = click.button();
         if (isMouseOver(mouseX, mouseY)) {
             this.setFocused();
             switch (button) {
@@ -134,7 +137,9 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
      * @return Whether this widget handled the drag
      */
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double ignored, double ignored_) {
+    public boolean mouseDragged(Click click, double ignored, double ignored_) {
+        double mouseX = click.x();
+        double mouseY = click.y();
         if (dragging) {
             int deltaX = (int) (mouseX - startingMouseX);
             int deltaY = (int) (mouseY - startingMouseY);
@@ -165,7 +170,7 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
      * @return {@code false}
      */
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(Click click) {
         dragging = false;
         return false;
     }

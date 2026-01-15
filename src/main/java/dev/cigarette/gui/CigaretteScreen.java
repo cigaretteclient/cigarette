@@ -14,6 +14,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.input.KeyInput;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix3x2f;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Stack;
@@ -229,8 +230,6 @@ public class CigaretteScreen extends Screen {
      */
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
-        this.renderBackground(context, mouseX, mouseY, deltaTicks);
-
         MinecraftClient mc = MinecraftClient.getInstance();
         int scrW = mc.getWindow().getScaledWidth();
         int scrH = mc.getWindow().getScaledHeight();
@@ -253,7 +252,7 @@ public class CigaretteScreen extends Screen {
                 BaseWidget<?> widget = priority.get(i);
 
                 context.getMatrices().pushMatrix();
-                context.getMatrices().translate(0, 0, priority.size() - i);
+                context.getMatrices().translate(0.0f, 0.0f, new Matrix3x2f().translation(0.0f, (float) (priority.size() - i)));
 
                 double normalizedPos = 0.0;
                 try {
@@ -289,19 +288,19 @@ public class CigaretteScreen extends Screen {
                     double dx = magnitude * nx;
                     double dy = magnitude * ny;
                     if (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01) {
-                        context.getMatrices().translate((float) dx, (float) dy, 0);
+                        context.getMatrices().translate((float) dx, (float) dy);
                     }
                 } catch (Exception ignore) {
                     double dx = (1.0 - eased) * OPEN_DISTANCE_PX;
                     if (dx > 0.01)
-                        context.getMatrices().translate(dx, 0, 0);
+                        context.getMatrices().translate((float) dx, 0.0f);
                 }
 
-                context.getMatrices().scale((float) eased, (float) eased, 1.0f);
+                context.getMatrices().scale((float) eased, (float) eased);
                 widget._render(context, mouseX, mouseY, deltaTicks);
-                context.getMatrices().pop();
+                context.getMatrices().popMatrix();
             }
-            context.getMatrices().pop();
+            context.getMatrices().popMatrix();
 
             if (!animActive) {
                 this.closing = false;
@@ -327,8 +326,8 @@ public class CigaretteScreen extends Screen {
                     }
                 }
             }
-            context.getMatrices().push();
-            context.getMatrices().translate(0, 0, priority.size() - i);
+            context.getMatrices().pushMatrix();
+            context.getMatrices().translate(0.0f, 0.0f, new Matrix3x2f().translation(0.0f, (float) (priority.size() - i)));
             if (begin && animActive) {
                 double totalStagger = Math.max(0, categoryCount - 1) * OPEN_STAGGER_S;
 
@@ -363,18 +362,18 @@ public class CigaretteScreen extends Screen {
                     double dx = magnitude * nx;
                     double dy = magnitude * ny;
                     if (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01) {
-                        context.getMatrices().translate((float) dx, (float) dy, 0);
+                        context.getMatrices().translate((float) dx, (float) dy);
                     }
                 } catch (Exception ignore) {
                     double dx = (1.0 - eased) * OPEN_DISTANCE_PX;
                     if (dx > 0.01)
-                        context.getMatrices().translate(dx, 0, 0);
+                        context.getMatrices().translate((float) dx, 0.0f);
                 }
 
-                context.getMatrices().scale((float) eased, (float) eased, 1.0f);
+                context.getMatrices().scale((float) eased, (float) eased);
             }
             widget._render(context, mouseX, mouseY, deltaTicks);
-            context.getMatrices().pop();
+            context.getMatrices().popMatrix();
         }
         if (begin && !animActive)
             begin = false;

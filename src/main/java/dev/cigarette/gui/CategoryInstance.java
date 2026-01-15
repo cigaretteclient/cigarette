@@ -34,6 +34,7 @@ public class CategoryInstance {
         this.widget = new ScrollableWidget<>(x, y);
         this.widget.setHeader(displayName, () -> {
             this.expanded = !this.expanded;
+            this.widget.setExpanded(this.expanded);
         });
         this.widget.alphabetic();
     }

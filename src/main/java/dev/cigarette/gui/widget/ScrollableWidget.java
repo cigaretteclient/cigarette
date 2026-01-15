@@ -451,7 +451,7 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
         double normalizedPos = scrW > 0 ? widgetCenterX / scrW : 0.5;
         int colorLeft = Color.lerpColor(Colors.INSTANCE.primaryStart.getStateRGBA(), Colors.INSTANCE.primaryEnd.getStateRGBA(), (float)(normalizedPos - 0.1));
         int colorRight = Color.lerpColor(Colors.INSTANCE.primaryStart.getStateRGBA(), Colors.INSTANCE.primaryEnd.getStateRGBA(), (float)(normalizedPos + 0.1));
-        CigaretteScreen.drawGradientRoundedRect(context, left, top, right, bottom, 2, colorLeft, colorRight);
+        context.fillGradient(left, top, right, bottom, colorLeft, colorRight);
     }
     
     /**
@@ -475,7 +475,7 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
         
         // Fast path: if gradients disabled, use solid color
         if (!gui.isGradientEnabled()) {
-            CigaretteScreen.drawRoundedRect(context, left, top, right, actualBottom, radius, CigaretteScreen.BACKGROUND_COLOR);
+            context.fill(left, top, right, actualBottom, CigaretteScreen.BACKGROUND_COLOR);
             return;
         }
 
@@ -500,7 +500,7 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
         }
         
         // Draw gradient background with rounded corners
-        CigaretteScreen.drawGradientRoundedRect(context, left, top, right, actualBottom, radius, cachedColorLeft, cachedColorRight);
+        context.fillGradient(left, top, right, actualBottom, radius, scrW);
     }
 
     @Override

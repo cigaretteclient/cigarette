@@ -2,6 +2,7 @@ package dev.cigarette.module.ui;
 
 import dev.cigarette.Cigarette;
 import dev.cigarette.gui.CigaretteScreen;
+import dev.cigarette.gui.AnimationConfig;
 import dev.cigarette.gui.hud.wmark.WatermarkDisplay;
 import dev.cigarette.gui.widget.ColorDropdownWidget;
 import dev.cigarette.gui.widget.ToggleWidget;
@@ -21,6 +22,9 @@ public class Watermark extends RenderModule<ToggleWidget, Boolean> {
     private final ToggleWidget simplistic = new ToggleWidget("Simplistic", "A very simple watermark.").withDefaultState(false);
 
     private final ColorDropdownWidget simpleBgColor = ColorDropdownWidget.buildToggle("Background Color", "The background color of the simplistic watermark.").withDefaultColor(Color.colorTransparentize(CigaretteScreen.PRIMARY_COLOR, 0.4f)).withDefaultState(true);
+    private final ToggleWidget gradientBg = new ToggleWidget("Gradient Background", "Use gradient background instead of solid color.").withDefaultState(false);
+    private final ColorDropdownWidget gradientStartColor = ColorDropdownWidget.buildToggle("Gradient Start", "The starting color of the gradient background.").withDefaultColor(Color.colorTransparentize(CigaretteScreen.PRIMARY_COLOR, 0.4f)).withDefaultState(true);
+    private final ColorDropdownWidget gradientEndColor = ColorDropdownWidget.buildToggle("Gradient End", "The ending color of the gradient background.").withDefaultColor(Color.colorTransparentize(CigaretteScreen.SECONDARY_COLOR, 0.4f)).withDefaultState(true);
 
     private WatermarkDisplay display;
 
@@ -29,10 +33,16 @@ public class Watermark extends RenderModule<ToggleWidget, Boolean> {
         this.setChildren(
                 enableText,
                 simplistic,
-                simpleBgColor
+                simpleBgColor,
+                gradientBg,
+                gradientStartColor,
+                gradientEndColor
         );
         enableText.registerConfigKey(id + ".text");
         simplistic.registerConfigKey(id + ".simplistic");
+        gradientBg.registerConfigKey(id + ".gradientBg");
+        gradientStartColor.registerConfigKey(id + ".gradientStart");
+        gradientEndColor.registerConfigKey(id + ".gradientEnd");
     }
 
     @Override
@@ -47,7 +57,10 @@ public class Watermark extends RenderModule<ToggleWidget, Boolean> {
         }
         WatermarkDisplay.TEXT_ENABLED = enableText.getRawState();
         WatermarkDisplay.SIMPLE_DISPLAY = simplistic.getRawState();
-        WatermarkDisplay.BG_COLOR = simpleBgColor.getToggleState() ? simpleBgColor.getStateARGB() : Color.colorTransparentize(CigaretteScreen.PRIMARY_COLOR, 0.4f);
+        WatermarkDisplay.BG_COLOR = simpleBgColor.getToggleState() ? simpleBgColor.getStateARGB() : Color.colorTransparentize(AnimationConfig.getPrimaryColor(), 0.4f);
+        WatermarkDisplay.GRADIENT_BG = gradientBg.getRawState();
+        WatermarkDisplay.GRADIENT_START_COLOR = gradientStartColor.getToggleState() ? gradientStartColor.getStateARGB() : Color.colorTransparentize(AnimationConfig.getPrimaryColor(), 0.4f);
+        WatermarkDisplay.GRADIENT_END_COLOR = gradientEndColor.getToggleState() ? gradientEndColor.getStateARGB() : Color.colorTransparentize(AnimationConfig.getSecondaryColor(), 0.4f);
     }
 
     @Override

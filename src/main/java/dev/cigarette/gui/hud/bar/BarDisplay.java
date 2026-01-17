@@ -1,6 +1,8 @@
 package dev.cigarette.gui.hud.bar;
 
 import dev.cigarette.gui.CigaretteScreen;
+import dev.cigarette.gui.ColorScheme;
+import dev.cigarette.gui.GradientRenderer;
 import dev.cigarette.gui.Scissor;
 import dev.cigarette.gui.hud.bar.api.BarWidget;
 import dev.cigarette.gui.hud.bar.api.BarWidgetRegistry;
@@ -31,6 +33,11 @@ public class BarDisplay extends ClickableWidget {
     public static int TARGET_ROW_HEIGHT = 24;
     public static int GLOBAL_PADDING = 6;
     public static int MAX_ROWS = 3;
+    
+    // Gradient support
+    public static boolean USE_GRADIENT_BACKGROUND = false;
+    public static int GRADIENT_START_COLOR = 0xFF1A1A1A;
+    public static int GRADIENT_END_COLOR = 0xFF000000;
 
     private static final int MIN_BAR_HEIGHT = 0;
 
@@ -192,8 +199,16 @@ public class BarDisplay extends ClickableWidget {
         height = this.getHeight();
 
         Scissor.pushExclusive(context, x, y, x + width, y + height);
-        int bgCol = BG_COLOR;
-        Shape.roundedRect(context, x, y, x + width, y + height, bgCol, 6);
+        
+        // Render background with gradient support
+        if (USE_GRADIENT_BACKGROUND) {
+            // Draw gradient background
+            GradientRenderer.renderVerticalGradient(context, x, y, x + width, y + height, 
+                                                   GRADIENT_START_COLOR, GRADIENT_END_COLOR);
+        } else {
+            int bgCol = BG_COLOR;
+            context.fill(x, y, x + width, y + height, bgCol);
+        }
 
         int innerLeft = x + padX;
         int innerRight = x + width - padX;

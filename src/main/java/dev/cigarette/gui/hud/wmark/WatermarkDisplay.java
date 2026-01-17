@@ -2,6 +2,7 @@ package dev.cigarette.gui.hud.wmark;
 
 import dev.cigarette.Cigarette;
 import dev.cigarette.gui.CigaretteScreen;
+import dev.cigarette.gui.GradientRenderer;
 import dev.cigarette.lib.Color;
 import dev.cigarette.lib.Shape;
 import dev.cigarette.gui.hud.notification.NotificationDisplay;
@@ -19,6 +20,9 @@ public class WatermarkDisplay extends ClickableWidget {
     public static boolean SIMPLE_DISPLAY = false;
 
     public static int BG_COLOR = Color.colorTransparentize(CigaretteScreen.PRIMARY_COLOR, 0.4f);
+    public static boolean GRADIENT_BG = false;
+    public static int GRADIENT_START_COLOR = Color.colorTransparentize(CigaretteScreen.PRIMARY_COLOR, 0.4f);
+    public static int GRADIENT_END_COLOR = Color.colorTransparentize(CigaretteScreen.SECONDARY_COLOR, 0.4f);
 
     public WatermarkDisplay() {
 
@@ -28,7 +32,6 @@ public class WatermarkDisplay extends ClickableWidget {
     public static void watermarkFullRender(DrawContext context, int x, int y, boolean textEnabled,
             boolean simpleDisplay) {
         if (simpleDisplay) {
-            int c = BG_COLOR;
             final int radius = 6;
             if (textEnabled) {
                 final int logoSize = 24;
@@ -42,7 +45,12 @@ public class WatermarkDisplay extends ClickableWidget {
                 int textWidth = tr.getWidth("cigarette");
                 int boxWidth = padLeft + logoSize + spacing + textWidth + padRight;
 
-                Shape.roundedRect(context, x, y, x + boxWidth, y + boxHeight, c, radius);
+                // Render background with gradient or solid color
+                if (GRADIENT_BG) {
+                    GradientRenderer.renderHorizontalGradient(context, x, y, x + boxWidth, y + boxHeight, GRADIENT_START_COLOR, GRADIENT_END_COLOR);
+                } else {
+                    context.fill(x, y, x + boxWidth, y + boxHeight, BG_COLOR);
+                }
 
                 int logoY = y + Math.max(0, (boxHeight - logoSize) / 2);
                 int logoX = x + padLeft;
@@ -61,7 +69,14 @@ public class WatermarkDisplay extends ClickableWidget {
             } else {
                 final int logoSize = 24;
                 final int boxSize = 28;
-                Shape.roundedRect(context, x, y, x + boxSize, y + boxSize, c, radius);
+                
+                // Render background with gradient or solid color
+                if (GRADIENT_BG) {
+                    GradientRenderer.renderHorizontalGradient(context, x, y, x + boxSize, y + boxSize, GRADIENT_START_COLOR, GRADIENT_END_COLOR);
+                } else {
+                    context.fill(x, y, x + boxSize, y + boxSize, BG_COLOR);
+                }
+                
                 int logoY = y + Math.max(0, (boxSize - logoSize) / 2);
                 int logoX = x + Math.max(0, (boxSize - logoSize) / 2);
 

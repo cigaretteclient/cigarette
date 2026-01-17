@@ -443,15 +443,8 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
         int right = left + header.getWidth();
         int bottom = top + header.getHeight();
         
-        // Render header background with gradient
-        dev.cigarette.module.ui.GUI gui = dev.cigarette.module.ui.GUI.INSTANCE;
-        MinecraftClient mc = MinecraftClient.getInstance();
-        int scrW = mc.getWindow().getScaledWidth();
-        double widgetCenterX = left + ((right - left) / 2.0);
-        double normalizedPos = scrW > 0 ? widgetCenterX / scrW : 0.5;
-        int colorLeft = Color.lerpColor(Colors.INSTANCE.primaryStart.getStateRGBA(), Colors.INSTANCE.primaryEnd.getStateRGBA(), (float)(normalizedPos - 0.1));
-        int colorRight = Color.lerpColor(Colors.INSTANCE.primaryStart.getStateRGBA(), Colors.INSTANCE.primaryEnd.getStateRGBA(), (float)(normalizedPos + 0.1));
-        context.fillGradient(left, top, right, bottom, colorLeft, colorRight);
+        // Always use solid background for header
+        context.fill(left, top, right, bottom, CigaretteScreen.BACKGROUND_COLOR);
     }
     
     /**
@@ -470,37 +463,8 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
         
         if (left < 0 || top < 0 || right < 0 || actualBottom < 0 || actualBottom <= top) return;
 
-        dev.cigarette.module.ui.GUI gui = dev.cigarette.module.ui.GUI.INSTANCE;
-        int radius = 4;
-        
-        // Fast path: if gradients disabled, use solid color
-        if (!gui.isGradientEnabled()) {
-            context.fill(left, top, right, actualBottom, CigaretteScreen.BACKGROUND_COLOR);
-            return;
-        }
-
-        net.minecraft.client.MinecraftClient mc = net.minecraft.client.MinecraftClient.getInstance();
-        int scrW = mc.getWindow().getScaledWidth();
-
-        // Calculate gradient position
-        double widgetCenterX = left + ((right - left) / 2.0);
-        double normalizedPos = scrW > 0 ? widgetCenterX / scrW : 0.5;
-        
-        // Cache gradient colors to avoid recalculating every frame (update every 100ms or when position changes significantly)
-        long currentTime = System.currentTimeMillis();
-        boolean needsUpdate = (currentTime - lastGradientUpdate > 100) || 
-                             Math.abs(normalizedPos - lastGradientPosition) > 0.02 ||
-                             cachedColorLeft == -1;
-        
-        if (needsUpdate) {
-            int colorLerpLeft = Color.lerpColor(Colors.INSTANCE.primaryStart.getStateRGBA(), Colors.INSTANCE.primaryEnd.getStateRGBA(), (float)(normalizedPos - 0.1));
-            int colorLerpRight = Color.lerpColor(Colors.INSTANCE.primaryStart.getStateRGBA(), Colors.INSTANCE.primaryEnd.getStateRGBA(), (float)(normalizedPos + 0.1));
-            lastGradientPosition = normalizedPos;
-            lastGradientUpdate = currentTime;
-        }
-        
-        // Draw gradient background with rounded corners
-        context.fillGradient(left, top, right, actualBottom, radius, scrW);
+        // Always use solid background regardless of gradient settings
+        context.fill(left, top, right, actualBottom, CigaretteScreen.BACKGROUND_COLOR);
     }
 
     @Override
@@ -571,9 +535,9 @@ public class ScrollableWidget<Widgets extends BaseWidget<?>>
                 }
                 int bottomRectTop = realBottomInt;
                 if (this.getEasedProgress() > 0.0 && showBottomRoundedRect) {
-                    Shape.roundedRect(context, left, bottomRectTop, right,
+                    context.fill(left, bottomRectTop, right,
                             bottomRectTop + BOTTOM_ROUNDED_RECT_HEIGHT,
-                            CigaretteScreen.BACKGROUND_COLOR, 5, false, true);
+                            CigaretteScreen.BACKGROUND_COLOR);
                 }
                 Scissor.popExclusive();
             }

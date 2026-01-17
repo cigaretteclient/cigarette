@@ -2,7 +2,9 @@ package dev.cigarette.gui;
 
 import dev.cigarette.Cigarette;
 import dev.cigarette.gui.widget.*;
+import dev.cigarette.lib.Color;
 import dev.cigarette.module.BaseModule;
+import dev.cigarette.gui.CigaretteScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
@@ -10,6 +12,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.input.KeyInput;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix3x2f;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -17,18 +20,28 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Alternate GUI layout - a single draggable contained box with sidebar categories and module list.
- */
 public class AlternateClickGUI extends Screen {
-    private static final int PRIMARY_COLOR = 0xFFFE5F00;
-    private static final int SECONDARY_COLOR = 0xFFC44700;
-    private static final int PRIMARY_TEXT_COLOR = 0xFFFFFFFF;
-    private static final int BACKGROUND_COLOR = 0xFF1A1A1A;
-    private static final int DARK_BACKGROUND_COLOR = 0xFF0D0D0D;
-    private static final int HOVER_COLOR = 0xFF2A2A2A;
+    
+    // Private helper to get colors dynamically
+    private int getPrimaryColor() { return AnimationConfig.getPrimaryColor(); }
+    private int getSecondaryColor() { return AnimationConfig.getSecondaryColor(); }
+    private int getPrimaryTextColor() { return AnimationConfig.getPrimaryTextColor(); }
+    private int getSecondaryTextColor() { return AnimationConfig.getSecondaryTextColor(); }
+    private int getBackgroundColor() { return AnimationConfig.getBackgroundColor(); }
+    private int getDarkBackgroundColor() { return AnimationConfig.getDarkBackgroundColor(); }
+    private int getHoverColor() { return AnimationConfig.getHoverColor(); }
+    private int getSelectionColor() { return AnimationConfig.getSelectionColor(); }
+    private int getCheckboxBackgroundColor() { return AnimationConfig.getCheckboxBackgroundColor(); }
+    private int getCheckboxBorderColor() { return AnimationConfig.getCheckboxBorderColor(); }
+    private int getCheckboxCheckColor() { return AnimationConfig.getCheckboxCheckColor(); }
 
     private Screen parent = null;
+
+    // Animation state
+    private boolean opening = false;
+    private boolean closing = false;
+    private long animStartNanos = 0L;
+    private double animProgress = 1.0; // 0.0 = closed, 1.0 = fully open
 
     // Container dimensions
     private static final int CONTAINER_WIDTH = 380;
@@ -51,6 +64,7 @@ public class AlternateClickGUI extends Screen {
     private int selectedCategoryIndex = 0;
     private final List<CategoryInstance> categories = new ArrayList<>();
     private final AnimationHelper categoryAnimation = new AnimationHelper(0, 0.3);
+    private final AnimationHelper categoryBackgroundAnimation = new AnimationHelper(0, 0.35);
 
     // Module list for selected category
     private final List<ModuleEntry> moduleEntries = new ArrayList<>();
@@ -102,6 +116,18 @@ public class AlternateClickGUI extends Screen {
         containerX = (width - CONTAINER_WIDTH) / 2;
         containerY = (height - CONTAINER_HEIGHT) / 2;
 
+        // Start opening animation if animations are enabled
+        if (AnimationConfig.isGuiAnimationsEnabled()) {
+            this.opening = true;
+            this.closing = false;
+            this.animStartNanos = System.nanoTime();
+            this.animProgress = 0.0;
+        } else {
+            this.opening = false;
+            this.closing = false;
+            this.animProgress = 1.0;
+        }
+
         // Load categories
         for (CategoryInstance categoryInstance : Cigarette.CONFIG.CATEGORIES.values()) {
             if (categoryInstance != null) {
@@ -119,6 +145,9 @@ public class AlternateClickGUI extends Screen {
         if (index >= 0 && index < categories.size()) {
             selectedCategoryIndex = index;
             categoryAnimation.setTarget(index * CATEGORY_HEIGHT);
+            // Reset background animation when category changes
+            categoryBackgroundAnimation.set(0);
+            categoryBackgroundAnimation.setTarget(0);
             moduleEntries.clear();
             contentScrollOffset = 0;
             expandedModule = null;
@@ -237,10 +266,24 @@ public class AlternateClickGUI extends Screen {
             return slider.mouseClicked(click, doubled);
         } else if (widget instanceof ColorWheelWidget colorWheel && !colorWheel.disabled) {
             return colorWheel.mouseClicked(click, doubled);
-        } else if (widget instanceof KeybindWidget keybind) {
-            return keybind.mouseClicked(click, doubled);
         } else if (widget instanceof ToggleKeybindWidget toggleKeybind) {
+            // Set position and dimensions for proper click detection
+            toggleKeybind.setX(bounds.x);
+            toggleKeybind.setY(bounds.y);
+            toggleKeybind.setWidth(bounds.width);
+            toggleKeybind.setHeight(bounds.height);
+            toggleKeybind.widget.setX(bounds.x);
+            toggleKeybind.widget.setY(bounds.y);
+            toggleKeybind.widget.setWidth(bounds.width);
+            toggleKeybind.widget.setHeight(bounds.height);
             return toggleKeybind.mouseClicked(click, doubled);
+        } else if (widget instanceof KeybindWidget keybind) {
+            // Set position and dimensions for proper click detection
+            keybind.setX(bounds.x);
+            keybind.setY(bounds.y);
+            keybind.setWidth(bounds.width);
+            keybind.setHeight(bounds.height);
+            return keybind.mouseClicked(click, doubled);
         } else if (widget instanceof ToggleWidget) {
             // Toggle the boolean value
             if (!widget.isStateless()) {
@@ -279,31 +322,38 @@ public class AlternateClickGUI extends Screen {
         entry.settingWidgets.clear();
         
         if (entry.widget instanceof DropdownWidget dropdown) {
-            int height = 8; // Top padding
-            
-            for (var child : dropdown.getChildren().values()) {
-                if (child instanceof BaseWidget<?> widget) {
-                    WidgetBounds bounds = new WidgetBounds(widget);
-                    entry.settingWidgets.add(bounds);
-                    
-                    // Determine height based on widget type
-                    if (widget instanceof ColorWheelWidget) {
-                        height += 184; // Label (14) + wheel (160) + spacing (10)
-                    } else if (widget instanceof SliderWidget) {
-                        height += 32; // Label (14) + slider (12) + spacing (6)
-                    } else if (widget instanceof KeybindWidget || widget instanceof ToggleKeybindWidget) {
-                        height += 26; // Label + keybind display + spacing
-                    } else if (widget instanceof DropdownWidget innerDropdown) {
-                        height += 24; // Header height only - children are managed by the dropdown itself
-                    } else {
-                        height += 22; // Default for toggles, text, etc.
-                    }
-                }
-            }
-            
-            return Math.max(30, height + 8); // Bottom padding
+            return calculateWidgetHeightRecursively(dropdown.getChildren(), 0);
         }
         return 50;
+    }
+    
+    /**
+     * Recursively calculates the total height needed for all widgets at any nesting depth.
+     */
+    private int calculateWidgetHeightRecursively(Map<String, BaseWidget<?>> widgets, int depth) {
+        int height = 8; // Top padding
+        
+        for (var child : widgets.values()) {
+            if (child instanceof ColorWheelWidget) {
+                height += 14 + 160 + 10; // Label + wheel + spacing
+            } else if (child instanceof SliderWidget) {
+                height += 14 + 12 + 6; // Label + slider + spacing
+            } else if (child instanceof KeybindWidget || child instanceof ToggleKeybindWidget) {
+                height += 20 + 6; // Widget height + spacing
+            } else if (child instanceof ToggleWidget) {
+                height += 18 + 4; // Widget height + spacing
+            } else if (child instanceof ColorSquareWidget) {
+                height += 16 + 4; // Widget height + spacing
+            } else if (child instanceof DropdownWidget innerDropdown) {
+                height += 20; // Header height
+                // Add height for expanded children
+                height += calculateWidgetHeightRecursively(innerDropdown.getChildren(), depth + 1);
+            } else {
+                height += 22; // Default for other widgets
+            }
+        }
+        
+        return height + 8; // Bottom padding
     }
 
     @Override
@@ -399,11 +449,27 @@ public class AlternateClickGUI extends Screen {
     @Override
     public void close() {
         assert this.client != null;
-        this.client.setScreen(parent);
+        
+        if (AnimationConfig.isGuiAnimationsEnabled() && !closing) {
+            // Start closing animation
+            this.opening = false;
+            this.closing = true;
+            this.animStartNanos = System.nanoTime();
+        } else if (!AnimationConfig.isGuiAnimationsEnabled()) {
+            // No animation, close immediately
+            this.client.setScreen(parent);
+        }
     }
 
     @Override
     public boolean keyPressed(KeyInput input) {
+        // If a keybind widget is actively capturing input, forward the key press to it
+        if (CigaretteScreen.bindingKey != null) {
+            if (CigaretteScreen.bindingKey.keyPressed(input)) {
+                return true;
+            }
+        }
+
         switch (input.getKeycode()) {
             case GLFW.GLFW_KEY_ESCAPE, GLFW.GLFW_KEY_RIGHT_SHIFT -> this.close();
         }
@@ -412,8 +478,35 @@ public class AlternateClickGUI extends Screen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
+        // Update opening/closing animation
+        if (opening || closing) {
+            double elapsed = (System.nanoTime() - animStartNanos) / 1_000_000_000.0;
+            double duration = opening ? AnimationConfig.getGuiOpenDuration() : 
+                             (AnimationConfig.getGuiOpenDuration() * AnimationConfig.getGuiCloseDurationFactor());
+            
+            double t = Math.min(1.0, elapsed / duration);
+            double eased = AnimationConfig.getGuiEasing().apply(t);
+            
+            if (opening) {
+                animProgress = eased;
+                if (t >= 1.0) {
+                    opening = false;
+                    animProgress = 1.0;
+                }
+            } else if (closing) {
+                animProgress = 1.0 - eased;
+                if (t >= 1.0) {
+                    // Animation complete, actually close
+                    assert this.client != null;
+                    this.client.setScreen(parent);
+                    return;
+                }
+            }
+        }
+        
         // Update animations
         categoryAnimation.update(deltaTicks);
+        categoryBackgroundAnimation.update(deltaTicks);
         for (ModuleEntry entry : moduleEntries) {
             entry.expansionAnimation.update(deltaTicks);
             entry.toggleAnimation.update(deltaTicks);
@@ -425,34 +518,71 @@ public class AlternateClickGUI extends Screen {
                 entry.expansionAnimation.setTarget(0);
             }
             
-            // Update toggle animation target
+            // Update toggle animation target - check every frame to sync with settings toggles
             boolean shouldBeOn = isModuleEnabled(entry);
             double targetToggle = shouldBeOn ? 1.0 : 0.0;
-            if (Math.abs(entry.toggleAnimation.get() - targetToggle) > 0.01) {
-                entry.toggleAnimation.setTarget(targetToggle);
-            }
+            entry.toggleAnimation.setTarget(targetToggle);
         }
         
-        // Dim background
-        context.fill(0, 0, width, height, 0x80000000);
+        // Dim background with animated alpha
+        int bgAlpha = (int) (0x80 * animProgress);
+        context.fill(0, 0, width, height, (bgAlpha << 24));
 
-        // Container background
-        context.fill(containerX, containerY, containerX + CONTAINER_WIDTH, containerY + CONTAINER_HEIGHT, DARK_BACKGROUND_COLOR);
+        // Apply transformations if animating
+        context.getMatrices().pushMatrix();
+        
+        if (animProgress < 1.0) {
+            // Calculate center point for scaling
+            double centerX = containerX + CONTAINER_WIDTH / 2.0;
+            double centerY = containerY + CONTAINER_HEIGHT / 2.0;
+            
+            // Apply scaling
+            double scaleFactor = AnimationConfig.getGuiScaleFactor() + 
+                               (1.0 - AnimationConfig.getGuiScaleFactor()) * animProgress;
+            context.getMatrices().translate((float) centerX, (float) centerY);
+            context.getMatrices().scale((float) scaleFactor, (float) scaleFactor, new Matrix3x2f().identity());
+            context.getMatrices().translate((float) -centerX, (float) -centerY);
+            
+            // Apply slide animation
+            double slideDistance = AnimationConfig.getGuiSlideDistance() * (1.0 - animProgress);
+            context.getMatrices().translate(0, (float) slideDistance);
+        }
+        
+        // Calculate alpha for fade effect
+        int fadeAlpha = (int) (255 * (AnimationConfig.getGuiFadeAlpha() + 
+                                      (1.0 - AnimationConfig.getGuiFadeAlpha()) * animProgress));
+        
+        // Container background with fade
+        int containerBg = (fadeAlpha << 24) | (getDarkBackgroundColor() & 0x00FFFFFF);
+        context.fill(containerX, containerY, containerX + CONTAINER_WIDTH, containerY + CONTAINER_HEIGHT, containerBg);
 
-        // Header gradient
+        // Header gradient with fade
         int[] headerGradient = ColorScheme.getCategoryHeaderGradient();
-        GradientRenderer.renderHorizontalGradient(context, containerX, containerY, containerX + CONTAINER_WIDTH, containerY + HEADER_HEIGHT, headerGradient[0], headerGradient[1]);
-        context.drawCenteredTextWithShadow(textRenderer, "Cigarette", containerX + CONTAINER_WIDTH / 2, containerY + 6, PRIMARY_TEXT_COLOR);
+        int headerStart = (fadeAlpha << 24) | (headerGradient[0] & 0x00FFFFFF);
+        int headerEnd = (fadeAlpha << 24) | (headerGradient[1] & 0x00FFFFFF);
+        GradientRenderer.renderHorizontalGradient(context, containerX, containerY, containerX + CONTAINER_WIDTH, containerY + HEADER_HEIGHT, headerStart, headerEnd);
+        int textColor = (fadeAlpha << 24) | (getPrimaryTextColor() & 0x00FFFFFF);
+        context.drawCenteredTextWithShadow(textRenderer, "Cigarette", containerX + CONTAINER_WIDTH / 2, containerY + 6, textColor);
 
-        // Sidebar
-        context.fill(containerX, containerY + HEADER_HEIGHT, containerX + SIDEBAR_WIDTH, containerY + CONTAINER_HEIGHT, BACKGROUND_COLOR);
+        // Sidebar with fade
+        int sidebarBg = (fadeAlpha << 24) | (getBackgroundColor() & 0x00FFFFFF);
+        context.fill(containerX, containerY + HEADER_HEIGHT, containerX + SIDEBAR_WIDTH, containerY + CONTAINER_HEIGHT, sidebarBg);
 
         // Categories with selection indicator
         int catY = containerY + HEADER_HEIGHT;
         
-        // Draw animated selection indicator
+        // Draw animated selection indicator with fade
         int indicatorY = containerY + HEADER_HEIGHT + categoryAnimation.getInt();
-        context.fill(containerX, indicatorY, containerX + 2, indicatorY + CATEGORY_HEIGHT, PRIMARY_COLOR);
+        int indicatorColor = (fadeAlpha << 24) | (getPrimaryColor() & 0x00FFFFFF);
+        context.fill(containerX, indicatorY, containerX + 2, indicatorY + CATEGORY_HEIGHT, indicatorColor);
+        
+        // Animate the category background scaling after the indicator settles
+        // Only start the background animation when the indicator is close to its target
+        double indicatorProgress = categoryAnimation.getProgress();
+        if (indicatorProgress > 0.7 && categoryBackgroundAnimation.get() == 0) {
+            // Start left-to-right scaling
+            categoryBackgroundAnimation.setTarget(SIDEBAR_WIDTH - 4);
+        }
         
         for (int i = 0; i < categories.size(); i++) {
             CategoryInstance category = categories.get(i);
@@ -460,16 +590,26 @@ public class AlternateClickGUI extends Screen {
             boolean isHovered = mouseX >= containerX && mouseX < containerX + SIDEBAR_WIDTH && mouseY >= catY && mouseY < catY + CATEGORY_HEIGHT;
 
             if (isSelected) {
-                // Subtle highlight for selected
-                int alpha = 0x30000000;
-                context.fill(containerX, catY, containerX + SIDEBAR_WIDTH, catY + CATEGORY_HEIGHT, alpha | (SECONDARY_COLOR & 0x00FFFFFF));
+                // Render left-to-right scaling rounded rect for selected category
+                int rectWidth = categoryBackgroundAnimation.getInt();
+                int rectX = containerX + 2; // Start after the indicator bar
+                int rectY = catY + 2;
+                int rectHeight = CATEGORY_HEIGHT - 4;
+                
+                if (rectWidth > 0) {
+                    // Draw rectangular selection with animated width
+                    int rectColor = (fadeAlpha << 24) | (getPrimaryColor() & 0x00FFFFFF);
+                    context.fill(rectX, rectY, rectX + rectWidth, rectY + rectHeight, rectColor);
+                }
             } else if (isHovered) {
-                context.fill(containerX, catY, containerX + SIDEBAR_WIDTH, catY + CATEGORY_HEIGHT, HOVER_COLOR);
+                int hoverColor = (fadeAlpha << 24) | (getHoverColor() & 0x00FFFFFF);
+                context.fill(containerX, catY, containerX + SIDEBAR_WIDTH, catY + CATEGORY_HEIGHT, hoverColor);
             }
 
             String name = category.widget.getHeaderName();
-            int textColor = isSelected ? PRIMARY_COLOR : PRIMARY_TEXT_COLOR;
-            context.drawTextWithShadow(textRenderer, name, containerX + 6, catY + 5, textColor);
+            int baseCatTextColor = isSelected ? 0xFFFFFFFF : getPrimaryTextColor();
+            int catTextColor = (fadeAlpha << 24) | (baseCatTextColor & 0x00FFFFFF);
+            context.drawTextWithShadow(textRenderer, name, containerX + 6, catY + 5, catTextColor);
             catY += CATEGORY_HEIGHT;
         }
 
@@ -479,7 +619,8 @@ public class AlternateClickGUI extends Screen {
         int contentWidth = CONTAINER_WIDTH - SIDEBAR_WIDTH;
         int contentHeight = CONTAINER_HEIGHT - HEADER_HEIGHT;
 
-        context.fill(contentX, contentY, contentX + contentWidth, contentY + contentHeight, DARK_BACKGROUND_COLOR);
+        int contentBg = (fadeAlpha << 24) | (getDarkBackgroundColor() & 0x00FFFFFF);
+        context.fill(contentX, contentY, contentX + contentWidth, contentY + contentHeight, contentBg);
 
         // Scissor for content
         Scissor.pushExclusive(context, contentX, contentY, contentX + contentWidth, contentY + contentHeight);
@@ -494,32 +635,62 @@ public class AlternateClickGUI extends Screen {
 
                 // Module header with expansion transition
                 double expansionProgress = entry.expansionAnimation.getProgress();
-                int headerBg = entry.expanded ? 
-                    interpolateColor(isHovered ? HOVER_COLOR : BACKGROUND_COLOR, SECONDARY_COLOR, expansionProgress) :
-                    (isHovered ? HOVER_COLOR : BACKGROUND_COLOR);
+                int baseHeaderBg = entry.expanded ? 
+                    interpolateColor(isHovered ? getHoverColor() : getBackgroundColor(), getSecondaryColor(), expansionProgress) :
+                    (isHovered ? getHoverColor() : getBackgroundColor());
+                int headerBg = (fadeAlpha << 24) | (baseHeaderBg & 0x00FFFFFF);
                 context.fill(contentX, moduleY, contentX + contentWidth, moduleY + MODULE_HEIGHT, headerBg);
 
                 // Module name
                 String moduleName = entry.module.widget.getMessage().getString();
-                context.drawTextWithShadow(textRenderer, moduleName, contentX + 6, moduleY + 4, PRIMARY_TEXT_COLOR);
+                int moduleNameColor = (fadeAlpha << 24) | (getPrimaryTextColor() & 0x00FFFFFF);
+                context.drawTextWithShadow(textRenderer, moduleName, contentX + 6, moduleY + 4, moduleNameColor);
 
-                // Animated toggle indicator
-                double toggleProgress = entry.toggleAnimation.get();
-                int toggleColor = interpolateColor(0xFF444444, 0xFF00FF00, toggleProgress);
-                context.fill(contentX + contentWidth - 14, moduleY + 4, contentX + contentWidth - 4, moduleY + 14, toggleColor);
+                // Checkbox toggle indicator (same as ToggleWidget)
+                boolean isModuleOn = isModuleEnabled(entry);
+                int checkboxX = contentX + contentWidth - 16;
+                int checkboxY = moduleY + 3;
+                int baseCheckboxColor = getCheckboxBackgroundColor();
+                int checkboxColor = (fadeAlpha << 24) | (baseCheckboxColor & 0x00FFFFFF);
+                context.fill(checkboxX, checkboxY, checkboxX + 12, checkboxY + 12, checkboxColor);
+                int checkboxBorderColor = (fadeAlpha << 24) | (getCheckboxBorderColor() & 0x00FFFFFF);
+                drawBorder(context, checkboxX, checkboxY, 12, 12, checkboxBorderColor);
+                
+                // Animated checkmark based on toggle animation progress
+                double checkProgress = entry.toggleAnimation.get();
+                if (checkProgress > 0.0) {
+                    // Scale and fade the checkmark
+                    double scale = 0.3 + 0.7 * checkProgress; // Start at 30% scale, grow to 100%
+                    int alpha = (int) (checkProgress * 255);
+                    int checkColor = (alpha << 24) | (getCheckboxCheckColor() & 0x00FFFFFF);
+                    
+                    // Calculate scaled checkmark bounds
+                    double centerX = checkboxX + 6; // Center of checkbox
+                    double centerY = checkboxY + 6;
+                    double halfWidth = 3 * scale;
+                    double halfHeight = 3 * scale;
+                    
+                    int checkX1 = (int) (centerX - halfWidth);
+                    int checkY1 = (int) (centerY - halfHeight);
+                    int checkX2 = (int) (centerX + halfWidth);
+                    int checkY2 = (int) (centerY + halfHeight);
+                    
+                    context.fill(checkX1, checkY1, checkX2, checkY2, checkColor);
+                }
 
-                // Arrow with rotation hint via different characters
                 String arrow = entry.expanded ? "▼" : "►";
-                context.drawTextWithShadow(textRenderer, arrow, contentX + contentWidth - 26, moduleY + 4, 0xFF888888);
+                int arrowColor = (fadeAlpha << 24) | (0xFF888888 & 0x00FFFFFF);
+                context.drawTextWithShadow(textRenderer, arrow, contentX + contentWidth - 26, moduleY + 4, arrowColor);
 
                 // Settings dropdown with animation
                 if (animatedSettingsHeight > 0) {
                     int settingsY = moduleY + MODULE_HEIGHT;
-                    context.fill(contentX, settingsY, contentX + contentWidth, settingsY + animatedSettingsHeight, 0xFF121212);
+                    int settingsBg = (fadeAlpha << 24) | (getDarkBackgroundColor() & 0x00FFFFFF);
+                    context.fill(contentX, settingsY, contentX + contentWidth, settingsY + animatedSettingsHeight, settingsBg);
                     
                     // Only render settings if sufficiently expanded
                     if (animatedSettingsHeight > 10) {
-                        renderSettings(context, entry, contentX + 4, settingsY + 4, contentWidth - 8, animatedSettingsHeight - 8, mouseX, mouseY, deltaTicks);
+                        renderSettings(context, entry, contentX + 4, settingsY + 4, contentWidth - 8, animatedSettingsHeight - 8, mouseX, mouseY, deltaTicks, fadeAlpha);
                     }
                 }
             }
@@ -533,11 +704,18 @@ public class AlternateClickGUI extends Screen {
         if (totalHeight > contentHeight) {
             int scrollbarHeight = Math.max(15, (contentHeight * contentHeight) / totalHeight);
             int scrollbarY = contentY + (contentScrollOffset * (contentHeight - scrollbarHeight)) / Math.max(1, totalHeight - contentHeight);
-            context.fill(contentX + contentWidth - 3, scrollbarY, contentX + contentWidth, scrollbarY + scrollbarHeight, 0xFF555555);
+            int scrollbarColor = (fadeAlpha << 24) | (0xFF555555 & 0x00FFFFFF);
+            context.fill(contentX + contentWidth - 3, scrollbarY, contentX + contentWidth, scrollbarY + scrollbarHeight, scrollbarColor);
         }
 
-        // Border
-        drawBorder(context, containerX, containerY, CONTAINER_WIDTH, CONTAINER_HEIGHT, PRIMARY_COLOR);
+        // Border with fade
+        if (AnimationConfig.isBorderEnabled()) {
+            int borderColor = (fadeAlpha << 24) | (AnimationConfig.getBorderColor() & 0x00FFFFFF);
+            drawBorder(context, containerX, containerY, CONTAINER_WIDTH, CONTAINER_HEIGHT, borderColor);
+        }
+        
+        // Restore matrix
+        context.getMatrices().popMatrix();
     }
 
     private boolean isModuleEnabled(ModuleEntry entry) {
@@ -551,300 +729,320 @@ public class AlternateClickGUI extends Screen {
         return state instanceof Boolean b && b;
     }
 
-    private void renderSettings(DrawContext context, ModuleEntry entry, int x, int y, int width, int maxHeight, int mouseX, int mouseY, float deltaTicks) {
+    private void renderSettings(DrawContext context, ModuleEntry entry, int x, int y, int width, int maxHeight, int mouseX, int mouseY, float deltaTicks, int fadeAlpha) {
         if (entry.widget instanceof DropdownWidget dropdown) {
             DropdownWidget<?,?> dw = (DropdownWidget<?,?>) entry.widget;
-            int settingY = y;
-            int settingIndex = 0;
+            // Clear existing bounds to rebuild them during recursive rendering
+            List<WidgetBounds> oldBounds = new ArrayList<>(entry.settingWidgets);
+            entry.settingWidgets.clear();
             
-            for (Map.Entry<String, BaseWidget<?>> en : dw.getChildren().entrySet()) {
-                BaseWidget<?> child = en.getValue();
-
-                if (child instanceof BaseWidget<?> widget && settingIndex < entry.settingWidgets.size()) {
-                    WidgetBounds bounds = entry.settingWidgets.get(settingIndex);
-                    
-                    // Stop rendering if we exceed available height
-                    if (settingY - y >= maxHeight) break;
-                    
-                    // Determine widget height and render appropriately
-                    if (widget instanceof ColorWheelWidget colorWheel) {
-                        ColorWheelWidget colorWheelWidget = (ColorWheelWidget) en.getValue();
-                        // Render label
-                        context.drawTextWithShadow(textRenderer, en.getValue().getMessage().getString(), x, settingY, 0xFFAAAAAA);
-                        settingY += 14;
-                        
-                        int wheelSize = Math.min(width, 160);
-                        // Set bounds to the actual wheel position
-                        bounds.x = x + (width - wheelSize) / 2;
-                        bounds.y = settingY;
-                        bounds.width = wheelSize;
-                        bounds.height = wheelSize;
-                        
-                        // Render color wheel
-                        if (settingY - y + wheelSize <= maxHeight) {
-                            colorWheelWidget.setX(bounds.x);
-                            colorWheelWidget.setY(bounds.y);
-                            colorWheelWidget.setDimensions(wheelSize, wheelSize);
-                            colorWheelWidget.render(context, mouseX, mouseY, deltaTicks);
-                        }
-                        settingY += wheelSize + 10;
-                        
-                    } else if (widget instanceof SliderWidget slider) {
-                        // Render slider label with current value
-                        String label = widget.getMessage().getString();
-                        if (!widget.isStateless()) {
-                            Object state = widget.getRawState();
-                            if (state instanceof Double d) {
-                                label += ": " + String.format("%.2f", d);
-                            }
-                        }
-                        context.drawTextWithShadow(textRenderer, label, x, settingY, 0xFFAAAAAA);
-                        settingY += 14;
-                        
-                        // Set bounds to the actual slider bar position
-                        bounds.x = x;
-                        bounds.y = settingY;
-                        bounds.width = width;
-                        bounds.height = 12;
-                        
-                        // Manually render slider bar to avoid text overlap
-                        if (settingY - y + 12 <= maxHeight) {
-                            SliderWidget sliderWidget = (SliderWidget) en.getValue();
-                            sliderWidget.setX(bounds.x);
-                            sliderWidget.setY(bounds.y);
-                            sliderWidget.setWidth(bounds.width - 20);
-                            sliderWidget.setHeight(12);
-                            
-                            double value = !sliderWidget.isStateless() ? (Double) sliderWidget.getRawState() : sliderWidget.minState;
-                            double progress = (value - sliderWidget.minState) / (sliderWidget.maxState - sliderWidget.minState);
-                            
-                            // Draw slider track
-                            context.fill(bounds.x, bounds.y + 4, bounds.x + bounds.width - 20, bounds.y + 8, 0xFF333333);
-                            
-                            // Draw filled portion
-                            int fillWidth = (int) ((bounds.width - 20) * progress);
-                            context.fill(bounds.x, bounds.y + 4, bounds.x + fillWidth, bounds.y + 8, PRIMARY_COLOR);
-                            
-                            // Draw slider handle
-                            int handleX = bounds.x + fillWidth - 2;
-                            context.fill(handleX, bounds.y + 2, handleX + 4, bounds.y + 10, PRIMARY_TEXT_COLOR);
-                        }
-                        settingY += 18; // 12 + spacing
-                        
-                    } else if (widget instanceof KeybindWidget keybind) {
-                        bounds.x = x;
-                        bounds.y = settingY;
-                        bounds.width = width;
-                        bounds.height = 20;
-                        KeybindWidget keybindWidget = (KeybindWidget) en.getValue();
-                        
-                        if (settingY - y + 20 <= maxHeight) {
-                            boolean isBinding = CigaretteScreen.bindingKey == keybindWidget;
-                            boolean isHovered = mouseX >= bounds.x && mouseX < bounds.x + bounds.width &&
-                                              mouseY >= bounds.y && mouseY < bounds.y + bounds.height;
-                            
-                            // Label
-                            context.drawTextWithShadow(textRenderer, keybindWidget.getMessage().getString(), x, settingY + 2, 0xFFAAAAAA);
-                            
-                            // Keybind display box
-                            int boxX = x + width - 60;
-                            int boxColor = isBinding ? PRIMARY_COLOR : (isHovered ? HOVER_COLOR : DARK_BACKGROUND_COLOR);
-                            context.fill(boxX, settingY, boxX + 56, settingY + 18, boxColor);
-                            drawBorder(context, boxX, settingY, 56, 18, PRIMARY_TEXT_COLOR);
-                            
-                            // Key name
-                            String keyName = isBinding ? "..." : keybindWidget.toString();
-                            int textX = boxX + 28 - textRenderer.getWidth(keyName) / 2;
-                            context.drawTextWithShadow(textRenderer, keyName, textX, settingY + 5, PRIMARY_TEXT_COLOR);
-                        }
-                        settingY += 26;
-                        
-                    } else if (widget instanceof ToggleKeybindWidget toggleKeybind) {
-                        bounds.x = x;
-                        bounds.y = settingY;
-                        bounds.width = width;
-                        bounds.height = 20;
-
-                        ToggleKeybindWidget toggleKeybindWidget = (ToggleKeybindWidget) en.getValue();
-                        
-                        if (settingY - y + 20 <= maxHeight) {
-                            boolean isBinding = CigaretteScreen.bindingKey == toggleKeybindWidget.widget;
-                            boolean isHovered = mouseX >= bounds.x && mouseX < bounds.x + bounds.width &&
-                                              mouseY >= bounds.y && mouseY < bounds.y + bounds.height;
-                            
-                            // Label with toggle state
-                            boolean isOn = !toggleKeybindWidget.isStateless() && toggleKeybindWidget.getRawState() instanceof Boolean b && b;
-                            String label = toggleKeybindWidget.getMessage().getString() + (isOn ? " [ON]" : " [OFF]");
-                            context.drawTextWithShadow(textRenderer, label, x, settingY + 2, isOn ? 0xFF00FF00 : 0xFFAAAAAA);
-                            
-                            // Keybind display box
-                            int boxX = x + width - 60;
-                            int boxColor = isBinding ? PRIMARY_COLOR : (isHovered ? HOVER_COLOR : DARK_BACKGROUND_COLOR);
-                            context.fill(boxX, settingY, boxX + 56, settingY + 18, boxColor);
-                            drawBorder(context, boxX, settingY, 56, 18, PRIMARY_TEXT_COLOR);
-                            
-                            // Key name
-                            String keyName = isBinding ? "..." : toggleKeybindWidget.widget.toString();
-                            int textX = boxX + 28 - textRenderer.getWidth(keyName) / 2;
-                            context.drawTextWithShadow(textRenderer, keyName, textX, settingY + 5, PRIMARY_TEXT_COLOR);
-                        }
-                        settingY += 26;
-                        
-                    } else if (widget instanceof ToggleWidget toggle) {
-                        bounds.x = x;
-                        bounds.y = settingY;
-                        bounds.width = width;
-                        bounds.height = 18;
-                        
-                        ToggleWidget toggleWidget = (ToggleWidget) en.getValue();
-                        
-                        if (settingY - y + 18 <= maxHeight) {
-                            // Render toggle with checkbox
-                            boolean isOn = !toggleWidget.isStateless() && toggleWidget.getRawState() instanceof Boolean b && b;
-                            boolean isHovered = mouseX >= bounds.x && mouseX < bounds.x + bounds.width &&
-                                              mouseY >= bounds.y && mouseY < bounds.y + bounds.height;
-                            
-                            // Checkbox
-                            int checkboxColor = isHovered ? HOVER_COLOR : DARK_BACKGROUND_COLOR;
-                            context.fill(x, settingY + 2, x + 12, settingY + 14, checkboxColor);
-                            drawBorder(context, x, settingY + 2, 12, 12, PRIMARY_TEXT_COLOR);
-                            
-                            if (isOn) {
-                                // Checkmark
-                                context.fill(x + 3, settingY + 5, x + 9, settingY + 11, 0xFF00FF00);
-                            }
-                            
-                            // Label
-                            context.drawTextWithShadow(textRenderer, toggleWidget.getMessage().getString(), x + 16, settingY + 4, 0xFFAAAAAA);
-                        }
-                        settingY += 22;
-                        
-                    } else if (widget instanceof ColorSquareWidget colorSquare) {
-                        bounds.x = x;
-                        bounds.y = settingY;
-                        bounds.width = width;
-                        bounds.height = 16;
-
-                        ColorSquareWidget colorSquareWidget = (ColorSquareWidget) en.getValue();
-                        
-                        if (settingY - y + 16 <= maxHeight) {
-                            // Render color square
-                            int color = !colorSquareWidget.isStateless() ? (int) colorSquareWidget.getRawState() : 0xFFFFFFFF;
-                            context.fill(x, settingY + 2, x + 12, settingY + 14, color);
-                            drawBorder(context, x, settingY + 2, 12, 12, PRIMARY_TEXT_COLOR);
-                            
-                            // Show hex value
-                            String hexValue = String.format("#%06X", color & 0xFFFFFF);
-                            context.drawTextWithShadow(textRenderer, hexValue, x + 16, settingY + 4, 0xFFAAAAAA);
-                        }
-                        settingY += 20;
-                        
-                    } else if (widget instanceof DropdownWidget innerDropdown) {
-                        bounds.x = x;
-                        bounds.y = settingY;
-                        bounds.width = width;
-                        bounds.height = 20;
-                        
-                        DropdownWidget<?,?> dwInner = (DropdownWidget<?,?>) en.getValue();
-                        // Position the dropdown widget for click handling
-                        dwInner.setX(bounds.x);
-                        dwInner.setY(bounds.y);
-                        dwInner.setWidth(bounds.width);
-                        dwInner.setHeight(bounds.height);
-                        
-                        // Render the nested dropdown header
-                        if (settingY - y + 20 <= maxHeight) {
-                            // Render header background
-                            boolean isHovered = mouseX >= bounds.x && mouseX < bounds.x + bounds.width &&
-                                              mouseY >= bounds.y && mouseY < bounds.y + bounds.height;
-                            int headerColor = isHovered ? 0xFF2A2A2A : 0xFF1A1A1A;
-                            context.fill(bounds.x, bounds.y, bounds.x + bounds.width, bounds.y + bounds.height, headerColor);
-                            
-                            // Render header text with dropdown indicator
-                            context.drawTextWithShadow(textRenderer, dwInner.getMessage().getString() + " ▼", bounds.x + 4, bounds.y + 2, 0xFFAAAAAA);
-                        }
-                        settingY += 20;
-                        
-                        // Check if dropdown is expanded and render children
-                        if (dwInner.isExpanded() && settingY - y < maxHeight) {
-                            for (Map.Entry<String, BaseWidget<?>> childEn : dwInner.getChildren().entrySet()) {
-                                BaseWidget<?> childWidget = childEn.getValue();
-                                
-                                if (childWidget instanceof ColorWheelWidget colorWheelChild) {
-                                    // Render color wheel inside the dropdown
-                                    int childWheelSize = Math.min(width, 160);
-                                    int wheelX = x + (width - childWheelSize) / 2;
-                                    int wheelY = settingY;
-                                    
-                                    if (wheelY - y + childWheelSize <= maxHeight) {
-                                        // Create bounds for the color wheel so it can be clicked
-                                        WidgetBounds wheelBounds = new WidgetBounds(colorWheelChild);
-                                        wheelBounds.x = wheelX;
-                                        wheelBounds.y = wheelY;
-                                        wheelBounds.width = childWheelSize;
-                                        wheelBounds.height = childWheelSize;
-                                        entry.settingWidgets.add(wheelBounds);
-                                        
-                                        colorWheelChild.setX(wheelX);
-                                        colorWheelChild.setY(wheelY);
-                                        colorWheelChild.setDimensions(childWheelSize, childWheelSize);
-                                        colorWheelChild.render(context, mouseX, mouseY, deltaTicks);
-                                        settingY += childWheelSize + 10;
-                                    }
-                                } else if (childWidget instanceof SliderWidget childSlider) {
-                                    // Render slider inside the dropdown
-                                    context.drawTextWithShadow(textRenderer, childWidget.getMessage().getString(), x, settingY, 0xFFAAAAAA);
-                                    settingY += 14;
-                                    
-                                    if (settingY - y + 12 <= maxHeight) {
-                                        // Create bounds for the slider so it can be clicked
-                                        WidgetBounds sliderBounds = new WidgetBounds(childSlider);
-                                        sliderBounds.x = x;
-                                        sliderBounds.y = settingY;
-                                        sliderBounds.width = width - 20;
-                                        sliderBounds.height = 12;
-                                        entry.settingWidgets.add(sliderBounds);
-                                        
-                                        childSlider.setX(x);
-                                        childSlider.setY(settingY);
-                                        childSlider.setWidth(width - 20);
-                                        childSlider.setHeight(12);
-                                        
-                                        double sliderValue = !childSlider.isStateless() ? (Double) childSlider.getRawState() : childSlider.minState;
-                                        double sliderProgress = (sliderValue - childSlider.minState) / (childSlider.maxState - childSlider.minState);
-                                        
-                                        context.fill(x, settingY + 4, x + width - 20, settingY + 8, 0xFF333333);
-                                        int sliderFillWidth = (int) ((width - 20) * sliderProgress);
-                                        context.fill(x, settingY + 4, x + sliderFillWidth, settingY + 8, PRIMARY_COLOR);
-                                        int sliderHandleX = x + sliderFillWidth - 2;
-                                        context.fill(sliderHandleX, settingY + 2, sliderHandleX + 4, settingY + 10, PRIMARY_TEXT_COLOR);
-                                        settingY += 18;
-                                    }
-                                }
-                            }
-                            settingY += 4; // Extra spacing after expanded content
-                        } else {
-                            settingY += 4;
-                        }
-                        
-                    } else {
-                        // Generic widget rendering
-                        bounds.x = x;
-                        bounds.y = settingY;
-                        bounds.width = width;
-                        bounds.height = 18;
-                        
-                        if (settingY - y + 18 <= maxHeight) {
-                            context.drawTextWithShadow(textRenderer, widget.getMessage().getString(), x, settingY + 2, 0xFFAAAAAA);
-                        }
-                        settingY += 22;
-                    }
-                    
-                    settingIndex++;
-                }
-            }
+            int finalY = renderWidgetsRecursively(context, dw.getChildren(), entry, x, y, width, maxHeight, mouseX, mouseY, deltaTicks, 0, fadeAlpha);
         }
     }
+    
+    /**
+     * Recursively renders widgets and their nested children at any depth.
+     * @param depth Indentation level for nested widgets
+     * @param fadeAlpha Alpha value for fade animation
+     * @return Final Y position after rendering all widgets
+     */
+    private int renderWidgetsRecursively(DrawContext context, Map<String, BaseWidget<?>> widgets, ModuleEntry entry, 
+                                          int x, int startY, int width, int maxHeight, int mouseX, int mouseY, 
+                                          float deltaTicks, int depth, int fadeAlpha) {
+        int settingY = startY;
+        int indent = depth * 10; // 10 pixels indentation per level
+        int availableWidth = width - indent;
+        
+        for (Map.Entry<String, BaseWidget<?>> en : widgets.entrySet()) {
+            BaseWidget<?> widget = en.getValue();
+            
+            // Stop rendering if we exceed available height
+            if (settingY - startY >= maxHeight) break;
+            
+            // Create bounds for this widget
+            WidgetBounds bounds = new WidgetBounds(widget);
+            entry.settingWidgets.add(bounds);
+            int renderX = x + indent;
+            
+            // Determine widget type and render appropriately
+            if (widget instanceof ColorWheelWidget colorWheel) {
+                ColorWheelWidget colorWheelWidget = (ColorWheelWidget) widget;
+                // Render label
+                int labelColor = (fadeAlpha << 24) | (0xFFAAAAAA & 0x00FFFFFF);
+                context.drawTextWithShadow(textRenderer, widget.getMessage().getString(), renderX, settingY, labelColor);
+                settingY += 14;
+                
+                int wheelSize = Math.min(availableWidth, 160);
+                // Set bounds to the actual wheel position
+                bounds.x = renderX + (availableWidth - wheelSize) / 2;
+                bounds.y = settingY;
+                bounds.width = wheelSize;
+                bounds.height = wheelSize;
+                
+                // Initialize color wheel with current module color if available
+                if (!widget.isStateless()) {
+                    Object state = widget.getRawState();
+                    if (state instanceof Integer colorValue) {
+                        double[] hsl = Color.rgbToHsl(colorValue);
+                        colorWheelWidget.setHSL(hsl[0], hsl[1], hsl[2]);
+                        
+                        // Set up callback to update widget state when color changes
+                        colorWheelWidget.setColorCallback((newColor) -> {
+                            @SuppressWarnings("unchecked")
+                            BaseWidget<Integer> colorWidget = (BaseWidget<Integer>) widget;
+                            colorWidget.setRawState(newColor);
+                        });
+                    }
+                }
+                
+                // Render color wheel
+                if (settingY - startY + wheelSize <= maxHeight) {
+                    colorWheelWidget.setX(bounds.x);
+                    colorWheelWidget.setY(bounds.y);
+                    colorWheelWidget.setDimensions(wheelSize, wheelSize);
+                    colorWheelWidget.render(context, mouseX, mouseY, deltaTicks);
+                }
+                settingY += wheelSize + 10;
+                
+            } else if (widget instanceof SliderWidget slider) {
+                // Render slider label with current value
+                String label = widget.getMessage().getString();
+                if (!widget.isStateless()) {
+                    Object state = widget.getRawState();
+                    if (state instanceof Double d) {
+                        label += ": " + String.format("%.2f", d);
+                    }
+                }
+                int labelColor = (fadeAlpha << 24) | (0xFFAAAAAA & 0x00FFFFFF);
+                context.drawTextWithShadow(textRenderer, label, renderX, settingY, labelColor);
+                settingY += 14;
+                
+                // Set bounds to the actual slider bar position
+                bounds.x = renderX;
+                bounds.y = settingY;
+                bounds.width = availableWidth - 20;
+                bounds.height = 12;
+                
+                // Manually render slider bar to avoid text overlap
+                if (settingY - startY + 12 <= maxHeight) {
+                    SliderWidget sliderWidget = (SliderWidget) widget;
+                    sliderWidget.setX(bounds.x);
+                    sliderWidget.setY(bounds.y);
+                    sliderWidget.setWidth(bounds.width);
+                    sliderWidget.setHeight(12);
+                    
+                    double value = !sliderWidget.isStateless() ? (Double) sliderWidget.getRawState() : sliderWidget.minState;
+                    double progress = (value - sliderWidget.minState) / (sliderWidget.maxState - sliderWidget.minState);
+                    
+                    // Draw slider track
+                    int trackColor = (fadeAlpha << 24) | (0xFF333333 & 0x00FFFFFF);
+                    context.fill(bounds.x, bounds.y + 4, bounds.x + bounds.width, bounds.y + 8, trackColor);
+                    
+                    // Draw filled portion
+                    int fillWidth = (int) (bounds.width * progress);
+                    int fillColor = (fadeAlpha << 24) | (getPrimaryColor() & 0x00FFFFFF);
+                    context.fill(bounds.x, bounds.y + 4, bounds.x + fillWidth, bounds.y + 8, fillColor);
+                    
+                    // Draw slider handle
+                    int handleX = bounds.x + fillWidth - 2;
+                    int handleColor = (fadeAlpha << 24) | (getPrimaryTextColor() & 0x00FFFFFF);
+                    context.fill(handleX, bounds.y + 2, handleX + 4, bounds.y + 10, handleColor);
+                }
+                settingY += 18; // 12 + spacing
+                
+            } else if (widget instanceof KeybindWidget keybind) {
+                bounds.x = renderX;
+                bounds.y = settingY;
+                bounds.width = availableWidth;
+                bounds.height = 20;
+                KeybindWidget keybindWidget = (KeybindWidget) widget;
+                
+                if (settingY - startY + 20 <= maxHeight) {
+                    boolean isBinding = CigaretteScreen.bindingKey == keybindWidget;
+                    boolean isHovered = mouseX >= bounds.x && mouseX < bounds.x + bounds.width &&
+                                      mouseY >= bounds.y && mouseY < bounds.y + bounds.height;
+                    
+                    // Label
+                    int labelColor = (fadeAlpha << 24) | (0xFFAAAAAA & 0x00FFFFFF);
+                    context.drawTextWithShadow(textRenderer, keybindWidget.getMessage().getString(), renderX, settingY + 2, labelColor);
+                    
+                    // Keybind display box
+                    int boxX = renderX + availableWidth - 60;
+                    int baseBoxColor = isBinding ? getPrimaryColor() : (isHovered ? getHoverColor() : getDarkBackgroundColor());
+                    int boxColor = (fadeAlpha << 24) | (baseBoxColor & 0x00FFFFFF);
+                    context.fill(boxX, settingY, boxX + 56, settingY + 18, boxColor);
+                    int borderColor = (fadeAlpha << 24) | (getPrimaryTextColor() & 0x00FFFFFF);
+                    drawBorder(context, boxX, settingY, 56, 18, borderColor);
+                    
+                    // Key name
+                    String keyName = isBinding ? "..." : keybindWidget.toString();
+                    int textX = boxX + 28 - textRenderer.getWidth(keyName) / 2;
+                    int keyTextColor = (fadeAlpha << 24) | (getPrimaryTextColor() & 0x00FFFFFF);
+                    context.drawTextWithShadow(textRenderer, keyName, textX, settingY + 5, keyTextColor);
+                }
+                settingY += 26;
+                
+            } else if (widget instanceof ToggleKeybindWidget toggleKeybind) {
+                bounds.x = renderX;
+                bounds.y = settingY;
+                bounds.width = availableWidth;
+                bounds.height = 20;
+
+                ToggleKeybindWidget toggleKeybindWidget = (ToggleKeybindWidget) widget;
+                
+                if (settingY - startY + 20 <= maxHeight) {
+                    boolean isBinding = CigaretteScreen.bindingKey == toggleKeybindWidget.widget;
+                    boolean isHovered = mouseX >= bounds.x && mouseX < bounds.x + bounds.width &&
+                                      mouseY >= bounds.y && mouseY < bounds.y + bounds.height;
+                    
+                    // Label with toggle state
+                    boolean isOn = !toggleKeybindWidget.isStateless() && toggleKeybindWidget.getRawState() instanceof Boolean b && b;
+                    String label = toggleKeybindWidget.getMessage().getString() + (isOn ? " [ON]" : " [OFF]");
+                    int baseLabelColor = isOn ? 0xFF00FF00 : 0xFFAAAAAA;
+                    int labelColor = (fadeAlpha << 24) | (baseLabelColor & 0x00FFFFFF);
+                    context.drawTextWithShadow(textRenderer, label, renderX, settingY + 2, labelColor);
+                    
+                    // Keybind display box
+                    int boxX = renderX + availableWidth - 60;
+                    int baseBoxColor = isBinding ? getPrimaryColor() : (isHovered ? getHoverColor() : getDarkBackgroundColor());
+                    int boxColor = (fadeAlpha << 24) | (baseBoxColor & 0x00FFFFFF);
+                    context.fill(boxX, settingY, boxX + 56, settingY + 18, boxColor);
+                    int borderColor = (fadeAlpha << 24) | (getPrimaryTextColor() & 0x00FFFFFF);
+                    drawBorder(context, boxX, settingY, 56, 18, borderColor);
+                    
+                    // Key name
+                    String keyName = isBinding ? "..." : toggleKeybindWidget.widget.toString();
+                    int textX = boxX + 28 - textRenderer.getWidth(keyName) / 2;
+                    int keyTextColor = (fadeAlpha << 24) | (getPrimaryTextColor() & 0x00FFFFFF);
+                    context.drawTextWithShadow(textRenderer, keyName, textX, settingY + 5, keyTextColor);
+                }
+                settingY += 26;
+                
+            } else if (widget instanceof ToggleWidget toggle) {
+                bounds.x = renderX;
+                bounds.y = settingY;
+                bounds.width = availableWidth;
+                bounds.height = 18;
+                
+                ToggleWidget toggleWidget = (ToggleWidget) widget;
+                
+                if (settingY - startY + 18 <= maxHeight) {
+                    // Render toggle with checkbox
+                    boolean isOn = !toggleWidget.isStateless() && toggleWidget.getRawState() instanceof Boolean b && b;
+                    boolean isHovered = mouseX >= bounds.x && mouseX < bounds.x + bounds.width &&
+                                      mouseY >= bounds.y && mouseY < bounds.y + bounds.height;
+                    
+                    // Checkbox
+                    int baseCheckboxColor = isHovered ? getHoverColor() : getCheckboxBackgroundColor();
+                    int checkboxColor = (fadeAlpha << 24) | (baseCheckboxColor & 0x00FFFFFF);
+                    context.fill(renderX, settingY + 2, renderX + 12, settingY + 14, checkboxColor);
+                    int borderColor = (fadeAlpha << 24) | (getCheckboxBorderColor() & 0x00FFFFFF);
+                    drawBorder(context, renderX, settingY + 2, 12, 12, borderColor);
+                    
+                    // Animated checkmark based on ToggleWidget's enable animation
+                    float maxEnableTicks = 5f; // Same as ToggleWidget.MAX_ENABLE_TICKS
+                    // Update enable ticks to mimic ToggleWidget's internal render behavior
+                    if (isOn) {
+                        toggleWidget.ticksOnEnable = Math.min(toggleWidget.ticksOnEnable + deltaTicks, maxEnableTicks);
+                    } else {
+                        toggleWidget.ticksOnEnable = Math.max(toggleWidget.ticksOnEnable - deltaTicks, 0f);
+                    }
+                    float enableProgress = toggleWidget.ticksOnEnable / maxEnableTicks;
+                    if (enableProgress > 0.0f) {
+                        // Fade in the checkmark without scaling
+                        int alpha = (int) (enableProgress * 255);
+                        int checkColor = (alpha << 24) | (getCheckboxCheckColor() & 0x00FFFFFF);
+                        
+                        // Draw a simple checkmark shape using multiple fills
+                        // Vertical part of checkmark
+                        context.fill(renderX + 3, settingY + 6, renderX + 5, settingY + 10, checkColor);
+                        // Horizontal part
+                        context.fill(renderX + 5, settingY + 8, renderX + 9, settingY + 10, checkColor);
+                    }
+                    
+                    // Label
+                    int labelColor = (fadeAlpha << 24) | (0xFFAAAAAA & 0x00FFFFFF);
+                    context.drawTextWithShadow(textRenderer, toggleWidget.getMessage().getString(), renderX + 16, settingY + 4, labelColor);
+                }
+                settingY += 22;
+                
+            } else if (widget instanceof ColorSquareWidget colorSquare) {
+                bounds.x = renderX;
+                bounds.y = settingY;
+                bounds.width = availableWidth;
+                bounds.height = 16;
+
+                ColorSquareWidget colorSquareWidget = (ColorSquareWidget) widget;
+                
+                if (settingY - startY + 16 <= maxHeight) {
+                    // Render color square
+                    int color = !colorSquareWidget.isStateless() ? (int) colorSquareWidget.getRawState() : 0xFFFFFFFF;
+                    // Apply fade to color preview
+                    int fadedColor = (fadeAlpha << 24) | (color & 0x00FFFFFF);
+                    context.fill(renderX, settingY + 2, renderX + 12, settingY + 14, fadedColor);
+                    int borderColor = (fadeAlpha << 24) | (getPrimaryTextColor() & 0x00FFFFFF);
+                    drawBorder(context, renderX, settingY + 2, 12, 12, borderColor);
+                    
+                    // Show hex value
+                    String hexValue = String.format("#%06X", color & 0xFFFFFF);
+                    int labelColor = (fadeAlpha << 24) | (0xFFAAAAAA & 0x00FFFFFF);
+                    context.drawTextWithShadow(textRenderer, hexValue, renderX + 16, settingY + 4, labelColor);
+                }
+                settingY += 20;
+                
+            } else if (widget instanceof DropdownWidget innerDropdown) {
+                bounds.x = renderX;
+                bounds.y = settingY;
+                bounds.width = availableWidth;
+                bounds.height = 20;
+                
+                DropdownWidget<?,?> dwInner = (DropdownWidget<?,?>) widget;
+                // Position the dropdown widget for click handling
+                dwInner.setX(bounds.x);
+                dwInner.setY(bounds.y);
+                dwInner.setWidth(bounds.width);
+                dwInner.setHeight(bounds.height);
+                
+                // Render the nested dropdown header
+                if (settingY - startY + 20 <= maxHeight) {
+                    // Render header background
+                    boolean isHovered = mouseX >= bounds.x && mouseX < bounds.x + bounds.width &&
+                                      mouseY >= bounds.y && mouseY < bounds.y + bounds.height;
+                    int baseHeaderColor = isHovered ? getHoverColor() : getBackgroundColor();
+                    int headerColor = (fadeAlpha << 24) | (baseHeaderColor & 0x00FFFFFF);
+                    context.fill(bounds.x, bounds.y, bounds.x + bounds.width, bounds.y + bounds.height, headerColor);
+                    
+                    // Render header text with dropdown indicator
+                    String indicator = dwInner.isExpanded() ? " ▼" : " ▶";
+                    int textColor = (fadeAlpha << 24) | (getSecondaryTextColor() & 0x00FFFFFF);
+                    context.drawTextWithShadow(textRenderer, dwInner.getMessage().getString() + indicator, bounds.x + 4, bounds.y + 2, textColor);
+                }
+                settingY += 20;
+                
+                // Recursively render nested children if expanded
+                if (dwInner.isExpanded() && settingY - startY < maxHeight) {
+                    settingY = renderWidgetsRecursively(context, dwInner.getChildren(), entry, x, settingY, width, maxHeight, mouseX, mouseY, deltaTicks, depth + 1, fadeAlpha);
+                    settingY += 4; // Extra spacing after expanded content
+                }
+                
+            } else {
+                // Generic widget rendering
+                bounds.x = renderX;
+                bounds.y = settingY;
+                bounds.width = availableWidth;
+                bounds.height = 18;
+                
+                if (settingY - startY + 18 <= maxHeight) {
+                    int labelColor = (fadeAlpha << 24) | (0xFFAAAAAA & 0x00FFFFFF);
+                    context.drawTextWithShadow(textRenderer, widget.getMessage().getString(), renderX, settingY + 2, labelColor);
+                }
+                settingY += 22;
+            }
+        }
+        
+        return settingY;
+    }
+
     
     /**
      * Interpolates between two colors.
@@ -871,10 +1069,11 @@ public class AlternateClickGUI extends Screen {
     }
 
     private void drawBorder(DrawContext context, int x, int y, int w, int h, int color) {
-        context.fill(x, y, x + w, y + 1, color); // Top border
-        context.fill(x, y + h - 1, x + w, y + h, color); // Bottom border
-        context.fill(x, y, x + 1, y + h, color); // Left border
-        context.fill(x + w - 1, y, x + w, y + h, color); // Right border
+        int borderWidth = AnimationConfig.getBorderWidth();
+        context.fill(x, y, x + w, y + borderWidth, color); // Top border
+        context.fill(x, y + h - borderWidth, x + w, y + h, color); // Bottom border
+        context.fill(x, y, x + borderWidth, y + h, color); // Left border
+        context.fill(x + w - borderWidth, y, x + w, y + h, color); // Right border
     }
 
     @Override

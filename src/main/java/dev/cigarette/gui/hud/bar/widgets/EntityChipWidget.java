@@ -197,10 +197,10 @@ public class EntityChipWidget implements BarWidget {
             if (textRight > textLeft) {
                 int bg = Color.scaleAlpha((barBgColor & 0x00FFFFFF) | 0xFF000000, visibility);
                 int fg = Color.scaleAlpha((barColor & 0x00FFFFFF) | 0xFF000000, visibility);
-                Shape.roundedRect(ctx, textLeft, barTop, textRight, barTop + barHeight, bg, 2);
+                ctx.fill(textLeft, barTop, textRight, barTop + barHeight, bg);
                 int fillRight = textLeft + Math.round((textRight - textLeft) * progress);
                 if (fillRight > textLeft) {
-                    Shape.roundedRect(ctx, textLeft, barTop, fillRight, barTop + barHeight, fg, 2);
+                    ctx.fill(textLeft, barTop, fillRight, barTop + barHeight, fg);
                 }
             }
         }

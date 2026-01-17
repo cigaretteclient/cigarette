@@ -2,6 +2,7 @@ package dev.cigarette.module.ui;
 
 import dev.cigarette.Cigarette;
 import dev.cigarette.gui.CigaretteScreen;
+import dev.cigarette.gui.AnimationConfig;
 import dev.cigarette.gui.hud.bar.BarDisplay;
 import dev.cigarette.gui.widget.ColorDropdownWidget;
 import dev.cigarette.gui.widget.SliderWidget;
@@ -50,7 +51,7 @@ public class TargetHUD extends RenderModule<ToggleWidget, Boolean> {
             display = new BarDisplay();
             Cigarette.registerHudElement(display);
         }
-        BarDisplay.BG_COLOR = bgColor.getToggleState() ? bgColor.getStateARGB() : Color.colorTransparentize(CigaretteScreen.PRIMARY_COLOR, 0.4f);
+        BarDisplay.BG_COLOR = bgColor.getToggleState() ? bgColor.getStateARGB() : Color.colorTransparentize(AnimationConfig.getPrimaryColor(), 0.4f);
         BarDisplay.TARGET_ROW_HEIGHT = rowHeight.getRawState().intValue();
         BarDisplay.GLOBAL_PADDING = globalPadding.getRawState().intValue();
         BarDisplay.MAX_ROWS = maxRows.getRawState().intValue();

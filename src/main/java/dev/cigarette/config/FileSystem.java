@@ -117,4 +117,19 @@ public class FileSystem {
             error.printStackTrace();
         }
     }
+
+    public static void save(String string, boolean enabled) {
+        OPTIONS.put(string, enabled);
+        saveConfig();
+    }
+
+    public static void save(String string, int color) {
+        OPTIONS.put(string, color);
+        saveConfig();
+    }
+
+    public static void save(String string, double GUI_CLOSE_DURATION_FACTOR) {
+        OPTIONS.put(string, GUI_CLOSE_DURATION_FACTOR);
+        saveConfig();
+    }
 }

@@ -74,7 +74,7 @@ public class Config {
         cfg.putModules("Keybind", AddGlassBlock.INSTANCE, BreakBlock.INSTANCE, VClip.INSTANCE);
         cfg.putModules("Murder Mystery", GoldESP.INSTANCE, PlayerESP.INSTANCE);
         cfg.putModules("Render", dev.cigarette.module.render.PlayerESP.INSTANCE, ProjectileESP.INSTANCE);
-        cfg.putModules("UI", GUI.INSTANCE, ModuleList.INSTANCE, Notifications.INSTANCE, TargetHUD.INSTANCE, Watermark.INSTANCE, Colors.INSTANCE);
+        cfg.putModules("UI", GUI.INSTANCE, ModuleList.INSTANCE, Notifications.INSTANCE, TargetHUD.INSTANCE, Watermark.INSTANCE, Colors.INSTANCE, Animations.INSTANCE);
         cfg.putModules("Zombies", Aimbot.INSTANCE, PowerupESP.INSTANCE, ReviveAura.INSTANCE, ZombieESP.INSTANCE);
         cfg.putModules("Skyblock", RedGifter.INSTANCE, GardenWSMacro.INSTANCE);
         cfg.putModules("Pit", dev.cigarette.module.pit.PlayerESP.INSTANCE);

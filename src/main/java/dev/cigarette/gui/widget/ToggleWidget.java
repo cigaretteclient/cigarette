@@ -34,7 +34,7 @@ public class ToggleWidget extends BaseWidget<Boolean> {
     /**
      * The current number of ticks the enable animation has run for.
      */
-    private float ticksOnEnable = 0f;
+    public float ticksOnEnable = 0f;
 
     /**
      * Smoothly transition from color {@code a} to color {@code b} in {@code t} partial ticks.

@@ -222,13 +222,13 @@ public class ModuleListDisplay extends ClickableWidget {
             int borderColor = Color.lerpColor(gradient[0], gradient[1], borderAnim);
             borderColor = scaleAlpha(borderColor, vis);
             
-            // Draw rounded border on the appropriate side based on alignment
+            // Draw border on the appropriate side based on alignment
             if (doFlip) {
                 // Left side border
-                Shape.roundedRect(context, bgLeft - borderThickness, bgTop, bgLeft, bgBottom, borderColor, borderRadius);
+                context.fill(bgLeft - borderThickness, bgTop, bgLeft, bgBottom, borderColor);
             } else {
                 // Right side border  
-                Shape.roundedRect(context, bgRight, bgTop, bgRight + borderThickness, bgBottom, borderColor, borderRadius);
+                context.fill(bgRight, bgTop, bgRight + borderThickness, bgBottom, borderColor);
             }
 
             context.drawText(tr, name, drawX, lineY, textColor, true);

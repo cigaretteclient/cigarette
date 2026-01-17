@@ -216,7 +216,7 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
         double progress = ticksOnCollapse / (double) MAX_TICKS_ON_COLLAPSE;
         progress = CigaretteScreen.easeOutExpo(progress);
 
-        // Render gradient background with proper rounded corners
+        // Render gradient background
         // Use horizontal animated gradient that goes smoothly left-to-right across the screen
         int[] gradient = ColorScheme.getCategoryHeaderGradient();
         
@@ -230,36 +230,6 @@ public class DraggableWidget extends BaseWidget<BaseWidget.Stateless> {
             ColorScheme.getWaveSpeed(),
             ColorScheme.getWaveAmplitude() * 0.3f, // Reduce amplitude for subtler effect
             0.0f);
-        
-        // Apply rounded corners by masking the corners with background color
-        int cornerRadius = 4;
-        int height = bottom - top;
-        
-        // Top corners
-        for (int y = 0; y < cornerRadius; y++) {
-            int dy = cornerRadius - 1 - y;
-            int dx = (int) Math.floor(Math.sqrt((double) cornerRadius * cornerRadius - (double) dy * dy));
-            int inset = cornerRadius - dx;
-            if (inset > 0) {
-                // Use the primary gradient color for corner blending
-                context.fill(left, top + y, left + inset, top + y + 1, gradient[0]);
-                context.fill(right - inset, top + y, right, top + y + 1, gradient[0]);
-            }
-        }
-        
-        // Bottom corners (only if collapsed)
-        if (!this.expanded) {
-            for (int y = height - cornerRadius; y < height; y++) {
-                int dy = y - (height - cornerRadius);
-                int dx = (int) Math.floor(Math.sqrt((double) cornerRadius * cornerRadius - (double) dy * dy));
-                int inset = cornerRadius - dx;
-                if (inset > 0) {
-                    // Use the primary gradient color for corner blending
-                    context.fill(left, top + y, left + inset, top + y + 1, gradient[0]);
-                    context.fill(right - inset, top + y, right, top + y + 1, gradient[0]);
-                }
-            }
-        }
         
         context.getMatrices().popMatrix();
         GradientRenderer.renderSatinOverlay(context, left, top, right, bottom);

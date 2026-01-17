@@ -198,7 +198,7 @@ public class NotificationDisplay extends ClickableWidget {
 
             // Render gradient background based on notification type
             int[] bgGradient = ColorScheme.getGradientForType(notificationType);
-                GradientRenderer.renderVerticalWaveGradient(
+            GradientRenderer.renderVerticalWaveGradient(
                     context,
                     clampedLeft, clampedTop, clampedRight, clampedBottom,
                     bgGradient[0], bgGradient[1],
@@ -206,12 +206,8 @@ public class NotificationDisplay extends ClickableWidget {
                     ColorScheme.getWaveSpeed(),
                     ColorScheme.getWaveAmplitude(),
                     0.25f * i);
-            // Satin overlay for a subtle sheen
+
             GradientRenderer.renderSatinOverlay(context, clampedLeft, clampedTop, clampedRight, clampedBottom);
-            
-            // Draw rounded rectangle outline with anti-aliasing
-            Shape.roundedRect(context, clampedLeft, clampedTop, clampedRight, clampedBottom, bgGradient[1],
-                    cornerRadius);
 
             float visibleStart = NotificationWithEasingProgress.APPEAR_TICKS;
             float visibleEnd = NotificationWithEasingProgress.APPEAR_TICKS
@@ -236,38 +232,12 @@ public class NotificationDisplay extends ClickableWidget {
             barRight = Math.max(clampedLeft, Math.min(barRight, clampedRight));
 
             if (barLeft < barRight && barTop < barBottom) {
-                int barRadius = Math.max(0, Math.min(
-                        cornerRadius,
-                        Math.min((barRight - barLeft) / 2, barHeight / 2)));
-
-                Shape.roundedRect(context,
-                        barLeft + 1, barTop, barRight, barBottom,
-                        0xFF00FF00,
-                        0,
-                        progressBarWidth > (actualBoxWidth - barRadius) ? 0 : barRadius,
-                        0,
-                        barRadius);
+                context.fill(barLeft + 1, barTop, barRight, barBottom, 0xFF00FF00);
             }
 
-            int rad = Math.max(0, Math.min(cornerRadius,
-                    Math.min(Math.max(0, clampedRight - clampedLeft) / 2,
-                            Math.max(0, clampedBottom - clampedTop) / 2)));
-            int h = Math.max(0, clampedBottom - clampedTop);
+            // Draw simple left stripe border without rounded corners
             for (int y = clampedTop; y < clampedBottom; y++) {
-                int yIndex = y - clampedTop;
-                int leftEdgeX = clampedLeft;
-                if (rad > 0) {
-                    if (yIndex < rad) {
-                        int dy = (rad - 1) - yIndex;
-                        int dx = (int) Math.floor(Math.sqrt((double) rad * rad - (double) dy * dy));
-                        leftEdgeX = clampedLeft + rad - dx;
-                    } else if (yIndex >= h - rad) {
-                        int dy = yIndex - (h - rad);
-                        int dx = (int) Math.floor(Math.sqrt((double) rad * rad - (double) dy * dy));
-                        leftEdgeX = clampedLeft + rad - dx;
-                    }
-                }
-                int sx0 = Math.max(clampedLeft, leftEdgeX);
+                int sx0 = clampedLeft;
                 int sx1 = Math.min(clampedRight, sx0 + stripeWidth);
                 if (sx0 < sx1) {
                     context.fill(sx0, y, sx1, y + 1, stripeColor);
@@ -283,7 +253,7 @@ public class NotificationDisplay extends ClickableWidget {
             String msgStr = n.getNotification().getMessage();
             String titleTrim = titleStr;
             String msgTrim = msgStr;
-            
+
             // Draw text with anti-aliasing enabled
             context.drawText(boldTextRenderer, titleTrim, contentLeft - 3, clampedTop + 8,
                     CigaretteScreen.PRIMARY_TEXT_COLOR, true);

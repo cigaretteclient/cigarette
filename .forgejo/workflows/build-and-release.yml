@@ -6,55 +6,46 @@ permissions:
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 jobs:
   build:
     runs-on: docker
     container:
       image: ghcr.io/catthehacker/ubuntu:act-22.04
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up JDK
-        uses: actions/setup-java@v2
+      - uses: actions/checkout@v4
         with:
-          java-version: '21'
-          distribution: 'adopt'
+          github-server-url: "https://git.okr765.com"
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "adopt"
 
       - name: Set Mod Version
-        run: sed -i "s/development_build/${GITHUB_REF##*/}/" gradle.properties
+        run: sed -i "s/development_build/${{ github.ref_name }}/" gradle.properties
 
-      - name: Cache Gradle files
-        uses: actions/cache@v4
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
+          restore-keys: ${{ runner.os }}-gradle-
 
-      - name: Build with Gradle
-        run: |
-          ./gradlew build
-          ./gradlew --stop
+      - name: Build
+        run: ./gradlew build --no-daemon
 
-      - name: Rename JAR file
+      - name: Rename and stage JAR
         run: |
-          MC_VERSION=$(cat gradle.properties | grep minecraft_version | cut -d '=' -f2)
-          JAR_NAME=$(ls build/libs/*.jar | grep -v '\-sources\.jar$')
-          NEW_JAR_NAME="cigarette-${GITHUB_REF##*/}+$MC_VERSION.jar"
+          MC_VERSION=$(grep '^minecraft' gradle/libs.versions.toml | head -1 | cut -d '"' -f2)
+          JAR=$(ls build/libs/*.jar | grep -v '\-sources\.jar$')
+          NEW_NAME="cigarette-${{ github.ref_name }}+${MC_VERSION}.jar"
           mkdir -p dist/release
-          mv "$JAR_NAME" "dist/release/$NEW_JAR_NAME"
-          echo "Moved JAR to dist/release/$NEW_JAR_NAME"
-          echo "NEW_JAR_NAME=$NEW_JAR_NAME" >> $GITHUB_ENV
+          mv "$JAR" "dist/release/$NEW_NAME"
 
-      - name: Create Release and Upload JAR
-        id: create_release
-        uses: actions/forgejo-release@v2.7.3
+      - uses: actions/forgejo-release@v2.7.3
         with:
           direction: upload
           url: https://git.okr765.com

@@ -7,4 +7,13 @@ pluginManagement {
 		mavenCentral()
 		gradlePluginPortal()
 	}
+	dependencyResolutionManagement {
+		versionCatalogs {
+			devLibs {
+				from(files("gradle/dev.versions.toml"))
+			}
+		}
+	}
 }
+
+rootProject.name = "cigarette"

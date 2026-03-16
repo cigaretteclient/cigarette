@@ -1,0 +1,15 @@
+[versions]
+sodium  = "mc1.21.11-0.8.6-fabric"
+modmenu = "17.0.0-beta.2"
+devauth  = "1.2.2"
+iris    = "1.10.6+1.21.11-fabric"
+
+[libraries]
+sodium  = { module = "maven.modrinth:sodium",          version.ref = "sodium" }
+modmenu = { module = "maven.modrinth:modmenu",         version.ref = "modmenu" }
+devauth  = { module = "me.djtheredstoner:DevAuth-fabric",  version.ref = "devauth" }
+iris    = { module = "maven.modrinth:iris",            version.ref = "iris" }
+
+
+[bundles]
+dev-mods = ["sodium", "modmenu", "iris", "devauth"]
